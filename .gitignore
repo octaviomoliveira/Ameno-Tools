@@ -1,0 +1,24 @@
+# 3ds Max and Autodesk generated files
+*.autosave
+*.bak
+*.max
+*.max.bak
+*.mse
+*.dmp
+*.log
+
+# Build and release output
+/build/
+/dist/
+*.zip
+
+# Editors and operating system
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
+
+# Local test configuration
+.env
+.env.*
+local.settings.json

@@ -1,0 +1,6 @@
+* text=auto
+*.ms text eol=crlf
+*.mxs text eol=crlf
+*.mcr text eol=crlf
+*.xml text eol=crlf
+*.md text eol=lf
