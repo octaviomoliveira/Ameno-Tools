@@ -13,7 +13,8 @@ Decisões já tomadas:
 - cotas persistentes no arquivo `.max`;
 - layer `AMENO_COTAS` criada e gerenciada automaticamente;
 - geometria renderizável, não apenas overlay de viewport;
-- saída no Beauty, LightMix, Render Element/AOV ou somente viewport;
+- MVP com botão `Renderizar Cotas` para gerar overlay transparente independente;
+- nenhuma alteração automática no Beauty, LightMix ou Render Elements do usuário;
 - dados separados da representação gráfica;
 - arquitetura preparada para núcleo C++ futuro;
 - sem dependência de índices frágeis de vértice no MVP.
@@ -36,6 +37,7 @@ Decisões pendentes:
 - [Roadmap](ROADMAP.md)
 - [ADR 0001 — MAXScript primeiro](docs/decisions/0001-maxscript-first.md)
 - [ADR 0002 — Layer e saídas de render](docs/decisions/0002-layer-and-render-output.md)
+- [ADR 0003 — Render separado no MVP](docs/decisions/0003-separate-overlay-render-mvp.md)
 
 ## Princípios
 

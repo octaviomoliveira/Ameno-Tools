@@ -245,6 +245,70 @@ Perfis previstos:
 
 ## Pipeline de saída
 
+> A arquitetura abaixo descreve a evolução futura. O MVP usa o serviço independente `RenderCotasService` e não configura Beauty, LightMix ou Render Elements.
+
+## RenderCotasService do MVP
+
+Entrada:
+
+```text
+camera
+frame
+resolution/pixelAspect
+crop/region
+outputPath
+fileFormat
+selectionMode: all | selected
+background: transparent
+```
+
+Fluxo:
+
+1. validar câmera, resolução, layer e cotas órfãs;
+2. atualizar todas as cotas dirty;
+3. capturar um snapshot mínimo do estado que será alterado;
+4. isolar `AMENO_COTAS` ou somente os controladores selecionados;
+5. garantir material de annotation e alpha transparente;
+6. executar o render para arquivo próprio;
+7. restaurar o snapshot em caminho de sucesso, erro ou cancelamento;
+8. validar que o arquivo foi criado e informar dimensões/path.
+
+O serviço não dispara o render normal da planta e não edita o Render Element Manager.
+
+### Snapshot protegido
+
+Guardar somente o necessário:
+
+- visibilidade/renderability das layers/nós afetados;
+- layer corrente;
+- câmera ativa;
+- frame;
+- output path e flags temporárias;
+- region/crop quando alterado;
+- environment/alpha quando necessário;
+- material override temporário, se usado;
+- trava contra callbacks recursivos.
+
+Evitar alterar configurações globais quando os argumentos do comando `render` permitirem informar câmera, frame, resolução e output diretamente.
+
+### Pixel-perfect
+
+O serviço calcula uma assinatura da saída:
+
+```text
+cameraId + projection + transform + frame + width + height + pixelAspect + crop
+```
+
+Essa assinatura pode ser salva ao lado do overlay ou em metadados/arquivo auxiliar. O diagnóstico compara a assinatura com a configuração atual da planta e alerta quando o overlay não encaixará exatamente.
+
+### Materiais
+
+O renderer adapter do MVP tem responsabilidade pequena: fornecer material gráfico que preserve cor e alpha. Ele não integra LightMix ou AOV. Se nenhum adapter existir, o app oferece um material genérico e avisa sobre limitações de exposição/tone mapping.
+
+### Falha segura
+
+Restauração é obrigatória. O código mantém snapshot e flag de operação ativa; callbacks de reset, open, cancel e exceções chamam a mesma rotina idempotente de restore. Uma segunda chamada de restore não deve causar efeitos.
+
 O `RenderOutputService` recebe uma política neutra:
 
 ```text

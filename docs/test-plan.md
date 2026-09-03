@@ -115,6 +115,8 @@ Casos de referência:
 
 ## Saída de render e LightMix
 
+Os testes abaixo são futuros. Para o MVP, aplicar primeiro a seção `Render separado das cotas`.
+
 - integrada aparece no Beauty nativo;
 - integrada aparece também no LightMix escolhido;
 - element separado pode excluir cotas do canal final;
@@ -135,6 +137,26 @@ Casos de referência:
 - render de animação inclui frame e LightMix corretos;
 - render farm encontra pacote, materiais, elements e paths;
 - color management do overlay é consistente com o canal final.
+
+## Render separado das cotas — MVP
+
+- botão renderiza somente `AMENO_COTAS`;
+- Beauty, LightMix e Render Elements permanecem inalterados;
+- PNG contém alpha transparente;
+- EXR possui dimensões e alpha esperados;
+- largura, altura e pixel aspect coincidem com a planta;
+- câmera e frame coincidem;
+- crop/region geram resultado previsível ou aviso;
+- todas/selecionadas funcionam;
+- material preserva cor do estilo;
+- objetos da planta não aparecem no overlay;
+- render termina com todas as visibilidades restauradas;
+- cancelamento restaura a cena;
+- exceção simulada restaura a cena;
+- render repetido não acumula callbacks ou objetos temporários;
+- arquivo recebe nome sem sobrescrever silenciosamente outro frame;
+- preview usa a mesma proporção da saída final;
+- assinatura pixel-perfect detecta câmera ou resolução divergente.
 
 ## Renderizadores
 

@@ -17,7 +17,8 @@
 - valor em centímetros;
 - traço arquitetônico;
 - criação automática da layer `AMENO_COTAS`;
-- modo de saída `Beauty`;
+- botão `Renderizar Cotas`;
+- PNG transparente alinhado ao Render Setup;
 - criação em um único bloco de Undo.
 
 ## 0.0.3 — Persistência
@@ -35,9 +36,9 @@
 - unidades e formatação;
 - atualização automática com debounce;
 - atualização antes do render;
-- modos Beauty, LightMix, Element e Viewport only;
-- máscara de cotas no mesmo render;
-- fallback Annotation RGBA em segundo passe;
+- render separado das cotas em PNG/EXR com alpha;
+- câmera, resolução, crop e frame iguais à planta;
+- restauração segura do estado da cena;
 - converter/bake;
 - diagnóstico e reparo;
 - documentação de uso.
@@ -47,9 +48,9 @@
 - cotas contínuas e em cadeia;
 - dimensionamento por seleção;
 - perfis de saída em pixels e impressão;
-- adapters de Annotation RGBA para os renderizadores priorizados;
-- integração validada com LightMix;
-- nomes e paths automáticos para Render Elements/AOVs;
+- render apenas das cotas selecionadas;
+- preview rápido do overlay;
+- nomes e paths automáticos;
 - presets por escritório/projeto;
 - localização português/inglês.
 
@@ -60,6 +61,14 @@
 - cotas gerais e parciais automáticas;
 - detecção e resolução assistida de sobreposição;
 - auditoria de cotas órfãs ou desatualizadas.
+
+## Futuro — Integração avançada de render
+
+- Render Element/AOV no mesmo passe quando suportado;
+- integração opcional com Beauty e LightMix;
+- adapters por Corona, V-Ray e Arnold;
+- composição e flatten automáticos;
+- empacotamento em EXR multicanal.
 
 ## 1.0.0 — Produto estável
 

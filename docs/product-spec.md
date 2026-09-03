@@ -144,6 +144,8 @@ Regras:
 
 ## Canais de entrega
 
+> Escopo futuro. O MVP não modifica Beauty, LightMix ou Render Elements. Ele gera um overlay separado pelo botão `Renderizar Cotas`.
+
 O termo `Beauty` não é suficiente, porque Corona e V-Ray podem entregar um resultado final calculado pelo LightMix em outro Render Element/canal. O perfil Ameno deve definir o **canal de entrega** usado pelo usuário:
 
 - Beauty nativo;
@@ -218,6 +220,52 @@ O path pode usar tokens:
 ```text
 {scene}_{camera}_{lightmix}_{frame}_AMENO_COTAS.exr
 ```
+
+## MVP: Renderizar Cotas
+
+O fluxo inicial será deliberadamente simples:
+
+1. o usuário renderiza a planta normalmente, com Beauty ou LightMix;
+2. abre o Ameno Tools;
+3. clica em `Renderizar Cotas`;
+4. o app gera somente as cotas em fundo transparente;
+5. o usuário coloca o arquivo como layer no Photoshop.
+
+O Ameno não cria, remove ou altera Render Elements no MVP. Também não precisa saber qual LightMix será entregue, porque o overlay é independente da iluminação.
+
+### Garantia de alinhamento
+
+O overlay deve reutilizar exatamente:
+
+- câmera ativa;
+- frame;
+- resolução e pixel aspect;
+- crop, region ou output size aplicável;
+- projeção ortográfica;
+- enquadramento;
+- color management escolhido para o overlay.
+
+Se uma configuração impedir composição pixel-perfect, o app bloqueia ou avisa antes do render.
+
+### Configuração mínima
+
+- formato: PNG com alpha ou EXR;
+- path automático ou escolhido;
+- todas as cotas ou somente selecionadas;
+- cor conforme estilo;
+- fundo transparente;
+- abrir pasta ao terminar;
+- opção de preview em baixa resolução.
+
+### Nome de arquivo
+
+```text
+{scene}_{camera}_{frame}_AMENO_COTAS.png
+```
+
+### Comportamento
+
+Durante o render separado, somente `AMENO_COTAS` fica renderizável. O app preserva e restaura o estado anterior de todas as layers e objetos, inclusive após cancelamento ou erro. A operação não altera permanentemente Beauty, LightMix, VFB ou Render Elements.
 
 ## Estados de integridade
 

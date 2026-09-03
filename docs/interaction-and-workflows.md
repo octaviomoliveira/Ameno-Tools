@@ -22,7 +22,7 @@ O Ameno Tools deve parecer parte do 3ds Max, mas organizar o trabalho por result
 │ [Inverter] [Reancorar] [Atualizar]  │
 ├─ AÇÕES RÁPIDAS ─────────────────────┤
 │ [Atualizar tudo] [Cotas para câmera]│
-│ [Render output]  [Converter/Bake]   │
+│ [Renderizar Cotas] [Converter/Bake] │
 ├─ DIAGNÓSTICO ───────────────────────┤
 │ ⚠ 1 referência perdida              │
 │ [Examinar] [Reparar]                 │
@@ -156,6 +156,35 @@ Alternar:
 Esse fluxo facilita composição, correção de cor e versões com/sem informação comercial.
 
 ## Painel Render Output
+
+> Painel avançado futuro. No MVP ele é substituído pelo painel simples abaixo.
+
+## Painel Renderizar Cotas — MVP
+
+```text
+┌─ RENDERIZAR COTAS ─────────────────┐
+│ Câmera: CAM_Planta_01              │
+│ Saída: 3840 × 2160 · Pixel 1,0     │
+│                                    │
+│ Cotas: (•) Todas  ( ) Selecionadas │
+│ Formato: [PNG + Alpha ▾]           │
+│ Path: .../CAM_Planta_AMENO_COTAS   │
+│ [✓] Fundo transparente             │
+│ [✓] Abrir pasta ao concluir        │
+│                                    │
+│ [Preview] [RENDERIZAR COTAS]       │
+└────────────────────────────────────┘
+```
+
+Ao clicar:
+
+1. o app confere se câmera e saída combinam com o render da planta;
+2. atualiza as cotas;
+3. renderiza somente `AMENO_COTAS`;
+4. restaura a cena;
+5. informa o arquivo pronto para o Photoshop.
+
+Nenhuma configuração de LightMix ou Render Elements aparece nesse fluxo.
 
 ```text
 ┌─ SAÍDA DAS COTAS ──────────────────┐
