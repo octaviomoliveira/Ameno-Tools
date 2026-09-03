@@ -83,7 +83,7 @@ Ao abrir pela primeira vez:
 
 O botão `Preparar esta cena` cria somente infraestrutura do Ameno. Não altera unidades, renderizador ou objetos do usuário sem confirmação explícita.
 
-Ao preparar, cria `AMENO_COTAS` e `AMENO_SYSTEM`, configura o estilo inicial e apresenta as capacidades de Beauty, LightMix e Render Elements do renderer atual.
+Ao preparar, cria `AMENO_COTAS` e `AMENO_SYSTEM`, configura o estilo inicial e mostra o adapter encontrado: `Corona · suportado`, `V-Ray CPU · suportado`, `V-Ray GPU · experimental` ou `sem adapter`. Beauty, LightMix e Render Elements não são modificados.
 
 ## Criação comum
 
@@ -255,6 +255,7 @@ Esse fluxo facilita composição, correção de cor e versões com/sem informaç
 ┌─ RENDERIZAR COTAS ─────────────────┐
 │ Câmera: CAM_Planta_01              │
 │ Saída: 3840 × 2160 · Pixel 1,0     │
+│ Renderer: Corona · suportado       │
 │                                    │
 │ Cotas: (•) Todas  ( ) Selecionadas │
 │ Formato: [PNG + Alpha ▾]           │

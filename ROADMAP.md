@@ -6,6 +6,7 @@
 - manifesto inicial direcionado ao 3ds Max 2026;
 - carregamento previsível de módulos;
 - logger, versão e diagnóstico;
+- detecção do renderer ativo e sua versão;
 - MacroScript para abrir o painel;
 - registro e limpeza segura de callbacks;
 - cena de teste manual.
@@ -19,6 +20,7 @@
 - traço arquitetônico;
 - criação automática da layer `AMENO_COTAS`;
 - botão `Renderizar Cotas`;
+- primeiro adapter de render para Corona;
 - PNG transparente alinhado ao Render Setup;
 - criação em um único bloco de Undo.
 
@@ -45,6 +47,8 @@
 - atualização automática com debounce;
 - atualização antes do render;
 - render separado das cotas em PNG/EXR com alpha;
+- adapter Corona aprovado como referência;
+- adapter V-Ray CPU com o mesmo contrato de saída;
 - câmera, resolução, crop e frame iguais à planta;
 - restauração segura do estado da cena;
 - converter/bake;
@@ -52,6 +56,7 @@
 - filtro e relatório de cotas manuais;
 - documentação de uso.
 - validação completa no Max 2026.
+- matriz de render aprovada em Corona e V-Ray CPU.
 
 ## 0.2.0 — Produção de plantas
 
@@ -63,6 +68,7 @@
 - nomes e paths automáticos;
 - presets por escritório/projeto;
 - localização português/inglês.
+- validação e, se aprovada, suporte oficial ao V-Ray GPU.
 
 ## 0.3.0 — Automação assistida
 
@@ -85,7 +91,8 @@
 
 - Render Element/AOV no mesmo passe quando suportado;
 - integração opcional com Beauty e LightMix;
-- adapters por Corona, V-Ray e Arnold;
+- integração avançada por adapter para Corona e V-Ray;
+- avaliação de Arnold conforme demanda;
 - composição e flatten automáticos;
 - empacotamento em EXR multicanal.
 

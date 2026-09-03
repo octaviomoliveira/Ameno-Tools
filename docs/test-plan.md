@@ -214,6 +214,35 @@ Para cada renderizador oficialmente suportado:
 - render local e render farm usam o mesmo pacote;
 - cena sem adapter apresenta diagnóstico claro.
 
+### Corona — referência obrigatória
+
+- detectar renderer e versão instalada;
+- material da anotação permanece visível diretamente e opaco no alpha;
+- material não emite luz nem cria um grupo controlável no LightMix;
+- exposição, tone mapping, Bloom & Glare e denoise não alteram silenciosamente a cor gráfica;
+- Advanced Render Selected não deixa resíduos de VFB em arquivos novos;
+- PNG e EXR coincidem em recorte e cobertura de alpha;
+- render iniciado com LightMix configurado termina com o LightMix intacto;
+- CXR e Render Elements existentes permanecem intactos, mesmo não sendo usados pelo MVP.
+
+### V-Ray CPU — segundo adapter oficial
+
+- detectar renderer, versão e engine CPU;
+- VRayMtl/VRayLightMtl escolhido mantém cor, alpha e antialiasing esperados;
+- self-illumination não contribui para GI;
+- compensação de exposição tem comportamento determinístico;
+- correções do VFB não são gravadas silenciosamente no overlay `graphic-sRGB`;
+- Render Mask não é necessário para gerar o arquivo isolado;
+- troca de Bucket/Progressive não altera cobertura de alpha além da tolerância;
+- LightMix, Light Selects e Render Elements do usuário permanecem intactos.
+
+### V-Ray GPU — qualificação independente
+
+- o app diferencia V-Ray CPU de V-Ray GPU no diagnóstico;
+- nenhuma aprovação do adapter CPU é herdada automaticamente;
+- materiais, splines, TextPlus, alpha, Render Mask e color pipeline são testados novamente;
+- enquanto a matriz não passar, a UI informa `experimental` e oferece voltar ao V-Ray CPU.
+
 ## Desempenho
 
 Medir:
@@ -232,13 +261,15 @@ Meta inicial: 100 cotas atualizadas em menos de 1 segundo no equipamento de refe
 
 O MVP possui uma única plataforma oficialmente suportada:
 
-| Max | Instalação/UI | Cena e cotas | Render separado | Frequência |
-|---|---:|---:|---:|---|
-| 2026 | completa | completa | completa | contínua e release candidate |
+| Max | Renderer | Estado-alvo | Cena e cotas | Render separado |
+|---|---|---|---:|---:|
+| 2026 | Corona | referência obrigatória | completa | completa |
+| 2026 | V-Ray CPU | segundo adapter oficial | completa | completa |
+| 2026 | V-Ray GPU | experimental até qualificação | completa | matriz própria |
 
 `Completa` inclui instalação/desinstalação, abertura pelo MacroScript, criação em três cliques, estilos/TextPlus, layers, Undo/Redo, valor manual, save/open, atualização e PNG/EXR com alpha.
 
-O renderer prioritário será acrescentado como segunda dimensão da matriz. Compatibilidade com o Max e compatibilidade com o renderer são aprovações independentes.
+As versões mínimas de Corona e V-Ray serão fixadas após executar a primeira prova no ambiente real. Cada release registra exatamente as versões testadas. Compatibilidade com o Max e compatibilidade com o renderer são aprovações independentes.
 
 ### Qualificação futura de versões antigas
 

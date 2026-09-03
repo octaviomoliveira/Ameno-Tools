@@ -343,6 +343,26 @@ Fluxo:
 
 O serviço não dispara o render normal da planta e não edita o Render Element Manager.
 
+### Contrato do renderer adapter
+
+O `RenderCotasService` não acessa classes Corona ou V-Ray diretamente. Ele resolve um `IAnnotationRendererAdapter` para o renderer ativo:
+
+```text
+probe()                       versão, engine e capacidades
+validate(request)             câmera, formato, alpha e recursos
+captureState()                estado específico que será tocado
+createAnnotationMaterial()    cor gráfica, opacidade e alpha
+configureIsolation(nodes)     somente nós Ameno renderizáveis
+configureOutput(request)      fundo transparente e color pipeline
+render(request)               produz arquivo novo
+restore(snapshot)             restauração idempotente
+verify(file, signature)       dimensões, alpha e correspondência
+```
+
+O contrato comum é renderer-agnostic. Corona é a implementação de referência; V-Ray CPU precisa produzir o mesmo resultado observável. Trocar o renderer nunca altera a definição, o estilo ou as âncoras de uma cota.
+
+O isolamento base usa o estado renderizável dos nós/layers capturado no snapshot. Render Selected/Render Mask nativos podem virar otimização após testes, mas não são a fonte de verdade: alguns modos preservam pixels anteriores do VFB ou ainda consideram objetos transparentes à frente, o que não garante um overlay novo e limpo.
+
 ### Snapshot protegido
 
 Guardar somente o necessário:
@@ -371,7 +391,13 @@ Essa assinatura pode ser salva ao lado do overlay ou em metadados/arquivo auxili
 
 ### Materiais
 
-O renderer adapter do MVP tem responsabilidade pequena: fornecer material gráfico que preserve cor e alpha. Ele não integra LightMix ou AOV. Se nenhum adapter existir, o app oferece um material genérico e avisa sobre limitações de exposição/tone mapping.
+O renderer adapter do MVP tem responsabilidade pequena: fornecer material gráfico que preserve cor e alpha. Ele não integra LightMix ou AOV.
+
+O perfil padrão é `graphic-sRGB`: a cor das cotas é uma decisão gráfica para composição no Photoshop e não deve variar com luzes, exposição da câmera ou LightMix. Pós-processamento do VFB não pode ser incorporado silenciosamente. Um perfil futuro poderá imitar o pós do render, mas precisa ser explícito.
+
+No Corona, o candidato inicial é um material visível diretamente e no alpha, sem emissão de luz para a cena. No V-Ray, o adapter usa material nativo com autoiluminação, GI desabilitada e compensação de exposição controlada. As propriedades exatas são resolvidas e testadas por adapter; os dados persistidos guardam papéis lógicos, nunca instâncias de classes do renderer.
+
+Se o renderer ativo não possuir adapter aprovado, `Renderizar Cotas` bloqueia com diagnóstico claro. Não haverá fallback silencioso que produza cores ou alpha diferentes.
 
 ## StyleEditorService
 
@@ -559,13 +585,14 @@ Regras:
 
 O estilo referencia um papel lógico, como `annotation-dark` ou `annotation-light`. Um provider escolhe a implementação:
 
-- material genérico compatível;
-- Corona;
-- V-Ray;
-- Arnold;
+- material genérico somente para viewport/preview;
+- Corona, referência do MVP;
+- V-Ray CPU, segundo adapter oficial;
+- V-Ray GPU, depois de qualificação própria;
+- Arnold, futuro conforme demanda;
 - material fornecido pelo usuário.
 
-Sem provider específico, a geometria continua existindo e o diagnóstico informa que o material precisa ser atribuído.
+Sem provider específico, a geometria continua existindo e pode ser editada, mas o render separado é bloqueado para não gerar cor ou alpha incorretos. O diagnóstico informa exatamente qual adapter está ausente.
 
 ## Performance
 

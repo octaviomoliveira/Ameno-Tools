@@ -18,6 +18,9 @@ Decisões já tomadas:
 - geometria renderizável, não apenas overlay de viewport;
 - MVP com botão `Renderizar Cotas` para gerar overlay transparente independente;
 - nenhuma alteração automática no Beauty, LightMix ou Render Elements do usuário;
+- Corona como renderer de referência e gate obrigatório do MVP;
+- V-Ray CPU como segundo renderer oficial, implementado por adapter separado;
+- V-Ray GPU tratado separadamente até passar sua própria matriz;
 - valores medidos, arredondados e manuais mantidos separadamente;
 - cotas manuais destacadas somente na viewport;
 - dados separados da representação gráfica;
@@ -26,7 +29,7 @@ Decisões já tomadas:
 
 Decisões pendentes:
 
-- renderizador prioritário;
+- versões mínimas de Corona e V-Ray após testar o ambiente real;
 - interface apenas em português ou bilíngue;
 - licença e modelo de distribuição;
 - serviço e visibilidade do repositório remoto.
@@ -41,12 +44,14 @@ Decisões pendentes:
 - [Formato dos dados de cena](docs/scene-data-schema.md)
 - [Plano de testes](docs/test-plan.md)
 - [Estratégia de versões do 3ds Max](docs/compatibility.md)
+- [Compatibilidade com Corona e V-Ray](docs/renderers.md)
 - [Roadmap](ROADMAP.md)
 - [ADR 0001 — MAXScript primeiro](docs/decisions/0001-maxscript-first.md)
 - [ADR 0002 — Layer e saídas de render](docs/decisions/0002-layer-and-render-output.md)
 - [ADR 0003 — Render separado no MVP](docs/decisions/0003-separate-overlay-render-mvp.md)
 - [ADR 0004 — Sobrescritas manuais auditáveis](docs/decisions/0004-auditable-manual-overrides.md)
 - [ADR 0005 — Max 2026 primeiro](docs/decisions/0005-max-2026-first.md)
+- [ADR 0006 — Corona primeiro, V-Ray compatível](docs/decisions/0006-corona-primary-vray-secondary.md)
 
 ## Princípios
 

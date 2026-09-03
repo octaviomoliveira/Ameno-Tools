@@ -8,7 +8,9 @@ Produto-pai: Ameno Tools
 - desenvolvimento principal: 3ds Max 2026 no Windows;
 - primeira versão suportada: 3ds Max 2026;
 - compatibilidade 2021–2025: avaliação posterior ao MVP, sem limitar a solução atual;
-- renderer prioritário ainda a definir.
+- renderer prioritário: Corona;
+- segundo renderer oficial: V-Ray CPU;
+- V-Ray GPU: qualificação separada.
 
 O produto usa os recursos adequados do 2026 quando isso melhora a experiência. A separação entre domínio e APIs do host preserva um caminho de portabilidade, descrito em [compatibility.md](compatibility.md), mas o MVP não assume o custo de manter seis versões.
 
