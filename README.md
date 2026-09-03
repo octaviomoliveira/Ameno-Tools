@@ -4,7 +4,7 @@ Suíte modular de ferramentas para 3ds Max. O primeiro módulo, **Ameno Dimensio
 
 ## Estado
 
-Projeto em especificação e fundação técnica. Ainda não existe uma build executável.
+Fundação técnica `0.0.1` executável no 3ds Max 2026. O pacote já carrega, registra a ação `Ameno Tools`, abre o painel e diagnostica o renderer. A ferramenta de criação de cotas ainda está em desenvolvimento.
 
 Decisões já tomadas:
 
@@ -62,6 +62,30 @@ Decisões pendentes:
 5. Atualizações derivadas não devem poluir o histórico de Undo.
 6. O usuário sempre pode converter uma cota em geometria comum.
 7. O arquivo deve continuar abrindo sem o Ameno Tools instalado.
+
+## Desenvolvimento local
+
+Validar o manifesto e os arquivos do pacote:
+
+```powershell
+.\tools\validate-package.ps1
+```
+
+Executar o smoke test dentro do 3ds Max 2026 Batch:
+
+```powershell
+.\tools\test-maxscript.ps1
+```
+
+Instalar a cópia de desenvolvimento no perfil do usuário:
+
+```powershell
+.\tools\install-dev.ps1
+```
+
+Depois de reiniciar o Max, abra `Customize User Interface`, procure a categoria `Ameno Tools` e associe a ação `AmenoTools_Open` a uma toolbar ou atalho. O painel deve mostrar a versão, a classe do renderer e um dos estados `suportado`, `experimental` ou `sem adapter`.
+
+O pacote segue o formato oficial `ApplicationPlugins`: [PackageContents.xml](PackageContents.xml) é carregado pelo Max, [AmenoTools.mcr](Contents/macroscripts/AmenoTools.mcr) registra a ação e [ameno_bootstrap.ms](Contents/scripts/startup/ameno_bootstrap.ms) carrega os módulos em ordem explícita.
 
 ## Licença
 

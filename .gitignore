@@ -7,9 +7,10 @@
 *.dmp
 *.log
 
-# Build and release output
+# Build, release, and test output
 /build/
 /dist/
+/.test-output/
 *.zip
 
 # Editors and operating system

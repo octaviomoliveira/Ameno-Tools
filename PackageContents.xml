@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage
+    SchemaVersion="1.0"
+    AutodeskProduct="3ds Max"
+    ProductType="Application"
+    Name="Ameno Tools"
+    Description="Ferramentas de produtividade para 3ds Max."
+    AppVersion="0.0.1"
+    UpgradeCode="{83CC7FC6-D5D6-4870-8DBC-8612A72567E9}"
+    ProductCode="{4E5DF01B-F2FB-4F93-8769-0723A2626591}">
+    <CompanyDetails Name="Ameno" />
+
+    <Components Description="macroscripts parts">
+        <RuntimeRequirements
+            OS="Win64"
+            Platform="3ds Max"
+            SeriesMin="2026"
+            SeriesMax="2026" />
+        <ComponentEntry ModuleName="./Contents/macroscripts/AmenoTools.mcr" />
+    </Components>
+
+    <Components Description="post-start-up scripts parts">
+        <RuntimeRequirements
+            OS="Win64"
+            Platform="3ds Max"
+            SeriesMin="2026"
+            SeriesMax="2026" />
+        <ComponentEntry ModuleName="./Contents/scripts/startup/ameno_bootstrap.ms" />
+    </Components>
+</ApplicationPackage>
