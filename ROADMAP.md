@@ -3,6 +3,7 @@
 ## 0.0.1 — Fundação
 
 - estrutura do pacote `ApplicationPlugins`;
+- manifesto inicial direcionado ao 3ds Max 2026;
 - carregamento previsível de módulos;
 - logger, versão e diagnóstico;
 - MacroScript para abrir o painel;
@@ -50,6 +51,7 @@
 - diagnóstico e reparo;
 - filtro e relatório de cotas manuais;
 - documentação de uso.
+- validação completa no Max 2026.
 
 ## 0.2.0 — Produção de plantas
 
@@ -70,6 +72,15 @@
 - detecção e resolução assistida de sobreposição;
 - auditoria de cotas órfãs ou desatualizadas.
 
+## Futuro — Compatibilidade 2021–2025
+
+- congelar a primeira release estável como referência funcional no Max 2026;
+- inventariar chamadas realmente incompatíveis antes de alterar o produto;
+- priorizar versões conforme usuários e custo de manutenção;
+- criar adapters somente para diferenças comprovadas;
+- testar primeiro o Max 2025 e depois descer até o piso comercial escolhido;
+- publicar limitações por versão sem degradar a experiência do 2026.
+
 ## Futuro — Integração avançada de render
 
 - Render Element/AOV no mesmo passe quando suportado;
@@ -80,7 +91,7 @@
 
 ## 1.0.0 — Produto estável
 
-- compatibilidade formal por versões do Max;
+- matriz formal para cada versão do Max que vier a ser suportada;
 - instalador e atualizador;
 - telemetria somente se opcional e consentida;
 - política de migração de cenas;

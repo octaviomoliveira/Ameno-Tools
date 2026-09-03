@@ -230,11 +230,28 @@ Meta inicial: 100 cotas atualizadas em menos de 1 segundo no equipamento de refe
 
 ## Matriz de compatibilidade
 
-Depois de escolher o alvo:
+O MVP possui uma única plataforma oficialmente suportada:
 
-| Max | Renderer | Criar | Reabrir | Atualizar | Render | Status |
-|---|---|---:|---:|---:|---:|---|
-| a definir | a definir | — | — | — | — | pendente |
+| Max | Instalação/UI | Cena e cotas | Render separado | Frequência |
+|---|---:|---:|---:|---|
+| 2026 | completa | completa | completa | contínua e release candidate |
+
+`Completa` inclui instalação/desinstalação, abertura pelo MacroScript, criação em três cliques, estilos/TextPlus, layers, Undo/Redo, valor manual, save/open, atualização e PNG/EXR com alpha.
+
+O renderer prioritário será acrescentado como segunda dimensão da matriz. Compatibilidade com o Max e compatibilidade com o renderer são aprovações independentes.
+
+### Qualificação futura de versões antigas
+
+Uma versão anterior só entra na lista de suporte após:
+
+- inventário das APIs usadas pela build estável do 2026;
+- prova de instalação e abertura do painel;
+- identificação de funcionalidades que exigem fallback;
+- execução da matriz completa de cotas, persistência e render;
+- cenas cruzadas testadas na direção permitida pelo formato `.max`;
+- limitações publicadas por versão.
+
+O primeiro candidato natural é o Max 2025, que compartilha o sistema novo de menus. A expansão até 2021 será decidida depois, conforme demanda e custo comprovados.
 
 ## Critério de release alpha
 

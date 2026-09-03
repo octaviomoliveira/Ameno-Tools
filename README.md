@@ -9,6 +9,9 @@ Projeto em especificação e fundação técnica. Ainda não existe uma build ex
 Decisões já tomadas:
 
 - MAXScript no primeiro MVP;
+- desenvolvimento principal no 3ds Max 2026;
+- primeira versão oficialmente suportada somente no 3ds Max 2026;
+- arquitetura sem acoplamentos desnecessários ao 2026, para avaliar 2021–2025 depois do MVP;
 - pacote oficial `ApplicationPlugins` desde o início;
 - cotas persistentes no arquivo `.max`;
 - layer `AMENO_COTAS` criada e gerenciada automaticamente;
@@ -23,7 +26,6 @@ Decisões já tomadas:
 
 Decisões pendentes:
 
-- versão principal e versão mínima do 3ds Max;
 - renderizador prioritário;
 - interface apenas em português ou bilíngue;
 - licença e modelo de distribuição;
@@ -38,11 +40,13 @@ Decisões pendentes:
 - [Valores manuais e avisos de viewport](docs/manual-overrides.md)
 - [Formato dos dados de cena](docs/scene-data-schema.md)
 - [Plano de testes](docs/test-plan.md)
+- [Estratégia de versões do 3ds Max](docs/compatibility.md)
 - [Roadmap](ROADMAP.md)
 - [ADR 0001 — MAXScript primeiro](docs/decisions/0001-maxscript-first.md)
 - [ADR 0002 — Layer e saídas de render](docs/decisions/0002-layer-and-render-output.md)
 - [ADR 0003 — Render separado no MVP](docs/decisions/0003-separate-overlay-render-mvp.md)
 - [ADR 0004 — Sobrescritas manuais auditáveis](docs/decisions/0004-auditable-manual-overrides.md)
+- [ADR 0005 — Max 2026 primeiro](docs/decisions/0005-max-2026-first.md)
 
 ## Princípios
 

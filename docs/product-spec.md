@@ -3,6 +3,15 @@
 Status: rascunho 0.1
 Produto-pai: Ameno Tools
 
+## Plataforma-alvo
+
+- desenvolvimento principal: 3ds Max 2026 no Windows;
+- primeira versão suportada: 3ds Max 2026;
+- compatibilidade 2021–2025: avaliação posterior ao MVP, sem limitar a solução atual;
+- renderer prioritário ainda a definir.
+
+O produto usa os recursos adequados do 2026 quando isso melhora a experiência. A separação entre domínio e APIs do host preserva um caminho de portabilidade, descrito em [compatibility.md](compatibility.md), mas o MVP não assume o custo de manter seis versões.
+
 ## Problema
 
 O 3ds Max mede a cena, mas não oferece um fluxo completo para criar cotas gráficas, consistentes e atualizáveis em plantas humanizadas. O usuário termina o render no Max e precisa reconstruir as cotas em outro programa, manter dois arquivos sincronizados e revisar valores manualmente sempre que a planta muda.

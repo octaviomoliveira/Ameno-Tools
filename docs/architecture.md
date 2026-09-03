@@ -63,6 +63,22 @@ Custom Attributes    spline/TextPlus/material
 - pre-render callback;
 - rollout/floater ou painel futuro.
 
+## Estratégia de versões
+
+O MVP é desenvolvido, otimizado e testado no 3ds Max 2026. Pode usar APIs dessa versão quando elas melhorarem a experiência, a robustez ou a velocidade de entrega. Não existe, nesta fase, a obrigação de permanecer dentro da interseção de APIs do Max 2021–2026.
+
+A portabilidade futura é preservada por fronteiras que já fazem sentido para o produto:
+
+- regras de medição e formatação não conhecem widgets do Max;
+- dados de cena têm schema próprio e versionado;
+- menu, mouse tool, viewport, TextPlus, layers e render vivem em adaptadores/serviços;
+- o ponto de entrada é uma ação MacroScript na categoria `Ameno Tools`;
+- nenhuma comparação de versão é adicionada até existir uma segunda implementação real.
+
+O Max 2025 mudou completamente o sistema de menus. Se a portabilidade alcançar versões 2021–2024, o lançamento do painel continuará comum, mas o registro opcional de menu terá um adapter legado. Essa possibilidade não entra no caminho crítico do MVP.
+
+Se surgir um núcleo compilado em C++ no futuro, builds por SDK/release serão avaliados separadamente. A estratégia completa está em [compatibility.md](compatibility.md).
+
 ## Estado da ferramenta de três cliques
 
 ```text
