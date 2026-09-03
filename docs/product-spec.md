@@ -113,6 +113,28 @@ Um estilo deve controlar:
 
 Alterar um estilo atualiza todas as cotas ligadas a ele. O usuário também pode `Desvincular estilo`, criando uma cópia local.
 
+## Editor de estilo
+
+O editor será inspirado no TextPlus do 3ds Max, mas limitado às decisões relevantes para cotas. O usuário edita o estilo Ameno; o app aplica os valores aos TextPlus internos e às splines sem expor os objetos derivados.
+
+O preview mostra a cota completa sobre uma planta simplificada. Mudanças de fonte, tamanho, tracking, espessura e terminal aparecem imediatamente.
+
+Controles principais:
+
+- fonte instalada no Windows/3ds Max;
+- regular, negrito e itálico;
+- tamanho em unidades da cena, pixels ou milímetros impressos;
+- tracking;
+- máscara atrás do texto;
+- cor compartilhada ou separada para texto/linha;
+- espessuras Fina, Normal e Forte, mais ajuste contínuo;
+- terminal por traço arquitetônico, seta cheia, seta aberta, ponto ou nenhum;
+- tamanho, ângulo e posição automática/dentro/fora;
+- presets Arquitetônico, Editorial e Técnico;
+- salvar como novo estilo ou atualizar o estilo vinculado.
+
+O cabeçalho informa quantas cotas estão ligadas ao estilo. Atualizar um estilo compartilhado exige uma confirmação clara; `Salvar como novo` evita mudanças acidentais em toda a cena.
+
 ## Perfis de saída
 
 O diferencial do produto para planta humanizada será separar medida real de tamanho visual.

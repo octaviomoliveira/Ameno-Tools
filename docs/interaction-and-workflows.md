@@ -110,6 +110,57 @@ Selecionar o controlador deve exibir:
 
 No MVP, handles podem ser Point Helpers visíveis somente quando selecionados. Em uma versão C++, podem virar manipuladores nativos.
 
+## Editor de estilo
+
+O editor abre ao clicar no nome do estilo ou em `Editar estilo`. Ele combina três áreas visíveis:
+
+1. preview ao vivo da cota;
+2. Texto, com controles inspirados no TextPlus;
+3. Linhas e Setas, com presets e escolhas visuais.
+
+Não haverá uma reprodução completa do TextPlus. Controles de múltiplas linhas, animação por caractere, extrusão e bevel ficam ocultos porque não ajudam na cotagem.
+
+### Texto
+
+- lista pesquisável de fontes instaladas;
+- fontes recentes e favoritas no topo;
+- regular, bold e italic;
+- tamanho e tracking com sliders mais valor digitável;
+- máscara de fundo;
+- preview usando o TextPlus real sempre que possível;
+- aviso de fonte ausente em outra máquina/render farm.
+
+### Linhas
+
+- botões Fina, Normal e Forte para decisão rápida;
+- slider para ajuste fino;
+- unidade visual em px quando o estilo for screen-based;
+- color picker;
+- opções avançadas recolhidas: extensão gap, overshoot e espessura independente.
+
+### Setas e terminais
+
+Uma grade visual evita dropdown abstrato:
+
+- traço arquitetônico;
+- seta cheia;
+- seta aberta;
+- ponto;
+- nenhuma.
+
+Após escolher, o usuário ajusta tamanho e posição. `Automática` é padrão e move setas para fora quando texto e terminais não cabem.
+
+### Segurança de edição
+
+O editor mostra `24 cotas vinculadas`. As ações são:
+
+- `Aplicar às selecionadas`;
+- `Salvar como novo`;
+- `Atualizar estilo`;
+- `Cancelar`.
+
+Cancelar restaura o preview. Atualizar o estilo informa o alcance antes de reconstruir todas as cotas.
+
 ## Ações que realmente economizam tempo
 
 ### Atualizar tudo antes do render

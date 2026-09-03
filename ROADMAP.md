@@ -33,6 +33,10 @@
 
 - alinhada, horizontal e vertical;
 - estilos globais;
+- editor visual inspirado no TextPlus;
+- fonte, tamanho, tracking, máscara e cor;
+- espessura por presets e valor contínuo;
+- terminais por traço, seta cheia/aberta, ponto ou nenhum;
 - unidades e formatação;
 - atualização automática com debounce;
 - atualização antes do render;

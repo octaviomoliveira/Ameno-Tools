@@ -104,13 +104,25 @@ Se `nodeRef` ficar inválida, `worldFallback` mantém a cota visível e permite 
 | `prefix` | string | texto anterior |
 | `suffix` | string | texto posterior |
 | `fontName` | string | fonte desejada |
+| `fontVariant` | string | variante/família selecionada |
+| `fontFallback` | string | fallback quando ausente |
+| `bold` | boolean | negrito |
+| `italic` | boolean | itálico |
+| `tracking` | float | espaçamento global do TextPlus |
 | `textSizeMode` | enum | world, pixels, printMm |
 | `textSize` | float | valor conforme modo |
+| `textMaskEnabled` | boolean | fundo/máscara atrás do texto |
+| `textMaskPadding` | float | margem da máscara |
+| `textColor` | color | cor do texto |
 | `lineSizeMode` | enum | world, pixels, printMm |
 | `lineThickness` | float | espessura |
+| `extensionThicknessMode` | enum | linked ou independent |
+| `extensionThickness` | float | espessura independente |
 | `lineColor` | color | cor lógica |
 | `terminalType` | enum | tick, arrow, dot, none |
 | `terminalSize` | float | tamanho |
+| `terminalAngle` | float | ângulo do traço/seta |
+| `terminalPosition` | enum | auto, inside, outside |
 | `extensionGap` | float | folga inicial |
 | `extensionOvershoot` | float | prolongamento |
 | `textGap` | float | distância texto/linha |

@@ -101,6 +101,27 @@ Casos de referência:
 - alteração do crop/enquadramento ortográfico;
 - espessura coerente entre resoluções.
 
+## Editor de estilo
+
+- lista fontes instaladas sem travar a abertura;
+- troca de fonte atualiza preview;
+- regular, bold e italic correspondem ao TextPlus;
+- tamanho e tracking coincidem após salvar/reabrir;
+- fonte ausente usa fallback e gera diagnóstico;
+- render farm sem fonte recebe aviso verificável;
+- Fina/Normal/Forte produzem espessuras distintas no perfil ativo;
+- slider de espessura não reconstrói todas as cotas a cada evento;
+- traço, seta cheia, seta aberta, ponto e nenhuma renderizam corretamente;
+- terminais esquerdo/direito são espelhados;
+- posição automática move terminais para fora quando necessário;
+- texto longo não colide silenciosamente com setas;
+- máscara acompanha bounding box e padding;
+- Cancel restaura snapshot;
+- Salvar como novo não altera cotas antigas;
+- Atualizar estilo altera todas as vinculadas em um Undo;
+- multi-seleção representa valores mistos corretamente;
+- valores inválidos são bloqueados sem corromper o estilo.
+
 ## Layers
 
 - primeira cota cria `AMENO_COTAS`;

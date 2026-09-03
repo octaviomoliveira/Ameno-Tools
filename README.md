@@ -32,6 +32,7 @@ Decisões pendentes:
 - [Especificação do produto](docs/product-spec.md)
 - [Arquitetura técnica](docs/architecture.md)
 - [Experiência e fluxos de uso](docs/interaction-and-workflows.md)
+- [Editor de estilos: texto, linhas e setas](docs/style-editor.md)
 - [Formato dos dados de cena](docs/scene-data-schema.md)
 - [Plano de testes](docs/test-plan.md)
 - [Roadmap](ROADMAP.md)

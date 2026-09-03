@@ -305,6 +305,86 @@ Essa assinatura pode ser salva ao lado do overlay ou em metadados/arquivo auxili
 
 O renderer adapter do MVP tem responsabilidade pequena: fornecer material gráfico que preserve cor e alpha. Ele não integra LightMix ou AOV. Se nenhum adapter existir, o app oferece um material genérico e avisa sobre limitações de exposição/tone mapping.
 
+## StyleEditorService
+
+O editor trabalha sobre um `StyleDraft`, não diretamente nos nós da cena.
+
+```text
+estilo persistido
+      ↓ snapshot
+StyleDraft ← controles/preview
+      ↓ aplicar
+validação → persistência → mark dirty → rebuild
+```
+
+Durante sliders e escolha de fontes, somente o preview é atualizado imediatamente. Cotas selecionadas podem receber preview throttled opcional. O commit final agrupa a alteração em um único Undo; Cancel restaura o snapshot sem reconstrução desnecessária.
+
+### TextPlusAdapter
+
+Responsabilidades:
+
+- criar/reparar o TextPlus filho;
+- definir string formatada;
+- aplicar fonte e variante;
+- aplicar bold/italic;
+- aplicar size e tracking;
+- manter alinhamento central;
+- configurar interpolação suficiente para a resolução;
+- calcular bounding box real do texto;
+- informar fonte ausente ou substituída.
+
+O TextPlus continua sendo representação derivada. Editá-lo manualmente não altera o estilo oficial; o diagnóstico oferece `Reaplicar estilo` ou, futuramente, `Capturar aparência`.
+
+### Conversão pixels → mundo
+
+Para câmera ortográfica, o perfil calcula `worldPerPixel` a partir do enquadramento e da resolução. O tamanho visual escolhido no editor vira:
+
+```text
+textSizeWorld = textSizePx * worldPerPixel * fontCalibration
+lineWidthWorld = lineWidthPx * worldPerPixel
+terminalSizeWorld = terminalSizePx * worldPerPixel
+```
+
+`fontCalibration` corrige diferenças de altura aparente entre famílias e é calculado pela bounding box real do TextPlus. O valor fica em cache por fonte/variante.
+
+### LineStyleAdapter
+
+Converte o estilo em Renderable Spline:
+
+- espessura da linha principal;
+- espessura das extensões, vinculada ou independente;
+- cap/segmentos quando aplicável;
+- cor/material;
+- gap inicial e overshoot;
+- elevação Z.
+
+Presets Fina/Normal/Forte são valores relativos ao perfil de saída, não números fixos em unidades do mundo.
+
+### TerminalGeometryFactory
+
+Gera terminais espelhados e consistentes:
+
+- `tick`: segmento inclinado com ângulo configurável;
+- `closedArrow`: triângulo preenchido;
+- `openArrow`: dois segmentos;
+- `dot`: círculo/disco;
+- `none`: sem terminal.
+
+O layout `auto` usa a largura real do texto, gaps e tamanho dos terminais. Se não houver espaço interno, move setas e/ou texto para fora conforme a regra do estilo.
+
+### Atualização em massa
+
+Ao salvar um estilo:
+
+1. validar fonte e valores;
+2. persistir uma nova revisão do estilo;
+3. localizar cotas vinculadas pelo índice de estilo;
+4. marcá-las dirty;
+5. reconstruir em lote com redraw suspenso;
+6. emitir um único redraw e uma entrada de Undo.
+
+Sliders não podem disparar rebuild integral de dezenas de cotas em cada pixel de movimento.
+
 ### Falha segura
 
 Restauração é obrigatória. O código mantém snapshot e flag de operação ativa; callbacks de reset, open, cancel e exceções chamam a mesma rotina idempotente de restore. Uma segunda chamada de restore não deve causar efeitos.
