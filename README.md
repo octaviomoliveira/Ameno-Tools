@@ -15,6 +15,8 @@ Decisões já tomadas:
 - geometria renderizável, não apenas overlay de viewport;
 - MVP com botão `Renderizar Cotas` para gerar overlay transparente independente;
 - nenhuma alteração automática no Beauty, LightMix ou Render Elements do usuário;
+- valores medidos, arredondados e manuais mantidos separadamente;
+- cotas manuais destacadas somente na viewport;
 - dados separados da representação gráfica;
 - arquitetura preparada para núcleo C++ futuro;
 - sem dependência de índices frágeis de vértice no MVP.
@@ -33,12 +35,14 @@ Decisões pendentes:
 - [Arquitetura técnica](docs/architecture.md)
 - [Experiência e fluxos de uso](docs/interaction-and-workflows.md)
 - [Editor de estilos: texto, linhas e setas](docs/style-editor.md)
+- [Valores manuais e avisos de viewport](docs/manual-overrides.md)
 - [Formato dos dados de cena](docs/scene-data-schema.md)
 - [Plano de testes](docs/test-plan.md)
 - [Roadmap](ROADMAP.md)
 - [ADR 0001 — MAXScript primeiro](docs/decisions/0001-maxscript-first.md)
 - [ADR 0002 — Layer e saídas de render](docs/decisions/0002-layer-and-render-output.md)
 - [ADR 0003 — Render separado no MVP](docs/decisions/0003-separate-overlay-render-mvp.md)
+- [ADR 0004 — Sobrescritas manuais auditáveis](docs/decisions/0004-auditable-manual-overrides.md)
 
 ## Princípios
 

@@ -139,6 +139,58 @@ Processo:
 
 O valor canônico e o texto formatado devem ser mantidos separados.
 
+## ValuePresentationService
+
+O serviço resolve o que será exibido sem alterar a medição:
+
+```text
+measuredMm = MeasurementService(...)
+
+switch valueMode
+  measured      → displayMm = measuredMm
+  rounded       → displayMm = roundToIncrement(measuredMm, incrementMm)
+  manualNumeric → displayMm = manualValueMm
+  manualText    → displayText = manualText
+
+deltaMm = displayMm - measuredMm
+formattedText = TextFormatter(displayMm, style)
+```
+
+`measuredMm` nunca é sobrescrito pelo valor informado. A reconstrução da cota atualiza medição e delta, preservando `manualValueMm`.
+
+### Arredondamento previsível
+
+Arredondamento usa incremento explícito em milímetros canônicos e uma regra documentada de midpoint. Não deve depender da quantidade de casas decimais exibidas nem acumular arredondamentos sucessivos.
+
+### Manual numérico versus texto livre
+
+`manualNumeric` mantém unidade, precisão, prefixo e sufixo do estilo. `manualText` ignora formatação e é reservado para casos como `VER LEVANTAMENTO`. A UI oferece numérico primeiro.
+
+## ViewportOverrideOverlay
+
+Advertências manuais são uma camada de feedback, não geometria renderizável.
+
+O overlay usa callback de viewport para desenhar cor âmbar e marcador junto à cota. Alternativamente, helpers não renderizáveis podem ser usados se o desenho por Graphics Window não satisfizer hit-testing/legibilidade. Em ambos os casos:
+
+- nenhum material de render é alterado;
+- `AMENO_COTAS` mantém sua aparência final;
+- o overlay consulta `valueMode` e a preferência global;
+- cota fora da viewport não gera trabalho;
+- redraw não recalcula medição;
+- o callback é registrado uma vez e removido no shutdown.
+
+O desenho deve ser compatível com viewport clara/escura e oferecer cor configurável. O marcador `M` acompanha o texto, mas não entra no TextPlus renderizável.
+
+### Seleção e diagnóstico
+
+Manter índice de `dimensionId` por `valueMode` permite:
+
+- selecionar todas as manuais;
+- enquadrar a próxima;
+- restaurar medido em lote com confirmação;
+- exportar relatório de medido, exibido, delta e motivo;
+- contar overrides sem varrer toda a geometria.
+
 ## Âncoras
 
 ### Mundo

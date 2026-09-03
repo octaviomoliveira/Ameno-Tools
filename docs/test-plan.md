@@ -122,6 +122,27 @@ Casos de referência:
 - multi-seleção representa valores mistos corretamente;
 - valores inválidos são bloqueados sem corromper o estilo.
 
+## Valores medidos, arredondados e manuais
+
+- medido exibe exatamente o valor formatado da geometria;
+- arredondamento de 19,555 m para incremento 0,10 m resulta em 19,60 m;
+- arredondamento não altera `measuredMm`;
+- manual 19,60 m sobre medido 20,00 m produz delta -0,40 m;
+- manual numérico continua obedecendo unidade e precisão do estilo;
+- texto livre permanece separado de manual numérico;
+- mover âncoras recalcula medido e delta, preservando manual;
+- `Usar valor medido` remove override e advertência em um Undo;
+- reabrir cena preserva valor, motivo e estado;
+- cotas manuais aparecem âmbar somente na viewport;
+- marcador manual não aparece no PNG/EXR de cotas;
+- material e cor de render permanecem normais;
+- toggle de advertências não altera dados;
+- cor de advertência é configurável;
+- diagnóstico seleciona e enquadra todas as manuais;
+- restauração em lote exige confirmação;
+- merge e clone preservam ou renovam IDs sem perder override;
+- relatório lista medido, exibido, delta e motivo.
+
 ## Layers
 
 - primeira cota cria `AMENO_COTAS`;

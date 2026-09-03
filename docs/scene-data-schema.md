@@ -66,15 +66,33 @@ Campos sugeridos:
 | `anchorB` | composite | segunda âncora |
 | `offset` | world float | distância assinada da linha |
 | `styleRef` | node/string | referência e GUID do estilo |
-| `manualTextEnabled` | boolean | indica sobrescrita |
-| `manualText` | string | texto opcional |
+| `valueMode` | enum | measured, rounded, manualNumeric, manualText |
+| `manualValueMm` | float | valor numérico informado pelo usuário |
+| `manualText` | string | texto livre avançado |
+| `overrideReason` | string | motivo opcional, como Levantamento |
+| `overrideUpdatedUtc` | string | última alteração manual |
+| `overrideAuthor` | string | identificação opcional |
+| `roundingIncrementMm` | float | incremento quando local à cota |
 | `lastMeasuredMm` | float | último valor canônico válido |
+| `lastDisplayMm` | float | último valor numérico exibido |
+| `lastDeltaMm` | float | exibido menos medido |
 | `lastFormattedText` | string | fallback visual/diagnóstico |
 | `lineNodeRef` | node | spline derivada |
 | `textNodeRef` | node | TextPlus derivado |
 | `markNodeRef` | node | geometria opcional |
 | `createdWith` | string | versão inicial |
 | `lastUpdatedWith` | string | versão mais recente |
+
+## Preferências de viewport
+
+| Campo | Tipo | Função |
+|---|---|---|
+| `showManualOverrides` | boolean | mostra advertências de valor manual |
+| `manualOverrideColor` | color | cor viewport-only, padrão âmbar |
+| `manualOverrideMarker` | enum | M, pencil, dot ou none |
+| `showOverrideDelta` | boolean | mostra delta junto ao marcador |
+
+Essas preferências não controlam materiais e não fazem parte do render.
 
 ## Âncora
 

@@ -28,6 +28,9 @@
 - âncoras mundiais e locais ao objeto;
 - reconstrução ao reabrir a cena;
 - detecção de referência perdida.
+- modos de valor medido, arredondado e manual;
+- aviso viewport-only para valor manual;
+- restauração do valor geométrico;
 
 ## 0.1.0-alpha — MVP interno
 
@@ -45,6 +48,7 @@
 - restauração segura do estado da cena;
 - converter/bake;
 - diagnóstico e reparo;
+- filtro e relatório de cotas manuais;
 - documentação de uso.
 
 ## 0.2.0 — Produção de plantas

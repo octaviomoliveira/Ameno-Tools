@@ -16,10 +16,11 @@ O Ameno Tools deve parecer parte do 3ds Max, mas organizar o trabalho por result
 │ [Contínua] [Geral + parciais]       │
 │ Estilo: Apresentação escura      ▾  │
 ├─ SELEÇÃO ───────────────────────────┤
-│ Valor real: 3,425 m                  │
-│ Texto:      3,43 m                   │
+│ Valor medido: 20,000 m               │
+│ Valor exibido: 19,600 m  ⚠ Manual    │
+│ Diferença: -0,400 m                  │
 │ Afastamento: 35 cm                   │
-│ [Inverter] [Reancorar] [Atualizar]  │
+│ [Usar medido] [Reancorar] [Editar]  │
 ├─ AÇÕES RÁPIDAS ─────────────────────┤
 │ [Atualizar tudo] [Cotas para câmera]│
 │ [Renderizar Cotas] [Converter/Bake] │
@@ -30,6 +31,44 @@ O Ameno Tools deve parecer parte do 3ds Max, mas organizar o trabalho por result
 ```
 
 O painel começa compacto. Se não houver cota selecionada, a área `Seleção` mostra orientação curta. Se houver várias, mostra somente propriedades comuns.
+
+## Edição do valor
+
+Ao clicar em `Valor exibido`, abrir:
+
+```text
+┌─ VALOR DA COTA ────────────────────┐
+│ Valor medido       20,000 m        │
+│                                    │
+│ ( ) Medido                         │
+│ ( ) Arredondado para [0,10 m ▾]    │
+│ (•) Manual          [19,600] m     │
+│                                    │
+│ Diferença           -0,400 m       │
+│ Motivo              [Levantamento] │
+│                                    │
+│ [Usar medido]       [Aplicar]      │
+└────────────────────────────────────┘
+```
+
+Ao aplicar Manual:
+
+- texto da cota passa a mostrar `19,60 m` conforme o estilo;
+- linha/texto recebem overlay âmbar somente na viewport;
+- marcador `M` aparece próximo ao texto;
+- o render continua usando a cor normal;
+- o diagnóstico incrementa `Cotas manuais`.
+
+O toggle `Mostrar valores manuais` fica no cabeçalho do app. Desligá-lo oculta somente a advertência, não modifica o valor exibido.
+
+### Arredondamento
+
+Arredondamento é uma regra explícita e diferente de valor manual. Exemplos:
+
+- `19,555 m` com incremento `0,10 m` → `19,60 m`;
+- `3,423 m` com incremento `0,01 m` → `3,42 m`.
+
+O modo arredondado pode ser definido no estilo ou apenas na cota. Ele não recebe a cor âmbar destinada a intervenção manual, mas o painel continua mostrando o valor medido.
 
 ## Primeiro uso
 

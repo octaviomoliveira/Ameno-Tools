@@ -298,7 +298,9 @@ Durante o render separado, somente `AMENO_COTAS` fica renderizável. O app prese
 - `orphan-both`: ambas desapareceram;
 - `unsupported`: dado criado por versão mais nova;
 - `baked`: convertido em geometria comum;
-- `hidden-by-profile`: oculto pelo perfil/câmera atual.
+- `hidden-by-profile`: oculto pelo perfil/câmera atual;
+- `manual-value`: valor exibido foi substituído manualmente;
+- `rounded-value`: valor exibido segue regra explícita de arredondamento.
 
 Uma cota órfã conserva a última posição válida e aparece no diagnóstico. Nunca deve desaparecer automaticamente.
 
@@ -320,11 +322,45 @@ Uma cota órfã conserva a última posição válida e aparece no diagnóstico. 
 
 ## Sobrescrita segura
 
-Quando o usuário digitar um valor manual, o painel deve mostrar:
+Cada cota possui três modos de apresentação:
 
-- `Valor medido: 3,42 m`;
-- `Texto exibido: 3,40 m`;
-- indicador visual de sobrescrita.
+- `Medido`: exibe o valor geométrico formatado;
+- `Arredondado`: aplica incremento do estilo, como 1 cm, 5 cm ou 10 cm;
+- `Manual`: exibe um número definido pelo usuário, sem alterar a geometria.
+
+Exemplo:
+
+- geometria atual: `20,000 m`;
+- levantamento informado: `19,600 m`;
+- valor exibido: `19,60 m`;
+- diferença registrada: `-0,400 m`.
+
+Quando o usuário definir um valor manual, o painel mostra:
+
+- `Valor medido: 20,000 m`;
+- `Valor exibido: 19,600 m`;
+- `Diferença: -0,400 m`;
+- motivo opcional, como `Levantamento`;
+- botão `Usar valor medido`;
+- indicador visual persistente.
+
+O valor manual deve ser numérico e formatado pelo estilo sempre que possível. Texto livre continua disponível como recurso avançado, mas é um estado diferente.
+
+### Aviso somente na viewport
+
+Cotas em modo Manual recebem uma cor de advertência configurável, inicialmente âmbar, e um pequeno marcador `M` ou ícone de lápis. Esse aviso:
+
+- aparece somente na viewport;
+- nunca altera material, cor ou alpha do render;
+- permanece visível após salvar/reabrir;
+- pode ser ligado/desligado por `Mostrar valores manuais`;
+- aparece no diagnóstico e na seleção por filtro.
+
+No render separado, a cota usa o estilo normal e mostra o valor manual, sem a cor de advertência ou marcador.
+
+### Mudanças posteriores na geometria
+
+Se os objetos ancorados forem movidos, o valor medido é recalculado, mas o manual permanece. O delta é atualizado e a advertência continua. O app não apaga nem substitui a decisão do usuário silenciosamente.
 
 Isso evita que uma correção gráfica seja confundida com uma medida real.
 
@@ -336,6 +372,8 @@ O app deve responder rapidamente:
 - quantas estão desatualizadas;
 - quais perderam referências;
 - quais possuem texto sobrescrito;
+- quais possuem valor manual e seu delta;
+- quais usam arredondamento;
 - quais usam estilos ausentes;
 - quais não aparecem na câmera atual;
 - quais foram criadas por versão incompatível.
