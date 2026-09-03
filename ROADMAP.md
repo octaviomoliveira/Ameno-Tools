@@ -16,6 +16,8 @@
 - cota alinhada no plano XY;
 - valor em centímetros;
 - traço arquitetônico;
+- criação automática da layer `AMENO_COTAS`;
+- modo de saída `Beauty`;
 - criação em um único bloco de Undo.
 
 ## 0.0.3 — Persistência
@@ -33,6 +35,9 @@
 - unidades e formatação;
 - atualização automática com debounce;
 - atualização antes do render;
+- modos Beauty, LightMix, Element e Viewport only;
+- máscara de cotas no mesmo render;
+- fallback Annotation RGBA em segundo passe;
 - converter/bake;
 - diagnóstico e reparo;
 - documentação de uso.
@@ -42,7 +47,9 @@
 - cotas contínuas e em cadeia;
 - dimensionamento por seleção;
 - perfis de saída em pixels e impressão;
-- render pass de anotações;
+- adapters de Annotation RGBA para os renderizadores priorizados;
+- integração validada com LightMix;
+- nomes e paths automáticos para Render Elements/AOVs;
 - presets por escritório/projeto;
 - localização português/inglês.
 

@@ -101,6 +101,41 @@ Casos de referência:
 - alteração do crop/enquadramento ortográfico;
 - espessura coerente entre resoluções.
 
+## Layers
+
+- primeira cota cria `AMENO_COTAS`;
+- cotas seguintes reutilizam a layer;
+- layer de usuário com nome conflitante não é apropriada;
+- layer renomeada continua sendo encontrada;
+- layer apagada é recriada sem perder cotas;
+- nós gráficos movidos para outra layer são reparados;
+- objetos do usuário nunca são movidos para `AMENO_COTAS`;
+- layer corrente anterior é restaurada após criação;
+- ocultar, congelar e bloquear manualmente são respeitados.
+
+## Saída de render e LightMix
+
+- integrada aparece no Beauty nativo;
+- integrada aparece também no LightMix escolhido;
+- element separado pode excluir cotas do canal final;
+- integrada + separada produz ambos;
+- viewport only não aparece no render;
+- Mask possui alpha e antialiasing corretos;
+- Annotation RGBA preserva cor e transparência;
+- alterar intensidade/cor no LightMix não muda a identidade gráfica das cotas;
+- cotas não aparecem como grupo de luz controlável;
+- self-illumination do renderer não contamina o overlay;
+- preview `LightMix + overlay` coincide com a cópia achatada;
+- trocar entre LightMix A/B conserva o mesmo overlay;
+- fallback de segundo passe restaura a cena após sucesso, erro e cancelamento;
+- Object IDs do usuário não são sobrescritos silenciosamente;
+- Render Elements do usuário não são removidos, renomeados ou reordenados;
+- element Ameno existente é reutilizado sem duplicação;
+- paths com tokens geram nomes previsíveis;
+- render de animação inclui frame e LightMix corretos;
+- render farm encontra pacote, materiais, elements e paths;
+- color management do overlay é consistente com o canal final.
+
 ## Renderizadores
 
 Para cada renderizador oficialmente suportado:
@@ -109,6 +144,8 @@ Para cada renderizador oficialmente suportado:
 - TextPlus aparece;
 - material não recebe iluminação indevida;
 - alpha correto no overlay;
+- integração LightMix testada quando disponível;
+- Self Illumination/LightSelect não altera cotas involuntariamente;
 - motion blur/DOF não afetam cotas quando desabilitados pelo perfil;
 - render local e render farm usam o mesmo pacote;
 - cena sem adapter apresenta diagnóstico claro.

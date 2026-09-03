@@ -11,7 +11,9 @@ Decisões já tomadas:
 - MAXScript no primeiro MVP;
 - pacote oficial `ApplicationPlugins` desde o início;
 - cotas persistentes no arquivo `.max`;
+- layer `AMENO_COTAS` criada e gerenciada automaticamente;
 - geometria renderizável, não apenas overlay de viewport;
+- saída no Beauty, LightMix, Render Element/AOV ou somente viewport;
 - dados separados da representação gráfica;
 - arquitetura preparada para núcleo C++ futuro;
 - sem dependência de índices frágeis de vértice no MVP.
@@ -33,6 +35,7 @@ Decisões pendentes:
 - [Plano de testes](docs/test-plan.md)
 - [Roadmap](ROADMAP.md)
 - [ADR 0001 — MAXScript primeiro](docs/decisions/0001-maxscript-first.md)
+- [ADR 0002 — Layer e saídas de render](docs/decisions/0002-layer-and-render-output.md)
 
 ## Princípios
 

@@ -42,6 +42,12 @@ Campos sugeridos:
 | `activeCameraHandle` | integer/ref | câmera principal |
 | `projectName` | string | nome opcional |
 | `lastValidationUtc` | string | auditoria mais recente |
+| `dimensionLayerName` | string | último nome conhecido da layer de cotas |
+| `systemLayerName` | string | último nome conhecido da layer interna |
+| `deliveryChannel` | enum | Beauty, LightMix ou composição externa |
+| `outputMode` | enum | integrada, separada, ambas ou viewport |
+| `elementKind` | enum | mask ou annotationRGBA |
+| `renderAdapterId` | string | adapter usado na configuração |
 
 ## Cota
 
@@ -111,6 +117,35 @@ Se `nodeRef` ficar inválida, `worldFallback` mantém a cota visível e permite 
 | `textFitRule` | enum | inside, outsideWhenNeeded, alwaysOutside |
 | `zOffset` | float | separação do plano |
 | `materialRole` | string | chave para provider |
+
+## Configuração de render
+
+| Campo | Tipo | Função |
+|---|---|---|
+| `deliveryChannel` | enum | nativeBeauty, activeLightMix, both ou externalComposite |
+| `lightMixElementRef` | maxObject/string | LightMix escolhido pelo usuário |
+| `lightMixElementName` | string | fallback para diagnóstico |
+| `outputMode` | enum | integrated, separate, integratedAndSeparate, viewportOnly |
+| `elementKind` | enum | mask ou annotationRGBA |
+| `elementName` | string | nome gerenciado pelo Ameno |
+| `outputPathPattern` | string | path com tokens permitidos |
+| `fileFormat` | enum | EXR, PNG ou formato suportado |
+| `alphaMode` | enum | straight ou premultiplied |
+| `occlusionMode` | enum | sceneDepth ou alwaysOnTop |
+| `compositePreview` | boolean | mostrar overlay sobre canal final |
+| `flattenFinalCopy` | boolean | gerar cópia achatada opcional |
+| `independentFromLightMix` | boolean | impedir alteração pelos grupos de luz |
+| `includeInReflections` | boolean | reflexão |
+| `includeInRefractions` | boolean | refração |
+| `castShadows` | boolean | sombra projetada |
+| `receiveShadows` | boolean | sombra recebida |
+| `affectGI` | boolean | contribuição de GI |
+| `motionBlur` | boolean | motion blur |
+| `depthOfField` | boolean | profundidade de campo |
+| `adapterId` | string | adapter renderer-specific |
+| `adapterVersion` | integer | versão da configuração |
+
+Paths não serão executados como código. Tokens fora da whitelist serão rejeitados, e paths relativos serão resolvidos junto à saída principal ou ao projeto.
 
 ## Custom Attributes
 

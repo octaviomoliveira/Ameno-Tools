@@ -56,6 +56,9 @@ Custom Attributes    spline/TextPlus/material
 - splines renderizáveis;
 - TextPlus;
 - material provider por renderizador;
+- layer manager;
+- render output adapter por renderizador;
+- LightMix/composite adapter;
 - Node Event callbacks;
 - pre-render callback;
 - rollout/floater ou painel futuro.
@@ -173,6 +176,19 @@ O controlador é a raiz. Apagar o controlador remove sua representação; apagar
 
 Uma cota não deve depender do nome dos nós. IDs e referências são a identidade; nomes servem apenas para inspeção humana.
 
+## Layers
+
+O `LayerService` resolve ou cria:
+
+```text
+AMENO_COTAS   representação renderizável
+AMENO_SYSTEM  controladores, estilos e metadados não renderizáveis
+```
+
+O nome é uma convenção visível, não a única identidade. Ao criar ou reconstruir uma cota, o serviço valida propriedade, resolve conflitos, adiciona somente os nós gerados e restaura a layer corrente anterior. Assim, objetos criados depois pelo usuário não caem acidentalmente em `AMENO_COTAS`.
+
+Se a layer for renomeada, a referência registrada continua válida. Se for apagada, o diagnóstico recria uma layer gerenciada e reatribui os nós. Estados explícitos de visibilidade, freeze e lock são respeitados.
+
 ## Atualização associativa
 
 ### Índice reverso
@@ -226,6 +242,106 @@ Perfis previstos:
 - `screen-pixels`: tamanhos derivados da câmera ortográfica e resolução;
 - `print-mm`: tamanhos derivados do formato físico e DPI;
 - `overlay-pass`: material e visibilidade próprios para composição.
+
+## Pipeline de saída
+
+O `RenderOutputService` recebe uma política neutra:
+
+```text
+deliveryChannel: nativeBeauty | activeLightMix | both | externalComposite
+outputMode: integrated | separate | integratedAndSeparate | viewportOnly
+elementKind: mask | annotationRGBA
+occlusionMode: sceneDepth | alwaysOnTop
+alphaMode: straight | premultiplied
+```
+
+Ele seleciona um `IRenderOutputAdapter` compatível com o renderer ativo.
+
+### Integrated
+
+As cotas precisam aparecer no canal de entrega, que pode ser o Beauty nativo ou um LightMix. `Aparece no RGB original` não é condição suficiente para aprovação.
+
+### Mask
+
+O adapter atribui seleção ou Object ID aos nós Ameno e cria/reutiliza `AMENO_COTAS_MASK`. IDs existentes do usuário não podem ser sobrescritos sem mapeamento e restauração.
+
+### Annotation RGBA
+
+Contém cor real, alpha e antialiasing. Quando o renderer suporta AOV/LPE/texmap adequado no mesmo passe, o adapter o configura. Essa capacidade é declarada e testada por renderer; nunca presumida.
+
+### Segundo passe
+
+Fallback renderer-agnostic:
+
+1. atualizar todas as cotas;
+2. salvar visibilidade, materiais, câmera, resolução, frame, paths e color management;
+3. isolar a saída de anotação;
+4. renderizar RGBA transparente;
+5. restaurar todo o estado mesmo após erro ou cancelamento;
+6. impedir recursão do pre-render.
+
+O segundo passe é exibido claramente no painel e não pode modificar permanentemente a cena.
+
+## LightMix
+
+LightMix é tratado como canal de entrega e não como sinônimo de Beauty. O adapter deve detectar:
+
+- se há LightMix ativo;
+- quais LightMix/LightSelect elements existem;
+- qual canal o usuário considera final;
+- se self-illumination é agrupada separadamente;
+- se a composição final pode receber overlay sem novo render.
+
+As cotas não devem ser tratadas como luzes. Em V-Ray, LightMix cria canais de Environment e Self Illumination; em Corona, materiais luminosos também podem participar de LightSelect/LightMix. Se usarmos emissão para deixar a cota independente da iluminação, ela pode cair em Self Illumination e ser alterada pelo LightMix. Por isso, a estratégia padrão é `overlay after LightMix`:
+
+```text
+Beauty/LightMix final
+        +
+AMENO_COTAS_RGBA
+        =
+preview/saída achatada opcional
+```
+
+O Ameno mantém o overlay original separado e pode gerar uma prévia composta. Assim o LightMix continua livre para mudar intensidades, cores e ambientes sem alterar a identidade gráfica das cotas.
+
+### Integração direta opcional
+
+Se um renderer oferecer um canal de composição que permita incluir o overlay depois do LightMix sem registrá-lo como luz, o adapter pode habilitar `integrated`. Esse caminho só será marcado como suportado após teste de:
+
+- cor constante;
+- alpha correto;
+- denoise;
+- tone mapping;
+- bloom/glare;
+- salvamento em EXR/CXR;
+- render interativo e render farm.
+
+### Capacidades do adapter
+
+Cada adapter declara:
+
+- mask no mesmo passe;
+- RGBA no mesmo passe;
+- overlay após LightMix;
+- flatten opcional do canal final;
+- alpha antialiasing;
+- IPR e render farm;
+- formatos e limitações.
+
+Se o modo pedido não existir, o app propõe Mask ou segundo passe antes do render.
+
+## Render Element Manager
+
+O MAXScript pode consultar, adicionar, habilitar e configurar paths de Render Elements. O Ameno procura primeiro um element próprio existente e nunca chama operações globais que apaguem elements do usuário.
+
+Regras:
+
+- nomes reservados começam com `AMENO_`;
+- classe, nome e configuração são validados;
+- elements do usuário não são removidos, renomeados ou reordenados;
+- troca de renderer invalida somente o adapter, não as cotas;
+- paths e tokens são validados antes do batch render;
+- diagnóstico informa se a saída é Mask, RGBA ou segundo passe.
 
 ## Materiais
 

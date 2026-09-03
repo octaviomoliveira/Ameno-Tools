@@ -22,7 +22,7 @@ O Ameno Tools deve parecer parte do 3ds Max, mas organizar o trabalho por result
 │ [Inverter] [Reancorar] [Atualizar]  │
 ├─ AÇÕES RÁPIDAS ─────────────────────┤
 │ [Atualizar tudo] [Cotas para câmera]│
-│ [Render pass]    [Converter/Bake]   │
+│ [Render output]  [Converter/Bake]   │
 ├─ DIAGNÓSTICO ───────────────────────┤
 │ ⚠ 1 referência perdida              │
 │ [Examinar] [Reparar]                 │
@@ -43,6 +43,8 @@ Ao abrir pela primeira vez:
 6. mostrar `Tudo pronto` ou uma lista objetiva do que precisa ser ajustado.
 
 O botão `Preparar esta cena` cria somente infraestrutura do Ameno. Não altera unidades, renderizador ou objetos do usuário sem confirmação explícita.
+
+Ao preparar, cria `AMENO_COTAS` e `AMENO_SYSTEM`, configura o estilo inicial e apresenta as capacidades de Beauty, LightMix e Render Elements do renderer atual.
 
 ## Criação comum
 
@@ -152,6 +154,59 @@ Alternar:
 - somente selecionadas.
 
 Esse fluxo facilita composição, correção de cor e versões com/sem informação comercial.
+
+## Painel Render Output
+
+```text
+┌─ SAÍDA DAS COTAS ──────────────────┐
+│ Canal final                        │
+│ [LightMix ativo ▾]                 │
+│                                    │
+│ Modo                               │
+│ (•) Integrada + separada           │
+│ ( ) Integrada                      │
+│ ( ) Somente element                │
+│ ( ) Somente viewport               │
+│                                    │
+│ Element: [Annotation RGBA ▾]       │
+│ [✓] Alpha antialiasing             │
+│ [✓] Sempre por cima                │
+│ [✓] Cor independente do LightMix   │
+│ Formato: [EXR 16-bit ▾]            │
+│                                    │
+│ Renderer: Corona                   │
+│ RGBA no mesmo passe: não           │
+│ Fallback: segundo passe disponível │
+│                                    │
+│ [Configurar] [Testar saída]        │
+└────────────────────────────────────┘
+```
+
+`Testar saída` valida em resolução reduzida se as cotas aparecem no canal final escolhido e no element separado. Isso evita descobrir somente após o render que o Beauty contém cotas, mas o LightMix entregue não.
+
+## Preview de composição
+
+Quando o canal final for LightMix, o app oferece:
+
+- visualizar LightMix sem cotas;
+- visualizar `LightMix + AMENO_COTAS_RGBA`;
+- salvar apenas o overlay;
+- salvar uma cópia achatada;
+- alternar entre diferentes LightMix preservando o mesmo overlay.
+
+O overlay separado é sempre preservado, mesmo quando uma versão achatada é gerada.
+
+## Controles da layer
+
+No cabeçalho:
+
+- olho: ligar/desligar `AMENO_COTAS`;
+- freeze/lock: proteger seleção acidental;
+- alvo: selecionar todas as cotas;
+- enquadrar: localizar cotas fora da câmera;
+- reparar: devolver nós Ameno movidos para outra layer.
+
+O app respeita alterações manuais. `Reparar` só muda a cena quando solicitado ou ao reconstruir um nó próprio.
 
 ## Fluxos por cenário
 
