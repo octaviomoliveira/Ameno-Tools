@@ -11,6 +11,7 @@ global AmenoDimensionGraphics
 global AmenoDimensionCA
 global AmenoDimensionRecord
 global AmenoStyleService
+global AmenoAnchorService
 
 struct AmenoDimensionAuditRecord
 (
@@ -23,7 +24,11 @@ struct AmenoDimensionAuditRecord
     displayText = "",
     deltaText = "",
     manualReason = "",
-    isManual = false
+    isManual = false,
+    anchorType = "world",
+    anchorDesc = "Mundial",
+    isOrphan = false,
+    orphanReason = ""
 )
 
 struct AmenoGraphicDimensionRecord
@@ -518,6 +523,33 @@ struct AmenoDimensionGraphicsService
             )
         )
 
+        -- E8: Informações de âncoras e órfãs
+        if record != undefined then
+        (
+            audit.isOrphan = record.isOrphan
+            audit.orphanReason = record.orphanReason
+            audit.anchorType = record.anchorType
+
+            if record.anchorType == "world" or (record.nodeA == undefined and record.nodeB == undefined and not record.isOrphan) then
+            (
+                audit.anchorDesc = "Mundial"
+            )
+            else
+            (
+                local nameA = if record.nodeA != undefined and isValidNode record.nodeA then record.nodeA.name else (if (record.anchorType == "nodeA" or record.anchorType == "both") then "[Nó A excluído]" else "Livre")
+                local nameB = if record.nodeB != undefined and isValidNode record.nodeB then record.nodeB.name else (if (record.anchorType == "nodeB" or record.anchorType == "both") then "[Nó B excluído]" else "Livre")
+                audit.anchorDesc = nameA + " · " + nameB
+                if audit.isOrphan do audit.anchorDesc += " [ÓRFÃ]"
+            )
+        )
+        else
+        (
+            audit.isOrphan = false
+            audit.orphanReason = ""
+            audit.anchorDesc = "Mundial"
+            audit.anchorType = "world"
+        )
+
         audit
     ),
 
@@ -533,7 +565,8 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
-    fn createController pointA pointB offsetPoint systemLayer role:"test" outputUnit:#meters precision:2 styleId:"default" =
+    fn createController pointA pointB offsetPoint systemLayer role:"test" outputUnit:#meters precision:2 styleId:"default" \
+        anchorType:"world" nodeA:undefined localPointA:undefined nodeB:undefined localPointB:undefined =
     (
         local controller = Point name:(uniqueName "AMENO_DIM_CTRL_") size:5.0
         local dimensionId = "dimension-" + (controller.handle as string)
@@ -545,7 +578,7 @@ struct AmenoDimensionGraphicsService
         if AmenoDimensionCA != undefined do
         (
             local rec = AmenoDimensionRecord()
-            rec.schemaVersion = schemaVersion
+            rec.schemaVersion = 3
             rec.dimensionId = dimensionId
             rec.dimensionRole = (role as string)
             rec.pointA = pointA
@@ -562,6 +595,14 @@ struct AmenoDimensionGraphicsService
             rec.lastMeasuredMm = 0.0
             rec.lastDeltaMm = 0.0
             rec.styleId = styleId
+
+            rec.anchorType = (anchorType as string)
+            rec.nodeA = nodeA
+            rec.localPointA = if localPointA != undefined then localPointA else [0, 0, 0]
+            rec.nodeB = nodeB
+            rec.localPointB = if localPointB != undefined then localPointB else [0, 0, 0]
+            rec.isOrphan = false
+            rec.orphanReason = ""
 
             AmenoDimensionCA.applyCA controller rec
         )
@@ -622,6 +663,11 @@ struct AmenoDimensionGraphicsService
             decorateGraphicNode markerNode dimensionId "marker" dimensionsLayer
             try (lineNode.wirecolor = (color 245 166 35)) catch ()
             try (textNode.wirecolor = (color 245 166 35)) catch ()
+        )
+        else if audit != undefined and audit.isOrphan then
+        (
+            try (lineNode.wirecolor = (color 230 70 70)) catch ()
+            try (textNode.wirecolor = (color 230 70 70)) catch ()
         )
         else
         (
@@ -710,11 +756,29 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
-    fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" =
+    fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" \
+        anchorType:"world" nodeA:undefined localPointA:undefined nodeB:undefined localPointB:undefined =
     (
         local sceneState = ensureSceneReady()
 
         if sceneState.status != #ready then throw ("Ameno não conseguiu preparar a cena: " + sceneState.detail)
+
+        local resolvedAnchorType = anchorType
+        local resolvedLocalA = localPointA
+        local resolvedLocalB = localPointB
+
+        if nodeA != undefined and isValidNode nodeA do
+        (
+            if resolvedLocalA == undefined do resolvedLocalA = pointA * (inverse nodeA.transform)
+        )
+        if nodeB != undefined and isValidNode nodeB do
+        (
+            if resolvedLocalB == undefined do resolvedLocalB = pointB * (inverse nodeB.transform)
+        )
+
+        if nodeA != undefined and nodeB != undefined then resolvedAnchorType = "both"
+        else if nodeA != undefined then resolvedAnchorType = "nodeA"
+        else if nodeB != undefined then resolvedAnchorType = "nodeB"
 
         local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
         if not layout.valid then throw ("Não foi possível criar a cota: " + layout.errorMessage)
@@ -726,7 +790,8 @@ struct AmenoDimensionGraphicsService
         (
             undo "Ameno: criar cota" on
             (
-                controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId
+                controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId \
+                    anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA nodeB:nodeB localPointB:resolvedLocalB
                 local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
                 if AmenoDimensionCA != undefined do
                 (
@@ -889,6 +954,21 @@ struct AmenoDimensionGraphicsService
             offsetPoint = record.offsetPoint
             try (outputUnit = (record.outputUnit as name)) catch ()
             precision = record.precision
+
+            -- E8: Resolve âncoras para obter coordenadas mundiais atualizadas
+            local resolved = AmenoDimensionCA.resolvePoints record
+            if resolved != undefined do
+            (
+                pointA = resolved.pointA
+                pointB = resolved.pointB
+                offsetPoint = resolved.offsetPoint
+                record.pointA = resolved.pointA
+                record.pointB = resolved.pointB
+                record.offsetPoint = resolved.offsetPoint
+                record.isOrphan = resolved.isOrphan
+                record.orphanReason = resolved.orphanReason
+                AmenoDimensionCA.applyCA controller record
+            )
         )
         else
         (
@@ -1066,6 +1146,33 @@ struct AmenoDimensionGraphicsService
         )
 
         removedCount
+    ),
+
+    fn reanchorDimension controller whichPoint targetNode targetWorldPoint =
+    (
+        if ::AmenoAnchorService != undefined then
+        (
+            ::AmenoAnchorService.reanchorDimension controller whichPoint targetNode targetWorldPoint
+        )
+        else false
+    ),
+
+    fn selectAnchors controller =
+    (
+        if ::AmenoAnchorService != undefined then
+        (
+            ::AmenoAnchorService.selectAnchors controller
+        )
+        else false
+    ),
+
+    fn repairOrphans =
+    (
+        if ::AmenoAnchorService != undefined then
+        (
+            ::AmenoAnchorService.repairOrphans()
+        )
+        else 0
     )
 )
 

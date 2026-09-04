@@ -91,6 +91,21 @@ fn AmenoRefreshMainPanel =
                 AmenoMainPanelRollout.edtReason.enabled = true
                 AmenoMainPanelRollout.btnApplyMode.enabled = true
                 AmenoMainPanelRollout.btnResetMeasured.enabled = true
+
+                -- E8: Atualiza informações de âncoras e órfãs
+                AmenoMainPanelRollout.lblAnchors.text = "Âncoras: " + audit.anchorDesc
+                if audit.isOrphan then
+                (
+                    AmenoMainPanelRollout.lblOrphanStatus.text = "[ALERTA] " + audit.orphanReason
+                )
+                else
+                (
+                    AmenoMainPanelRollout.lblOrphanStatus.text = "Status: Âncoras sincronizadas"
+                )
+
+                AmenoMainPanelRollout.btnReanchorA.enabled = true
+                AmenoMainPanelRollout.btnReanchorB.enabled = true
+                AmenoMainPanelRollout.btnSelectAnchors.enabled = true
             )
         )
         else
@@ -113,11 +128,18 @@ fn AmenoRefreshMainPanel =
             AmenoMainPanelRollout.edtReason.enabled = false
             AmenoMainPanelRollout.btnApplyMode.enabled = false
             AmenoMainPanelRollout.btnResetMeasured.enabled = false
+
+            -- E8: Limpa informações de âncoras
+            AmenoMainPanelRollout.lblAnchors.text = "Âncoras: -"
+            AmenoMainPanelRollout.lblOrphanStatus.text = "Status: -"
+            AmenoMainPanelRollout.btnReanchorA.enabled = false
+            AmenoMainPanelRollout.btnReanchorB.enabled = false
+            AmenoMainPanelRollout.btnSelectAnchors.enabled = false
         )
     )
 )
 
-rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:770
+rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:915
 (
     local styleIds = #()
 
@@ -143,7 +165,7 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:770
     button btnStyleEditor "Editor de Estilos..." pos:[26,376] width:328 height:24
     label lblTestHint "Preview temporário; Esc/botão direito cancela." pos:[26,408] width:320 height:18 align:#left
 
-    groupBox grpAudit "Inspeção e Estilos (E6 / E7)" pos:[12,448] width:356 height:272
+    groupBox grpAudit "Inspeção e Estilos (E6 / E7)" pos:[12,448] width:356 height:260
     label lblSelName "Selecione uma cota na cena para editar." pos:[26,468] width:320 height:18 align:#left
     label lblMeasured "Medido: -" pos:[26,488] width:150 height:18 align:#left
     label lblDisplay "Exibido: -" pos:[186,488] width:160 height:18 align:#left
@@ -155,14 +177,22 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:770
     edittext edtManualText "Texto:" pos:[26,594] width:320 height:18 text:""
     edittext edtReason "Motivo:" pos:[26,616] width:320 height:18 text:""
 
-    label lblStyle "Estilo:" pos:[26,648] width:40 height:18
-    dropdownList ddlSelStyle "" pos:[68,644] width:180 height:21
-    button btnApplySelStyle "Aplicar Estilo" pos:[254,644] width:100 height:22
+    label lblStyle "Estilo:" pos:[26,644] width:40 height:18
+    dropdownList ddlSelStyle "" pos:[68,640] width:180 height:21
+    button btnApplySelStyle "Aplicar Estilo" pos:[254,640] width:100 height:22
 
-    button btnApplyMode "Aplicar Alteração" pos:[26,680] width:156 height:24
-    button btnResetMeasured "Restaurar Medido" pos:[198,680] width:156 height:24
+    button btnApplyMode "Aplicar Alteração" pos:[26,672] width:156 height:24
+    button btnResetMeasured "Restaurar Medido" pos:[198,672] width:156 height:24
 
-    button btnClose "Fechar" pos:[278,730] width:90 height:24
+    groupBox grpAnchors "Âncoras e Reatividade (E8)" pos:[12,718] width:356 height:142
+    label lblAnchors "Âncoras: -" pos:[26,738] width:320 height:18 align:#left
+    label lblOrphanStatus "Status: -" pos:[26,758] width:320 height:18 align:#left
+    button btnReanchorA "Reancorar A" pos:[26,782] width:100 height:24
+    button btnReanchorB "Reancorar B" pos:[134,782] width:100 height:24
+    button btnSelectAnchors "Selecionar" pos:[242,782] width:112 height:24
+    button btnRepairOrphans "Reparar Cotas Órfãs" pos:[26,816] width:328 height:24
+
+    button btnClose "Fechar" pos:[278,874] width:90 height:24
 
     on AmenoMainPanelRollout open do
     (
@@ -372,6 +402,80 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:770
         )
     )
 
+    on btnReanchorA pressed do
+    (
+        global AmenoApp
+        global AmenoDimensionCA
+        global AmenoRefreshMainPanel
+
+        if AmenoApp != undefined then
+        (
+            local ctrl = AmenoApp.getSelectedDimensionController()
+            if ctrl != undefined then
+            (
+                local picked = pickObject prompt:"Ameno Dimensions: clique no objeto para ancorar o Ponto A (Esc cancela)"
+                if picked != undefined and isValidNode picked do
+                (
+                    local rec = if AmenoDimensionCA != undefined then AmenoDimensionCA.readCA ctrl else undefined
+                    local curPt = if rec != undefined then rec.pointA else [0, 0, 0]
+                    AmenoApp.reanchorDimension ctrl #pointA picked curPt
+                    AmenoRefreshMainPanel()
+                )
+            )
+        )
+    )
+
+    on btnReanchorB pressed do
+    (
+        global AmenoApp
+        global AmenoDimensionCA
+        global AmenoRefreshMainPanel
+
+        if AmenoApp != undefined then
+        (
+            local ctrl = AmenoApp.getSelectedDimensionController()
+            if ctrl != undefined then
+            (
+                local picked = pickObject prompt:"Ameno Dimensions: clique no objeto para ancorar o Ponto B (Esc cancela)"
+                if picked != undefined and isValidNode picked do
+                (
+                    local rec = if AmenoDimensionCA != undefined then AmenoDimensionCA.readCA ctrl else undefined
+                    local curPt = if rec != undefined then rec.pointB else [0, 0, 0]
+                    AmenoApp.reanchorDimension ctrl #pointB picked curPt
+                    AmenoRefreshMainPanel()
+                )
+            )
+        )
+    )
+
+    on btnSelectAnchors pressed do
+    (
+        global AmenoApp
+
+        if AmenoApp != undefined then
+        (
+            local ctrl = AmenoApp.getSelectedDimensionController()
+            if ctrl != undefined then
+            (
+                local ok = AmenoApp.selectAnchors ctrl
+                if not ok do displayTempPrompt "Ameno Dimensions: a cota selecionada não possui âncoras em objetos." 1800
+            )
+        )
+    )
+
+    on btnRepairOrphans pressed do
+    (
+        global AmenoApp
+        global AmenoRefreshMainPanel
+
+        if AmenoApp != undefined then
+        (
+            local repCount = AmenoApp.repairOrphans()
+            messageBox ("Cotas órfãs reparadas e convertidas para coordenadas mundiais: " + (repCount as string)) title:"Ameno Dimensions"
+            AmenoRefreshMainPanel()
+        )
+    )
+
     on btnClose pressed do
     (
         destroyDialog AmenoMainPanelRollout
@@ -382,5 +486,5 @@ fn AmenoShowMainPanel =
 (
     try (destroyDialog AmenoMainPanelRollout) catch ()
 
-    createDialog AmenoMainPanelRollout width:380 height:770 style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) lockWidth:true lockHeight:true
+    createDialog AmenoMainPanelRollout width:380 height:915 style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) lockWidth:true lockHeight:true
 )

@@ -12,6 +12,7 @@ global AmenoDimensionTool
 global AmenoDimensionMouseTool
 global AmenoStyleService
 global AmenoStyleRecord
+global AmenoAnchorService
 
 (
     local testFile = getSourceFileName()
@@ -33,6 +34,7 @@ global AmenoStyleRecord
     if AmenoDimensionGraphics == undefined then throw "Construtor gráfico de cotas não foi carregado pelo bootstrap."
     if AmenoDimensionTool == undefined then throw "Ferramenta interativa E4 não foi carregada pelo bootstrap."
     if (classOf AmenoDimensionMouseTool) != MouseTool then throw "MouseTool E4 não foi registrado."
+    if AmenoAnchorService == undefined then throw "Serviço de âncoras E8 não foi carregado pelo bootstrap."
 
     local coronaInfo = AmenoRendererProbe.classify "CoronaRenderer"
     local vrayCpuInfo = AmenoRendererProbe.classify "V_Ray_7_Hotfix_1"
@@ -469,7 +471,141 @@ global AmenoStyleRecord
     local recAfterCtrl = AmenoDimensionCA.readCA dimSelTest.controller
     if recAfterCtrl.styleId != "technical" then throw "E7: Estilo após applyStyleToDimension não é technical."
 
+    -- E8 — Âncoras Geométricas, Reatividade, Cotas Órfãs e Diagnóstico
+    resetMaxFile #noPrompt
+    AmenoApp.prepareScene()
+    if AmenoAnchorService == undefined then throw "E8: AmenoAnchorService não está disponível."
+
+    -- 1. Criação de nós e cota associativa
+    local boxA = box name:"Wall_A" pos:[0, 0, 0] width:20 length:20 height:50
+    local boxB = box name:"Wall_B" pos:[200, 0, 0] width:20 length:20 height:50
+    local dimE8 = AmenoDimensionGraphics.createDimension [0, 0, 0] [200, 0, 0] [0, 40, 0] nodeA:boxA nodeB:boxB
+    local ctrlE8 = dimE8.controller
+    local dimE8Id = dimE8.dimensionId
+
+    local caE8 = AmenoDimensionCA.readCA ctrlE8
+    if caE8.anchorType != "both" then throw "E8: anchorType deveria ser both."
+    if caE8.nodeA != boxA or caE8.nodeB != boxB then throw "E8: Referências aos nós de ancoragem incorretas."
+    if caE8.isOrphan != false then throw "E8: Cota recém-criada não deve ser órfã."
+
+    local auditE8 = AmenoDimensionGraphics.getDimensionAudit ctrlE8
+    if auditE8.anchorDesc != "Wall_A · Wall_B" then throw ("E8: anchorDesc incorreto: " + auditE8.anchorDesc)
+    if not (AmenoDimensionMath.nearlyEqual auditE8.measuredMillimeters (200.0 * AmenoUnitService.currentMillimetersPerSceneUnit())) then throw "E8: Medida inicial da cota ancorada incorreta."
+
+    -- 2. Movimentação de nó e sincronização reativa
+    boxB.pos = [300, 0, 0]
+    local syncRes = AmenoAnchorService.syncDimension ctrlE8
+    if not syncRes then throw "E8: syncDimension deveria ter retornado true após mover boxB."
+
+    local auditMoved = AmenoDimensionGraphics.getDimensionAudit ctrlE8
+    if not (AmenoDimensionMath.nearlyEqual auditMoved.measuredMillimeters (300.0 * AmenoUnitService.currentMillimetersPerSceneUnit())) then throw "E8: Cota não atualizou medida após mover o nó B."
+
+    -- 3. Rotação de nó e integridade
+    rotate boxA (angleaxis 90 [0, 0, 1])
+    AmenoAnchorService.syncAll()
+    if (AmenoDimensionGraphics.inspectDimension ctrlE8) != #healthy then throw "E8: Integridade da cota danificada após rotacionar nó A."
+
+    -- 4. Selecionar nós âncoras
+    local selOk = AmenoAnchorService.selectAnchors ctrlE8
+    if not selOk or selection.count != 2 then throw "E8: selectAnchors falhou ao selecionar os 2 nós associados."
+
+    -- 5. Deleção de nó (resiliência a cota órfã)
+    delete boxB
+    AmenoAnchorService.syncAll()
+
+    local caOrphan = AmenoDimensionCA.readCA ctrlE8
+    if caOrphan.isOrphan != true then throw "E8: Cota deveria ter sido marcada como órfã após deleção de nó."
+    if (AmenoDimensionGraphics.findNodesForDimension dimE8Id).count != 3 then throw "E8: Cota sumiu da cena após exclusão de objeto de referência!"
+
+    local auditOrphan = AmenoDimensionGraphics.getDimensionAudit ctrlE8
+    if auditOrphan.isOrphan != true then throw "E8: Audit da cota órfã não marcou isOrphan."
+    if (findString auditOrphan.anchorDesc "[ÓRFÃ]") == undefined then throw "E8: Descrição da âncora órfã deveria conter [ÓRFÃ]."
+
+    local orphanLineNode = undefined
+    for n in (AmenoDimensionGraphics.findNodesForDimension dimE8Id) do
+    (
+        if (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "lines" do orphanLineNode = n
+    )
+    if orphanLineNode == undefined or orphanLineNode.wirecolor != (color 230 70 70) then throw "E8: Cota órfã deveria assumir wirecolor de alerta (230, 70, 70)."
+
+    -- 6. Reancoragem manual para novo objeto
+    local boxC = box name:"Wall_C" pos:[400, 0, 0] width:20 length:20 height:50
+    AmenoAnchorService.reanchorDimension ctrlE8 #pointB boxC [400, 0, 0]
+
+    local caRecovered = AmenoDimensionCA.readCA ctrlE8
+    if caRecovered.isOrphan != false then throw "E8: Cota continuou órfã após reancorar ponto B."
+    if caRecovered.nodeB != boxC then throw "E8: Nó B não foi atualizado para Wall_C."
+
+    local auditRecovered = AmenoDimensionGraphics.getDimensionAudit ctrlE8
+    if auditRecovered.anchorDesc != "Wall_A · Wall_C" then throw ("E8: anchorDesc após recuperação incorreto: " + auditRecovered.anchorDesc)
+    if not (AmenoDimensionMath.nearlyEqual auditRecovered.measuredMillimeters (400.0 * AmenoUnitService.currentMillimetersPerSceneUnit())) then throw "E8: Medida após reancorar incorreta."
+
+    -- 7. Reparo em lote de órfãs (repairOrphans)
+    delete #(boxA, boxC)
+    AmenoAnchorService.syncAll()
+    if (AmenoDimensionCA.readCA ctrlE8).isOrphan != true then throw "E8: Cota deveria ser órfã após deletar todos os nós."
+
+    local repairedOrphansCount = AmenoAnchorService.repairOrphans()
+    if repairedOrphansCount != 1 then throw "E8: repairOrphans deveria ter reparado 1 cota."
+
+    local caRepaired = AmenoDimensionCA.readCA ctrlE8
+    if caRepaired.isOrphan != false or caRepaired.anchorType != "world" then throw "E8: Cota reparada não foi convertida para mundial."
+    local auditRepaired = AmenoDimensionGraphics.getDimensionAudit ctrlE8
+    if not (AmenoDimensionMath.nearlyEqual auditRepaired.measuredMillimeters (400.0 * AmenoUnitService.currentMillimetersPerSceneUnit())) then throw "E8: Medida mundial não foi preservada durante o reparo de órfãs."
+
+    -- 8. Persistência de âncoras no arquivo .max
+    local boxD = box name:"Wall_D" pos:[50, 50, 0]
+    local boxE = box name:"Wall_E" pos:[250, 50, 0]
+    local dimPersist = AmenoDimensionGraphics.createDimension [50, 50, 0] [250, 50, 0] [50, 80, 0] nodeA:boxD nodeB:boxE
+    local persistId = dimPersist.dimensionId
+
+    local tempE8Scene = pathConfig.appendPath tempMaxDir "ameno_e8_test.max"
+    deleteFile tempE8Scene
+    saveMaxFile tempE8Scene clearNeedSaveFlag:true quiet:true
+
+    resetMaxFile #noPrompt
+    loadMaxFile tempE8Scene quiet:true
+    deleteFile tempE8Scene
+    AmenoApp.refreshDimensions()
+
+    local loadedE8Ctrl = undefined
+    for c in (AmenoDimensionGraphics.findControllers()) do
+    (
+        if (AmenoDimensionGraphics.getDimensionId c) == persistId do loadedE8Ctrl = c
+    )
+    if loadedE8Ctrl == undefined then throw "E8: Cota ancorada persistida não foi encontrada após load."
+    local caLoadedE8 = AmenoDimensionCA.readCA loadedE8Ctrl
+    if caLoadedE8.anchorType != "both" then throw "E8: anchorType não persistiu como both no arquivo .max."
+    if caLoadedE8.nodeA == undefined or caLoadedE8.nodeB == undefined then throw "E8: Referências aos nós foram perdidas após load."
+    if caLoadedE8.nodeA.name != "Wall_D" or caLoadedE8.nodeB.name != "Wall_E" then throw "E8: Nomes dos nós carregados incorretos."
+    if caLoadedE8.isOrphan != false then throw "E8: Cota válida foi incorretamente marcada como órfã no load."
+
+    -- 9. Garantia Pré-Render (#preRender)
+    caLoadedE8.nodeB.pos = [350, 50, 0]
+    AmenoAnchorService.onPreRender()
+
+    local auditPreRender = AmenoDimensionGraphics.getDimensionAudit loadedE8Ctrl
+    if not (AmenoDimensionMath.nearlyEqual auditPreRender.measuredMillimeters (300.0 * AmenoUnitService.currentMillimetersPerSceneUnit())) then throw "E8: Hook #preRender não sincronizou a cota antes do render."
+
+    -- 10. Teste de escalabilidade com 100 cotas ativas
+    local benchmarkBoxes = #()
+    for i = 1 to 101 do
+    (
+        append benchmarkBoxes (box pos:[(i * 10), 500, 0] width:5 length:5 height:5)
+    )
+    for i = 1 to 100 do
+    (
+        AmenoDimensionGraphics.createDimension [(i * 10), 500, 0] [((i + 1) * 10), 500, 0] [(i * 10), 520, 0] nodeA:benchmarkBoxes[i] nodeB:benchmarkBoxes[i+1]
+    )
+
+    for b in benchmarkBoxes do b.pos.y += 10.0
+    local startTime = timestamp()
+    local syncedBatch = AmenoAnchorService.syncAll()
+    local elapsed = (timestamp() - startTime) / 1000.0
+    format "E8: Sincronizadas % cotas em % segundos.\n" syncedBatch elapsed
+    if syncedBatch < 100 then throw "E8: syncAll não sincronizou todas as 100 cotas em lote."
+
     fileIn macroPath quiet:true
 
-    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6 e E7 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
+    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6, E7 e E8 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
 )

@@ -28,6 +28,60 @@ struct AmenoDimensionToolService
     previewOutputUnit = #meters,
     previewPrecision = 2,
     activeStyleId = "default",
+    nodeA = undefined,
+    nodeB = undefined,
+
+    fn detectHitNode pointValue =
+    (
+        local candidateNode = undefined
+        try
+        (
+            local r = mapScreenToWorldRay mouse.pos
+            local hits = intersectRayScene r
+            if hits.count > 0 do
+            (
+                local firstHit = hits[1][1]
+                if isValidNode firstHit do
+                (
+                    local k = ::AmenoDimensionGraphics.readTextProperty firstHit "Ameno.Kind"
+                    if k == undefined or k == "" do candidateNode = firstHit
+                )
+            )
+        )
+        catch ()
+
+        if candidateNode == undefined and pointValue != undefined do
+        (
+            try
+            (
+                local closestDist = 1e9
+                local flatTarget = [pointValue.x, pointValue.y, 0.0]
+                for obj in geometry where isValidNode obj and not obj.isHidden do
+                (
+                    local k = ::AmenoDimensionGraphics.readTextProperty obj "Ameno.Kind"
+                    if k == undefined or k == "" do
+                    (
+                        local objCenter = [obj.pos.x, obj.pos.y, 0.0]
+                        local d = length (objCenter - flatTarget)
+                        local bbMax = obj.max
+                        local bbMin = obj.min
+                        if flatTarget.x >= (bbMin.x - 5.0) and flatTarget.x <= (bbMax.x + 5.0) and \
+                           flatTarget.y >= (bbMin.y - 5.0) and flatTarget.y <= (bbMax.y + 5.0) do
+                        (
+                            if d < closestDist do
+                            (
+                                closestDist = d
+                                candidateNode = obj
+                            )
+                        )
+                    )
+                )
+            )
+            catch ()
+        )
+
+        candidateNode
+    ),
 
     fn flattenPoint pointValue =
     (
@@ -156,6 +210,8 @@ struct AmenoDimensionToolService
         pointA = undefined
         pointB = undefined
         offsetPoint = undefined
+        nodeA = undefined
+        nodeB = undefined
         preview = undefined
         lastCommittedRecord = undefined
         lastError = ""
@@ -176,6 +232,7 @@ struct AmenoDimensionToolService
             #pointA:
             (
                 pointA = candidate
+                nodeA = detectHitNode pointValue
                 setStage #pointB
                 undefined
             )
@@ -190,6 +247,7 @@ struct AmenoDimensionToolService
                 )
 
                 pointB = candidate
+                nodeB = detectHitNode pointValue
                 offsetPoint = defaultOffsetPoint pointA pointB
                 updatePreview pointA pointB offsetPoint
                 setStage #offset
@@ -205,9 +263,11 @@ struct AmenoDimensionToolService
                 local created = undefined
                 try
                 (
-                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId
+                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId nodeA:nodeA nodeB:nodeB
                     lastCommittedRecord = created
                     removePreview()
+                    nodeA = undefined
+                    nodeB = undefined
                     true
                 )
                 catch
@@ -255,6 +315,8 @@ struct AmenoDimensionToolService
         pointA = undefined
         pointB = undefined
         offsetPoint = undefined
+        nodeA = undefined
+        nodeB = undefined
         active = false
         stage = #idle
         panelStatus "E4: cota cancelada."

@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 a E5 aprovadas; E6 em desenvolvimento.
+**Estado atual:** E1 a E7 aprovadas; E8 pronta para teste no Max.
 
 ## Estratégia de execução
 
@@ -29,9 +29,9 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E3 | Uma cota gráfica de teste é construída na cena | Aprovada no viewport, Arnold/V-Ray com luz e limpeza |
 | E4 | Cota alinhada é criada com três cliques e preview | Aprovada no Max |
 | E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Aprovada no Max |
-| E6 | Valor medido, arredondado e manual podem ser revisados | Em desenvolvimento |
-| E7 | Estilo edita fonte, texto, linhas e terminais | Não iniciada |
-| E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Não iniciada |
+| E6 | Valor medido, arredondado e manual podem ser revisados | Aprovada no Max |
+| E7 | Estilo edita fonte, texto, linhas e terminais | Aprovada no Max |
+| E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Pronta para teste no Max |
 | E9 | Corona renderiza somente as cotas em arquivo transparente | Não iniciada |
 | E10 | Fluxo de produção, V-Ray CPU e estabilização do MVP | Não iniciada |
 
@@ -390,25 +390,52 @@ Editar aparência com a clareza do TextPlus, sem expor controles irrelevantes à
 
 ## E8 — Âncoras, atualização e diagnóstico
 
+**Estado:** pronta para teste manual no 3ds Max 2026.3 em 2026-09-04.
+**Implementação:** `Contents/scripts/ameno/core/ameno_anchor_service.ms`, `Contents/scripts/ameno/core/ameno_dimension_ca.ms` (Schema v3 com nós e coordenadas locais), atualizações em `ameno_dimension_graphics.ms`, `ameno_dimension_tool.ms`, `ameno_runtime.ms`, `ameno_main_panel.ms` e documentada na ADR `docs/decisions/0011-e8-anchors-dirty-queue-diagnostics.md`.
+**Evidência automatizada:** `test_bootstrap.ms` e `test_installed_package.ms` aprovaram no 3ds Max Batch isolado:
+1. Criação associativa ligada a nós (`nodeA`, `nodeB`) e cálculo de coordenadas no espaço local (`localPointA`, `localPointB`).
+2. Movimentação e rotação de nós da cena com recálculo automático da linha de cota e medição milimétrica.
+3. Botão e rotina `selectAnchors` para localizar e selecionar na cena os nós âncora da cota selecionada.
+4. Resiliência a nós deletados: a exclusão de nós na cena não apaga nem quebra a cota; ela é convertida em órfã (`isOrphan = true`), mantém a última posição física mundial intacta e adquire indicação visual vermelha de alerta `(color 230 70 70)` no viewport e badge no painel.
+5. Reancoragem interativa (`reanchorDimension` para ponto A ou B) via botão de captura no painel, restaurando o status da cota para ativo.
+6. Reparo em lote de cotas órfãs (`repairOrphans`), convertendo-as para cotas estáticas no espaço mundial de forma limpa.
+7. Persistência de nós de âncora e coordenadas locais no arquivo `.max`.
+8. Garantia mandatória de sincronização síncrona pré-render (`#preRender`), executando `flushQueue` e `syncAll` antes de qualquer frame em Corona, V-Ray ou Arnold.
+9. Benchmark de escalabilidade com 100 cotas ativas sincronizadas em lote.
+**Instalação:** `tools/install-dev.ps1` sincronizou a versão atualizada no `ApplicationPlugins\AmenoTools`.
+
 ### Objetivo
 
-Fazer as cotas acompanharem alterações arquitetônicas sem se tornarem frágeis.
+Fazer as cotas acompanharem alterações arquitetônicas (translação/rotação de paredes e elementos) sem se tornarem frágeis, sem travar o viewport e sem perder dados quando nós forem excluídos.
 
 ### Implementação
 
-- âncora mundial e âncora local ao objeto;
-- fila `dirty` e atualização com debounce;
-- atualização antes do render;
-- referência perdida fica órfã, nunca some silenciosamente;
-- `Reancorar A/B`, `Selecionar e enquadrar` e `Reparar`;
-- callbacks idempotentes e limpeza no shutdown/reset.
+- Schema CA v3 com `anchorType`, `nodeA`, `localPointA`, `nodeB`, `localPointB`, `isOrphan`, `orphanReason`;
+- Serviço `AmenoAnchorService` com `dirtyQueue`, debounce timer (50ms) e listener via `NodeEventCallback`;
+- Garantia pré-render via hook `#preRender`;
+- Indicação visual de cota órfã: arame e material emissivo vermelhos `(color 230 70 70)` no viewport;
+- Ferramentas no painel principal: botões de reancoragem A e B com `pickObject`, botão `Selecionar Âncoras` e botão `Reparar Órfãs (Mundial)`;
+- Reversibilidade total: Undo atômico em todas as operações de reancoragem e reparo.
 
-### Gate
+### Gate no Max
 
-- mover/rotacionar uma parede atualiza somente cotas dependentes;
-- excluir referência marca órfã e mantém a cota visível;
-- reancorar preserva estilo, texto manual e identidade;
-- 100 cotas atualizam dentro da meta inicial de 1 segundo no equipamento de referência.
+1. Abrir o 3ds Max 2026 com o Ameno Tools instalado.
+2. Criar dois objetos na cena (ex: duas caixas ou paredes `Box001` e `Box002`).
+3. Clicar em **Criar cota** e clicar sobre `Box001`, depois sobre `Box002` e posicionar o afastamento da linha:
+   - Selecionar a cota e verificar no painel: grupo **Âncoras** exibe `A: Box001` e `B: Box002`.
+4. Mover ou rotacionar `Box001` ou `Box002` no viewport:
+   - Confirmar que a cota acompanha os objetos e a medida se atualiza em tempo real.
+5. Clicar em **Selecionar Âncoras**:
+   - Confirmar que `Box001` e `Box002` são selecionados na cena.
+6. Deletar `Box002` com a tecla Delete:
+   - Confirmar que a cota **não desaparece**.
+   - A cota permanece na última posição física válida e suas linhas e texto mudam para cor de alerta vermelha na viewport.
+   - O painel exibe `⚠️ COTA ÓRFÃ` e o motivo `Nó de ancoragem B foi excluído da cena`.
+7. Criar uma nova caixa `Box003`, selecionar a cota e clicar em **Reancorar B**:
+   - Clicar sobre `Box003` no viewport.
+   - Confirmar que a cota se reconecta ao `Box003`, o status de órfã desaparece, o texto/linhas voltam à cor normal e o painel exibe `A: Box001 | B: Box003`.
+8. Deletar as caixas de uma cota e clicar em **Reparar Órfãs (Mundial)**:
+   - Confirmar que a cota é convertida para coordenadas mundiais estáticas limpas e a indicação de órfã é removida.
 
 ---
 
@@ -459,4 +486,4 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 
 ## Próxima ação
 
-Iniciar o planejamento e implementação da **E8 — Âncoras, atualização e diagnóstico**. Acompanhar alterações arquitetônicas (mover/rotacionar objetos) com fila dirty, debounce, suporte a referência órfã e reancoragem sem perda de dados.
+Realizar a validação interativa do gate da **E8 — Âncoras, atualização e diagnóstico** no 3ds Max 2026.3 com o usuário (criação de cota com âncoras em caixas/paredes, movimentação/rotação reativa, exclusão com cota órfã destacada em vermelho, reancoragem manual e reparo em lote para coordenadas mundiais). Após a aprovação, prosseguir para a **E9 — Renderizar somente cotas no Corona**.

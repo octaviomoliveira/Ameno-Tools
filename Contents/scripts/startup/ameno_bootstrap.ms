@@ -18,6 +18,7 @@ global AmenoDimensionRecord
 global AmenoStyleRecord
 global AmenoStyleServiceDefinition
 global AmenoStyleService
+global AmenoAnchorService
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
@@ -72,6 +73,7 @@ struct AmenoBootstrapService
             @"core\ameno_dimensions_math.ms",
             @"core\ameno_dimension_ca.ms",
             @"core\ameno_dimension_graphics.ms",
+            @"core\ameno_anchor_service.ms",
             @"core\ameno_style_service.ms",
             @"core\ameno_dimension_tool.ms",
             @"renderers\ameno_renderer_probe.ms",

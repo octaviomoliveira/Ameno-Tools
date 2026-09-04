@@ -11,6 +11,7 @@ global AmenoMainPanelRollout
 global AmenoStyleService
 global AmenoShowStyleEditor
 global AmenoStyleEditorRollout
+global AmenoAnchorService
 
 struct AmenoRuntime
 (
@@ -123,6 +124,36 @@ struct AmenoRuntime
         res
     ),
 
+    fn reanchorDimension controller whichPoint targetNode targetWorldPoint =
+    (
+        if ::AmenoAnchorService == undefined then return false
+        local res = ::AmenoAnchorService.reanchorDimension controller whichPoint targetNode targetWorldPoint
+        refreshDimensions()
+        res
+    ),
+
+    fn selectAnchors controller =
+    (
+        if ::AmenoAnchorService == undefined then return false
+        ::AmenoAnchorService.selectAnchors controller
+    ),
+
+    fn repairOrphans =
+    (
+        if ::AmenoAnchorService == undefined then return 0
+        local count = ::AmenoAnchorService.repairOrphans()
+        refreshDimensions()
+        count
+    ),
+
+    fn syncDimensions force:false =
+    (
+        if ::AmenoAnchorService == undefined then return 0
+        local count = ::AmenoAnchorService.syncAll force:force
+        refreshDimensions()
+        count
+    ),
+
     fn getStyles =
     (
         if ::AmenoStyleService != undefined then ::AmenoStyleService.listStyles() else #()
@@ -144,6 +175,7 @@ struct AmenoRuntime
     fn onSceneOpened =
     (
         if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
+        if ::AmenoAnchorService != undefined do ::AmenoAnchorService.init()
         refreshScene()
         refreshDimensions()
         if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
@@ -153,6 +185,7 @@ struct AmenoRuntime
     fn onSceneReset =
     (
         if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
+        if ::AmenoAnchorService != undefined do ::AmenoAnchorService.init()
         refreshScene()
         refreshDimensions()
         if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
@@ -164,6 +197,7 @@ struct AmenoRuntime
         refreshRenderer()
         refreshScene()
         refreshDimensions()
+        if ::AmenoAnchorService != undefined do ::AmenoAnchorService.init()
         started = true
 
         callbacks.removeScripts id:#ameno_lifecycle
@@ -185,6 +219,7 @@ struct AmenoRuntime
     (
         callbacks.removeScripts id:#ameno_lifecycle
         callbacks.removeScripts id:#ameno_selection
+        if ::AmenoAnchorService != undefined do ::AmenoAnchorService.shutdown()
         try (stopTool AmenoDimensionMouseTool) catch ()
         try (if AmenoDimensionTool != undefined do AmenoDimensionTool.cancel()) catch ()
         try (destroyDialog AmenoMainPanelRollout) catch ()

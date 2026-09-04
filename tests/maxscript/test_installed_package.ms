@@ -8,6 +8,8 @@ global AmenoDimensionMath
 global AmenoDimensionCA
 global AmenoDimensionGraphics
 global AmenoDimensionTool
+global AmenoStyleService
+global AmenoAnchorService
 
 (
     if AmenoApp == undefined then throw "O pacote instalado não criou AmenoApp."
@@ -19,6 +21,8 @@ global AmenoDimensionTool
     if AmenoDimensionCA == undefined then throw "O pacote instalado não carregou o serviço de Custom Attributes da E5."
     if AmenoDimensionGraphics == undefined then throw "O pacote instalado não carregou o construtor gráfico da E3."
     if AmenoDimensionTool == undefined then throw "O pacote instalado não carregou a ferramenta interativa da E4."
+    if AmenoStyleService == undefined then throw "O pacote instalado não carregou o serviço de estilos da E7."
+    if AmenoAnchorService == undefined then throw "O pacote instalado não carregou o serviço de âncoras da E8."
 
     local installedE2Format = AmenoUnitService.formatMillimeters 19555.0 outputUnit:#meters precision:2 decimalSeparator:#comma roundingIncrementMillimeters:100.0
     if installedE2Format.text != "19,60 m" then throw "O núcleo E2 instalado formatou a medida incorretamente."
@@ -41,8 +45,23 @@ global AmenoDimensionTool
     )
     if not markerFound then throw "E6 instalado: Marcador [M] não encontrado."
     AmenoDimensionGraphics.removeDimension testDim.dimensionId
-    if AmenoStyleService == undefined then throw "O pacote instalado não carregou o serviço de estilos da E7."
+
+    -- E7: Presets de estilo no pacote instalado
     if (AmenoStyleService.listStyles()).count < 3 then throw "O pacote instalado não possui os presets de estilo da E7."
 
-    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5, E6 e E7.\n" AmenoVersion.appVersion
+    -- E8: Teste de âncoras e órfãs no pacote instalado
+    local bA = box pos:[0, 0, 0]
+    local bB = box pos:[200, 0, 0]
+    local testAnchored = AmenoDimensionGraphics.createDimension [0, 0, 0] [200, 0, 0] [0, 40, 0] nodeA:bA nodeB:bB
+    bB.pos = [250, 0, 0]
+    AmenoAnchorService.syncAll()
+    local auditP = AmenoDimensionGraphics.getDimensionAudit testAnchored.controller
+    if not (AmenoDimensionMath.nearlyEqual auditP.measuredMillimeters (250.0 * AmenoUnitService.currentMillimetersPerSceneUnit())) then throw "E8 instalado: Sincronização de âncoras falhou."
+    delete #(bA, bB)
+    AmenoAnchorService.syncAll()
+    local auditOrph = AmenoDimensionGraphics.getDimensionAudit testAnchored.controller
+    if not auditOrph.isOrphan then throw "E8 instalado: Detecção de órfã falhou."
+    AmenoDimensionGraphics.removeDimension testAnchored.dimensionId
+
+    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5, E6, E7 e E8.\n" AmenoVersion.appVersion
 )

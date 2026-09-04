@@ -1,18 +1,31 @@
 /*
-    E5/E6 — Custom Attributes e Persistência de Cotas.
+    E5/E6/E8 — Custom Attributes e Persistência de Cotas.
 
     Define os Custom Attributes versionados para o controlador técnico da cota,
     permitindo que cenas salvas abram de forma confiável e independente do script.
-    Na E6, expande para suportar modos de valor (medido, arredondado, manual),
-    delta entre medido e exibido, e motivo da alteração.
+    Na E6: suporta modos de valor (medido, arredondado, manual), delta e motivo.
+    Na E8: adiciona âncoras geométricas (nós A e B com pontos em espaço local),
+    status de cota órfã (resiliência a nós deletados) e resolução de coordenadas.
 */
 
 global AmenoDimensionCADef
 global AmenoDimensionCA
+global AmenoDimensionRecord
+global AmenoResolvedAnchorPoints
+
+struct AmenoResolvedAnchorPoints
+(
+    pointA = [0, 0, 0],
+    pointB = [0, 0, 0],
+    offsetPoint = [0, 0, 0],
+    isOrphan = false,
+    orphanReason = "",
+    changed = false
+)
 
 struct AmenoDimensionRecord
 (
-    schemaVersion = 2,
+    schemaVersion = 3,
     dimensionId = "",
     dimensionRole = "user",
     pointA = [0, 0, 0],
@@ -28,16 +41,23 @@ struct AmenoDimensionRecord
     manualReason = "",
     lastMeasuredMm = 0.0,
     lastDeltaMm = 0.0,
-    styleId = "default"
+    styleId = "default",
+    anchorType = "world", -- world, nodeA, nodeB, both
+    nodeA = undefined,
+    localPointA = [0, 0, 0],
+    nodeB = undefined,
+    localPointB = [0, 0, 0],
+    isOrphan = false,
+    orphanReason = ""
 )
 
 AmenoDimensionCADef = attributes AmenoDimensionData
 attribID:#(0x414d454e, 0x44494d31) -- 'AMEN', 'DIM1'
-version:2
+version:3
 (
     parameters main
     (
-        schemaVersion type:#integer default:2
+        schemaVersion type:#integer default:3
         dimensionId type:#string default:""
         dimensionRole type:#string default:"user"
         pointA type:#point3 default:[0, 0, 0]
@@ -54,13 +74,20 @@ version:2
         lastMeasuredMm type:#float default:0.0
         lastDeltaMm type:#float default:0.0
         styleId type:#string default:"default"
+        anchorType type:#string default:"world"
+        nodeA type:#node
+        localPointA type:#point3 default:[0, 0, 0]
+        nodeB type:#node
+        localPointB type:#point3 default:[0, 0, 0]
+        isOrphan type:#boolean default:false
+        orphanReason type:#string default:""
     )
 )
 
 struct AmenoDimensionCAService
 (
     def = AmenoDimensionCADef,
-    schemaVersion = 2,
+    schemaVersion = 3,
 
     fn hasCA node =
     (
@@ -98,6 +125,13 @@ struct AmenoDimensionCAService
         if isProperty ca #lastMeasuredMm do ca.lastMeasuredMm = (record.lastMeasuredMm as float)
         if isProperty ca #lastDeltaMm do ca.lastDeltaMm = (record.lastDeltaMm as float)
         ca.styleId = (record.styleId as string)
+        if isProperty ca #anchorType do ca.anchorType = (record.anchorType as string)
+        if isProperty ca #nodeA do (if record.nodeA != undefined and isValidNode record.nodeA then ca.nodeA = record.nodeA else ca.nodeA = undefined)
+        if isProperty ca #localPointA do ca.localPointA = record.localPointA
+        if isProperty ca #nodeB do (if record.nodeB != undefined and isValidNode record.nodeB then ca.nodeB = record.nodeB else ca.nodeB = undefined)
+        if isProperty ca #localPointB do ca.localPointB = record.localPointB
+        if isProperty ca #isOrphan do ca.isOrphan = record.isOrphan
+        if isProperty ca #orphanReason do ca.orphanReason = (record.orphanReason as string)
 
         true
     ),
@@ -127,6 +161,13 @@ struct AmenoDimensionCAService
             if isProperty ca #lastMeasuredMm do rec.lastMeasuredMm = ca.lastMeasuredMm
             if isProperty ca #lastDeltaMm do rec.lastDeltaMm = ca.lastDeltaMm
             rec.styleId = ca.styleId
+            if isProperty ca #anchorType do rec.anchorType = ca.anchorType
+            if isProperty ca #nodeA do (if ca.nodeA != undefined and isValidNode ca.nodeA then rec.nodeA = ca.nodeA else rec.nodeA = undefined)
+            if isProperty ca #localPointA do rec.localPointA = ca.localPointA
+            if isProperty ca #nodeB do (if ca.nodeB != undefined and isValidNode ca.nodeB then rec.nodeB = ca.nodeB else rec.nodeB = undefined)
+            if isProperty ca #localPointB do rec.localPointB = ca.localPointB
+            if isProperty ca #isOrphan do rec.isOrphan = (ca.isOrphan as booleanClass)
+            if isProperty ca #orphanReason do rec.orphanReason = ca.orphanReason
             return rec
         )
 
@@ -167,6 +208,100 @@ struct AmenoDimensionCAService
         )
 
         false
+    ),
+
+    fn resolvePoints record =
+    (
+        if record == undefined then return undefined
+
+        local resolved = AmenoResolvedAnchorPoints()
+        resolved.pointA = record.pointA
+        resolved.pointB = record.pointB
+        resolved.offsetPoint = record.offsetPoint
+        resolved.isOrphan = record.isOrphan
+        resolved.orphanReason = record.orphanReason
+
+        local checkA = (record.anchorType == "nodeA" or record.anchorType == "both")
+        local checkB = (record.anchorType == "nodeB" or record.anchorType == "both")
+        local orphanFound = false
+        local reasons = #()
+
+        local worldA = record.pointA
+        if checkA then
+        (
+            if record.nodeA != undefined and isValidNode record.nodeA then
+            (
+                worldA = record.localPointA * record.nodeA.transform
+            )
+            else
+            (
+                orphanFound = true
+                append reasons "Âncora A excluída"
+            )
+        )
+
+        local worldB = record.pointB
+        if checkB then
+        (
+            if record.nodeB != undefined and isValidNode record.nodeB then
+            (
+                worldB = record.localPointB * record.nodeB.transform
+            )
+            else
+            (
+                orphanFound = true
+                append reasons "Âncora B excluída"
+            )
+        )
+
+        if orphanFound then
+        (
+            resolved.isOrphan = true
+            local reasonStr = ""
+            for i = 1 to reasons.count do
+            (
+                if i > 1 do reasonStr += " · "
+                reasonStr += reasons[i]
+            )
+            resolved.orphanReason = reasonStr
+        )
+        else
+        (
+            resolved.isOrphan = false
+            resolved.orphanReason = ""
+        )
+
+        -- Verificar se as coordenadas mudaram
+        local changedA = (length (worldA - record.pointA)) > 0.0001
+        local changedB = (length (worldB - record.pointB)) > 0.0001
+
+        resolved.pointA = worldA
+        resolved.pointB = worldB
+
+        if changedA or changedB then
+        (
+            resolved.changed = true
+            -- Manter o afastamento perpendicular anterior
+            local oldLayout = AmenoDimensionMath.alignedLayout record.pointA record.pointB record.offsetPoint
+            local offsetDist = if oldLayout.valid then oldLayout.signedOffsetSceneUnits else 20.0
+            local newVec = [worldB.x - worldA.x, worldB.y - worldA.y, 0.0]
+            if (length newVec) > 0.00001 then
+            (
+                local newDir = normalize newVec
+                local newPerp = normalize (cross [0, 0, 1] newDir)
+                resolved.offsetPoint = [worldA.x, worldA.y, 0.0] + (newPerp * offsetDist)
+            )
+            else
+            (
+                resolved.offsetPoint = record.offsetPoint
+            )
+        )
+        else
+        (
+            resolved.offsetPoint = record.offsetPoint
+        )
+
+        resolved
     )
 )
 
