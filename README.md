@@ -46,6 +46,8 @@ Decisões pendentes:
 - [Estratégia de versões do 3ds Max](docs/compatibility.md)
 - [Compatibilidade com Corona e V-Ray](docs/renderers.md)
 - [Roadmap](ROADMAP.md)
+- [Plano compartilhado de execução](PLAN.md)
+- [Histórico de planos e handoffs](plans/README.md)
 - [ADR 0001 — MAXScript primeiro](docs/decisions/0001-maxscript-first.md)
 - [ADR 0002 — Layer e saídas de render](docs/decisions/0002-layer-and-render-output.md)
 - [ADR 0003 — Render separado no MVP](docs/decisions/0003-separate-overlay-render-mvp.md)
