@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 aguarda validação visual manual; E2 foi aprovada em Batch por ser independente da cena. A E3 aguarda o gate visual da E1.
+**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 em desenvolvimento.
 
 ## Estratégia de execução
 
@@ -24,9 +24,9 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | Etapa | Entrega visível | Estado |
 | --- | --- | --- |
 | E0 | Pacote abre, mostra versão e reconhece o Corona | Aprovada |
-| E1 | `Preparar esta cena` cria a infraestrutura Ameno com segurança | Pronta para teste manual |
+| E1 | `Preparar esta cena` cria a infraestrutura Ameno com segurança | Aprovada |
 | E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Aprovada em Batch |
-| E3 | Uma cota gráfica de teste é construída na cena | Não iniciada |
+| E3 | Uma cota gráfica de teste é construída na cena | Em desenvolvimento |
 | E4 | Cota alinhada é criada com três cliques e preview | Não iniciada |
 | E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Não iniciada |
 | E6 | Valor medido, arredondado e manual podem ser revisados | Não iniciada |
@@ -57,11 +57,12 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 
 ## E1 — Preparar esta cena
 
-**Estado:** pronta para teste manual.
+**Estado:** aprovada.
 **Implementação:** `Contents/scripts/ameno/core/ameno_scene_setup.ms`.
 **Evidência automatizada:** 3ds Max 2026.3 Batch aprovou criação, repetição sem duplicatas, restauração da layer corrente e conflito de nome `AMENO_COTAS`; a cópia instalada via `ApplicationPlugins` também carregou a E1.
 **Commit publicado em `origin/main`:** `92bddd1` (`feat: prepare Ameno scene infrastructure`).
 **Verificação visual em 2026-09-03:** a captura recebida mostrou a UI da sessão antiga. A cópia instalada foi comparada por SHA-256 com o checkout e contém `Preparar esta cena` e a E2; é necessário reiniciar completamente o 3ds Max antes de repetir o gate.
+**Gate visual aprovado em 2026-09-03:** depois da reinicialização, o painel mostrou `Cena preparada` e as layers `AMENO_COTAS`/`AMENO_SYSTEM`; o Layer Explorer confirmou o registro de documento e o estilo padrão em `AMENO_SYSTEM`.
 
 ### Objetivo
 
@@ -141,6 +142,8 @@ A E2 foi executada antes da validação visual da E1 por autorização explícit
 ---
 
 ## E3 — Primeiro construtor gráfico
+
+**Estado:** em desenvolvimento desde 2026-09-03, após aprovação visual da E1.
 
 ### Objetivo
 
