@@ -54,7 +54,7 @@ Criar o serviço de layers e o comando de cota linear no MAXScript, iniciando co
 | 2026-09-03 | Usar layer exclusiva, manter Beauty/LightMix intactos e renderizar cotas separadamente para composição. | Decidido e documentado | `docs/decisions/0002-*`, `0003-*` |
 | 2026-09-03 | Permitir valores manuais auditáveis com alerta visível somente no viewport. | Decidido e documentado | `docs/decisions/0004-*`, `docs/manual-overrides.md` |
 | 2026-09-03 | Priorizar 3ds Max 2026; Corona primeiro, com compatibilidade planejada para V-Ray. | Decidido e documentado | `docs/decisions/0005-*`, `0006-*` |
-| 2026-09-03 | Centralizar o projeto em `D:\Ameno\_tools` e manter planos atualizados para continuidade via Antigravity. | Em execução | Este plano e `plans/` |
+| 2026-09-03 | Centralizar o projeto em `D:\Ameno\_tools` e manter planos atualizados para continuidade via Antigravity. | Concluído | Repositório Git íntegro em `D:\Ameno\_tools`; origem removida após confirmação de vazio |
 
 ## Como retomar sem contexto
 
@@ -62,4 +62,3 @@ Criar o serviço de layers e o comando de cota linear no MAXScript, iniciando co
 2. Execute `git status` e confirme que o estado local é o esperado.
 3. Leia `README.md` e a documentação diretamente ligada ao próximo passo.
 4. Implemente uma unidade pequena, teste no 3ds Max e registre o resultado aqui.
-
