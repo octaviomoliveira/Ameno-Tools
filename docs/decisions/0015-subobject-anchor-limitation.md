@@ -1,7 +1,7 @@
 ﻿# 0015 — Limitação: Âncoras não rastreiam edições de sub-objeto (EditPoly/EditMesh)
 
 **Data:** 2026-09-04  
-**Status:** Implementado como E10.7 · validação no 3ds Max pendente
+**Status:** Implementado e instalado como E10.7 · validação interativa pendente
 **Contexto:** Detectado durante gate manual da E10.1
 
 ---

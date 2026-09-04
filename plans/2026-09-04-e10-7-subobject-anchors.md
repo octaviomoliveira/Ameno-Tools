@@ -1,7 +1,7 @@
 # E10.7 — Âncoras por vértice em Editable Poly e Editable Mesh
 
 **Data:** 2026-09-04
-**Estado:** implementação concluída no código; gate automatizado e interativo pendentes
+**Estado:** implementação e instalação concluídas; gate Batch bloqueado pelo executor e gate interativo pendente
 **Origem:** ADR 0015
 
 ## Por que E10.7
@@ -77,9 +77,11 @@ para outro vértice silenciosamente.
 
 - [x] criar `tests/maxscript/test_e10_7_subobject_anchors.ms`;
 - [x] cobrir CA v4, Editable Poly, Editable Mesh, modo horizontal, ID inválido e callback;
-- [ ] executar no `3dsmaxbatch.exe` com a instância interativa do Max fechada;
-- [ ] executar regressão E10.1, E10.2, E10.4 e bootstrap;
-- [ ] instalar o pacote de desenvolvimento;
+- [!] executar no `3dsmaxbatch.exe` com a instância interativa do Max fechada —
+  bloqueado: o lançador não concluiu nem criou os logs após mais de sete minutos;
+- [!] executar regressão E10.1, E10.2, E10.4 e bootstrap — a regressão E10.1
+  reproduziu o mesmo bloqueio antes de executar o script;
+- [x] instalar o pacote de desenvolvimento;
 - [ ] validar manualmente criação com snap e edição Vertex no Max.
 
 ## Estado da validação anterior
@@ -91,6 +93,13 @@ para outro vértice silenciosamente.
   ativa; nenhum arquivo ou sessão do usuário foi fechado ou modificado;
 - revisão estática encontrou e corrigiu uma regressão: `updateDimensionFast` ainda
   chamava `alignedLayout`, ignorando os modos horizontal e vertical da E10.1.
+- nova tentativa em 2026-09-04 foi feita com o Max fechado: tanto o teste E10.7 quanto
+  o E10.1 conhecido ficaram presos no lançador `3dsmaxbatch.exe`; o processo filho do
+  Max só surgiu depois de seis a sete minutos, sem `listener.log` ou `system.log`, e o
+  harness não devolveu resultado. Isso impede atribuir a falha ao código do E10.7;
+- `tools/validate-package.ps1` aprovou novamente a estrutura do pacote;
+- a cópia de desenvolvimento foi instalada em
+  `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`.
 
 ## Limites conhecidos
 
@@ -103,5 +112,7 @@ para outro vértice silenciosamente.
 
 ## Próximo gate
 
-Fechar/reiniciar o 3ds Max, executar o teste E10.7 e as regressões, instalar o pacote e
-validar uma cota criada com Vertex Snap sobre um Editable Poly.
+Abrir o 3ds Max 2026, validar uma cota criada com Vertex Snap sobre um Editable Poly e
+mover o vértice em modo subobjeto. Depois validar um Editable Mesh e confirmar que
+cotas antigas continuam acompanhando apenas o transform do objeto. O gate Batch deve
+ser retomado separadamente após estabilizar o executor, sem bloquear o gate manual.
