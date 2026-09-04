@@ -14,6 +14,7 @@ global AmenoStyleEditorWPF
 global AmenoStyleEditorWindow
 global AmenoStyleService
 global AmenoStyleDraft
+global AmenoPreviewRenderer
 
 struct AmenoStyleEditorWPFDefinition
 (
@@ -545,10 +546,21 @@ struct AmenoStyleEditorWPFDefinition
 
             updateDirtyUI()
             updateInUseCount()
+            updatePreview()
         )
         catch ()
         isSyncingUI = false
         true
+    ),
+
+    fn updatePreview =
+    (
+        if previewCanvas == undefined or currentDraft == undefined do return false
+        if ::AmenoPreviewRenderer != undefined do
+        (
+            local pm = currentDraft.toPreviewModel()
+            ::AmenoPreviewRenderer.render pm previewCanvas
+        )
     ),
 
     fn onCancel =
@@ -592,6 +604,7 @@ struct AmenoStyleEditorWPFDefinition
         currentDraft = ::AmenoStyleService.createDraftFromPreset presetId
         loadDraftToUI()
         updateDirtyUI()
+        updatePreview()
         true
     ),
 
@@ -618,6 +631,7 @@ struct AmenoStyleEditorWPFDefinition
         setProperty currentDraft.styleRecord propName newVal
         currentDraft.markDirty()
         updateDirtyUI()
+        updatePreview()
     ),
 
     fn bindEvents =
@@ -692,13 +706,14 @@ struct AmenoStyleEditorWPFDefinition
                     local conv = dotNetObject bc
                     AmenoStyleEditorWPF.pnlPreviewHost.Background = if AmenoStyleEditorWPF.currentDraft.previewDarkBg then (conv.ConvertFromString "#121212") else (conv.ConvertFromString "#F5F5F5")
                 )
+                AmenoStyleEditorWPF.updatePreview()
             )
         ))
 
         -- Zoom do Preview
-        if btnZoom50 != undefined do dotNet.addEventHandler btnZoom50 "Click" (fn onZ50 s e = (if AmenoStyleEditorWPF.currentDraft != undefined do AmenoStyleEditorWPF.currentDraft.previewZoom = 0.5))
-        if btnZoom100 != undefined do dotNet.addEventHandler btnZoom100 "Click" (fn onZ100 s e = (if AmenoStyleEditorWPF.currentDraft != undefined do AmenoStyleEditorWPF.currentDraft.previewZoom = 1.0))
-        if btnZoom200 != undefined do dotNet.addEventHandler btnZoom200 "Click" (fn onZ200 s e = (if AmenoStyleEditorWPF.currentDraft != undefined do AmenoStyleEditorWPF.currentDraft.previewZoom = 2.0))
+        if btnZoom50 != undefined do dotNet.addEventHandler btnZoom50 "Click" (fn onZ50 s e = (if AmenoStyleEditorWPF.currentDraft != undefined do (AmenoStyleEditorWPF.currentDraft.previewZoom = 0.5; AmenoStyleEditorWPF.updatePreview())))
+        if btnZoom100 != undefined do dotNet.addEventHandler btnZoom100 "Click" (fn onZ100 s e = (if AmenoStyleEditorWPF.currentDraft != undefined do (AmenoStyleEditorWPF.currentDraft.previewZoom = 1.0; AmenoStyleEditorWPF.updatePreview())))
+        if btnZoom200 != undefined do dotNet.addEventHandler btnZoom200 "Click" (fn onZ200 s e = (if AmenoStyleEditorWPF.currentDraft != undefined do (AmenoStyleEditorWPF.currentDraft.previewZoom = 2.0; AmenoStyleEditorWPF.updatePreview())))
 
         -- Seleção de Estilo no Topo
         if cbStyleSelect != undefined do dotNet.addEventHandler cbStyleSelect "SelectionChanged" (fn onStyleChange s e = (
@@ -901,6 +916,9 @@ struct AmenoStyleEditorWPFDefinition
 
         -- Conectar eventos
         bindEvents()
+
+        -- Renderizar preview inicial
+        updatePreview()
 
         -- Vincular ao HWND do 3ds Max
         try

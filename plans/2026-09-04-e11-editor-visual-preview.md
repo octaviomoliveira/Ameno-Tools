@@ -205,6 +205,15 @@ O renderer não acessa diretamente nós do Max. Conversão estilo → preview fi
 
 Durante o arraste, atualizar apenas o canvas, com debounce máximo de 16–33 ms. Nenhum rebuild de cotas reais ocorre até uma ação de commit.
 
+**Status E11.3 (Concluído em 2026-09-04):**
+- Módulo `Contents/scripts/ameno/ui/ameno_preview_renderer.ms` implementado com struct `AmenoPreviewRendererDefinition` e singleton `AmenoPreviewRenderer`.
+- Renderizador vetorial 2D desacoplado para WPF `Canvas`: planta de contexto neutra com paredes e retornos sutis; linhas de extensão com gap e overhang; linha principal contínua; 5 tipos de terminais geométricos (`#tick`, `#arrowClosed`, `#arrowOpen`, `#dot`, `#none`); posicionamento inteligente/externo (`#auto`, `#inside`, `#outside`); medição e centralização de texto com máscara opaca (`textMaskEnabled`) ou transparente; badge de aviso para fontes não instaladas; alternância de temas claro (`#F5F5F5`) e escuro (`#121212`); zoom vetorial nítido (50%, 100%, 200%).
+- Gerenciamento de cores e pincéis 100% resiliente: uso de `System.Windows.Media.ColorConverter` e instâncias não congeladas de `SolidColorBrush`, evitando conflitos de `IsFrozen` no bridge .NET do 3ds Max 2026.
+- Totalmente isolado da cena (zero nós, modificadores ou materiais criados na cena do 3ds Max durante todo o ciclo de renderização e preview interativo).
+- Conexão e sincronização em tempo real integradas ao Shell WPF `AmenoStyleEditorWPF`.
+- Suíte automatizada `tests/maxscript/test_e11_3_preview.ms` executada sob 3ds Max 2026.3 headless com **20/20 testes aprovados (100% de cobertura)**.
+- Baterias de regressão completas (`test_e11_1_draft.ms`, `test_e11_2_shell.ms`, `test_bootstrap.ms`) executadas com **100% de sucesso**.
+
 ### E11.4 — Aplicação e persistência
 
 - `Cancelar`: descartar o draft;
