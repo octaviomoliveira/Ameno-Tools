@@ -26,25 +26,100 @@ struct AmenoStyleRecord
     terminalSize = 14.0
 )
 
+global AmenoStyleRegistryCA = attributes AmenoStyleRegistryData
+version:1
+attribID:#(0x4a123bc4, 0x19283746)
+(
+    parameters main rollout:params
+    (
+        stylesData type:#string default:""
+    )
+    rollout params "Estilos Ameno"
+    (
+        label lblInfo "Armazenamento paramétrico de estilos"
+    )
+)
+
 struct AmenoStyleServiceDefinition
 (
     styles = #(),
     installedFontsCache = undefined,
+    cachedSerialized = "",
+
+    fn escapeStr strVal =
+    (
+        if strVal == undefined then return ""
+        local s = strVal as string
+        s = substituteString s "\\" "\\\\"
+        s = substituteString s "|" "\\p"
+        s = substituteString s ";" "\\s"
+        s
+    ),
+
+    fn unescapeStr strVal =
+    (
+        if strVal == undefined then return ""
+        local s = strVal as string
+        s = substituteString s "\\p" "|"
+        s = substituteString s "\\s" ";"
+        s = substituteString s "\\\\" "\\"
+        s
+    ),
+
+    fn hasRegistryCA node =
+    (
+        if node == undefined or not isValidNode node then return false
+        (isProperty node #AmenoStyleRegistryData)
+    ),
+
+    fn getRegistryNode createIfMissing:false =
+    (
+        for obj in objects where isValidNode obj do
+        (
+            if (getUserPropVal obj "Ameno.Kind") == "styleRegistry" do return obj
+        )
+
+        if not createIfMissing then return undefined
+
+        local regNode = Point name:(uniqueName "AMENO_STYLE_REGISTRY_") size:5.0
+        try (regNode.isHidden = true) catch ()
+        try (regNode.renderable = false) catch ()
+        setUserPropVal regNode "Ameno.Kind" "styleRegistry"
+
+        if ::AmenoSceneSetup != undefined do
+        (
+            local state = ::AmenoSceneSetup.inspect()
+            if state.systemLayer != undefined do state.systemLayer.addNode regNode
+        )
+
+        custAttributes.add regNode AmenoStyleRegistryCA
+        regNode
+    ),
+
+    fn ensureRegistryNode =
+    (
+        local regNode = getRegistryNode createIfMissing:true
+        if regNode != undefined and not (hasRegistryCA regNode) do
+        (
+            custAttributes.add regNode AmenoStyleRegistryCA
+        )
+        regNode
+    ),
 
     fn createDefaultPresets =
     (
         local presets = #()
 
         -- Preset 1: Arquitetônico (Padrão)
-        local arch = AmenoStyleRecord styleId:"default" name:"Arquitetônico" fontName:"Arial" fontSize:20.0 bold:false italic:false tracking:0.0 textGap:12.0 lineThickness:1.5 extensionOverhang:8.0 terminalType:#tick terminalSize:14.0
+        local arch = AmenoStyleRecord styleId:"default" name:"Arquitetônico" fontName:"Arial" fontSize:20.0 bold:false italic:false tracking:0.0 textGap:12.0 lineThickness:1.5 extensionOverhang:8.0 extensionGap:0.0 terminalType:#tick terminalSize:14.0
         append presets arch
 
         -- Preset 2: Editorial
-        local edit = AmenoStyleRecord styleId:"editorial" name:"Editorial" fontName:"Georgia" fontSize:22.0 bold:false italic:false tracking:10.0 textGap:10.0 lineThickness:1.0 extensionOverhang:5.0 terminalType:#dot terminalSize:8.0
+        local edit = AmenoStyleRecord styleId:"editorial" name:"Editorial" fontName:"Georgia" fontSize:22.0 bold:false italic:false tracking:10.0 textGap:10.0 lineThickness:1.0 extensionOverhang:5.0 extensionGap:0.0 terminalType:#dot terminalSize:8.0
         append presets edit
 
         -- Preset 3: Técnico
-        local tech = AmenoStyleRecord styleId:"technical" name:"Técnico" fontName:"Arial" fontSize:16.0 bold:false italic:false tracking:0.0 textGap:8.0 lineThickness:1.2 extensionOverhang:6.0 terminalType:#arrowClosed terminalSize:16.0
+        local tech = AmenoStyleRecord styleId:"technical" name:"Técnico" fontName:"Arial" fontSize:16.0 bold:false italic:false tracking:0.0 textGap:8.0 lineThickness:1.2 extensionOverhang:6.0 extensionGap:0.0 terminalType:#arrowClosed terminalSize:16.0
         append presets tech
 
         presets
@@ -74,9 +149,9 @@ struct AmenoStyleServiceDefinition
         for s in styles do
         (
             local parts = #(
-                s.styleId,
-                s.name,
-                s.fontName,
+                (escapeStr s.styleId),
+                (escapeStr s.name),
+                (escapeStr s.fontName),
                 (s.fontSize as string),
                 (if s.bold then "1" else "0"),
                 (if s.italic then "1" else "0"),
@@ -119,9 +194,9 @@ struct AmenoStyleServiceDefinition
             if tokens.count >= 13 then
             (
                 local s = AmenoStyleRecord()
-                s.styleId = tokens[1]
-                s.name = tokens[2]
-                s.fontName = tokens[3]
+                s.styleId = unescapeStr tokens[1]
+                s.name = unescapeStr tokens[2]
+                s.fontName = unescapeStr tokens[3]
                 s.fontSize = tokens[4] as float
                 s.bold = (tokens[5] == "1")
                 s.italic = (tokens[6] == "1")
@@ -139,6 +214,7 @@ struct AmenoStyleServiceDefinition
         if loadedStyles.count > 0 do
         (
             styles = loadedStyles
+            cachedSerialized = serializedStr
             return true
         )
         false
@@ -149,6 +225,12 @@ struct AmenoStyleServiceDefinition
         try
         (
             local data = serializeStyles()
+            cachedSerialized = data
+            local regNode = ensureRegistryNode()
+            if regNode != undefined and (hasRegistryCA regNode) do
+            (
+                regNode.AmenoStyleRegistryData.stylesData = data
+            )
             setUserPropVal rootNode "Ameno.Styles" data
             true
         )
@@ -162,7 +244,17 @@ struct AmenoStyleServiceDefinition
     (
         try
         (
-            local data = getUserPropVal rootNode "Ameno.Styles"
+            local data = undefined
+            local regNode = getRegistryNode()
+            if regNode != undefined and (hasRegistryCA regNode) do
+            (
+                data = regNode.AmenoStyleRegistryData.stylesData
+            )
+            if data == undefined or data == "" do
+            (
+                data = getUserPropVal rootNode "Ameno.Styles"
+            )
+
             if data != undefined and data != "" then
             (
                 deserializeStyles data
@@ -170,13 +262,28 @@ struct AmenoStyleServiceDefinition
             else
             (
                 styles = createDefaultPresets()
+                cachedSerialized = serializeStyles()
             )
             true
         )
         catch
         (
             styles = createDefaultPresets()
+            cachedSerialized = serializeStyles()
             false
+        )
+    ),
+
+    fn checkSyncWithRegistry =
+    (
+        local regNode = getRegistryNode()
+        if regNode != undefined and isValidNode regNode and (hasRegistryCA regNode) do
+        (
+            local curData = regNode.AmenoStyleRegistryData.stylesData
+            if curData != undefined and curData != "" and curData != cachedSerialized do
+            (
+                deserializeStyles curData
+            )
         )
     ),
 
@@ -212,16 +319,18 @@ struct AmenoStyleServiceDefinition
 
     fn getStyle styleId =
     (
+        checkSyncWithRegistry()
         if styleId == undefined or styleId == "" do styleId = "default"
-        for s in styles where s.styleId == styleId do return s
+        for s in styles where s.styleId == styleId do return (cloneStyle s)
         -- Fallback para default
-        for s in styles where s.styleId == "default" do return s
-        if styles.count > 0 then styles[1] else (createDefaultPresets())[1]
+        for s in styles where s.styleId == "default" do return (cloneStyle s)
+        if styles.count > 0 then (cloneStyle styles[1]) else (cloneStyle (createDefaultPresets())[1])
     ),
 
     fn listStyles =
     (
-        styles
+        checkSyncWithRegistry()
+        for s in styles collect (cloneStyle s)
     ),
 
     fn saveStyle styleRecord =
@@ -262,7 +371,7 @@ struct AmenoStyleServiceDefinition
 
         append styles newRecord
         saveToScene()
-        newRecord
+        cloneStyle newRecord
     ),
 
     fn countDimensionsUsingStyle styleId =
@@ -352,21 +461,43 @@ struct AmenoStyleServiceDefinition
         global AmenoDimensionGraphics
         global AmenoDimensionCA
         if styleRecord == undefined then return 0
-        saveStyle styleRecord
         if ::AmenoDimensionGraphics == undefined then return 0
 
-        local controllers = ::AmenoDimensionGraphics.findControllers()
         local updatedCount = 0
 
         undo "Ameno: atualizar estilo de cotas" on
         (
+            local regNode = ensureRegistryNode()
+
+            -- Atualiza no array em memória
+            local found = false
+            for i = 1 to styles.count do
+            (
+                if styles[i].styleId == styleRecord.styleId do
+                (
+                    styles[i] = cloneStyle styleRecord
+                    found = true
+                    exit
+                )
+            )
+            if not found do append styles (cloneStyle styleRecord)
+
+            local dataStr = serializeStyles()
+            cachedSerialized = dataStr
+            if regNode != undefined and isValidNode regNode and (hasRegistryCA regNode) do
+            (
+                regNode.AmenoStyleRegistryData.stylesData = dataStr
+            )
+            try (setUserPropVal rootNode "Ameno.Styles" dataStr) catch ()
+
+            local controllers = ::AmenoDimensionGraphics.findControllers()
             for c in controllers where isValidNode c do
             (
                 local rec = undefined
                 if ::AmenoDimensionCA != undefined do rec = ::AmenoDimensionCA.readCA c
                 if rec != undefined and rec.styleId == styleRecord.styleId do
                 (
-                    ::AmenoDimensionGraphics.rebuildDimension c
+                    ::AmenoDimensionGraphics.rebuildDimension c style:(cloneStyle styleRecord)
                     updatedCount += 1
                 )
             )

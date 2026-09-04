@@ -176,10 +176,13 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
         local updated = readCurrentUIIntoActiveStyle()
         if updated != undefined then
         (
-            ::AmenoStyleService.saveStyle updated
-            if autoRebuild do
+            if autoRebuild then
             (
                 ::AmenoStyleService.updateStyleAndRebuild updated
+            )
+            else
+            (
+                ::AmenoStyleService.saveStyle updated
             )
             local count = if ::AmenoStyleService != undefined then ::AmenoStyleService.countDimensionsUsingStyle updated.styleId else 0
             lblInUse.text = "Em uso: " + (count as string) + " cota(s) nesta cena."

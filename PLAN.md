@@ -36,7 +36,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E6 implementada e aprovada manualmente no 3ds Max 2026.3 em 2026-09-04: valores medidos, arredondados e manuais com auditoria de delta e motivo; marcador `[M]` com cor âmbar exibido apenas na viewport (`renderable = false`), mantendo o render de produção 100% limpo e sem advertência visual; persistência de overrides em `.max` e reversão para medido.
 - E7 implementada e aprovada manualmente no 3ds Max 2026.3 em 2026-09-04: serviço de estilos de cena (`AmenoStyleService`), presets Arquitetônico, Editorial e Técnico, tipografia avançada via TextPlus (peso, itálico, tracking, tamanho, fontes instaladas), 5 tipos de terminais vetoriais na mesma spline (`#tick`, `#arrowClosed`, `#arrowOpen`, `#dot`, `#none`), espessura de render configurável (0.8, 1.5, 2.5) com atalhos, atualização de estilos em lote em 1 único Undo, persistência de estilos em UserProps de `rootNode` da cena `.max` e editor visual dedicado (`AmenoStyleEditorRollout`).
 - E8 implementada e validada em Batch isolado no 3ds Max 2026.3 e no pacote instalado via `ApplicationPlugins`: serviço de âncoras reativas (`AmenoAnchorService`), Schema CA v3 com nós e coordenadas locais (`nodeA`, `localPointA`, `nodeB`, `localPointB`), detecção automática de nós ao criar cotas, recálculo dinâmico da linha de cota ao mover/rotacionar objetos, resiliência total com detecção de cotas órfãs (`isOrphan = true`) e coloração de alerta avermelhada `(color 230 70 70)` no viewport sem sumir da cena, seleção de âncoras (`selectAnchors`), reancoragem interativa A/B no painel, reparo em lote para coordenadas mundiais (`repairOrphans`), persistência de nós em arquivo `.max` e garantia mandatória de sincronização pré-render (`#preRender`).
-- Pacote instalado com E1 a E8 validado em Batch isolado e instalado em `ApplicationPlugins\AmenoTools`.
+- E8.1 implementada e aprovada em testes automatizados no 3ds Max 2026.3 Batch e no pacote instalado via `ApplicationPlugins`: reatividade a movimentação e rotação via `controllerOtherEvent` e `controllerStructured`, guarda de recursão `isSyncing` e histórico de Undo limpo com `with undo off`, persistência de estilos atômica via Custom Attribute `AmenoStyleRegistryCA` no helper `AMENO_STYLE_REGISTRY` (suportando `max undo` e `max redo`), imutabilidade por clones defensivos em `getStyle()`, escala física real em milímetros (`toSceneUnits`) em todas as dimensões de estilo, suporte a `extensionGap` na spline, hierarquia de prioridade visual no viewport (1º Órfã vermelha `230 70 70` > 2º Manual âmbar `245 166 35` > 3º Normal), atualização rápida in-place (`updateDimensionFast`) associada a índice reverso por `Dictionary #string` nativo, interface compacta (altura <= 640 px) com `subRollout` nativo e reancoragem interativa com `pickPoint snap:#3D`.
+- Pacote instalado com E1 a E8.1 validado em Batch isolado e instalado em `ApplicationPlugins\AmenoTools`.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
 - Regras decididas para `AMENO_COTAS`, geometria renderizável, render separado de cotas e preservação do Beauty, LightMix e Render Elements existentes.
@@ -47,19 +48,19 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- E8 — Âncoras, atualização e diagnóstico: aguardando validação interativa do usuário no 3ds Max 2026 (teste de cotas ancoradas em objetos, mover/rotacionar objetos, deletar objeto para verificar cota órfã vermelha, reancorar no painel e reparar órfãs).
+- E8.1 — Estabilização das Âncoras, Estilos e Interface: aguardando validação interativa do usuário no 3ds Max 2026.
 
 ## Próximo passo executável
 
-Apresentar ao usuário o roteiro de validação interativa no 3ds Max 2026 para a **E8 — Âncoras, atualização e diagnóstico**:
+Apresentar ao usuário o roteiro de validação interativa no 3ds Max 2026 para a **E8.1 — Estabilização das Âncoras, Estilos e Interface**:
 1. Criar dois objetos na cena (ex: duas caixas ou paredes `Box001` e `Box002`);
 2. Clicar em **Criar cota** e clicar sobre os dois objetos para definir a cota;
 3. No painel Ameno Tools, verificar que o grupo **Âncoras** identifica `A: Box001` e `B: Box002`;
-4. Mover ou rotacionar os objetos na cena e confirmar que a cota acompanha e atualiza a medida em tempo real;
-5. Clicar em **Selecionar Âncoras** e verificar a seleção dos nós âncora;
-6. Deletar um dos objetos e confirmar que a cota **não desaparece**: torna-se órfã com arame e texto vermelhos na viewport e badge no painel;
-7. Criar um novo objeto e usar o botão **Reancorar** para reconectar o ponto órfão, confirmando retorno à cor normal;
-8. Testar o botão **Reparar Órfãs (Mundial)** e verificar a conversão limpa para coordenadas mundiais estáticas.
+4. Mover ou rotacionar os objetos na cena e confirmar que a cota acompanha e atualiza a medida em tempo real (corrige a falha anterior do item 4);
+5. Pressionar `Ctrl+Z` e confirmar que o histórico de Undo do usuário desfaz apenas as transformações dos objetos, sem poluição de Undo;
+6. Deletar um dos objetos e confirmar que a cota **não desaparece**: torna-se órfã com arame e texto vermelhos `(230, 70, 70)` na viewport e badge de alerta no painel (corrige a falha anterior do item 6);
+7. Criar um novo objeto `Box003`, clicar em **Reancorar Ponto B** e clicar em um ponto do novo objeto no viewport (usando snap 3D se desejar), confirmando que a cota se reconecta e volta à cor normal (corrige a falha anterior do item 7);
+8. Abrir o Editor de Estilos, alterar propriedades (ex: espessura da linha), aplicar e testar `Ctrl+Z` / `Ctrl+Y` confirmando que os estilos suportam Undo/Redo atômico.
 
 ## Decisões que ainda exigem validação
 
@@ -94,6 +95,7 @@ Apresentar ao usuário o roteiro de validação interativa no 3ds Max 2026 para 
 | 2026-09-04 | Implementar E6: valores medidos, arredondados e manuais com marcador viewport-only. | E6 aprovada no Max pelo usuário (override 1,10m com medido 1,09m, [M] no viewport e ausente no render); E7 iniciada no planejamento. | captura do viewport/Arnold RenderView fornecida pelo usuário, commits `8fed0e0` e `e60a47a`, `PLAN.md` |
 | 2026-09-04 | Implementar E7: editor visual de estilo, tipografia TextPlus, terminais vetoriais e espessuras. | E7 aprovada no Max pelo usuário (reatividade ao vivo, presets, fontes, espessuras e Undo); E8 iniciada no planejamento. | confirmação do usuário, commit `557007c`, `0010-e7-style-system-and-visual-editor.md` |
 | 2026-09-04 | Implementar E8: âncoras geométricas, atualização reativa, cotas órfãs e diagnóstico. | E8 implementada e validada em Batch isolado e no pacote ApplicationPlugins; aguardando validação interativa no Max. | `ameno_anchor_service.ms`, `0011-e8-anchors-dirty-queue-diagnostics.md`, `.test-output/*` |
+| 2026-09-04 | E8.1: Estabilização das âncoras reativas, undo de estilos, escala de cena, prioridade de wirecolor e UI compacta. | Implementada e aprovada em testes automatizados no Batch isolado e pacote instalado; aguardando validação interativa no Max. | `0012-e8-1-anchors-styles-ui-stabilization.md`, `test_bootstrap.ms`, `test_installed_package.ms` |
 
 ## Como retomar sem contexto
 

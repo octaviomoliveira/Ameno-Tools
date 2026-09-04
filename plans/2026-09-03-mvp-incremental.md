@@ -439,6 +439,48 @@ Fazer as cotas acompanharem alterações arquitetônicas (translação/rotação
 
 ---
 
+## E8.1 — Estabilização das Âncoras, Estilos e Interface
+
+**Estado:** implementada e aprovada em testes automatizados no 3ds Max 2026.3 e no pacote instalado via `ApplicationPlugins` em 2026-09-04; aguardando validação interativa do usuário.
+**Implementação:**
+- `Contents/scripts/ameno/core/ameno_anchor_service.ms`: inclusão de `controllerOtherEvent` e `controllerStructured` no `NodeEventCallback`, inicialização centralizada no runtime com idempotência e `shutdown()` seguro, trava anti-recursão `isSyncing`, sincronização reativa com `with undo off`, otimização in-place via `updateDimensionFast` e índice reverso $O(1)$ por `Dictionary #string`.
+- `Contents/scripts/ameno/core/ameno_style_service.ms`: persistência atômica via Custom Attribute `AmenoStyleRegistryCA` no helper de sistema `AMENO_STYLE_REGISTRY` integrado ao histórico nativo de Undo/Redo do 3ds Max, retorno defensivo de clones em `getStyle()` e `listStyles()`, e escape seguro de caracteres (`|`, `;`).
+- `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`: conversão obrigatória para unidades de cena (`toSceneUnits`) em todas as dimensões de estilo (`lineThickness`, `fontSize`, `terminalSize`, `extensionOverhang`, `extensionGap`, `textGap`), implementação geométrica de `extensionGap` na spline, e hierarquia estrita de prioridade visual de viewport (Órfã vermelha `230 70 70` > Manual âmbar `245 166 35` > Normal `245 245 245`) mantendo o material de render neutro.
+- `Contents/scripts/ameno/core/ameno_dimension_tool.ms`: repasse correto de coordenadas de viewport para `handlePoint` e raycast iterativo filtrando nós técnicos Ameno.
+- `Contents/scripts/ameno/ui/ameno_main_panel.ms`: redimensionamento compacto para 380 × 640 px (compatível com 1366 × 768 px) com `subRollout` nativo (seções Cota, Auditoria, Âncoras e Ambiente) e reancoragem interativa usando `pickPoint snap:#3D`.
+**Evidência automatizada:** `test_bootstrap.ms` e `test_installed_package.ms` aprovados com código 0 no 3ds Max 2026.3 Batch, cobrindo idempotência, Undo de estilos, escala em unidades de cena, prioridade de wirecolor, `extensionGap`, separação de schemas e sincronização de 100 cotas em 2.095 segundos.
+**Instalação:** `tools/install-dev.ps1` sincronizou a versão atualizada no `ApplicationPlugins\AmenoTools`.
+
+### Gate no Max (Roteiro de Validação pelo Usuário)
+
+1. **Reatividade de Movimento**:
+   - Criar 2 caixas (`Box001`, `Box002`) e criar uma cota entre elas com a ferramenta de cota.
+   - Mover ou rotacionar `Box002` com a ferramenta de movimentação do 3ds Max:
+   - **Verificar**: a cota estica e acompanha o movimento imediatamente no viewport, atualizando o valor da medida.
+2. **Histórico de Undo Limpo**:
+   - Mover a caixa várias vezes no viewport.
+   - Pressionar `Ctrl+Z`:
+   - **Verificar**: o Max desfaz os movimentos da caixa sem poluição com passos intermediários internos da cota.
+3. **Detecção e Sinalização de Cota Órfã**:
+   - Deletar `Box002` (tecla Delete):
+   - **Verificar**: a cota **não desaparece**. Ela congela na última posição física válida e o arame + texto assumem imediatamente a cor vermelha de alerta `(230, 70, 70)`. O painel exibe o alerta de cota órfã.
+4. **Prioridade Visual com Override Manual**:
+   - Criar uma cota, aplicar override manual (ex: digitar 2,50 m). O arame/texto ficam na cor âmbar `(245, 166, 35)`.
+   - Deletar um dos objetos de suporte:
+   - **Verificar**: a cota deve assumir a cor **vermelha** de alerta de órfã (o alerta crítico de órfã sobrepõe a indicação de manual).
+5. **Reancoragem com Snap 3D**:
+   - Criar uma nova caixa `Box003`.
+   - Com a cota órfã selecionada, clicar no botão **Reancorar Ponto B** (com Snaps 3D ligados ou desligados) e clicar em qualquer vértice/ponto do `Box003`:
+   - **Verificar**: a cota se reconecta ao ponto clicado, o status de órfã é removido, a cor volta ao normal e a medida atualiza.
+6. **Undo do Editor de Estilos**:
+   - Abrir o Editor de Estilos (`Abrir Editor`), alterar a espessura de render ou tamanho de texto e aplicar.
+   - Pressionar `Ctrl+Z` (Undo do 3ds Max):
+   - **Verificar**: as cotas revertem para a espessura anterior e o registro do estilo sincroniza perfeitamente. Pressionar `Ctrl+Y` (Redo) reaplica a alteração.
+7. **Ergonomia do Painel**:
+   - Verificar que a janela do Ameno Tools cabe com folga na tela (altura máxima 640 px) e os grupos podem ser recolhidos e expandidos suavemente.
+
+---
+
 ## E9 — Renderizar somente cotas no Corona
 
 ### Objetivo

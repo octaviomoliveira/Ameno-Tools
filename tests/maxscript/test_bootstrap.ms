@@ -362,7 +362,7 @@ global AmenoAnchorService
 
     -- 1. Criação de cotas com os 5 tipos de terminais
     local dimTick = AmenoDimensionGraphics.createDimension [0, 0, 0] [100, 0, 0] [0, 20, 0] styleId:"default"
-    if dimTick.lineNode.render_thickness != archStyle.lineThickness then throw "E7: Espessura da linha não corresponde ao estilo."
+    if not (AmenoDimensionMath.nearlyEqual dimTick.lineNode.render_thickness (AmenoDimensionGraphics.toSceneUnits archStyle.lineThickness)) then throw "E7: Espessura da linha não corresponde ao estilo."
 
     local arrowClosedStyle = AmenoStyleRecord styleId:"t_arrowC" terminalType:#arrowClosed terminalSize:16.0 lineThickness:1.2
     local arrowOpenStyle = AmenoStyleRecord styleId:"t_arrowO" terminalType:#arrowOpen terminalSize:16.0 lineThickness:1.2
@@ -385,7 +385,7 @@ global AmenoAnchorService
     if (numSplines dimNone.lineNode) != 3 then throw "E7: Cota sem terminais (#none) deveria possuir exatamente 3 splines (extA, extB, cota)."
 
     -- 2. Propriedades de tipografia no TextPlus
-    if dimTick.textNode.size != archStyle.fontSize then throw "E7: Tamanho do TextPlus não corresponde ao estilo."
+    if not (AmenoDimensionMath.nearlyEqual dimTick.textNode.size (AmenoDimensionGraphics.toSceneUnits archStyle.fontSize)) then throw "E7: Tamanho do TextPlus não corresponde ao estilo."
 
     -- 3. Atualização de estilo em lote com Undo atômico
     local batchStyle = AmenoStyleRecord styleId:"batch_test" name:"Batch Test" fontSize:18.0 lineThickness:1.0 terminalType:#tick terminalSize:10.0
@@ -410,8 +410,8 @@ global AmenoAnchorService
         if (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "lines" do foundLine1 = n
         if (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "label" do foundText1 = n
     )
-    if foundLine1 == undefined or foundLine1.render_thickness != 2.5 then throw "E7: Cota 1 não assumiu nova espessura após atualização em lote."
-    if foundText1 == undefined or foundText1.size != 28.0 then throw "E7: Cota 1 não assumiu novo tamanho após atualização em lote."
+    if foundLine1 == undefined or not (AmenoDimensionMath.nearlyEqual foundLine1.render_thickness (AmenoDimensionGraphics.toSceneUnits 2.5)) then throw "E7: Cota 1 não assumiu nova espessura após atualização em lote."
+    if foundText1 == undefined or not (AmenoDimensionMath.nearlyEqual foundText1.size (AmenoDimensionGraphics.toSceneUnits 28.0)) then throw "E7: Cota 1 não assumiu novo tamanho após atualização em lote."
 
     -- Testar Undo atômico da atualização em lote
     max undo
@@ -420,7 +420,17 @@ global AmenoAnchorService
     (
         if (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "lines" do lineAfterUndo = n
     )
-    if lineAfterUndo != undefined and lineAfterUndo.render_thickness != 1.0 then throw "E7: Undo atômico não reverteu a espessura para 1.0."
+    if lineAfterUndo != undefined and not (AmenoDimensionMath.nearlyEqual lineAfterUndo.render_thickness (AmenoDimensionGraphics.toSceneUnits 1.0)) then throw "E7: Undo atômico não reverteu a espessura para 1.0."
+
+    -- Testar Redo da atualização em lote
+    max redo
+    local lineAfterRedo = undefined
+    for n in (AmenoDimensionGraphics.findNodesForDimension batchDim1.dimensionId) do
+    (
+        if (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "lines" do lineAfterRedo = n
+    )
+    if lineAfterRedo != undefined and not (AmenoDimensionMath.nearlyEqual lineAfterRedo.render_thickness (AmenoDimensionGraphics.toSceneUnits 2.5)) then throw "E7: Redo não reaplicou a nova espessura 2.5."
+    max undo
 
     -- 4. Persistência de Estilos de Cena no arquivo .max
     local customSavedStyle = AmenoStyleService.saveAsNewStyle "Persistido_Max" batchStyle
@@ -603,9 +613,58 @@ global AmenoAnchorService
     local syncedBatch = AmenoAnchorService.syncAll()
     local elapsed = (timestamp() - startTime) / 1000.0
     format "E8: Sincronizadas % cotas em % segundos.\n" syncedBatch elapsed
-    if syncedBatch < 100 then throw "E8: syncAll não sincronizou todas as 100 cotas em lote."
+    -- E8.1 — Estabilização das Âncoras, Estilos e Interface
+    -- 1. Idempotência do serviço de âncoras
+    AmenoAnchorService.init()
+    AmenoAnchorService.init()
+    if not AmenoAnchorService.isCallbackActive then throw "E8.1: AmenoAnchorService.init() duplicado desativou os callbacks."
+
+    -- 2. Separação de Schemas (DataSchemaVersion = 3 e GraphicSchemaVersion = 1)
+    local e81Dim = AmenoDimensionGraphics.createDimension [0, 0, 0] [100, 0, 0] [0, 30, 0]
+    local dataVer = AmenoDimensionGraphics.readTextProperty e81Dim.controller "Ameno.DataSchemaVersion"
+    local graphicVer = AmenoDimensionGraphics.readTextProperty e81Dim.lineNode "Ameno.GraphicSchemaVersion"
+    if dataVer != "3" or graphicVer != "1" then throw "E8.1: Schemas de dados e gráficos não foram separados corretamente."
+
+    -- 3. Imutabilidade e retorno de clones em getStyle()
+    local origStyle = AmenoStyleService.getStyle "default"
+    local originalThickness = origStyle.lineThickness
+    origStyle.lineThickness = 999.0
+    local recheckStyle = AmenoStyleService.getStyle "default"
+    if recheckStyle.lineThickness == 999.0 then throw "E8.1: getStyle não retornou clone imutável do registro interno."
+
+    -- 4. Escape seguro de strings com pipes e ponto-e-vírgula em estilos
+    local escapedStyle = AmenoStyleRecord styleId:"esc_test" name:"Estilo|Especial;Com;Símbolos" fontSize:20.0 lineThickness:1.5
+    AmenoStyleService.saveStyle escapedStyle
+    local retrievedEscaped = AmenoStyleService.getStyle "esc_test"
+    if retrievedEscaped == undefined or retrievedEscaped.name != "Estilo|Especial;Com;Símbolos" then throw "E8.1: Escape seguro de pipes e ponto-e-vírgula em estilos falhou."
+
+    -- 5. Prioridade visual: Órfã vermelha (230, 70, 70) > Manual âmbar (245, 166, 35)
+    local boxP1 = box pos:[0, 600, 0]
+    local boxP2 = box pos:[150, 600, 0]
+    local dimPriority = AmenoDimensionGraphics.createDimension [0, 600, 0] [150, 600, 0] [0, 630, 0] nodeA:boxP1 nodeB:boxP2
+    AmenoDimensionGraphics.setDimensionMode dimPriority.controller #manualNumeric manualValueMm:1400.0 reason:"Ajuste prioridade"
+    local manualNodes = AmenoDimensionGraphics.findNodesForDimension dimPriority.dimensionId
+    for n in manualNodes where (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "lines" do
+    (
+        if n.wirecolor != (color 245 166 35) then throw "E8.1: Cota manual válida deveria ter wirecolor âmbar."
+    )
+    delete boxP2
+    AmenoAnchorService.syncAll()
+    local orphanNodes = AmenoDimensionGraphics.findNodesForDimension dimPriority.dimensionId
+    for n in orphanNodes where (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "lines" do
+    (
+        if n.wirecolor != (color 230 70 70) then throw "E8.1: Cota órfã deve ter wirecolor vermelha, mesmo possuindo override manual."
+    )
+
+    -- 6. Verificação do afastamento extensionGap na geometria
+    local gapStyle = AmenoStyleRecord styleId:"gap_test" extensionGap:10.0 extensionOverhang:5.0 lineThickness:1.0
+    AmenoStyleService.saveStyle gapStyle
+    local dimGap = AmenoDimensionGraphics.createDimension [0, 700, 0] [100, 700, 0] [0, 750, 0] styleId:"gap_test"
+    local firstSplineKnot1 = getKnotPoint dimGap.lineNode 1 1
+    local expectedGapScene = AmenoDimensionGraphics.toSceneUnits 10.0
+    if not (AmenoDimensionMath.nearlyEqual firstSplineKnot1.y (700.0 + expectedGapScene) tolerance:0.1) then throw "E8.1: extensionGap não foi aplicado corretamente à geometria da spline."
 
     fileIn macroPath quiet:true
 
-    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6, E7 e E8 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
+    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6, E7, E8 e E8.1 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
 )

@@ -61,7 +61,19 @@ global AmenoAnchorService
     AmenoAnchorService.syncAll()
     local auditOrph = AmenoDimensionGraphics.getDimensionAudit testAnchored.controller
     if not auditOrph.isOrphan then throw "E8 instalado: Detecção de órfã falhou."
-    AmenoDimensionGraphics.removeDimension testAnchored.dimensionId
+    -- E8.1: Teste de estabilização de âncoras, esquemas e estilos no pacote instalado
+    AmenoAnchorService.init()
+    if not AmenoAnchorService.isCallbackActive then throw "E8.1 instalado: Callback de âncoras inativo."
 
-    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5, E6, E7 e E8.\n" AmenoVersion.appVersion
+    local instDim = AmenoDimensionGraphics.createDimension [0, 0, 0] [100, 0, 0] [0, 20, 0]
+    if (AmenoDimensionGraphics.readTextProperty instDim.controller "Ameno.DataSchemaVersion") != "3" then throw "E8.1 instalado: DataSchemaVersion incorreto."
+    if (AmenoDimensionGraphics.readTextProperty instDim.lineNode "Ameno.GraphicSchemaVersion") != "1" then throw "E8.1 instalado: GraphicSchemaVersion incorreto."
+
+    local instStyle = AmenoStyleService.getStyle "default"
+    instStyle.lineThickness = 999.0
+    if (AmenoStyleService.getStyle "default").lineThickness == 999.0 then throw "E8.1 instalado: getStyle expôs mutação interna."
+
+    AmenoDimensionGraphics.removeDimension instDim.dimensionId
+
+    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5, E6, E7, E8 e E8.1.\n" AmenoVersion.appVersion
 )

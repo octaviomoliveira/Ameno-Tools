@@ -46,10 +46,20 @@ struct AmenoGraphicDimensionRecord
 
 struct AmenoDimensionGraphicsService
 (
-    schemaVersion = 1,
+    dataSchemaVersion = 3,
+    graphicSchemaVersion = 1,
+    schemaVersion = 3, -- mantido para compatibilidade retroativa
     controllerKind = "dimension",
     graphicKind = "dimensionGraphic",
     testRole = "test",
+
+    fn toSceneUnits valMm =
+    (
+        if ::AmenoUnitService != undefined then
+            ::AmenoUnitService.millimetersToSceneUnits (valMm as float)
+        else
+            (valMm as float)
+    ),
 
     fn setTextProperty node propertyName value =
     (
@@ -215,11 +225,12 @@ struct AmenoDimensionGraphicsService
 
     fn configureLineShape lineNode thickness =
     (
+        local thicknessScene = toSceneUnits thickness
         if isProperty lineNode #render_renderable do lineNode.render_renderable = true
         if isProperty lineNode #render_displayRenderMesh do lineNode.render_displayRenderMesh = true
         if isProperty lineNode #render_useViewportSettings do lineNode.render_useViewportSettings = false
-        if isProperty lineNode #render_thickness do lineNode.render_thickness = thickness
-        if isProperty lineNode #render_viewport_thickness do lineNode.render_viewport_thickness = thickness
+        if isProperty lineNode #render_thickness do lineNode.render_thickness = thicknessScene
+        if isProperty lineNode #render_viewport_thickness do lineNode.render_viewport_thickness = thicknessScene
         if isProperty lineNode #render_sides do lineNode.render_sides = 4
         if isProperty lineNode #render_angle do lineNode.render_angle = 0.0
 
@@ -227,37 +238,50 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
-    fn updateLineSplinePoints lineNode layout style:undefined terminalSize:14.0 extensionOverhang:8.0 terminalType:#tick =
+    fn updateLineSplinePoints lineNode layout style:undefined terminalSize:14.0 extensionOverhang:8.0 extensionGap:0.0 terminalType:#tick =
     (
         if lineNode == undefined or not isValidNode lineNode then return false
         if layout == undefined or not layout.valid then return false
 
+        local resolvedThickness = 1.5
         local resolvedTerminalType = terminalType
         local resolvedTerminalSize = terminalSize
         local resolvedOverhang = extensionOverhang
+        local resolvedGapExt = extensionGap
 
         if style != undefined do
         (
+            resolvedThickness = style.lineThickness
             resolvedTerminalType = style.terminalType
             resolvedTerminalSize = style.terminalSize
             resolvedOverhang = style.extensionOverhang
+            resolvedGapExt = style.extensionGap
         )
+
+        local thicknessScene = toSceneUnits resolvedThickness
+        local terminalSizeScene = toSceneUnits resolvedTerminalSize
+        local overhangScene = toSceneUnits resolvedOverhang
+        local gapExtScene = toSceneUnits resolvedGapExt
+
+        local extDir = if layout.signedOffsetSceneUnits >= 0.0 then layout.perpendicular else -layout.perpendicular
+        local lineEndA = layout.linePointA
+        local lineEndB = layout.linePointB
+        local extStartA = layout.projectedA + (extDir * gapExtScene)
+        local extEndA = lineEndA + (extDir * overhangScene)
+        local extStartB = layout.projectedB + (extDir * gapExtScene)
+        local extEndB = lineEndB + (extDir * overhangScene)
 
         -- Se for tick padrão com 5 splines
         if resolvedTerminalType == #tick and (numSplines lineNode) == 5 then
         (
-            local lineEndA = layout.linePointA
-            local lineEndB = layout.linePointB
-            local extensionEndA = lineEndA + (layout.perpendicular * resolvedOverhang)
-            local extensionEndB = lineEndB + (layout.perpendicular * resolvedOverhang)
-            local tickVector = normalize (layout.direction + layout.perpendicular) * (resolvedTerminalSize * 0.5)
+            local tickVector = normalize (layout.direction + layout.perpendicular) * (terminalSizeScene * 0.5)
 
             try
             (
-                setKnotPoint lineNode 1 1 layout.projectedA
-                setKnotPoint lineNode 1 2 extensionEndA
-                setKnotPoint lineNode 2 1 layout.projectedB
-                setKnotPoint lineNode 2 2 extensionEndB
+                setKnotPoint lineNode 1 1 extStartA
+                setKnotPoint lineNode 1 2 extEndA
+                setKnotPoint lineNode 2 1 extStartB
+                setKnotPoint lineNode 2 2 extEndB
                 setKnotPoint lineNode 3 1 lineEndA
                 setKnotPoint lineNode 3 2 lineEndB
                 setKnotPoint lineNode 4 1 (lineEndA - tickVector)
@@ -265,6 +289,7 @@ struct AmenoDimensionGraphicsService
                 setKnotPoint lineNode 5 1 (lineEndB - tickVector)
                 setKnotPoint lineNode 5 2 (lineEndB + tickVector)
                 updateShape lineNode
+                configureLineShape lineNode resolvedThickness
                 return true
             )
             catch ()
@@ -274,16 +299,12 @@ struct AmenoDimensionGraphicsService
         try
         (
             while (numSplines lineNode) > 0 do deleteSpline lineNode 1
-            local lineEndA = layout.linePointA
-            local lineEndB = layout.linePointB
-            local extensionEndA = lineEndA + (layout.perpendicular * resolvedOverhang)
-            local extensionEndB = lineEndB + (layout.perpendicular * resolvedOverhang)
-
-            addLineSpline lineNode layout.projectedA extensionEndA
-            addLineSpline lineNode layout.projectedB extensionEndB
+            addLineSpline lineNode extStartA extEndA
+            addLineSpline lineNode extStartB extEndB
             addLineSpline lineNode lineEndA lineEndB
-            addTerminals lineNode layout resolvedTerminalType resolvedTerminalSize
+            addTerminals lineNode layout resolvedTerminalType terminalSizeScene
             updateShape lineNode
+            configureLineShape lineNode resolvedThickness
             true
         )
         catch
@@ -292,19 +313,28 @@ struct AmenoDimensionGraphicsService
         )
     ),
 
-    fn updateTextNode textNode labelText layout style:undefined textGap:12.0 =
+    fn updateTextNode textNode labelText layout style:undefined textHeight:20.0 textGap:12.0 =
     (
         if textNode == undefined or not isValidNode textNode then return false
         if layout == undefined or not layout.valid then return false
 
         local resolvedGap = textGap
-        if style != undefined do resolvedGap = style.textGap
+        local resolvedHeight = textHeight
+        if style != undefined do
+        (
+            resolvedGap = style.textGap
+            resolvedHeight = style.fontSize
+        )
 
-        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * resolvedGap)
+        local resolvedGapScene = toSceneUnits resolvedGap
+        local resolvedHeightScene = toSceneUnits resolvedHeight
+        local extDir = if layout.signedOffsetSceneUnits >= 0.0 then layout.perpendicular else -layout.perpendicular
+        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (extDir * resolvedGapScene)
 
         try
         (
             textNode.pos = textPosition
+            textNode.size = resolvedHeightScene
             textNode.ResetString()
             textNode.AppendString labelText
             true
@@ -315,12 +345,13 @@ struct AmenoDimensionGraphicsService
         )
     ),
 
-    fn createLineNode layout style:undefined lineThickness:1.5 terminalType:#tick terminalSize:14.0 extensionOverhang:8.0 material:undefined =
+    fn createLineNode layout style:undefined lineThickness:1.5 terminalType:#tick terminalSize:14.0 extensionOverhang:8.0 extensionGap:0.0 material:undefined =
     (
         local resolvedThickness = lineThickness
         local resolvedTerminalType = terminalType
         local resolvedTerminalSize = terminalSize
         local resolvedOverhang = extensionOverhang
+        local resolvedGapExt = extensionGap
 
         if style != undefined do
         (
@@ -328,18 +359,26 @@ struct AmenoDimensionGraphicsService
             resolvedTerminalType = style.terminalType
             resolvedTerminalSize = style.terminalSize
             resolvedOverhang = style.extensionOverhang
+            resolvedGapExt = style.extensionGap
         )
 
+        local terminalSizeScene = toSceneUnits resolvedTerminalSize
+        local overhangScene = toSceneUnits resolvedOverhang
+        local gapExtScene = toSceneUnits resolvedGapExt
+
         local lineNode = splineShape name:(uniqueName "AMENO_DIM_")
+        local extDir = if layout.signedOffsetSceneUnits >= 0.0 then layout.perpendicular else -layout.perpendicular
         local lineEndA = layout.linePointA
         local lineEndB = layout.linePointB
-        local extensionEndA = lineEndA + (layout.perpendicular * resolvedOverhang)
-        local extensionEndB = lineEndB + (layout.perpendicular * resolvedOverhang)
+        local extStartA = layout.projectedA + (extDir * gapExtScene)
+        local extEndA = lineEndA + (extDir * overhangScene)
+        local extStartB = layout.projectedB + (extDir * gapExtScene)
+        local extEndB = lineEndB + (extDir * overhangScene)
 
-        addLineSpline lineNode layout.projectedA extensionEndA
-        addLineSpline lineNode layout.projectedB extensionEndB
+        addLineSpline lineNode extStartA extEndA
+        addLineSpline lineNode extStartB extEndB
         addLineSpline lineNode lineEndA lineEndB
-        addTerminals lineNode layout resolvedTerminalType resolvedTerminalSize
+        addTerminals lineNode layout resolvedTerminalType terminalSizeScene
         updateShape lineNode
 
         configureLineShape lineNode resolvedThickness
@@ -372,13 +411,16 @@ struct AmenoDimensionGraphicsService
             resolvedFont = ::AmenoStyleService.validateFont resolvedFont
         )
 
-        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * resolvedGap)
+        local resolvedGapScene = toSceneUnits resolvedGap
+        local resolvedHeightScene = toSceneUnits resolvedHeight
+        local extDir = if layout.signedOffsetSceneUnits >= 0.0 then layout.perpendicular else -layout.perpendicular
+        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (extDir * resolvedGapScene)
         local textNode = TextPlus name:(uniqueName "AMENO_LABEL_") pos:textPosition
 
         textNode.layouttype = 0
         textNode.plane = 1
         textNode.alignment = 1
-        textNode.size = resolvedHeight
+        textNode.size = resolvedHeightScene
         textNode.tracking = resolvedTracking
         textNode.ResetString()
         textNode.ResetStyle()
@@ -411,14 +453,17 @@ struct AmenoDimensionGraphicsService
             resolvedFont = ::AmenoStyleService.validateFont resolvedFont
         )
 
-        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * resolvedGap)
-        local markerPosition = textPosition + (layout.direction * (resolvedHeight * 2.0))
+        local resolvedGapScene = toSceneUnits resolvedGap
+        local resolvedHeightScene = toSceneUnits resolvedHeight
+        local extDir = if layout.signedOffsetSceneUnits >= 0.0 then layout.perpendicular else -layout.perpendicular
+        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (extDir * resolvedGapScene)
+        local markerPosition = textPosition + (layout.direction * (resolvedHeightScene * 2.0))
         local markerNode = TextPlus name:(uniqueName "AMENO_MARK_") pos:markerPosition
 
         markerNode.layouttype = 0
         markerNode.plane = 1
         markerNode.alignment = 1
-        markerNode.size = resolvedHeight * 0.8
+        markerNode.size = resolvedHeightScene * 0.8
         markerNode.ResetString()
         markerNode.ResetStyle()
         markerNode.SetFont resolvedFont 0
@@ -561,7 +606,8 @@ struct AmenoDimensionGraphicsService
         setTextProperty node "Ameno.Kind" graphicKind
         setTextProperty node "Ameno.DimensionId" dimensionId
         setTextProperty node "Ameno.GraphicRole" role
-        setTextProperty node "Ameno.SchemaVersion" (schemaVersion as string)
+        setTextProperty node "Ameno.GraphicSchemaVersion" (graphicSchemaVersion as string)
+        setTextProperty node "Ameno.SchemaVersion" (graphicSchemaVersion as string)
         true
     ),
 
@@ -610,7 +656,8 @@ struct AmenoDimensionGraphicsService
         setTextProperty controller "Ameno.Kind" controllerKind
         setTextProperty controller "Ameno.DimensionId" dimensionId
         setTextProperty controller "Ameno.DimensionRole" (role as string)
-        setTextProperty controller "Ameno.SchemaVersion" (schemaVersion as string)
+        setTextProperty controller "Ameno.DataSchemaVersion" (dataSchemaVersion as string)
+        setTextProperty controller "Ameno.SchemaVersion" (dataSchemaVersion as string)
         setTextProperty controller "Ameno.StyleId" styleId
         setPointProperty controller "Ameno.PointA" pointA
         setPointProperty controller "Ameno.PointB" pointB
@@ -661,13 +708,24 @@ struct AmenoDimensionGraphicsService
         (
             markerNode = createMarkerNode layout style:resolvedStyle
             decorateGraphicNode markerNode dimensionId "marker" dimensionsLayer
-            try (lineNode.wirecolor = (color 245 166 35)) catch ()
-            try (textNode.wirecolor = (color 245 166 35)) catch ()
         )
-        else if audit != undefined and audit.isOrphan then
+
+        -- Prioridade visual (wirecolor):
+        -- 1º Órfã (Alerta vermelho 230, 70, 70)
+        -- 2º Manual Válida (Âmbar 245, 166, 35)
+        -- 3º Normal / Medida (Branco neutro 245, 245, 245)
+        -- O material renderizável permanece branco neutro independente do estado.
+        if audit != undefined and audit.isOrphan then
         (
             try (lineNode.wirecolor = (color 230 70 70)) catch ()
             try (textNode.wirecolor = (color 230 70 70)) catch ()
+            if markerNode != undefined do try (markerNode.wirecolor = (color 230 70 70)) catch ()
+        )
+        else if audit != undefined and audit.isManual then
+        (
+            try (lineNode.wirecolor = (color 245 166 35)) catch ()
+            try (textNode.wirecolor = (color 245 166 35)) catch ()
+            if markerNode != undefined do try (markerNode.wirecolor = (color 245 166 35)) catch ()
         )
         else
         (

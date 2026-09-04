@@ -31,43 +31,62 @@ struct AmenoDimensionToolService
     nodeA = undefined,
     nodeB = undefined,
 
-    fn detectHitNode pointValue =
+    fn detectHitNode pointValue screenPoint:undefined =
     (
         local candidateNode = undefined
+
+        -- 1. Tentativa via raycasting na cena (usando viewport-relative screenPoint)
         try
         (
-            local r = mapScreenToWorldRay mouse.pos
-            local hits = intersectRayScene r
-            if hits.count > 0 do
+            local r = undefined
+            if screenPoint != undefined then
             (
-                local firstHit = hits[1][1]
-                if isValidNode firstHit do
+                r = mapScreenToWorldRay screenPoint
+            )
+            else if mouse.pos != undefined then
+            (
+                r = mapScreenToWorldRay mouse.pos
+            )
+
+            if r != undefined then
+            (
+                local hits = intersectRayScene r
+                for h in hits where isValidNode h[1] do
                 (
-                    local k = ::AmenoDimensionGraphics.readTextProperty firstHit "Ameno.Kind"
-                    if k == undefined or k == "" do candidateNode = firstHit
+                    local nodeHit = h[1]
+                    local k = ::AmenoDimensionGraphics.readTextProperty nodeHit "Ameno.Kind"
+                    if (k == undefined or k == "") and (findString nodeHit.name "AMENO_" == undefined) do
+                    (
+                        candidateNode = nodeHit
+                        exit
+                    )
                 )
             )
         )
         catch ()
 
+        -- 2. Fallback via proximidade de Bounding Box em unidades de cena
         if candidateNode == undefined and pointValue != undefined do
         (
             try
             (
+                local tol = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 50.0) else 5.0
                 local closestDist = 1e9
-                local flatTarget = [pointValue.x, pointValue.y, 0.0]
+
                 for obj in geometry where isValidNode obj and not obj.isHidden do
                 (
                     local k = ::AmenoDimensionGraphics.readTextProperty obj "Ameno.Kind"
-                    if k == undefined or k == "" do
+                    if (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
                     (
-                        local objCenter = [obj.pos.x, obj.pos.y, 0.0]
-                        local d = length (objCenter - flatTarget)
-                        local bbMax = obj.max
                         local bbMin = obj.min
-                        if flatTarget.x >= (bbMin.x - 5.0) and flatTarget.x <= (bbMax.x + 5.0) and \
-                           flatTarget.y >= (bbMin.y - 5.0) and flatTarget.y <= (bbMax.y + 5.0) do
+                        local bbMax = obj.max
+
+                        if pointValue.x >= (bbMin.x - tol) and pointValue.x <= (bbMax.x + tol) and \
+                           pointValue.y >= (bbMin.y - tol) and pointValue.y <= (bbMax.y + tol) and \
+                           pointValue.z >= (bbMin.z - tol) and pointValue.z <= (bbMax.z + tol) do
                         (
+                            local objCenter = (bbMin + bbMax) * 0.5
+                            local d = length (objCenter - pointValue)
                             if d < closestDist do
                             (
                                 closestDist = d
@@ -220,7 +239,7 @@ struct AmenoDimensionToolService
         true
     ),
 
-    fn handlePoint clickNumber pointValue =
+    fn handlePoint clickNumber pointValue screenPoint:undefined =
     (
         if not active then return #stop
 
@@ -232,7 +251,7 @@ struct AmenoDimensionToolService
             #pointA:
             (
                 pointA = candidate
-                nodeA = detectHitNode pointValue
+                nodeA = detectHitNode pointValue screenPoint:screenPoint
                 setStage #pointB
                 undefined
             )
@@ -247,7 +266,7 @@ struct AmenoDimensionToolService
                 )
 
                 pointB = candidate
-                nodeB = detectHitNode pointValue
+                nodeB = detectHitNode pointValue screenPoint:screenPoint
                 offsetPoint = defaultOffsetPoint pointA pointB
                 updatePreview pointA pointB offsetPoint
                 setStage #offset
@@ -384,7 +403,7 @@ tool AmenoDimensionMouseTool prompt:"Ameno Dimensions: clique A, B e o afastamen
 
     on mousePoint clickNumber do
     (
-        if AmenoDimensionTool != undefined then AmenoDimensionTool.handlePoint clickNumber worldPoint else #abort
+        if AmenoDimensionTool != undefined then AmenoDimensionTool.handlePoint clickNumber worldPoint screenPoint:viewPoint else #abort
     )
 
     on mouseMove clickNumber do

@@ -1,4 +1,4 @@
-﻿# ADR 0011 — Âncoras Geométricas, Atualização Reativa, Cotas Órfãs e Diagnóstico
+# ADR 0011 — Âncoras Geométricas, Atualização Reativa, Cotas Órfãs e Diagnóstico
 
 - Estado: aceita para o MVP
 - Data: 2026-09-04
@@ -36,7 +36,7 @@ Para a Etapa E8, o projeto necessita de um sistema de âncoras associativas de a
   - Hook `#preRender`: registrado via `callbacks.addScript #preRender`, executa `flushQueue()` e `syncAll()` de forma síncrona antes do início de qualquer render (Corona, V-Ray, Arnold), blindando o frame contra descompasso.
 - **Resiliência a Órfãs e Sinalização Visual**:
   - Quando um nó é deletado ou torna-se inválido, o método `resolvePoints` congela os pontos mundiais anteriores e seta `isOrphan = true`.
-  - Ao reconstruir nós visuais de uma cota órfã, a cor dos objetos (`wirecolor`) e o material emissivo recebem coloração avermelhada de alerta `(color 230 70 70)`.
+  - Ao reconstruir nós visuais de uma cota órfã, a cor dos objetos no viewport (`wirecolor`) recebe coloração avermelhada de alerta `(color 230 70 70)`, enquanto o material renderizável permanece inalterado (branco padrão) para manter o render de produção limpo.
 - **Ferramentas de Interação e Reparo**:
   - `selectAnchors controller`: seleciona na cena os nós `nodeA` e `nodeB` associados.
   - `reanchorDimension controller whichPoint targetNode targetWorldPoint`: reancora interativamente o ponto A ou B para um novo nó ou ponto mundial.
