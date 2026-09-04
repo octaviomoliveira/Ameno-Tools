@@ -313,7 +313,7 @@ struct AmenoDimensionGraphicsService
         )
     ),
 
-    fn updateTextNode textNode labelText layout style:undefined textHeight:20.0 textGap:12.0 =
+    fn updateTextNode textNode labelText layout style:undefined textHeight:140.0 textGap:60.0 =
     (
         if textNode == undefined or not isValidNode textNode then return false
         if layout == undefined or not layout.valid then return false
@@ -345,7 +345,7 @@ struct AmenoDimensionGraphicsService
         )
     ),
 
-    fn createLineNode layout style:undefined lineThickness:1.5 terminalType:#tick terminalSize:14.0 extensionOverhang:8.0 extensionGap:0.0 material:undefined =
+    fn createLineNode layout style:undefined lineThickness:1.5 terminalType:#tick terminalSize:100.0 extensionOverhang:80.0 extensionGap:0.0 material:undefined =
     (
         local resolvedThickness = lineThickness
         local resolvedTerminalType = terminalType
@@ -387,7 +387,7 @@ struct AmenoDimensionGraphicsService
         lineNode
     ),
 
-    fn createTextNode labelText layout style:undefined textHeight:20.0 textGap:12.0 fontName:"Arial" bold:false italic:false tracking:0.0 material:undefined =
+    fn createTextNode labelText layout style:undefined textHeight:140.0 textGap:60.0 fontName:"Arial" bold:false italic:false tracking:0.0 material:undefined =
     (
         local resolvedHeight = textHeight
         local resolvedGap = textGap
@@ -405,6 +405,9 @@ struct AmenoDimensionGraphicsService
             resolvedItalic = style.italic
             resolvedTracking = style.tracking
         )
+
+        if resolvedTracking == undefined do resolvedTracking = 0.0
+        resolvedTracking = (amin (amax (resolvedTracking as float) -10.0) 100.0)
 
         if ::AmenoStyleService != undefined do
         (
@@ -435,7 +438,7 @@ struct AmenoDimensionGraphicsService
         textNode
     ),
 
-    fn createMarkerNode layout style:undefined textHeight:20.0 textGap:12.0 fontName:"Arial" =
+    fn createMarkerNode layout style:undefined textHeight:140.0 textGap:60.0 fontName:"Arial" =
     (
         local resolvedHeight = textHeight
         local resolvedGap = textGap

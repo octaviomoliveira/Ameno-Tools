@@ -98,21 +98,27 @@ struct AmenoPreviewRendererDefinition
         local cx = w / 2.0
         local cy = h / 2.0
 
-        -- Geometria de base da cota de amostra
-        local baseSpan = 200.0 * zoomFactor
+        -- Escala geométrica arquitetônica proporcional 1:1
+        -- 100mm de cena = 10px no preview com zoom 1.0 (fator 0.10 * zoomFactor)
+        local mmScale = 0.10 * zoomFactor
+
+        -- Geometria de base da cota de amostra (3,50 m = 3500 mm)
+        local baseSpan = 240.0 * zoomFactor
         local xA = cx - (baseSpan / 2.0)
         local xB = cx + (baseSpan / 2.0)
 
-        local yDim = cy - (10.0 * zoomFactor)
-        local yWall = cy + (45.0 * zoomFactor)
-        local wallThickness = 24.0 * zoomFactor
+        local yDim = cy - (15.0 * zoomFactor)
+        local yWall = cy + (40.0 * zoomFactor)
+        local wallThickness = 22.0 * zoomFactor
 
         local lineThick = previewModel.lineThickness * zoomFactor
         if lineThick < 0.8 do lineThick = 0.8
 
-        local overhang = previewModel.extensionOverhang * 0.6 * zoomFactor
-        local gap = previewModel.extensionGap * 0.6 * zoomFactor
-        local termSize = previewModel.terminalSize * 0.8 * zoomFactor
+        local overhang = previewModel.extensionOverhang * mmScale
+        if overhang < 2.0 do overhang = 2.0
+
+        local gap = previewModel.extensionGap * mmScale
+        local termSize = previewModel.terminalSize * mmScale
         if termSize < 4.0 do termSize = 4.0
 
         local canvasClass = dotNetClass "System.Windows.Controls.Canvas"
@@ -311,8 +317,8 @@ struct AmenoPreviewRendererDefinition
         -- 5. RÓTULO DE TEXTO COM MÁSCARA DE FUNDO
         -------------------------------------------------------------
         local textStr = if previewModel.sampleValue != undefined and previewModel.sampleValue != "" then previewModel.sampleValue else "3,50 m"
-        local fontSz = previewModel.fontSize * 0.7 * zoomFactor
-        if fontSz < 8.0 do fontSz = 8.0
+        local fontSz = previewModel.fontSize * mmScale
+        if fontSz < 6.0 do fontSz = 6.0
 
         local txtBlock = dotNetObject "System.Windows.Controls.TextBlock"
         txtBlock.Text = textStr
@@ -359,7 +365,8 @@ struct AmenoPreviewRendererDefinition
         local textWidth = textBorder.DesiredSize.Width
         local textHeight = textBorder.DesiredSize.Height
 
-        local tGap = previewModel.textGap * 0.6 * zoomFactor
+        local tGap = previewModel.textGap * mmScale
+        if tGap < 2.0 do tGap = 2.0
         local textX = cx - (textWidth / 2.0)
         local textY = yDim - tGap - (textHeight / 2.0)
 
