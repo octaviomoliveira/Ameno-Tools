@@ -1,9 +1,10 @@
 /*
-    E5 — Custom Attributes e Persistência de Cotas.
+    E5/E6 — Custom Attributes e Persistência de Cotas.
 
     Define os Custom Attributes versionados para o controlador técnico da cota,
     permitindo que cenas salvas abram de forma confiável e independente do script.
-    Mantém espelhamento com User Defined Properties para compatibilidade retroativa.
+    Na E6, expande para suportar modos de valor (medido, arredondado, manual),
+    delta entre medido e exibido, e motivo da alteração.
 */
 
 global AmenoDimensionCADef
@@ -11,7 +12,7 @@ global AmenoDimensionCA
 
 struct AmenoDimensionRecord
 (
-    schemaVersion = 1,
+    schemaVersion = 2,
     dimensionId = "",
     dimensionRole = "user",
     pointA = [0, 0, 0],
@@ -19,19 +20,24 @@ struct AmenoDimensionRecord
     offsetPoint = [0, 0, 0],
     outputUnit = "meters",
     precision = 2,
-    displayMode = "measured",
+    displayMode = "measured", -- measured, rounded, manualNumeric, manualText
     roundingIncrementMm = 0.0,
     manualValue = "",
+    manualValueMm = 0.0,
+    manualText = "",
+    manualReason = "",
+    lastMeasuredMm = 0.0,
+    lastDeltaMm = 0.0,
     styleId = "default"
 )
 
 AmenoDimensionCADef = attributes AmenoDimensionData
 attribID:#(0x414d454e, 0x44494d31) -- 'AMEN', 'DIM1'
-version:1
+version:2
 (
     parameters main
     (
-        schemaVersion type:#integer default:1
+        schemaVersion type:#integer default:2
         dimensionId type:#string default:""
         dimensionRole type:#string default:"user"
         pointA type:#point3 default:[0, 0, 0]
@@ -42,6 +48,11 @@ version:1
         displayMode type:#string default:"measured"
         roundingIncrementMm type:#float default:0.0
         manualValue type:#string default:""
+        manualValueMm type:#float default:0.0
+        manualText type:#string default:""
+        manualReason type:#string default:""
+        lastMeasuredMm type:#float default:0.0
+        lastDeltaMm type:#float default:0.0
         styleId type:#string default:"default"
     )
 )
@@ -49,7 +60,7 @@ version:1
 struct AmenoDimensionCAService
 (
     def = AmenoDimensionCADef,
-    schemaVersion = 1,
+    schemaVersion = 2,
 
     fn hasCA node =
     (
@@ -81,6 +92,11 @@ struct AmenoDimensionCAService
         ca.displayMode = (record.displayMode as string)
         ca.roundingIncrementMm = (record.roundingIncrementMm as float)
         ca.manualValue = (record.manualValue as string)
+        if isProperty ca #manualValueMm do ca.manualValueMm = (record.manualValueMm as float)
+        if isProperty ca #manualText do ca.manualText = (record.manualText as string)
+        if isProperty ca #manualReason do ca.manualReason = (record.manualReason as string)
+        if isProperty ca #lastMeasuredMm do ca.lastMeasuredMm = (record.lastMeasuredMm as float)
+        if isProperty ca #lastDeltaMm do ca.lastDeltaMm = (record.lastDeltaMm as float)
         ca.styleId = (record.styleId as string)
 
         true
@@ -105,6 +121,11 @@ struct AmenoDimensionCAService
             rec.displayMode = ca.displayMode
             rec.roundingIncrementMm = ca.roundingIncrementMm
             rec.manualValue = ca.manualValue
+            if isProperty ca #manualValueMm do rec.manualValueMm = ca.manualValueMm
+            if isProperty ca #manualText do rec.manualText = ca.manualText
+            if isProperty ca #manualReason do rec.manualReason = ca.manualReason
+            if isProperty ca #lastMeasuredMm do rec.lastMeasuredMm = ca.lastMeasuredMm
+            if isProperty ca #lastDeltaMm do rec.lastDeltaMm = ca.lastDeltaMm
             rec.styleId = ca.styleId
             return rec
         )

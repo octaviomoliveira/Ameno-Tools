@@ -288,26 +288,53 @@ Transformar o desenho criado em uma entidade Ameno confiável que sobreviva a sa
 
 ## E6 — Valores medidos, arredondados e manuais
 
+**Estado:** implementada, validada em 3ds Max Batch isolado e no pacote instalado; pronta para validação manual no 3ds Max 2026.3.
+**Implementação:** `Contents/scripts/ameno/core/ameno_dimension_ca.ms` (schema v2), `Contents/scripts/ameno/core/ameno_dimension_graphics.ms` (cálculo de audit, marcador viewport-only `[M]`, alteração e restauração de modos), `Contents/scripts/ameno/core/ameno_runtime.ms` (seleção e delegação), `Contents/scripts/ameno/ui/ameno_main_panel.ms` (painel expandido com inspeção reativa via `#selectionSetChanged`), e documentado na ADR `docs/decisions/0009-e6-manual-overrides-viewport-marker.md`.
+**Evidência automatizada:** `test_bootstrap.ms` aprovou no Batch isolado:
+1. Estado inicial medido com delta 0 e sem marcador.
+2. Override manual numérico (20,00m -> 19,60m) com delta -0,40m e motivo registrado.
+3. Instanciação do marcador `[M]` no viewport com `renderable = false` e `wirecolor` âmbar `(color 245 166 35)`, além de wirecolor âmbar nas linhas e no rótulo.
+4. Alteração da geometria física e recálculo automático do delta mantendo inalterado o valor manual exibido (regra de ouro).
+5. Persistência completa do modo manual, motivo e nó marcador em arquivo `.max` com reabertura íntegra e `renderable = false` preservado.
+6. Ação de restauração para valor medido (`resetDimensionToMeasured`), excluindo o marcador e retornando o wirecolor ao padrão.
+7. Modo arredondado por incremento configurável.
+8. Reversão atômica via Undo (`max undo`).
+`test_installed_package.ms` aprovou a execução dos overrides no pacote instalado via `ApplicationPlugins`.
+**Instalação:** `tools/install-dev.ps1` sincronizou a versão atualizada no `ApplicationPlugins\AmenoTools`.
+
 ### Objetivo
 
-Permitir que a cota represente levantamento e intenção de projeto sem esconder divergências.
+Permitir que a cota represente levantamento e intenção de projeto sem esconder divergências. Regra de ouro: **"Valor medido ≠ valor exibido. A medida física real nunca é apagada."**
 
 ### Implementação
 
-- painel da cota selecionada;
-- `measuredMm`, `displayMode`, incremento e `manualValue` separados;
-- motivo opcional da alteração manual;
-- delta entre real e exibido;
-- ação `Usar valor medido`;
-- estado manual em âmbar e marcador `M` somente no viewport;
-- filtro/lista de cotas manuais.
+- Schema CA Version 2 no controlador técnico com campos `manualValueMm`, `manualText`, `manualReason`, `lastMeasuredMm`, `lastDeltaMm`;
+- Quatro modos de valor: `#measured` (medido puro), `#rounded` (arredondado por passo em cm), `#manualNumeric` (numérico arbitrário em metros) e `#manualText` (texto livre);
+- Marcador visual `[M]` TextPlus posicionado ao lado da cota, com `renderable = false` (não renderiza em Corona/V-Ray/Arnold) e `wirecolor = (color 245 166 35)`;
+- Linha e texto da cota recebem `wirecolor` âmbar quando modificados, mantendo seus materiais originais para um render limpo;
+- Painel reativo: ao selecionar qualquer nó da cota na cena, o painel exibe ID, Valor Medido, Valor Exibido, Delta (com aviso `[MODIFICADA / MANUAL]`), modo ativo, campos para edição e botão de restauração imediata;
+- Undo atômico para todas as transições de modo e valores.
 
-### Gate
+### Gate no Max
 
-- medido `20,00 m` pode exibir manual `19,60 m` e delta `-0,40 m`;
-- mover os pontos muda o medido e o delta, preservando o manual;
-- salvar/reabrir preserva valor e motivo;
-- aviso âmbar não aparece no render.
+1. Abrir o 3ds Max 2026 com o Ameno Tools instalado.
+2. Criar uma cota qualquer no viewport (ex: ~20 m).
+3. Selecionar a cota no viewport e verificar no painel:
+   - Medido e Exibido devem mostrar o mesmo valor.
+   - Delta deve ser `0 m [EXATO]`.
+   - Na cena, não existe marcador `[M]`, e o wirecolor é padrão (branco).
+4. No painel, selecionar modo **Numérico Manual**, inserir um valor diferente (ex: diminuir 40 cm), preencher o motivo e clicar em **Aplicar Alteração**:
+   - O texto da cota exibe o novo valor manual.
+   - Um marcador `[M]` âmbar aparece ao lado do texto no viewport.
+   - As linhas e o texto da cota ficam com cor de arame âmbar na viewport.
+   - O painel exibe o Delta exato (ex: `-0,40 m [MODIFICADA / MANUAL]`).
+5. Renderizar a cena (Corona, V-Ray ou Arnold):
+   - Confirmar que o marcador `[M]` **NÃO aparece no render** e as linhas renderizam com material normal (sem cor âmbar).
+6. Mover um dos pontos da cota na cena:
+   - Confirmar que o valor exibido continua fixo no valor manual, e o Delta no painel é recalculado automaticamente.
+7. Clicar em **Restaurar Medido**:
+   - Confirmar que a cota volta ao valor físico real, o marcador `[M]` desaparece e a cor de arame volta ao padrão.
+8. Pressionar `Ctrl+Z` e confirmar o Undo atômico.
 
 ---
 

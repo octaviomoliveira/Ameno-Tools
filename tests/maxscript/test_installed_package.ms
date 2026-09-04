@@ -23,5 +23,24 @@ global AmenoDimensionTool
     local installedE2Format = AmenoUnitService.formatMillimeters 19555.0 outputUnit:#meters precision:2 decimalSeparator:#comma roundingIncrementMillimeters:100.0
     if installedE2Format.text != "19,60 m" then throw "O núcleo E2 instalado formatou a medida incorretamente."
 
-    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4 e E5.\n" AmenoVersion.appVersion
+    -- E6: Teste de override e auditoria no pacote instalado
+    local testDim = AmenoDimensionGraphics.createDimension [0, 0, 0] [1000, 0, 0] [0, 100, 0]
+    local testAudit = AmenoDimensionGraphics.getDimensionAudit testDim.controller
+    if testAudit == undefined or testAudit.isManual then throw "E6 instalado: Cota inicial deveria ser medido."
+    AmenoDimensionGraphics.setDimensionMode testDim.controller #manualNumeric manualValueMm:950.0 reason:"Ajuste pacote instalado"
+    local manualAudit = AmenoDimensionGraphics.getDimensionAudit testDim.controller
+    if manualAudit == undefined or not manualAudit.isManual then throw "E6 instalado: Cota não assumiu modo manual."
+    local markerFound = false
+    for n in (AmenoDimensionGraphics.findNodesForDimension testDim.dimensionId) do
+    (
+        if (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "marker" do
+        (
+            markerFound = true
+            if n.renderable != false then throw "E6 instalado: Marcador deve ter renderable = false."
+        )
+    )
+    if not markerFound then throw "E6 instalado: Marcador [M] não encontrado."
+    AmenoDimensionGraphics.removeDimension testDim.dimensionId
+
+    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5 e E6.\n" AmenoVersion.appVersion
 )

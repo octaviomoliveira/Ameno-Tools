@@ -11,14 +11,30 @@ global AmenoDimensionGraphics
 global AmenoDimensionCA
 global AmenoDimensionRecord
 
+struct AmenoDimensionAuditRecord
+(
+    dimensionId = "",
+    mode = #measured,
+    measuredMillimeters = 0.0,
+    displayMillimeters = 0.0,
+    deltaMillimeters = 0.0,
+    measuredText = "",
+    displayText = "",
+    deltaText = "",
+    manualReason = "",
+    isManual = false
+)
+
 struct AmenoGraphicDimensionRecord
 (
     dimensionId = "",
     controller = undefined,
     lineNode = undefined,
     textNode = undefined,
+    markerNode = undefined,
     layout = undefined,
-    displayText = ""
+    displayText = "",
+    audit = undefined
 )
 
 struct AmenoDimensionGraphicsService
@@ -217,6 +233,123 @@ struct AmenoDimensionGraphicsService
         textNode
     ),
 
+    fn createMarkerNode layout textHeight:20.0 textGap:12.0 fontName:"Arial" =
+    (
+        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * textGap)
+        local markerPosition = textPosition + (layout.direction * (textHeight * 2.0))
+        local markerNode = TextPlus name:(uniqueName "AMENO_MARK_") pos:markerPosition
+
+        markerNode.layouttype = 0
+        markerNode.plane = 1
+        markerNode.alignment = 1
+        markerNode.size = textHeight * 0.8
+        markerNode.ResetString()
+        markerNode.SetFont fontName 0
+        markerNode.ResetStyle()
+        markerNode.AppendString "[M]"
+
+        try (markerNode.wirecolor = (color 245 166 35)) catch ()
+        try (markerNode.renderable = false) catch ()
+
+        markerNode
+    ),
+
+    fn formatDelta deltaMm outputUnit:#meters precision:2 =
+    (
+        local signStr = if deltaMm > 0.0001 then "+" else if deltaMm < -0.0001 then "-" else ""
+        local absVal = abs deltaMm
+        local formatted = AmenoUnitService.formatMillimeters absVal outputUnit:outputUnit precision:precision decimalSeparator:#comma
+        if signStr == "" then ("0 " + (AmenoUnitService.outputUnitSuffix outputUnit))
+        else (signStr + formatted.text)
+    ),
+
+    fn calculateAudit controller layout outputUnit:#meters precision:2 =
+    (
+        local audit = AmenoDimensionAuditRecord()
+        local dimensionId = getDimensionId controller
+        audit.dimensionId = dimensionId
+        audit.measuredMillimeters = layout.measuredMillimeters
+
+        local resolvedUnit = outputUnit
+        local resolvedPrecision = precision
+
+        local record = undefined
+        if AmenoDimensionCA != undefined and isValidNode controller do
+        (
+            record = AmenoDimensionCA.readCA controller
+        )
+
+        local mode = #measured
+        local roundingInc = 0.0
+        local manValMm = 0.0
+        local manTxt = ""
+        local reasonTxt = ""
+
+        if record != undefined then
+        (
+            try (mode = record.displayMode as name) catch (mode = #measured)
+            try (resolvedUnit = record.outputUnit as name) catch ()
+            resolvedPrecision = record.precision
+            roundingInc = record.roundingIncrementMm
+            manValMm = record.manualValueMm
+            manTxt = record.manualText
+            reasonTxt = record.manualReason
+        )
+        else if isValidNode controller then
+        (
+            local mProp = readTextProperty controller "Ameno.DisplayMode"
+            if mProp != undefined and mProp != "" do try (mode = mProp as name) catch ()
+        )
+
+        local measuredFormat = AmenoUnitService.formatMillimeters audit.measuredMillimeters outputUnit:resolvedUnit precision:resolvedPrecision decimalSeparator:#comma
+        audit.measuredText = measuredFormat.text
+
+        audit.mode = mode
+        audit.manualReason = reasonTxt
+
+        case mode of
+        (
+            #rounded:
+            (
+                local inc = if roundingInc > 0.0 then roundingInc else 10.0 -- 1 cm padrão (10 mm)
+                audit.displayMillimeters = AmenoUnitService.roundToIncrement audit.measuredMillimeters inc
+                audit.deltaMillimeters = audit.displayMillimeters - audit.measuredMillimeters
+                audit.isManual = (abs audit.deltaMillimeters > 0.001)
+                local dispFormat = AmenoUnitService.formatMillimeters audit.displayMillimeters outputUnit:resolvedUnit precision:resolvedPrecision decimalSeparator:#comma
+                audit.displayText = dispFormat.text
+                audit.deltaText = formatDelta audit.deltaMillimeters outputUnit:resolvedUnit precision:resolvedPrecision
+            )
+            #manualNumeric:
+            (
+                audit.displayMillimeters = if manValMm > 0.0 then manValMm else audit.measuredMillimeters
+                audit.deltaMillimeters = audit.displayMillimeters - audit.measuredMillimeters
+                audit.isManual = true
+                local dispFormat = AmenoUnitService.formatMillimeters audit.displayMillimeters outputUnit:resolvedUnit precision:resolvedPrecision decimalSeparator:#comma
+                audit.displayText = dispFormat.text
+                audit.deltaText = formatDelta audit.deltaMillimeters outputUnit:resolvedUnit precision:resolvedPrecision
+            )
+            #manualText:
+            (
+                audit.displayMillimeters = audit.measuredMillimeters
+                audit.deltaMillimeters = 0.0
+                audit.isManual = true
+                audit.displayText = if manTxt != "" then manTxt else audit.measuredText
+                audit.deltaText = "Texto manual"
+            )
+            default: -- #measured
+            (
+                audit.mode = #measured
+                audit.displayMillimeters = audit.measuredMillimeters
+                audit.deltaMillimeters = 0.0
+                audit.isManual = false
+                audit.displayText = audit.measuredText
+                audit.deltaText = "0 " + (AmenoUnitService.outputUnitSuffix resolvedUnit)
+            )
+        )
+
+        audit
+    ),
+
     fn decorateGraphicNode node dimensionId role dimensionsLayer =
     (
         if node == undefined or not isValidNode node then return false
@@ -252,6 +385,11 @@ struct AmenoDimensionGraphicsService
             rec.displayMode = "measured"
             rec.roundingIncrementMm = 0.0
             rec.manualValue = ""
+            rec.manualValueMm = 0.0
+            rec.manualText = ""
+            rec.manualReason = ""
+            rec.lastMeasuredMm = 0.0
+            rec.lastDeltaMm = 0.0
             rec.styleId = "default"
 
             AmenoDimensionCA.applyCA controller rec
@@ -268,17 +406,44 @@ struct AmenoDimensionGraphicsService
         controller
     ),
 
-    fn createVisualNodes controller layout labelText dimensionsLayer =
+    fn createVisualNodes controller layout auditOrText dimensionsLayer =
     (
         local dimensionId = readTextProperty controller "Ameno.DimensionId"
+        local audit = undefined
+        local labelText = ""
+
+        if isProperty auditOrText #displayText then
+        (
+            audit = auditOrText
+            labelText = audit.displayText
+        )
+        else
+        (
+            labelText = auditOrText as string
+        )
+
         local dimensionMaterial = createDimensionMaterial()
         local lineNode = createLineNode layout material:dimensionMaterial
         local textNode = createTextNode labelText layout material:dimensionMaterial
+        local markerNode = undefined
+
+        if audit != undefined and audit.isManual then
+        (
+            markerNode = createMarkerNode layout
+            decorateGraphicNode markerNode dimensionId "marker" dimensionsLayer
+            try (lineNode.wirecolor = (color 245 166 35)) catch ()
+            try (textNode.wirecolor = (color 245 166 35)) catch ()
+        )
+        else
+        (
+            try (lineNode.wirecolor = (color 245 245 245)) catch ()
+            try (textNode.wirecolor = (color 245 245 245)) catch ()
+        )
 
         decorateGraphicNode lineNode dimensionId "lines" dimensionsLayer
         decorateGraphicNode textNode dimensionId "label" dimensionsLayer
 
-        AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode layout:layout displayText:labelText
+        AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode markerNode:markerNode layout:layout displayText:labelText audit:audit
     ),
 
     fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 =
@@ -360,7 +525,6 @@ struct AmenoDimensionGraphicsService
         local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
         if not layout.valid then throw ("Não foi possível criar a cota: " + layout.errorMessage)
 
-        local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
         local controller = undefined
         local result = undefined
 
@@ -369,7 +533,18 @@ struct AmenoDimensionGraphicsService
             undo "Ameno: criar cota" on
             (
                 controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision
-                result = createVisualNodes controller layout measurement.text sceneState.dimensionsLayer
+                local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
+                if AmenoDimensionCA != undefined do
+                (
+                    local rec = AmenoDimensionCA.readCA controller
+                    if rec != undefined do
+                    (
+                        rec.lastMeasuredMm = audit.measuredMillimeters
+                        rec.lastDeltaMm = audit.deltaMillimeters
+                        AmenoDimensionCA.applyCA controller rec
+                    )
+                )
+                result = createVisualNodes controller layout audit sceneState.dimensionsLayer
             )
         )
         catch
@@ -455,17 +630,46 @@ struct AmenoDimensionGraphicsService
         local nodes = findNodesForDimension dimensionId
         local hasLines = false
         local hasLabel = false
+        local hasMarker = false
 
         for n in nodes where isValidNode n do
         (
             local r = readTextProperty n "Ameno.GraphicRole"
             if r == "lines" do hasLines = true
             if r == "label" do hasLabel = true
+            if r == "marker" do hasMarker = true
         )
+
+        local record = undefined
+        if AmenoDimensionCA != undefined do record = AmenoDimensionCA.readCA controller
+        local isManualExpected = false
+        if record != undefined do
+        (
+            isManualExpected = (record.displayMode == "manualNumeric" or record.displayMode == "manualText" or (record.displayMode == "rounded" and (abs record.lastDeltaMm > 0.001)))
+        )
+
+        if isManualExpected and not hasMarker then return #missing_marker
+        if not isManualExpected and hasMarker then return #unexpected_marker
 
         if hasLines and hasLabel then #healthy
         else if hasLines or hasLabel then #partial
         else #missing_graphics
+    ),
+
+    fn getDimensionAudit controller =
+    (
+        if controller == undefined or not isValidNode controller then return undefined
+        local record = undefined
+        if AmenoDimensionCA != undefined do record = AmenoDimensionCA.readCA controller
+        if record == undefined then return undefined
+
+        local layout = AmenoDimensionMath.alignedLayout record.pointA record.pointB record.offsetPoint
+        if not layout.valid then return undefined
+
+        local outputUnit = #meters
+        try (outputUnit = (record.outputUnit as name)) catch ()
+
+        calculateAudit controller layout outputUnit:outputUnit precision:record.precision
     ),
 
     fn rebuildDimension controller =
@@ -507,9 +711,56 @@ struct AmenoDimensionGraphicsService
         local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
         if not layout.valid then throw ("Não foi possível reconstruir a cota: " + layout.errorMessage)
 
-        local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
+        local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
+        if record != undefined and AmenoDimensionCA != undefined do
+        (
+            record.lastMeasuredMm = audit.measuredMillimeters
+            record.lastDeltaMm = audit.deltaMillimeters
+            AmenoDimensionCA.applyCA controller record
+        )
+
         removeVisualNodes dimensionId
-        createVisualNodes controller layout measurement.text sceneState.dimensionsLayer
+        createVisualNodes controller layout audit sceneState.dimensionsLayer
+    ),
+
+    fn setDimensionMode controller mode manualValueMm:undefined manualText:undefined reason:undefined incrementMm:undefined =
+    (
+        if controller == undefined or not isValidNode controller then return false
+        if AmenoDimensionCA == undefined then return false
+
+        local rec = AmenoDimensionCA.readCA controller
+        if rec == undefined then return false
+
+        undo "Ameno: alterar modo de valor" on
+        (
+            rec.displayMode = (mode as string)
+            if manualValueMm != undefined do rec.manualValueMm = (manualValueMm as float)
+            if manualText != undefined do rec.manualText = (manualText as string)
+            if reason != undefined do rec.manualReason = (reason as string)
+            if incrementMm != undefined and incrementMm > 0.0 do rec.roundingIncrementMm = (incrementMm as float)
+
+            AmenoDimensionCA.applyCA controller rec
+            rebuildDimension controller
+        )
+        true
+    ),
+
+    fn resetDimensionToMeasured controller =
+    (
+        if controller == undefined or not isValidNode controller then return false
+        if AmenoDimensionCA == undefined then return false
+
+        local rec = AmenoDimensionCA.readCA controller
+        if rec == undefined then return false
+
+        undo "Ameno: restaurar valor medido" on
+        (
+            rec.displayMode = "measured"
+            rec.manualReason = ""
+            AmenoDimensionCA.applyCA controller rec
+            rebuildDimension controller
+        )
+        true
     ),
 
     fn repairDimension controller =

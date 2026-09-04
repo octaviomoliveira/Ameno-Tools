@@ -239,7 +239,109 @@ global AmenoDimensionMouseTool
     max undo
     if objects.count != undoBaseline then throw "Ctrl+Z não desfez a cota inteira em uma única entrada."
 
+    -- E6 — Valores medidos, arredondados e manuais (Overrides auditáveis e marcador viewport-only)
+    resetMaxFile #noPrompt
+    AmenoApp.prepareScene()
+    local e6Baseline = objects.count
+    local dimE6 = AmenoDimensionGraphics.createDimension [0, 0, 0] [20000, 0, 0] [0, 500, 0]
+    local ctrlE6 = dimE6.controller
+    local dimE6Id = dimE6.dimensionId
+
+    -- 1. Estado inicial medido
+    local auditInit = AmenoDimensionGraphics.getDimensionAudit ctrlE6
+    if auditInit == undefined then throw "E6: Não foi possível obter audit da cota recém-criada."
+    if auditInit.mode != #measured then throw "E6: Modo inicial deveria ser #measured."
+    if auditInit.isManual != false then throw "E6: isManual deveria ser false inicialmente."
+    if not (AmenoDimensionMath.nearlyEqual auditInit.deltaMillimeters 0.0) then throw "E6: Delta inicial deveria ser 0.0."
+    if dimE6.markerNode != undefined then throw "E6: Cota em modo medido não deve possuir markerNode."
+    if (AmenoDimensionGraphics.findNodesForDimension dimE6Id).count != 3 then throw "E6: Contagem de nós medidos deveria ser 3."
+
+    -- 2. Alteração para modo numérico manual (20,00m -> 19,60m, delta -0,40m)
+    local targetValMm = auditInit.measuredMillimeters - 400.0 -- 19.600 mm
+    AmenoDimensionGraphics.setDimensionMode ctrlE6 #manualNumeric manualValueMm:targetValMm reason:"Ajuste executivo"
+    local auditManual = AmenoDimensionGraphics.getDimensionAudit ctrlE6
+    if auditManual.mode != #manualNumeric then throw "E6: Modo deveria ser #manualNumeric."
+    if auditManual.isManual != true then throw "E6: isManual deveria ser true em modo numérico manual."
+    if not (AmenoDimensionMath.nearlyEqual auditManual.displayMillimeters targetValMm) then throw "E6: displayMillimeters incorreto após override."
+    if not (AmenoDimensionMath.nearlyEqual auditManual.deltaMillimeters -400.0) then throw "E6: deltaMillimeters deveria ser -400.0."
+    if auditManual.manualReason != "Ajuste executivo" then throw "E6: manualReason não foi preservado."
+
+    -- Validação do marcador no viewport e isolamento do render
+    local manualNodes = AmenoDimensionGraphics.findNodesForDimension dimE6Id
+    if manualNodes.count != 4 then throw "E6: Cota manual deveria possuir 4 nós (controller, line, label, marker)."
+    local foundMarker = undefined
+    local foundLine = undefined
+    local foundLabel = undefined
+    for n in manualNodes do
+    (
+        local r = AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole"
+        if r == "marker" do foundMarker = n
+        if r == "lines" do foundLine = n
+        if r == "label" do foundLabel = n
+    )
+    if foundMarker == undefined or not isValidNode foundMarker then throw "E6: Marcador [M] não foi encontrado na cena."
+    if foundMarker.renderable != false then throw "E6: CRÍTICO — Marcador [M] deve ter renderable = false para nunca aparecer no render."
+    if foundMarker.wirecolor != (color 245 166 35) then throw "E6: Marcador [M] deve ter wirecolor âmbar (245, 166, 35)."
+    if foundLine.wirecolor != (color 245 166 35) or foundLabel.wirecolor != (color 245 166 35) then throw "E6: Linha e rótulo devem ter wirecolor âmbar quando manual."
+    if (AmenoDimensionGraphics.inspectDimension ctrlE6) != #healthy then throw "E6: Cota manual com marcador deve ser considerada saudável."
+
+    -- 3. Mover geometria e confirmar recálculo de delta mantendo valor manual (regra de ouro)
+    local mmPerUnit = AmenoUnitService.currentMillimetersPerSceneUnit()
+    local caRec = AmenoDimensionCA.readCA ctrlE6
+    caRec.pointB = [21000, 0, 0] -- física alterada para 21000 unidades de cena
+    AmenoDimensionCA.applyCA ctrlE6 caRec
+    AmenoDimensionGraphics.rebuildDimension ctrlE6
+
+    local expectedMovedMm = 21000.0 * mmPerUnit
+    local auditMoved = AmenoDimensionGraphics.getDimensionAudit ctrlE6
+    if not (AmenoDimensionMath.nearlyEqual auditMoved.measuredMillimeters expectedMovedMm tolerance:1.0) then throw "E6: Medida física não atualizou após mover ponto."
+    if not (AmenoDimensionMath.nearlyEqual auditMoved.displayMillimeters targetValMm) then throw "E6: Valor exibido manual deveria se manter inalterado após mover ponto."
+    if not (AmenoDimensionMath.nearlyEqual auditMoved.deltaMillimeters (targetValMm - expectedMovedMm) tolerance:1.0) then throw "E6: Delta não recalculou corretamente após mover geometria."
+
+    -- 4. Persistência de modo manual e audit em arquivo .max
+    local tempE6Scene = pathConfig.appendPath tempMaxDir "ameno_e6_test.max"
+    deleteFile tempE6Scene
+    saveMaxFile tempE6Scene clearNeedSaveFlag:true quiet:true
+
+    resetMaxFile #noPrompt
+    loadMaxFile tempE6Scene quiet:true
+    deleteFile tempE6Scene
+    AmenoApp.refreshDimensions()
+
+    local loadedE6Controllers = AmenoDimensionGraphics.findControllers()
+    if loadedE6Controllers.count != 1 then throw "E6: Cota manual persistida não foi encontrada após recarregar cena."
+    local loadedE6Ctrl = loadedE6Controllers[1]
+    local auditReloaded = AmenoDimensionGraphics.getDimensionAudit loadedE6Ctrl
+    if auditReloaded.mode != #manualNumeric then throw "E6: Modo não persistiu como #manualNumeric após load."
+    if auditReloaded.isManual != true then throw "E6: isManual não persistiu como true após load."
+    if auditReloaded.manualReason != "Ajuste executivo" then throw "E6: Motivo manual não persistiu após load."
+    local reloadedNodes = AmenoDimensionGraphics.findNodesForDimension (AmenoDimensionGraphics.getDimensionId loadedE6Ctrl)
+    if reloadedNodes.count != 4 then throw "E6: Cota recarregada deveria possuir 4 nós."
+    for n in reloadedNodes where (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "marker" do
+    (
+        if n.renderable != false then throw "E6: Marcador recarregado perdeu renderable = false."
+    )
+
+    -- 5. Restauração para valor medido (resetDimensionToMeasured)
+    AmenoDimensionGraphics.resetDimensionToMeasured loadedE6Ctrl
+    local auditReset = AmenoDimensionGraphics.getDimensionAudit loadedE6Ctrl
+    if auditReset.mode != #measured then throw "E6: Modo após reset deveria ser #measured."
+    if auditReset.isManual != false then throw "E6: isManual após reset deveria ser false."
+    if not (AmenoDimensionMath.nearlyEqual auditReset.deltaMillimeters 0.0) then throw "E6: Delta após reset deveria ser 0.0."
+    local nodesAfterReset = AmenoDimensionGraphics.findNodesForDimension (AmenoDimensionGraphics.getDimensionId loadedE6Ctrl)
+    if nodesAfterReset.count != 3 then throw "E6: Nós após reset para medido deveriam ser 3 (marcador removido)."
+
+    -- 6. Modo arredondado
+    AmenoDimensionGraphics.setDimensionMode loadedE6Ctrl #rounded incrementMm:100.0 -- arredondar para cada 10 cm
+    local auditRounded = AmenoDimensionGraphics.getDimensionAudit loadedE6Ctrl
+    if auditRounded.mode != #rounded then throw "E6: Modo deveria ser #rounded."
+
+    -- 7. Desfazer alteração com Undo do 3ds Max
+    max undo
+    local auditAfterUndo = AmenoDimensionGraphics.getDimensionAudit loadedE6Ctrl
+    if auditAfterUndo.mode != #measured then throw "E6: Undo não reverteu a mudança de modo para #measured."
+
     fileIn macroPath quiet:true
 
-    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4 e E5 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
+    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5 e E6 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
 )

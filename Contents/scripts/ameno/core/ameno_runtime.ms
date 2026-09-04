@@ -79,6 +79,47 @@ struct AmenoRuntime
         repairedCount
     ),
 
+    fn getSelectedDimensionController =
+    (
+        if selection.count == 0 then return undefined
+        for obj in selection where isValidNode obj do
+        (
+            local dimId = AmenoDimensionGraphics.getDimensionId obj
+            if dimId != "" do
+            (
+                local nodes = AmenoDimensionGraphics.findNodesForDimension dimId
+                for n in nodes where isValidNode n do
+                (
+                    if (AmenoDimensionGraphics.readTextProperty n "Ameno.Kind") == "dimension" or (AmenoDimensionCA != undefined and AmenoDimensionCA.hasCA n) then
+                    (
+                        return n
+                    )
+                )
+            )
+        )
+        undefined
+    ),
+
+    fn getSelectedDimensionAudit =
+    (
+        local ctrl = getSelectedDimensionController()
+        if ctrl != undefined then AmenoDimensionGraphics.getDimensionAudit ctrl else undefined
+    ),
+
+    fn setDimensionMode controller mode manualValueMm:undefined manualText:undefined reason:undefined incrementMm:undefined =
+    (
+        local res = AmenoDimensionGraphics.setDimensionMode controller mode manualValueMm:manualValueMm manualText:manualText reason:reason incrementMm:incrementMm
+        refreshDimensions()
+        res
+    ),
+
+    fn resetDimensionToMeasured controller =
+    (
+        local res = AmenoDimensionGraphics.resetDimensionToMeasured controller
+        refreshDimensions()
+        res
+    ),
+
     fn onSceneOpened =
     (
         refreshScene()
@@ -120,6 +161,7 @@ struct AmenoRuntime
     fn shutdown =
     (
         callbacks.removeScripts id:#ameno_lifecycle
+        callbacks.removeScripts id:#ameno_selection
         try (stopTool AmenoDimensionMouseTool) catch ()
         try (if AmenoDimensionTool != undefined do AmenoDimensionTool.cancel()) catch ()
         try (destroyDialog AmenoMainPanelRollout) catch ()
