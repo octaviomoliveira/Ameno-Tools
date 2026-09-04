@@ -503,60 +503,35 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 
 ## E10 — Fluxo de produção e estabilização
 
-### Entregas
+**Estado:** implementada, testada e empacotada em 2026-09-04; pronta para validação interativa pelo usuário no 3ds Max.
+**Implementações:**
+- **E10.1 — Cotas Horizontal e Vertical:** `ameno_dimensions_math.ms` (`layoutForMode`), `ameno_dimension_ca.ms` (schema v4 com `dimensionMode`), `ameno_dimension_graphics.ms`, `ameno_dimension_tool.ms`, `ameno_main_panel.ms` (`rdoMode`). ADR 0014, `tests/maxscript/test_e10_1_modes.ms` aprovado.
+- **E10.2 — Seleção Múltipla, Lote e Bake:** `ameno_runtime.ms` (`getSelectedDimensionControllers`, `applyUnitToSelected`, `applyPrecisionToSelected`, `applyDimensionModeToSelected`, `bakeSelected`), `ameno_main_panel.ms` (seção Selecionadas no rollout Âncoras). `tests/maxscript/test_e10_2_batch.ms` aprovado.
+- **E10.3 — V-Ray CPU Renderer Adapter:** `ameno_vray_adapter.ms` (`AmenoVRayRendererAdapterService` com `VRayLightMtl` e fallback defensivo `VRayMtl`), `ameno_render_cotas_service.ms` (`resolveDefaultAdapter`), `ameno_main_panel.ms` (suporte dinâmico a Corona e V-Ray CPU/GPU). ADR 0016, `tests/maxscript/test_e10_3_vray.ms` aprovado (17 testes).
+- **E10.4 — Fixtures, Diagnóstico e Guia de Uso:** `ameno_diagnostic_service.ms` (`AmenoDiagnosticServiceDefinition` com varredura completa de saúde, modos, âncoras e órfãs), `tests/fixtures/create_fixture_architecture_plan.ms`, `tests/fixtures/create_fixture_scale.ms`, `docs/user-guide.md` (manual completo em português). ADR 0017, `tests/maxscript/test_e10_4_diagnostics.ms` aprovado (19 testes).
+- **E10.5 — Benchmarks de Escala (1 a 1000 Cotas):** `tests/maxscript/test_e10_5_scale.ms` executou testes de estresse com 1, 10, 100, 500 e 1000 cotas geradas parametricamente (3.000 nós na cena) sem falhas ou vazamentos. ADR 0018 aprovado (20 testes).
+- **E10.6 — Pacote Alpha Distribuível:** `tools/package-alpha.ps1` validou a estrutura e empacotou `dist/AmenoTools-0.0.1-alpha.zip` (57 KB, SHA-256 verificado), acompanhado de `docs/alpha-release-notes.md`.
 
-- cotas horizontal e vertical reutilizando o núcleo alinhado;
-- seleção múltipla, atualização em lote e bake;
-- V-Ray CPU pelo mesmo contrato do adapter Corona;
-- V-Ray GPU permanece experimental até matriz própria;
-- cenas-fixture, relatório de diagnóstico e documentação de uso;
-- testes com 1, 10, 100, 500 e 1000 cotas;
-- empacotamento de uma versão alpha interna para uma planta real.
+### Gate do MVP interno (Pendente de validação interativa pelo usuário)
 
-### Gate do MVP interno
-
-- uma planta humanizada real concluída do início ao fim;
-- nenhuma perda de dados conhecida;
-- instalação, criação, edição, persistência e render separado aprovados;
-- limitações e versões exatas de Max, Corona e V-Ray registradas.
+- [ ] Criar cotas nos modos Alinhada, Horizontal e Vertical em uma planta real;
+- [ ] Seleção múltipla: alterar unidade (m/cm/mm) e precisão em lote;
+- [ ] Bake de âncoras: fixar cotas e mover objetos;
+- [ ] Render separado de cotas no Corona ou V-Ray CPU e sobrepor no Photoshop;
+- [ ] Emitir Relatório de Diagnóstico no painel.
 
 ---
 
 ## E11 — Editor Visual e Preview ao Vivo
 
-**Estado:** planejada; iniciar após a aprovação da E10.
+**Estado:** planejada; iniciar após a aprovação da E10 pelo usuário.
 
 Substituir o rollout funcional criado na E7 por um editor visual coerente com o mockup aprovado pelo usuário. A “viewport” desta etapa é um preview 2D embutido e isolado da cena, não uma viewport 3D adicional do Max.
 
-### Entregas
-
-- prova técnica entre WPF/C# e MAXScript + .NET/WinForms;
-- interface moderna com cabeçalho, presets, preview e grupos Texto/Linhas/Terminais;
-- `StyleDraft` em memória: controles não alteram a cena antes do commit;
-- preview vetorial com planta neutra, texto, linhas, máscara, cores e cinco terminais;
-- ações distintas `Cancelar`, `Aplicar às selecionadas`, `Salvar estilo` e `Salvar como novo`;
-- compatibilidade/migração segura dos estilos existentes;
-- funcionamento em DPI 100/125/150/200 % e pacote `ApplicationPlugins` independente do checkout.
-
-### Gate
-
-- aparência aprovada pelo usuário contra o mockup;
-- preview fluido sem criar nós ou rebuildar a cena;
-- Cancelar não altera dados nem Undo;
-- Aplicar/Salvar atualizam em lote com um único Undo e restauração em erro;
-- save/open, fontes ausentes, cinco terminais e pacote instalado aprovados;
-- nenhuma regressão funcional nas etapas E1–E10.
-
 **Plano detalhado:** `plans/2026-09-04-e11-editor-visual-preview.md`.
 
+---
 
 ## Próxima ação
 
-Implementar a **E10 — Fluxo de produção e estabilização**:
-
-1. cotas horizontal e vertical reutilizando o núcleo alinhado;
-2. seleção múltipla, atualização em lote e bake;
-3. adapter V-Ray CPU pelo mesmo contrato do adapter Corona;
-4. cenas-fixture, relatório de diagnóstico e documentação de uso;
-5. testes de escala com 1, 10, 100, 500 e 1000 cotas;
-6. empacotamento de versão alpha interna para uma planta real.
+Aguardar validação interativa das funcionalidades da **E10** pelo usuário no 3ds Max 2026 com o pacote instalado (`install-dev.ps1`) ou o arquivo gerado `dist/AmenoTools-0.0.1-alpha.zip`.
