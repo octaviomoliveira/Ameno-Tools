@@ -1,8 +1,10 @@
 # E11 — Editor Visual e Preview ao Vivo
 
-**Data:** 2026-09-04  
-**Alvo inicial:** 3ds Max 2026  
-**Estado:** planejada; iniciar somente após o gate da E10  
+**Data:** 2026-09-04
+
+**Alvo inicial:** 3ds Max 2026
+
+**Estado:** planejada; iniciar somente após o gate da E10
 **Referência visual:** mockup “Ameno — Editor de estilo” fornecido pelo usuário em 2026-09-04
 
 ## Contexto
