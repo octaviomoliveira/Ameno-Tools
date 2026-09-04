@@ -46,21 +46,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Estratégia de render definida: Corona como referência obrigatória; V-Ray CPU como segundo adapter oficial; V-Ray GPU separado e experimental até ser validado.
 - Escopo inicial definido para 3ds Max 2026; compatibilidade 2021–2025 será avaliada após o MVP estar estável.
 
-## Em andamento
+### Em andamento
 
-- E8.1 — Estabilização das Âncoras, Estilos e Interface: bug de reatividade em tempo real corrigido (commit `853b97a`); aguardando validação interativa no 3ds Max 2026.
+- E9 — aguardando planejamento e aprovação do usuário.
 
 ## Próximo passo executável
 
-**Reiniciar o 3ds Max 2026** (necessário para carregar o pacote atualizado) e validar a E8.1 interativamente:
-
-1. Criar dois objetos na cena (ex: duas caixas `Box001` e `Box002`);
-2. Clicar em **Criar cota** e clicar sobre os dois objetos para definir a cota;
-3. **Mover ou rotacionar um dos objetos** e confirmar que a cota acompanha e atualiza a medida **em tempo real**, sem precisar reancorar;
-4. Pressionar `Ctrl+Z` e confirmar que o Undo desfaz apenas a transformação, sem poluição de histórico;
-5. Deletar um dos objetos e confirmar que a cota **não desaparece**: torna-se órfã com arame e texto vermelhos `(230, 70, 70)` na viewport;
-6. Criar um `Box003`, clicar em **Reancorar Ponto B** e clicar no novo objeto, confirmando que a cota se reconecta e volta à cor normal;
-7. Abrir o Editor de Estilos, alterar propriedades, aplicar e testar `Ctrl+Z` / `Ctrl+Y`.
+Planejar e iniciar **E9** (a definir com o usuário: ex. seleção de cotas, painel de listagem, exportação PDF/DWG, snap a geometria, etc.).
 
 ## Decisões que ainda exigem validação
 
@@ -97,6 +89,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-04 | Implementar E8: âncoras geométricas, atualização reativa, cotas órfãs e diagnóstico. | E8 implementada e validada em Batch isolado e no pacote ApplicationPlugins; aguardando validação interativa no Max. | `ameno_anchor_service.ms`, `0011-e8-anchors-dirty-queue-diagnostics.md`, `.test-output/*` |
 | 2026-09-04 | E8.1: Estabilização das âncoras reativas, undo de estilos, escala de cena, prioridade de wirecolor e UI compacta. | Implementada e aprovada em testes automatizados no Batch isolado e pacote instalado; aguardando validação interativa no Max. | `0012-e8-1-anchors-styles-ui-stabilization.md`, `test_bootstrap.ms`, `test_installed_package.ms` |
 | 2026-09-04 | Bug: cota não atualiza em tempo real ao mover objeto — precisava reancorar para atualizar. | Causa raiz: `rebuildIndex()` não era chamado após criar cota; o `indexTable` ficava vazio e o `NodeEventCallback` ignorava os eventos. Corrigido com `rebuildIndex()` após `createDimension` e rebuild lazy no `handleNodesChanged`. Testes automatizados passaram (exit code 0). | commit `853b97a`, `ameno_dimension_tool.ms`, `ameno_anchor_service.ms` |
+| 2026-09-04 | Bug persistente: reatividade em tempo real ainda não funcionava após `853b97a`. | Causa raiz final: `NodeEventCallback` não captura Select-and-Move interativo — os eventos não chegavam com handles de nó válidos. Solução: `execute()` com `when transform (getAnimByHandle h) changes` compila o watcher em runtime, com handle embutido na string para evitar closure/race condition. E8.1 **aprovada interativamente** pelo usuário. | commit `4373f34`, `ameno_anchor_service.ms` |
 
 ## Como retomar sem contexto
 
