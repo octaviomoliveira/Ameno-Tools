@@ -18,10 +18,11 @@ fn AmenoRefreshMainPanel =
         AmenoMainPanelRollout.lblSceneStatus.text = sceneInfo.statusLabel
         AmenoMainPanelRollout.lblSceneDetail.text = sceneInfo.detail
         AmenoMainPanelRollout.btnPrepare.caption = if sceneInfo.status == #ready then "Verificar infraestrutura" else "Preparar esta cena"
+        AmenoMainPanelRollout.lblDimensions.text = AmenoApp.refreshDimensions()
     )
 )
 
-rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:360
+rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:420
 (
     label lblBrand "AMENO TOOLS" pos:[20,16] width:340 height:24 align:#left
     label lblVersion "" pos:[20,44] width:340 height:18 align:#left
@@ -36,10 +37,13 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:360
     label lblSceneDetail "" pos:[26,214] width:320 height:18 align:#left
     button btnPrepare "Preparar esta cena" pos:[198,228] width:156 height:24
 
-    groupBox grpDimensions "Ameno Dimensions" pos:[12,268] width:356 height:54
-    label lblDimensions "Etapa E1: infraestrutura de cena e layers." pos:[26,290] width:320 height:18 align:#left
+    groupBox grpDimensions "Ameno Dimensions" pos:[12,268] width:356 height:114
+    label lblDimensions "E3: cota gráfica de teste · 0 ativa(s)." pos:[26,290] width:320 height:18 align:#left
+    button btnCreateTest "Criar cota de teste" pos:[26,316] width:156 height:24
+    button btnClearTests "Limpar cotas de teste" pos:[198,316] width:156 height:24
+    label lblTestHint "Cria 5 segmentos + TextPlus em AMENO_COTAS." pos:[26,346] width:320 height:18 align:#left
 
-    button btnClose "Fechar" pos:[278,330] width:90 height:24
+    button btnClose "Fechar" pos:[278,390] width:90 height:24
 
     on AmenoMainPanelRollout open do
     (
@@ -62,6 +66,36 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:360
         )
     )
 
+    on btnCreateTest pressed do
+    (
+        global AmenoApp
+
+        if AmenoApp != undefined then
+        (
+            try
+            (
+                local record = AmenoApp.createTestDimension()
+                select #(record.lineNode, record.textNode)
+                AmenoRefreshMainPanel()
+            )
+            catch
+            (
+                messageBox ("Não foi possível criar a cota de teste:\n" + (getCurrentException() as string)) title:"Ameno Tools"
+            )
+        )
+    )
+
+    on btnClearTests pressed do
+    (
+        global AmenoApp
+
+        if AmenoApp != undefined then
+        (
+            AmenoApp.clearTestDimensions()
+            AmenoRefreshMainPanel()
+        )
+    )
+
     on btnClose pressed do
     (
         destroyDialog AmenoMainPanelRollout
@@ -72,5 +106,5 @@ fn AmenoShowMainPanel =
 (
     try (destroyDialog AmenoMainPanelRollout) catch ()
 
-    createDialog AmenoMainPanelRollout width:380 height:360 style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) lockWidth:true lockHeight:true
+    createDialog AmenoMainPanelRollout width:380 height:420 style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) lockWidth:true lockHeight:true
 )

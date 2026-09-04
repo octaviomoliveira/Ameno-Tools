@@ -6,6 +6,7 @@ global AmenoRendererProbe
 global AmenoSceneSetup
 global AmenoUnitService
 global AmenoDimensionMath
+global AmenoDimensionGraphics
 
 (
     local testFile = getSourceFileName()
@@ -23,6 +24,7 @@ global AmenoDimensionMath
     if AmenoSceneSetup == undefined then throw "Scene setup não foi carregado pelo bootstrap."
     if AmenoUnitService == undefined then throw "Serviço de unidades não foi carregado pelo bootstrap."
     if AmenoDimensionMath == undefined then throw "Núcleo de matemática de cotas não foi carregado pelo bootstrap."
+    if AmenoDimensionGraphics == undefined then throw "Construtor gráfico de cotas não foi carregado pelo bootstrap."
 
     local coronaInfo = AmenoRendererProbe.classify "CoronaRenderer"
     local vrayCpuInfo = AmenoRendererProbe.classify "V_Ray_7_Hotfix_1"
@@ -100,7 +102,36 @@ global AmenoDimensionMath
     if conflictState.dimensionsLayer.name == "AMENO_COTAS" then throw "Uma layer homônima do usuário foi apropriada."
     if userLayer.name != "AMENO_COTAS" then throw "A layer homônima do usuário foi modificada."
 
+    resetMaxFile #noPrompt
+    local graphicSceneState = AmenoApp.prepareScene()
+    local objectCountBeforeGraphics = objects.count
+    local graphicRecord = AmenoDimensionGraphics.createDimension [0, 0, 0] [100, 0, 0] [0, 20, 0]
+
+    if graphicRecord == undefined then throw "A cota gráfica não retornou registro."
+    if graphicRecord.controller == undefined or not isValidNode graphicRecord.controller then throw "Controlador gráfico não foi criado."
+    if graphicRecord.lineNode == undefined or not isValidNode graphicRecord.lineNode then throw "Linhas gráficas não foram criadas."
+    if graphicRecord.textNode == undefined or not isValidNode graphicRecord.textNode then throw "Rótulo TextPlus não foi criado."
+    if graphicRecord.lineNode.layer != graphicSceneState.dimensionsLayer or graphicRecord.textNode.layer != graphicSceneState.dimensionsLayer then throw "Nós visuais não pertencem à layer de cotas."
+    if graphicRecord.controller.layer != graphicSceneState.systemLayer then throw "Controlador não pertence à layer de sistema."
+    if not graphicRecord.controller.isHidden or graphicRecord.controller.renderable then throw "Controlador gráfico deve ficar oculto e fora do render."
+    if graphicRecord.displayText == "" then throw "A cota gráfica não recebeu texto formatado."
+    if (AmenoDimensionGraphics.findNodesForDimension graphicRecord.dimensionId).count != 3 then throw "A cota gráfica deveria registrar três nós."
+    if objects.count != (objectCountBeforeGraphics + 3) then throw "A criação gráfica deveria adicionar exatamente três nós."
+
+    local originalLineNode = graphicRecord.lineNode
+    local rebuiltRecord = AmenoDimensionGraphics.rebuildDimension graphicRecord.controller
+
+    if rebuiltRecord.controller != graphicRecord.controller then throw "Reconstrução não preservou o controlador."
+    if isValidNode originalLineNode then throw "Reconstrução deixou a linha gráfica anterior na cena."
+    if rebuiltRecord.lineNode == undefined or not isValidNode rebuiltRecord.lineNode then throw "Reconstrução não criou novas linhas."
+    if rebuiltRecord.textNode == undefined or not isValidNode rebuiltRecord.textNode then throw "Reconstrução não criou novo rótulo TextPlus."
+    if (AmenoDimensionGraphics.findNodesForDimension rebuiltRecord.dimensionId).count != 3 then throw "Reconstrução deixou resíduos gráficos."
+
+    if not (AmenoDimensionGraphics.removeDimension rebuiltRecord.dimensionId) then throw "Remoção da cota gráfica falhou."
+    if (AmenoDimensionGraphics.findNodesForDimension rebuiltRecord.dimensionId).count != 0 then throw "Remoção da cota gráfica deixou resíduos."
+    if objects.count != objectCountBeforeGraphics then throw "Ciclo gráfico criar/reconstruir/remover não restaurou a contagem de nós."
+
     fileIn macroPath quiet:true
 
-    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena e E2 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
+    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2 e E3 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
 )

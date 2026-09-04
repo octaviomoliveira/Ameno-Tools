@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 em desenvolvimento.
+**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 pronta para teste no Max.
 
 ## Estratégia de execução
 
@@ -26,7 +26,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E0 | Pacote abre, mostra versão e reconhece o Corona | Aprovada |
 | E1 | `Preparar esta cena` cria a infraestrutura Ameno com segurança | Aprovada |
 | E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Aprovada em Batch |
-| E3 | Uma cota gráfica de teste é construída na cena | Em desenvolvimento |
+| E3 | Uma cota gráfica de teste é construída na cena | Pronta para teste no Max |
 | E4 | Cota alinhada é criada com três cliques e preview | Não iniciada |
 | E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Não iniciada |
 | E6 | Valor medido, arredondado e manual podem ser revisados | Não iniciada |
@@ -143,7 +143,10 @@ A E2 foi executada antes da validação visual da E1 por autorização explícit
 
 ## E3 — Primeiro construtor gráfico
 
-**Estado:** em desenvolvimento desde 2026-09-03, após aprovação visual da E1.
+**Estado:** pronta para teste no Max desde 2026-09-03, após aprovação visual da E1.
+**Implementação:** `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, integrada em `ameno_bootstrap.ms`, `ameno_runtime.ms` e `ameno_main_panel.ms`.
+**Instalação:** cópia de desenvolvimento atualizada em `ApplicationPlugins`; o hash SHA-256 do módulo instalado corresponde ao fonte.
+**Automação preparada:** `tests/maxscript/test_bootstrap.ms` testa criar, reconstruir e remover a cota sem resíduos. A execução foi adiada porque o `3dsmaxbatch.exe` fica aguardando enquanto a sessão interativa do usuário permanece aberta.
 
 ### Objetivo
 
@@ -158,6 +161,15 @@ Comprovar que spline, terminais e TextPlus formam uma cota renderizável e recon
 - material gráfico inicial compatível com Corona;
 - inserção de todos os nós visuais em `AMENO_COTAS`;
 - reconstrução e remoção sem resíduos.
+
+### Como validar agora
+
+1. fechar e reabrir o 3ds Max 2026 para carregar a atualização instalada;
+2. abrir `Ameno Tools` e clicar em `Criar cota de teste`;
+3. confirmar que o painel passa a indicar uma cota ativa, que a seleção contém a spline e o TextPlus e que ambos pertencem a `AMENO_COTAS`;
+4. confirmar que o `AMENO_DIM_CTRL_*` fica oculto e não renderizável em `AMENO_SYSTEM`;
+5. em uma câmera superior, conferir valor legível e, em um render comum, que apenas os helpers permanecem invisíveis;
+6. clicar em `Limpar cotas de teste` e confirmar que os três nós da cota foram removidos.
 
 ### Gate no Max
 
@@ -348,4 +360,4 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 
 ## Próxima ação
 
-Implementar somente a **E1 — Preparar esta cena**. Quando estiver pronta, instalar a build de desenvolvimento, executar o gate no 3ds Max aberto e registrar o resultado no `PLAN.md` antes de começar a E2.
+Executar exclusivamente o gate manual da **E3 — Primeiro construtor gráfico**. Ao ser aprovado, rodar os testes Batch com o Max interativo fechado, registrar a evidência em `PLAN.md` e só então iniciar a E4.

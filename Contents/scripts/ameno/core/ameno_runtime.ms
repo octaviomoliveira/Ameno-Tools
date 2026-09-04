@@ -1,6 +1,7 @@
 global AmenoApp
 global AmenoRendererProbe
 global AmenoSceneSetup
+global AmenoDimensionGraphics
 global AmenoLog
 global AmenoVersion
 global AmenoShowMainPanel
@@ -11,6 +12,8 @@ struct AmenoRuntime
     rootPath = "",
     rendererInfo = undefined,
     sceneInfo = undefined,
+    dimensionStatus = "",
+    lastTestDimension = undefined,
     started = false,
 
     fn refreshRenderer =
@@ -31,10 +34,35 @@ struct AmenoRuntime
         sceneInfo
     ),
 
+    fn refreshDimensions =
+    (
+        local testCount = (AmenoDimensionGraphics.findControllers role:AmenoDimensionGraphics.testRole).count
+        dimensionStatus = "E3: cota gráfica de teste · " + (testCount as string) + " ativa(s)."
+        dimensionStatus
+    ),
+
+    fn createTestDimension =
+    (
+        lastTestDimension = AmenoDimensionGraphics.createTestDimension()
+        refreshScene()
+        refreshDimensions()
+        lastTestDimension
+    ),
+
+    fn clearTestDimensions =
+    (
+        local removedCount = AmenoDimensionGraphics.clearTestDimensions()
+        lastTestDimension = undefined
+        refreshScene()
+        refreshDimensions()
+        removedCount
+    ),
+
     fn start =
     (
         refreshRenderer()
         refreshScene()
+        refreshDimensions()
         started = true
 
         AmenoLog.info (AmenoVersion.displayName() + " carregado.")

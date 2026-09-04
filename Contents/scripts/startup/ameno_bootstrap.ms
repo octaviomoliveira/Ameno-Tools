@@ -47,6 +47,7 @@ struct AmenoBootstrapService
             @"core\ameno_logger.ms",
             @"core\ameno_scene_setup.ms",
             @"core\ameno_dimensions_math.ms",
+            @"core\ameno_dimension_graphics.ms",
             @"renderers\ameno_renderer_probe.ms",
             @"core\ameno_runtime.ms",
             @"ui\ameno_main_panel.ms"
