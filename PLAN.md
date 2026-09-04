@@ -22,6 +22,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 - Repositório Git local criado e fundação `0.0.1` do pacote `ApplicationPlugins` estruturada.
 - Pacote carregado e smoke testado no 3ds Max 2026.3.
+- Validação manual no 3ds Max concluída: painel `Ameno Tools 0.0.1 · Max 2026` aberto e Corona identificado como `suportado`.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
 - Regras decididas para `AMENO_COTAS`, geometria renderizável, render separado de cotas e preservação do Beauty, LightMix e Render Elements existentes.
@@ -32,12 +33,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- Implementar o primeiro caminho completo de criação de cota: coleta de três pontos, cálculo e representação gráfica persistente.
-- Criar e controlar automaticamente as layers `AMENO_COTAS` e `AMENO_SYSTEM`.
+- Executar a **Etapa E1 — Preparar a cena**, definida em `plans/2026-09-03-mvp-incremental.md`.
+- Implementar somente a infraestrutura de layers, registro da cena e estilo padrão nesta etapa.
+- Aguardar o gate manual da E1 no 3ds Max antes de iniciar matemática ou criação de cotas.
 
 ## Próximo passo executável
 
-Criar o serviço de layers e o comando de cota linear no MAXScript, iniciando com três cliques: origem, destino e posição da linha de cota. Validar criação, desfazer/refazer, salvamento e reabertura da cena no 3ds Max 2026.
+Implementar a **E1 — Preparar a cena**: adicionar o botão `Preparar esta cena`, criar/reutilizar com segurança `AMENO_COTAS` e `AMENO_SYSTEM`, registrar a infraestrutura Ameno e mostrar o estado no painel. O comando deve ser idempotente, não trocar o renderer, não alterar unidades e restaurar a layer atual. O gate será repetição sem duplicatas em uma cena vazia e em uma cena real.
 
 ## Decisões que ainda exigem validação
 
@@ -55,10 +57,11 @@ Criar o serviço de layers e o comando de cota linear no MAXScript, iniciando co
 | 2026-09-03 | Permitir valores manuais auditáveis com alerta visível somente no viewport. | Decidido e documentado | `docs/decisions/0004-*`, `docs/manual-overrides.md` |
 | 2026-09-03 | Priorizar 3ds Max 2026; Corona primeiro, com compatibilidade planejada para V-Ray. | Decidido e documentado | `docs/decisions/0005-*`, `0006-*` |
 | 2026-09-03 | Centralizar o projeto em `D:\Ameno\_tools` e manter planos atualizados para continuidade via Antigravity. | Concluído | Repositório Git íntegro em `D:\Ameno\_tools`; origem removida após confirmação de vazio |
+| 2026-09-03 | Confirmar o pacote aberto no 3ds Max e dividir o funcionamento do plugin em etapas pequenas. | Concluído no planejamento; E1 é a próxima implementação | `plans/2026-09-03-mvp-incremental.md` |
 
 ## Como retomar sem contexto
 
-1. Leia este arquivo e depois `plans/2026-09-03-foundation.md`.
+1. Leia este arquivo e depois `plans/2026-09-03-mvp-incremental.md`.
 2. Execute `git status` e confirme que o estado local é o esperado.
 3. Leia `README.md` e a documentação diretamente ligada ao próximo passo.
 4. Implemente uma unidade pequena, teste no 3ds Max e registre o resultado aqui.

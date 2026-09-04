@@ -7,6 +7,6 @@ Esta pasta preserva planos de marco, handoffs e registros suficientemente detalh
 Arquivos atuais:
 
 - [Fundação de 2026-09-03](2026-09-03-foundation.md): estado técnico entregue, decisões e ponto de retomada.
+- [Plano incremental do MVP](2026-09-03-mvp-incremental.md): etapas funcionais, gates no 3ds Max e ordem de implementação.
 
 Ao abrir um marco novo, criar um arquivo datado (`AAAA-MM-DD-assunto.md`) e incluir o link no `PLAN.md` quando ele for relevante para continuidade.
-

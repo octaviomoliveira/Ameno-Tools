@@ -1,5 +1,7 @@
 # Roadmap
 
+Este arquivo agrupa resultados por versão. A ordem de implementação, os gates no 3ds Max e o estado de cada etapa estão no [plano incremental do MVP](plans/2026-09-03-mvp-incremental.md). Uma versão pode reunir várias etapas já aprovadas.
+
 ## 0.0.1 — Fundação
 
 - estrutura do pacote `ApplicationPlugins`;
