@@ -125,6 +125,130 @@ struct AmenoStyleEditorWPFDefinition
         FontFamily='Segoe UI' FontSize='12'
         WindowStartupLocation='CenterOwner'>
 
+    <Window.Resources>
+        <!-- ToggleButton escuro para ComboBox -->
+        <ControlTemplate x:Key='ComboBoxToggleButton' TargetType='ToggleButton'>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width='20' />
+                </Grid.ColumnDefinitions>
+                <Border x:Name='Border' Grid.ColumnSpan='2' CornerRadius='3'
+                        Background='#2D2D30' BorderBrush='#3F3F46' BorderThickness='1' />
+                <Border Grid.Column='0' Margin='1' Background='#2D2D30' CornerRadius='2,0,0,2' />
+                <Path x:Name='Arrow' Grid.Column='1' HorizontalAlignment='Center' VerticalAlignment='Center'
+                      Data='M 0 0 L 4 4 L 8 0 Z' Fill='#CCCCCC' />
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property='IsMouseOver' Value='true'>
+                    <Setter TargetName='Border' Property='BorderBrush' Value='#007ACC' />
+                    <Setter TargetName='Arrow' Property='Fill' Value='#FFFFFF' />
+                </Trigger>
+                <Trigger Property='IsChecked' Value='true'>
+                    <Setter TargetName='Border' Property='BorderBrush' Value='#007ACC' />
+                </Trigger>
+                <Trigger Property='IsEnabled' Value='false'>
+                    <Setter TargetName='Border' Property='Background' Value='#222222' />
+                    <Setter TargetName='Border' Property='BorderBrush' Value='#333333' />
+                    <Setter TargetName='Arrow' Property='Fill' Value='#555555' />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <!-- Estilo de Item do ComboBox (fundo escuro, texto claro e legivel) -->
+        <Style TargetType='ComboBoxItem'>
+            <Setter Property='SnapsToDevicePixels' Value='true' />
+            <Setter Property='OverridesDefaultStyle' Value='true' />
+            <Setter Property='Template'>
+                <Setter.Value>
+                    <ControlTemplate TargetType='ComboBoxItem'>
+                        <Border x:Name='Border' Padding='6,4' SnapsToDevicePixels='true' Background='#252526'>
+                            <ContentPresenter TextElement.Foreground='#E0E0E0' />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property='IsHighlighted' Value='true'>
+                                <Setter TargetName='Border' Property='Background' Value='#0E639C' />
+                                <Setter Property='TextElement.Foreground' Value='#FFFFFF' />
+                            </Trigger>
+                            <Trigger Property='IsSelected' Value='true'>
+                                <Setter TargetName='Border' Property='Background' Value='#1177BB' />
+                                <Setter Property='TextElement.Foreground' Value='#FFFFFF' />
+                            </Trigger>
+                            <Trigger Property='IsEnabled' Value='false'>
+                                <Setter Property='TextElement.Foreground' Value='#666666' />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo global de ComboBox escuro -->
+        <Style TargetType='ComboBox'>
+            <Setter Property='SnapsToDevicePixels' Value='true' />
+            <Setter Property='OverridesDefaultStyle' Value='true' />
+            <Setter Property='ScrollViewer.HorizontalScrollBarVisibility' Value='Auto' />
+            <Setter Property='ScrollViewer.VerticalScrollBarVisibility' Value='Auto' />
+            <Setter Property='ScrollViewer.CanContentScroll' Value='true' />
+            <Setter Property='Foreground' Value='#FFFFFF' />
+            <Setter Property='Template'>
+                <Setter.Value>
+                    <ControlTemplate TargetType='ComboBox'>
+                        <Grid>
+                            <ToggleButton Name='ToggleButton'
+                                          Template='{StaticResource ComboBoxToggleButton}'
+                                          Grid.Column='2'
+                                          Focusable='false'
+                                          IsChecked='{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}'
+                                          ClickMode='Press' />
+                            <ContentPresenter Name='ContentSite'
+                                              IsHitTestVisible='false'
+                                              Content='{TemplateBinding SelectionBoxItem}'
+                                              ContentTemplate='{TemplateBinding SelectionBoxItemTemplate}'
+                                              ContentTemplateSelector='{TemplateBinding ItemTemplateSelector}'
+                                              Margin='8,3,23,3'
+                                              VerticalAlignment='Center'
+                                              HorizontalAlignment='Left'
+                                              TextElement.Foreground='#FFFFFF' />
+                            <Popup Name='Popup'
+                                   Placement='Bottom'
+                                   IsOpen='{TemplateBinding IsDropDownOpen}'
+                                   AllowsTransparency='true'
+                                   Focusable='false'
+                                   PopupAnimation='Slide'>
+                                <Grid Name='DropDown'
+                                      SnapsToDevicePixels='true'
+                                      MinWidth='{TemplateBinding ActualWidth}'
+                                      MaxHeight='{TemplateBinding MaxDropDownHeight}'>
+                                    <Border x:Name='DropDownBorder'
+                                            Background='#252526'
+                                            BorderThickness='1'
+                                            BorderBrush='#3F3F46'
+                                            CornerRadius='3'
+                                            Margin='0,2,0,4' />
+                                    <ScrollViewer Margin='2,4,2,6' SnapsToDevicePixels='true'>
+                                        <StackPanel IsItemsHost='True' KeyboardNavigation.DirectionalNavigation='Contained' />
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property='HasItems' Value='false'>
+                                <Setter TargetName='DropDownBorder' Property='MinHeight' Value='95' />
+                            </Trigger>
+                            <Trigger Property='IsEnabled' Value='false'>
+                                <Setter Property='Foreground' Value='#666666' />
+                            </Trigger>
+                            <Trigger Property='IsGrouping' Value='true'>
+                                <Setter Property='ScrollViewer.CanContentScroll' Value='false' />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid Margin='12'>
         <Grid.RowDefinitions>
             <RowDefinition Height='Auto'/>
