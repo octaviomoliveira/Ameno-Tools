@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 aprovada visualmente no viewport, aguardando render comum e limpeza final.
+**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 aprovada no viewport, em render comum sob as condições informadas e na limpeza.
 
 ## Estratégia de execução
 
@@ -26,7 +26,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E0 | Pacote abre, mostra versão e reconhece o Corona | Aprovada |
 | E1 | `Preparar esta cena` cria a infraestrutura Ameno com segurança | Aprovada |
 | E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Aprovada em Batch |
-| E3 | Uma cota gráfica de teste é construída na cena | Aprovada no viewport; render/limpeza pendentes |
+| E3 | Uma cota gráfica de teste é construída na cena | Aprovada no viewport, Arnold/V-Ray com luz e limpeza |
 | E4 | Cota alinhada é criada com três cliques e preview | Não iniciada |
 | E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Não iniciada |
 | E6 | Valor medido, arredondado e manual podem ser revisados | Não iniciada |
@@ -143,12 +143,12 @@ A E2 foi executada antes da validação visual da E1 por autorização explícit
 
 ## E3 — Primeiro construtor gráfico
 
-**Estado:** aprovada visualmente no viewport em 2026-09-03, após aprovação visual da E1; render comum e limpeza final pendentes.
+**Estado:** aprovada no viewport, em render comum nas condições informadas e na limpeza em 2026-09-03, após aprovação visual da E1.
 **Implementação:** `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, integrada em `ameno_bootstrap.ms`, `ameno_runtime.ms` e `ameno_main_panel.ms`.
 **Instalação:** cópia de desenvolvimento atualizada em `ApplicationPlugins`; o hash SHA-256 do módulo instalado corresponde ao fonte.
 **Evidência automatizada:** `tests/maxscript/test_bootstrap.ms` passou no 3ds Max 2026.3 e testou criar, reconstruir e remover a cota sem resíduos; `test_installed_package.ms` também aprovou E1, E2 e E3 dentro de `ApplicationPlugins`. Ambos usam `tests/maxscript/batch-isolated.ini`, perfil que evita bloquear a sessão interativa.
 **Correção de bootstrap:** a primeira cópia da E3 falhou porque MAXScript só permite `throw` sem argumento dentro de `catch`. A ocorrência foi reproduzida em Batch isolado, corrigida e validada. O bootstrap e o macro agora preservam e mostram o diagnóstico detalhado se outro módulo falhar.
-**Gate visual parcial:** a captura fornecida pelo usuário mostrou uma cota ativa, linhas de extensão/terminais e TextPlus `5,00 m` no viewport, com `AMENO_COTAS` selecionada e o painel indicando `1 ativa(s)`.
+**Gate visual:** a captura fornecida pelo usuário mostrou uma cota ativa, linhas de extensão/terminais e TextPlus `5,00 m` no viewport, com `AMENO_COTAS` selecionada e o painel indicando `1 ativa(s)`. O usuário confirmou render Arnold, render V-Ray com luz na cena e limpeza pelo painel. O Beauty do Corona em uma cena sem luz não é usado como bloqueio desta etapa; ele será resolvido no overlay isolado da E9.
 
 ### Objetivo
 
@@ -164,17 +164,11 @@ Comprovar que spline, terminais e TextPlus formam uma cota renderizável e recon
 - inserção de todos os nós visuais em `AMENO_COTAS`;
 - reconstrução e remoção sem resíduos.
 
-### Como validar agora
-
-1. fazer um render comum da cena com a cota ativa;
-2. clicar em `Limpar cotas de teste`;
-3. confirmar que os três nós da cota foram removidos e que a cena voltou ao estado anterior.
-
 ### Gate no Max
 
 - criar, selecionar, reconstruir e apagar uma cota de teste;
 - texto legível pela câmera superior e sem inversão;
-- geometria aparece no viewport e em um render comum de teste;
+- geometria aparece no viewport e em um render comum de teste sob a iluminação disponível;
 - nenhum helper de sistema aparece no render.
 
 ### Fora desta etapa
@@ -359,4 +353,4 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 
 ## Próxima ação
 
-Concluir o render e a limpeza do gate da **E3 — Primeiro construtor gráfico**. Com esses dois checks confirmados, registrar a aprovação final em `PLAN.md` e iniciar a E4.
+Iniciar a **E4 — Ferramenta de três cliques**. A investigação de um overlay Corona independente de luz permanece planejada para a E9, sem alterar o Beauty/LightMix da cena.

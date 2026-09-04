@@ -42,6 +42,10 @@ O arquivo final precisa declarar claramente:
 - espaço de cor/transform aplicado;
 - se alguma correção do VFB foi incorporada.
 
+### Evidência inicial da E3
+
+O construtor gráfico atual foi validado visualmente no Arnold e no V-Ray com iluminação disponível na cena; a limpeza também foi confirmada. O caso Corona sem luz, no qual o usuário observou máscara/alpha sem conteúdo no Beauty, não será usado para justificar luz automática. Ele pertence ao contrato do overlay isolado da E9 e continuará como uma capacidade a validar do adapter Corona.
+
 O app não deve aparentar uma cor no VFB e salvar outra sem avisar. PNG serve ao fluxo rápido; EXR preserva maior liberdade de composição.
 
 ## Corona adapter

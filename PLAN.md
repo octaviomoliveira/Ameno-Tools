@@ -29,6 +29,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E2 implementada e aprovada em testes automatizados no 3ds Max 2026.3: layout de cota alinhada no plano XY, conversão canônica para milímetros, arredondamento por incremento e formatação determinística.
 - E2 não cria objetos, layers, callbacks ou histórico de Undo; ela recebe pontos e devolve dados prontos para a representação gráfica da E3.
 - E3 implementada e validada em Batch isolado no 3ds Max 2026.3: construtor gráfico cria controlador oculto, cinco segmentos de spline e rótulo TextPlus a partir de três pontos conhecidos; a reconstrução remove e recria somente os filhos gráficos.
+- E3 aprovada no uso visual informado pelo usuário: Arnold exibiu a cota no render, V-Ray exibiu a cota com a iluminação da cena e `Limpar cotas de teste` removeu a cota sem resíduos. A diferença observada no Corona sem luz fica registrada como requisito da E9 (overlay independente), não como bloqueio da criação gráfica da E3.
 - Pacote instalado com E1, E2 e E3 validado em Batch isolado; a cópia de `ameno_dimension_graphics.ms` foi conferida por SHA-256 contra o fonte.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
@@ -40,13 +41,14 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- E3 — primeiro construtor gráfico — aprovada visualmente no viewport; render comum e limpeza final ainda aguardam confirmação explícita.
+- E4 — ferramenta de três cliques — próxima unidade de implementação; E3 fechada com render comum validado nas condições informadas e limpeza aprovada.
 - A E2 foi concluída por solicitação explícita, pois é um núcleo puro e independente da cena.
 - A falha de bootstrap relatada após a primeira instalação da E3 foi corrigida: `throw getCurrentException()` é inválido dentro de `catch` no MAXScript e foi substituído por `throw`. O teste Batch passou a usar perfil isolado, portanto não exige fechar a sessão interativa do usuário.
+- O diagnóstico adicional de render foi encerrado sem alterar a cena do usuário: o resultado confirmado é Arnold funcionando, V-Ray funcionando quando há luz na cena e limpeza funcionando. Não serão mantidos probes temporários no repositório.
 
 ## Próximo passo executável
 
-Concluir o gate residual da **E3 — Primeiro construtor gráfico**: fazer um render comum, usar **Limpar cotas de teste** e confirmar ausência de resíduos. A criação e a leitura no viewport já foram aprovadas pela captura do usuário; a ferramenta de três cliques permanece fora desta etapa.
+Iniciar a **E4 — Ferramenta de três cliques**. O comportamento sem luz do Corona será tratado no desenho do overlay isolado da E9, mantendo Beauty, LightMix e Render Elements fora do fluxo de criação.
 
 ## Decisões que ainda exigem validação
 
@@ -72,6 +74,7 @@ Concluir o gate residual da **E3 — Primeiro construtor gráfico**: fazer um re
 | 2026-09-03 | Seguir após reiniciar o Max. | E3 implementada e instalada; aguardando gate manual. A validação Batch foi concluída depois em perfil isolado. | `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, cópia `ApplicationPlugins` conferida por SHA-256 |
 | 2026-09-03 | Corrigir tela “O núcleo do Ameno Tools não foi carregado”. | Corrigido, testado no 3ds Max 2026.3 em Batch isolado e no pacote `ApplicationPlugins`; a mensagem futura agora inclui o módulo/erro reais. | `ameno_dimension_graphics.ms`, `ameno_bootstrap.ms`, `AmenoTools.mcr`, `.test-output/*e3*` |
 | 2026-09-03 | Confirmar que a E3 funciona no Max após a correção. | Gate visual do viewport aprovado: uma cota ativa aparece com linhas, terminais e TextPlus `5,00 m`; `AMENO_COTAS` está selecionada. Render comum e limpeza ainda pendentes. | captura do viewport/painel fornecida pelo usuário |
+| 2026-09-03 | Validar render e limpeza da E3; esclarecer o caso Corona sem luz. | Arnold exibiu a cota; V-Ray exibiu a cota com luz na cena; `Limpar cotas de teste` funcionou. A hipótese de ausência de luz no Corona permanece registrada para a E9, sem novos probes no pacote. | capturas de Arnold/V-Ray e confirmação textual do usuário |
 
 ## Como retomar sem contexto
 

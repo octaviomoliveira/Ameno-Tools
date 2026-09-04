@@ -36,3 +36,7 @@ V-Ray possui engines CPU e GPU com matrizes de recursos diferentes. Tratá-las c
 - versões mínimas só podem ser prometidas depois de validação real;
 - V-Ray GPU pode exigir comportamento ou material específico;
 - integração no mesmo passe permanece fora do MVP.
+
+## Evidência do primeiro construtor gráfico
+
+Na validação do usuário em 03/09/2026, a geometria da E3 apareceu no Arnold, apareceu no V-Ray quando havia luz na cena e foi removida integralmente pelo comando de limpeza. Uma cena Corona sem luz exibiu diferença entre Beauty e a saída/máscara observada; isso é compatível com o objetivo de separar o overlay e não deve ser corrigido adicionando luzes automaticamente. A matriz de saída sem luz será validada somente na E9, com material/geometry proxy do adapter e restauração transacional.
