@@ -23,6 +23,7 @@ global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
 global AmenoCoronaRendererAdapter
+global AmenoVRayRendererAdapter
 global AmenoAdapterRenderResult
 global AmenoOutputVerification
 global AmenoRenderCotasRequest
@@ -85,6 +86,7 @@ struct AmenoBootstrapService
             @"core\ameno_dimension_tool.ms",
             @"renderers\ameno_renderer_probe.ms",
             @"renderers\ameno_corona_adapter.ms",
+            @"renderers\ameno_vray_adapter.ms",
             @"core\ameno_render_cotas_service.ms",
             @"core\ameno_runtime.ms",
             @"ui\ameno_style_editor.ms",

@@ -14,6 +14,7 @@ global AmenoStyleService
 global AmenoStyleRecord
 global AmenoAnchorService
 global AmenoCoronaRendererAdapter
+global AmenoVRayRendererAdapter
 global AmenoRenderCotasService
 global AmenoRenderCotasRequest
 global AmenoRenderCotasResult
@@ -782,7 +783,12 @@ struct AmenoE9MockAdapter
     e9Scene.dimensionsLayer.ishidden = e9LayerHidden
     e9Scene.dimensionsLayer.renderable = e9LayerRenderable
 
+    -- E10.3: V-Ray Renderer Adapter presente e registrado
+    if AmenoVRayRendererAdapter == undefined then throw "E10.3: AmenoVRayRendererAdapter não foi definido pelo bootstrap."
+    if AmenoVRayRendererAdapter.adapterId != "vray-overlay-v1" then throw "E10.3: adapterId inesperado para V-Ray."
+    if AmenoRenderCotasService.resolveDefaultAdapter() == undefined then throw "E10.3: resolveDefaultAdapter falhou em retornar um adapter válido."
+
     fileIn macroPath quiet:true
 
-    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6, E7, E8, E8.1 e núcleo transacional E9 aprovados.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
+    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6, E7, E8, E8.1, E9 e E10.3 V-Ray aprovados.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
 )

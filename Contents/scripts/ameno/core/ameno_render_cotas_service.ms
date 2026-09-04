@@ -317,6 +317,24 @@ struct AmenoRenderCotasServiceDefinition
         true
     ),
 
+    fn resolveDefaultAdapter =
+    (
+        local info = if ::AmenoRendererProbe != undefined then ::AmenoRendererProbe.detect() else undefined
+        if info != undefined then
+        (
+            case info.family of
+            (
+                #corona: (if ::AmenoCoronaRendererAdapter != undefined then ::AmenoCoronaRendererAdapter else undefined)
+                #vray:   (if ::AmenoVRayRendererAdapter != undefined then ::AmenoVRayRendererAdapter else undefined)
+                default: (if ::AmenoCoronaRendererAdapter != undefined then ::AmenoCoronaRendererAdapter else undefined)
+            )
+        )
+        else
+        (
+            if ::AmenoCoronaRendererAdapter != undefined then ::AmenoCoronaRendererAdapter else undefined
+        )
+    ),
+
     fn renderDimensions request adapter:undefined =
     (
         if isRendering then
@@ -332,7 +350,11 @@ struct AmenoRenderCotasServiceDefinition
         local sceneState = undefined
         local adapterState = undefined
         local outputExisted = false
-        local resolvedAdapter = if adapter != undefined then adapter else AmenoCoronaRendererAdapter
+        local resolvedAdapter = if adapter != undefined then adapter else (resolveDefaultAdapter())
+        if resolvedAdapter == undefined do
+        (
+            return AmenoRenderCotasResult errorMessage:"Nenhum adapter de renderização compatível está disponível para o renderer ativo."
+        )
         local targetNodes = #()
         local activeStage = "inicialização"
 

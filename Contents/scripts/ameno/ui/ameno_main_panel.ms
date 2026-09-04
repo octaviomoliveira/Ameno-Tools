@@ -52,9 +52,15 @@ fn AmenoRefreshMainPanel =
     (
         try
         (
-            local canRender = (info.family == #corona)
+            local canRender = (info.family == #corona or info.family == #vray)
             AmenoRenderRollout.btnRenderCotas.enabled = canRender
-            AmenoRenderRollout.lblRenderSupport.text = if canRender then "Corona pronto · PNG transparente" else "Ative o Corona para usar a E9"
+            AmenoRenderRollout.lblRenderSupport.text = if canRender then
+            (
+                if info.family == #corona then "Corona pronto · PNG transparente"
+                else if info.engine == #gpu then "V-Ray GPU (experimental) · PNG transparente"
+                else "V-Ray CPU pronto · PNG transparente"
+            )
+            else (info.displayName + " sem adapter de render")
             if AmenoRenderRollout.edtOutput.text == "" do AmenoRenderRollout.edtOutput.text = AmenoApp.defaultRenderCotasPath()
         )
         catch ()
@@ -566,7 +572,7 @@ rollout AmenoAnchorRollout "Âncoras e Diagnóstico" width:344
 
 rollout AmenoRenderRollout "Render Separado de Cotas" width:344
 (
-    label lblRenderSupport "Verificando Corona..." pos:[14, 10] width:316 height:18 align:#left
+    label lblRenderSupport "Verificando renderer..." pos:[14, 10] width:316 height:18 align:#left
     radiobuttons rdoRenderScope "Incluir:" pos:[14, 32] labels:#("Todas", "Selecionadas") default:1 columns:2
     edittext edtOutput "PNG:" pos:[14, 64] width:234 height:18 text:""
     button btnBrowseOutput "..." pos:[256, 62] width:32 height:22 tooltip:"Escolher arquivo PNG"
