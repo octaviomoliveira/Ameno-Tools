@@ -131,6 +131,8 @@ local nearestPoly = AmenoDimensionCA.findNearestVertex polyNode polyPointA maxDi
 expectTrue "vertice mais proximo do Poly foi detectado" (nearestPoly != undefined and nearestPoly.vertexId == polyVertexId)
 local toolHitPoly = AmenoDimensionTool.detectHitNode polyPointA
 expectTrue "ferramenta captura vertice pelo ponto de snap" (toolHitPoly != undefined and toolHitPoly.node == polyNode and toolHitPoly.vertexId == polyVertexId)
+local directSnapHit = AmenoDimensionTool.detectHitNode (polyPointA + [5000, 5000, 0]) snapNode:polyNode snapWorldPoint:polyPointA snapHit:true
+expectTrue "resultado direto do Snap prevalece sobre o ponto do mouse" (directSnapHit != undefined and directSnapHit.node == polyNode and directSnapHit.vertexId == polyVertexId)
 
 local polyDim = AmenoDimensionGraphics.createDimension polyPointA polyPointB polyOffset role:"test-subobject" \
     nodeA:polyNode anchorVertexIdA:polyVertexId dimensionMode:#horizontal
@@ -220,6 +222,7 @@ expectEqual "bake limpa edgeMid A" bakedRecord.anchorEdgeMidA false
 format "\n=== A7: callback geometrico unico esta ativo ===\n"
 expectTrue "NodeEventCallback foi retido" (AmenoAnchorService.anchorCallback != undefined)
 expectTrue "servico informa callback ativo" AmenoAnchorService.isCallbackActive
+expectTrue "watcher direto de geometria foi compilado" (AmenoAnchorService.geometryWatcherCount > 0)
 
 format "\n=== RESULTADO E10.7 ===\n"
 format "PASS: %  FAIL: %\n" passed failed

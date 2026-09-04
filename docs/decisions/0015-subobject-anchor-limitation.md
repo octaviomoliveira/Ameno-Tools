@@ -1,7 +1,7 @@
 ﻿# 0015 — Limitação: Âncoras não rastreiam edições de sub-objeto (EditPoly/EditMesh)
 
 **Data:** 2026-09-04  
-**Status:** E10.7.1 corrigida e reinstalada · novo gate interativo pendente
+**Status:** E10.7.2 corrigida e reinstalada · gate diagnóstico pendente
 **Contexto:** Detectado durante gate manual da E10.1
 
 ---
@@ -154,3 +154,12 @@ A correção passa a:
 
 Cotas criadas antes da captura de vertex ID continuam retrocompatíveis por `localPoint`.
 Para fazê-las rastrear subobjetos, é necessário reancorar A/B ou criar uma nova cota.
+
+### Adendo E10.7.2 — eliminar inferência silenciosa
+
+O segundo gate também falhou e a interface não informava se o ID havia sido persistido.
+A API do Max já fornece o resultado exato do Snap em `snapMode.node` e
+`snapMode.worldHitpoint`; esses dados passam a ter precedência sobre qualquer inferência
+por raycast ou bounding box. O painel passa a exibir os IDs capturados para separar
+objetivamente falha de captura e falha de atualização. A reancoragem A/B também foi
+corrigida para extrair `.node` do record `AmenoDimensionAnchorHit`.

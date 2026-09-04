@@ -434,12 +434,30 @@ rollout AmenoAnchorRollout "Âncoras e Diagnóstico" width:344
         local pt = pickPoint snap:#3D prompt:"Clique no novo ponto de ancoragem A no objeto (Esc cancela)"
         if pt != undefined and pt != #rightClick and (classof pt == Point3) then
         (
-            local foundNode = if AmenoDimensionTool != undefined then (AmenoDimensionTool.detectHitNode pt) else undefined
+            local snapped = false
+            local snappedNode = undefined
+            local snappedWorldPoint = undefined
+            try
+            (
+                snapped = (snapMode.hit == true)
+                if snapped do
+                (
+                    snappedNode = snapMode.node
+                    snappedWorldPoint = snapMode.worldHitpoint
+                )
+            )
+            catch ()
+
+            local hitResult = if AmenoDimensionTool != undefined then \
+                (AmenoDimensionTool.detectHitNode pt snapNode:snappedNode snapWorldPoint:snappedWorldPoint snapHit:snapped) \
+                else undefined
+            local foundNode = if hitResult != undefined then hitResult.node else undefined
+            local resolvedPoint = if hitResult != undefined and hitResult.vertexWorldPoint != undefined then hitResult.vertexWorldPoint else pt
             if foundNode == undefined do
             (
                 foundNode = pickObject prompt:"Objeto não detectado automaticamente. Clique no objeto para vincular o ponto A (ou Esc para manter mundial):"
             )
-            AmenoApp.reanchorDimension ctrl #pointA foundNode pt
+            AmenoApp.reanchorDimension ctrl #pointA foundNode resolvedPoint
             if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
         )
     )
@@ -462,12 +480,30 @@ rollout AmenoAnchorRollout "Âncoras e Diagnóstico" width:344
         local pt = pickPoint snap:#3D prompt:"Clique no novo ponto de ancoragem B no objeto (Esc cancela)"
         if pt != undefined and pt != #rightClick and (classof pt == Point3) then
         (
-            local foundNode = if AmenoDimensionTool != undefined then (AmenoDimensionTool.detectHitNode pt) else undefined
+            local snapped = false
+            local snappedNode = undefined
+            local snappedWorldPoint = undefined
+            try
+            (
+                snapped = (snapMode.hit == true)
+                if snapped do
+                (
+                    snappedNode = snapMode.node
+                    snappedWorldPoint = snapMode.worldHitpoint
+                )
+            )
+            catch ()
+
+            local hitResult = if AmenoDimensionTool != undefined then \
+                (AmenoDimensionTool.detectHitNode pt snapNode:snappedNode snapWorldPoint:snappedWorldPoint snapHit:snapped) \
+                else undefined
+            local foundNode = if hitResult != undefined then hitResult.node else undefined
+            local resolvedPoint = if hitResult != undefined and hitResult.vertexWorldPoint != undefined then hitResult.vertexWorldPoint else pt
             if foundNode == undefined do
             (
                 foundNode = pickObject prompt:"Objeto não detectado automaticamente. Clique no objeto para vincular o ponto B (ou Esc para manter mundial):"
             )
-            AmenoApp.reanchorDimension ctrl #pointB foundNode pt
+            AmenoApp.reanchorDimension ctrl #pointB foundNode resolvedPoint
             if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
         )
     )

@@ -18,6 +18,7 @@ global AmenoStyleService
 global AmenoRefreshMainPanel
 global AmenoRegisterTransformWatcher
 global AmenoRegisterGeometryWatcher
+global AmenoGeometryWatcherLastError
 
 -- Função global para registrar watcher de transform em nós âncora.
 -- Usa execute() com handle embutido na string para evitar closure e race condition.
@@ -48,6 +49,7 @@ fn AmenoRegisterTransformWatcher theNode =
 -- change handler fica ligado diretamente ao no ancorado e usa a mesma dirty queue.
 fn AmenoRegisterGeometryWatcher theNode =
 (
+    AmenoGeometryWatcherLastError = ""
     local h = getHandleByAnim theNode
     local hStr = h as string
     local cbBody = \
@@ -61,7 +63,17 @@ fn AmenoRegisterGeometryWatcher theNode =
     local watchScript = \
         "when geometry (getAnimByHandle " + hStr + ") changes id:#ameno_geometry_watchers do (" + \
         cbBody + ")"
-    try (execute watchScript) catch ()
+    local registered = false
+    try
+    (
+        execute watchScript
+        registered = true
+    )
+    catch
+    (
+        AmenoGeometryWatcherLastError = getCurrentException() as string
+    )
+    registered
 )
 
 
@@ -72,6 +84,7 @@ struct AmenoAnchorServiceDefinition
     isCallbackActive = false,
     isSyncing = false,
     indexTable = undefined,
+    geometryWatcherCount = 0,
 
     fn rebuildIndex =
     (
@@ -81,6 +94,7 @@ struct AmenoAnchorServiceDefinition
         -- Remove watchers anteriores antes de recriar o índice
         try (deleteAllChangeHandlers id:#ameno_watchers) catch ()
         try (deleteAllChangeHandlers id:#ameno_geometry_watchers) catch ()
+        geometryWatcherCount = 0
 
         local controllers = ::AmenoDimensionGraphics.findControllers()
         local watchedHandles = #()
@@ -110,7 +124,7 @@ struct AmenoAnchorServiceDefinition
                         if ::AmenoRegisterTransformWatcher != undefined do
                             try (::AmenoRegisterTransformWatcher rec.nodeA) catch ()
                         if ::AmenoRegisterGeometryWatcher != undefined do
-                            try (::AmenoRegisterGeometryWatcher rec.nodeA) catch ()
+                            try (if ::AmenoRegisterGeometryWatcher rec.nodeA do geometryWatcherCount += 1) catch ()
                     )
                 )
 
@@ -134,7 +148,7 @@ struct AmenoAnchorServiceDefinition
                         if ::AmenoRegisterTransformWatcher != undefined do
                             try (::AmenoRegisterTransformWatcher rec.nodeB) catch ()
                         if ::AmenoRegisterGeometryWatcher != undefined do
-                            try (::AmenoRegisterGeometryWatcher rec.nodeB) catch ()
+                            try (if ::AmenoRegisterGeometryWatcher rec.nodeB do geometryWatcherCount += 1) catch ()
                     )
                 )
             )
@@ -594,6 +608,7 @@ struct AmenoAnchorServiceDefinition
             anchorCallback = undefined
         )
         isCallbackActive = false
+        geometryWatcherCount = 0
         dirtyQueue = #()
         isSyncing = false
         if indexTable != undefined do

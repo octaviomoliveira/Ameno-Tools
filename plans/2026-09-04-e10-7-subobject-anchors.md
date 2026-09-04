@@ -1,7 +1,7 @@
 # E10.7 — Âncoras por vértice em Editable Poly e Editable Mesh
 
 **Data:** 2026-09-04
-**Estado:** correção E10.7.1 implementada e reinstalada após falha do primeiro gate manual; reteste pendente
+**Estado:** E10.7.2 implementada e reinstalada após duas falhas manuais; gate diagnóstico pendente
 **Origem:** ADR 0015
 
 ## Por que E10.7
@@ -101,6 +101,25 @@ para outro vértice silenciosamente.
 **Gate:** o ID deve ser capturado mesmo quando o raio encontra outra face, e o ponto deve
 acompanhar o vértice resultante de Editable Poly/Edit Mesh no topo da modifier stack.
 
+### E10.7-g — Captura explícita e diagnóstico após o segundo gate manual
+
+- [x] registrar que a E10.7.1 ainda não acompanhou o vértice no teste real;
+- [x] capturar diretamente `snapMode.node` e `snapMode.worldHitpoint` no evento do
+  `MouseTool`, conforme a API oficial do Max;
+- [x] dar precedência ao resultado real do Snap sobre raycast e bounding box;
+- [x] forçar leitura de vértices dentro de `in coordsys world`;
+- [x] corrigir a reancoragem A/B, que tratava `AmenoDimensionAnchorHit` incorretamente
+  como se o próprio record fosse um nó;
+- [x] registrar erro de compilação do watcher e contar watchers de geometria ativos;
+- [x] mostrar no status `A=vN / B=vN`, `obj` ou `mundo`;
+- [x] cobrir precedência do Snap e presença do watcher no teste automatizado;
+- [x] reinstalar o pacote de desenvolvimento;
+- [ ] confirmar primeiro a captura `A=vN / B=vN` antes de mover a malha.
+
+**Gate diagnóstico:** só testar o movimento quando o painel comprovar que as duas pontas
+receberam IDs. Se o status não mostrar `vN`, a falha está na captura; se mostrar e a cota
+não acompanhar, a falha está no watcher/resolvedor.
+
 ## Estado da validação anterior
 
 - `main` auditada em `ec3038b`, limpa e sincronizada com `origin/main`;
@@ -121,6 +140,9 @@ acompanhar o vértice resultante de Editable Poly/Edit Mesh no topo da modifier 
 - a revisão pós-gate identificou duas lacunas concretas: a resolução priorizava
   `baseObject`, ignorando Edit Poly/Edit Mesh acima dele, e a captura dependia do primeiro
   objeto retornado pelo raycast. A E10.7.1 corrige ambas e adiciona watcher direto.
+- o segundo gate manual também falhou. Como ainda não havia feedback do ID salvo, não era
+  possível separar falha de captura de falha de atualização. A E10.7.2 passa a usar o
+  resultado explícito do sistema de Snap e expõe o vínculo no status do painel.
 
 ## Limites conhecidos
 
@@ -133,7 +155,7 @@ acompanhar o vértice resultante de Editable Poly/Edit Mesh no topo da modifier 
 
 ## Próximo gate
 
-Reiniciar o 3ds Max 2026 e testar uma cota nova criada com Vertex
-Snap sobre um Editable Poly. Se a cota atual for reutilizada, reancorar A/B para que ela
-receba o novo ID de vértice. Depois mover o vértice no topo da modifier stack e repetir
-com Editable Mesh. O gate Batch será retomado após estabilizar o executor.
+Reiniciar o 3ds Max 2026. Criar uma cota nova com apenas Vertex Snap ativo e
+confirmar no painel `A=vN / B=vN`. Somente então mover o vértice. Se aparecer `obj` ou
+`mundo`, registrar exatamente esse status; isso identifica a camada que ainda
+falhou sem depender apenas da imagem. O gate Batch será retomado após estabilizar o executor.

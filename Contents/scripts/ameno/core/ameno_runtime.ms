@@ -47,6 +47,8 @@ struct AmenoRuntime
     (
         local dimensionCount = (AmenoDimensionGraphics.findControllers()).count
         dimensionStatus = "Ameno Dimensions · " + (dimensionCount as string) + " cota(s) ativa(s)."
+        if ::AmenoDimensionTool != undefined and ::AmenoDimensionTool.lastAnchorSummary != "" do
+            dimensionStatus += " | " + ::AmenoDimensionTool.lastAnchorSummary
         dimensionStatus
     ),
 

@@ -308,7 +308,7 @@ struct AmenoDimensionCAService
         (
             evaluatedMesh = snapshotAsMesh anchorNode
             if evaluatedMesh != undefined and vertexId <= (getNumVerts evaluatedMesh) do
-                evaluatedWorldPoint = getVert evaluatedMesh vertexId
+                in coordsys world (evaluatedWorldPoint = getVert evaluatedMesh vertexId)
         )
         catch ()
         if evaluatedMesh != undefined do try (delete evaluatedMesh) catch ()
@@ -359,7 +359,8 @@ struct AmenoDimensionCAService
             local vertexCount = getNumVerts evaluatedMesh
             for vertexId = 1 to vertexCount do
             (
-                local candidatePoint = getVert evaluatedMesh vertexId
+                local candidatePoint = undefined
+                in coordsys world (candidatePoint = getVert evaluatedMesh vertexId)
                 local candidateDistance = length (candidatePoint - worldPoint)
                 if candidateDistance < bestDistance do
                 (

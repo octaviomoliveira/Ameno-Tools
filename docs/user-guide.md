@@ -45,7 +45,9 @@ O pacote é instalado como plugin modular padrão da Autodesk em:
 3. **Clique 1 (Ponto A):** clique no primeiro ponto de referência ou vértice.
 4. **Clique 2 (Ponto B):** clique no segundo ponto. Uma prévia interativa da linha e do texto passa a acompanhar o cursor.
 5. **Clique 3 (Afastamento):** clique no local onde deseja posicionar a linha principal da cota.
-6. A cota permanente é gerada na layer gerenciada `AMENO_COTAS`.
+6. A cota permanente é gerada na layer gerenciada `AMENO_COTAS`. O status do painel
+   informa a captura de cada ponta: `A=vN` / `B=vN` significa vértice persistido;
+   `obj` significa apenas âncora por objeto; `mundo` significa ponto fixo.
 
 ---
 
@@ -70,8 +72,9 @@ Ao selecionar uma ou mais cotas na viewport (selecionando qualquer nó da cota o
 ### 5.1 Como funcionam as Âncoras
 Quando você clica em um objeto para iniciar ou finalizar uma cota, o Ameno Tools detecta o nó automaticamente. Se o clique com snap estiver sobre um vértice de Editable Poly ou Editable Mesh, também registra o ID desse vértice; nos demais casos, registra a âncora em coordenadas locais:
 - Se você mover, rotacionar ou escalar o objeto, a cota se atualiza instantaneamente no viewport.
-- Âncoras identificadas como vértice acompanham a edição desse vértice no base object.
-- **Limitação conhecida:** Delete, Weld, Attach, subdivisões e outras mudanças topológicas podem renumerar os vértices. Nessa situação, a cota preserva a última posição e fica órfã, em vez de saltar para outro ponto. Edit Poly como modificador e FFD ainda não fazem parte desta primeira entrega.
+- Âncoras identificadas como vértice acompanham a geometria avaliada no topo da
+  modifier stack, incluindo deslocamentos feitos por Edit Poly/Edit Mesh.
+- **Limitação conhecida:** Delete, Weld, Attach, subdivisões e outras mudanças topológicas podem renumerar os vértices. Nessa situação, a cota preserva a última posição e fica órfã, em vez de saltar para outro ponto.
 
 ### 5.2 Cotas Órfãs e Reparo
 Se um objeto ancorado for deletado da cena:

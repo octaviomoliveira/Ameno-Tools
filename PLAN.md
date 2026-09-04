@@ -50,7 +50,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **E10.7.1 — Âncoras por vértice:** o primeiro gate manual falhou. A correção agora resolve a malha avaliada no topo da modifier stack com `snapshotAsMesh`, captura o vértice globalmente pelo ponto de snap e adiciona watcher direto `when geometry`, além do callback global. Pacote reinstalado; novo gate manual pendente. O Batch continua bloqueado pelo executor.
+- **E10.7.2 — Âncoras por vértice:** dois gates manuais falharam. A nova correção elimina a inferência silenciosa: lê `snapMode.node/worldHitpoint`, corrige reancoragem A/B e mostra `A=vN / B=vN` no painel. Pacote reinstalado; gate diagnóstico pendente. O Batch continua bloqueado pelo executor.
 - Validação interativa das funcionalidades acumuladas da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico, pacote alpha e edição de vértices).
 
 ## Planejado após a E10
@@ -113,6 +113,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-04 | Auditar o trabalho do Antigravity e seguir com a correção de âncoras em edição de subobjeto antes da integração visual. | `main` limpa em `ec3038b`; pacote estrutural válido; E10.1–E10.6 confirmadas no histórico. A correção sugerida como E10.5 no ADR 0015 foi renumerada para E10.7 para evitar colisão. Código e teste dedicados implementados; Batch pendente porque o Max interativo está ativo. | `plans/2026-09-04-e10-7-subobject-anchors.md`, CA v5, `test_e10_7_subobject_anchors.ms` |
 | 2026-09-04 | Fechar o Max e concluir a validação/instalação da E10.7. | Pacote estrutural aprovado e versão de desenvolvimento instalada. O teste E10.7 e a regressão E10.1 não chegaram a executar: o lançador Batch demorou mais de seis minutos para criar o processo filho e não produziu logs nem resultado. Gate interativo pendente; gate automático registrado como bloqueio do executor, não como falha do E10.7. | `tools/validate-package.ps1`, `tools/install-dev.ps1`, `plans/2026-09-04-e10-7-subobject-anchors.md` |
 | 2026-09-04 | Corrigir a E10.7 após o gate manual continuar sem acompanhar o vértice. | Falha reproduzida visualmente pelo usuário. Identificadas lacunas na leitura de `baseObject` e na captura dependente do primeiro ray hit. E10.7.1 implementa malha avaliada por `snapshotAsMesh`, busca global pelo ponto de snap, watcher direto de geometria e teste com modifier stack; pacote reinstalado e reteste pendente. | `ameno_dimension_ca.ms`, `ameno_dimension_tool.ms`, `ameno_anchor_service.ms`, `test_e10_7_subobject_anchors.ms`, `tools/install-dev.ps1` |
+| 2026-09-04 | Avaliar viabilidade após a E10.7.1 ainda falhar no Max. | Viável pela API oficial: o Max expõe nó e ponto mundial do Snap e eventos de geometria. E10.7.2 usa esses dados diretamente, corrige reancoragem que passava o record como nó, força coordenadas mundiais e adiciona feedback `A=vN / B=vN`; pacote reinstalado e novo gate pendente. | `snapMode.node`, `snapMode.worldHitpoint`, `ameno_dimension_tool.ms`, `ameno_main_panel.ms`, `docs/decisions/0015-subobject-anchor-limitation.md`, `tools/install-dev.ps1` |
 
 ## Como retomar sem contexto
 
