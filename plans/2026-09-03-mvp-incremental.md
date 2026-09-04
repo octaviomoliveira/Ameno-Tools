@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 aprovada no viewport, em render comum sob as condições informadas e na limpeza; E4 corrigida após o primeiro teste manual e pronta para novo teste.
+**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 aprovada no viewport, em render comum sob as condições informadas e na limpeza; E4 aprovada no Max após a correção do terceiro clique; E5 é a próxima fatia.
 
 ## Estratégia de execução
 
@@ -27,7 +27,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E1 | `Preparar esta cena` cria a infraestrutura Ameno com segurança | Aprovada |
 | E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Aprovada em Batch |
 | E3 | Uma cota gráfica de teste é construída na cena | Aprovada no viewport, Arnold/V-Ray com luz e limpeza |
-| E4 | Cota alinhada é criada com três cliques e preview | Pronta para teste no Max |
+| E4 | Cota alinhada é criada com três cliques e preview | Aprovada no Max |
 | E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Não iniciada |
 | E6 | Valor medido, arredondado e manual podem ser revisados | Não iniciada |
 | E7 | Estilo edita fonte, texto, linhas e terminais | Não iniciada |
@@ -179,12 +179,14 @@ Ainda não haverá interação de três cliques nem associatividade.
 
 ## E4 — Ferramenta de três cliques
 
-**Estado:** correção pós-validação pronta para novo teste manual no 3ds Max 2026.3 em 2026-09-03.
+**Estado:** aprovada no 3ds Max 2026.3 em 2026-09-04 após correção pós-validação.
 **Implementação:** `Contents/scripts/ameno/core/ameno_dimension_tool.ms`, integrado ao `ameno_bootstrap.ms`, `ameno_runtime.ms`, `ameno_main_panel.ms` e ao construtor gráfico da E3.
 **Evidência automatizada:** `test_bootstrap.ms` passou no Batch isolado, verificando carregamento do `MouseTool`, criação/atualização/remoção da prévia, fluxo A/B/afastamento e cancelamento sem resíduos. `test_installed_package.ms` aprovou a cópia `ApplicationPlugins` com a E4 carregada.
-**Instalação:** `tools/install-dev.ps1` atualizou `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`; reinicie o 3ds Max antes do teste visual.
+**Instalação:** `tools/install-dev.ps1` atualizou `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`; a cópia instalada foi conferida por SHA-256 e carregada após reiniciar o Max.
 
 **Correção após o primeiro teste:** o limite automático `numPoints:3` foi removido. Se a atualização ou o commit falhar no terceiro clique, o Max não encerra silenciosamente o comando: a prévia permanece, a ferramenta aceita outra tentativa no afastamento e, ao sair, o painel mostra o erro registrado.
+
+**Gate manual aprovado em 2026-09-04:** o usuário confirmou o fluxo principal no Max. A captura mostra a cota permanente `4,05 m` no viewport, a ferramenta encerrada e o painel indicando `1 cota(s) ativa(s)`. A correção do desaparecimento no terceiro clique está validada; a matriz complementar de orientações e Undo permanece como regressão recomendada durante a E5.
 
 ### Como usar
 
