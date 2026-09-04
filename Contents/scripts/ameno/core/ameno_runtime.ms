@@ -2,6 +2,8 @@ global AmenoApp
 global AmenoRendererProbe
 global AmenoSceneSetup
 global AmenoDimensionGraphics
+global AmenoDimensionTool
+global AmenoDimensionMouseTool
 global AmenoLog
 global AmenoVersion
 global AmenoShowMainPanel
@@ -14,6 +16,7 @@ struct AmenoRuntime
     sceneInfo = undefined,
     dimensionStatus = "",
     lastTestDimension = undefined,
+    lastInteractiveDimension = undefined,
     started = false,
 
     fn refreshRenderer =
@@ -36,9 +39,19 @@ struct AmenoRuntime
 
     fn refreshDimensions =
     (
-        local testCount = (AmenoDimensionGraphics.findControllers role:AmenoDimensionGraphics.testRole).count
-        dimensionStatus = "E3: cota gráfica de teste · " + (testCount as string) + " ativa(s)."
+        local dimensionCount = (AmenoDimensionGraphics.findControllers()).count
+        dimensionStatus = "Ameno Dimensions · " + (dimensionCount as string) + " cota(s) ativa(s)."
         dimensionStatus
+    ),
+
+    fn startDimensionTool =
+    (
+        if AmenoDimensionTool == undefined then throw "A ferramenta interativa Ameno não foi carregada."
+
+        lastInteractiveDimension = AmenoDimensionTool.start()
+        refreshScene()
+        refreshDimensions()
+        lastInteractiveDimension
     ),
 
     fn createTestDimension =
@@ -77,6 +90,8 @@ struct AmenoRuntime
 
     fn shutdown =
     (
+        try (stopTool AmenoDimensionMouseTool) catch ()
+        try (if AmenoDimensionTool != undefined do AmenoDimensionTool.cancel()) catch ()
         try (destroyDialog AmenoMainPanelRollout) catch ()
         started = false
         true

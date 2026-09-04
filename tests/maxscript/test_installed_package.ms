@@ -6,6 +6,7 @@ global AmenoSceneSetup
 global AmenoUnitService
 global AmenoDimensionMath
 global AmenoDimensionGraphics
+global AmenoDimensionTool
 
 (
     if AmenoApp == undefined then throw "O pacote instalado não criou AmenoApp."
@@ -15,9 +16,10 @@ global AmenoDimensionGraphics
     if AmenoApp.refreshScene() == undefined then throw "O pacote instalado não respondeu ao diagnóstico de cena."
     if AmenoUnitService == undefined or AmenoDimensionMath == undefined then throw "O pacote instalado não carregou o núcleo da E2."
     if AmenoDimensionGraphics == undefined then throw "O pacote instalado não carregou o construtor gráfico da E3."
+    if AmenoDimensionTool == undefined then throw "O pacote instalado não carregou a ferramenta interativa da E4."
 
     local installedE2Format = AmenoUnitService.formatMillimeters 19555.0 outputUnit:#meters precision:2 decimalSeparator:#comma roundingIncrementMillimeters:100.0
     if installedE2Format.text != "19,60 m" then throw "O núcleo E2 instalado formatou a medida incorretamente."
 
-    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2 e E3.\n" AmenoVersion.appVersion
+    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3 e E4.\n" AmenoVersion.appVersion
 )

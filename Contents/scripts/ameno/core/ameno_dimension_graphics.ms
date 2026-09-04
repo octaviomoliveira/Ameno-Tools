@@ -97,6 +97,58 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
+    fn updateLineSplinePoints lineNode layout terminalSize:14.0 extensionOverhang:8.0 =
+    (
+        if lineNode == undefined or not isValidNode lineNode then return false
+        if layout == undefined or not layout.valid then return false
+
+        local lineEndA = layout.linePointA
+        local lineEndB = layout.linePointB
+        local extensionEndA = lineEndA + (layout.perpendicular * extensionOverhang)
+        local extensionEndB = lineEndB + (layout.perpendicular * extensionOverhang)
+        local tickVector = normalize (layout.direction + layout.perpendicular) * (terminalSize * 0.5)
+
+        try
+        (
+            setKnotPoint lineNode 1 1 layout.projectedA
+            setKnotPoint lineNode 1 2 extensionEndA
+            setKnotPoint lineNode 2 1 layout.projectedB
+            setKnotPoint lineNode 2 2 extensionEndB
+            setKnotPoint lineNode 3 1 lineEndA
+            setKnotPoint lineNode 3 2 lineEndB
+            setKnotPoint lineNode 4 1 (lineEndA - tickVector)
+            setKnotPoint lineNode 4 2 (lineEndA + tickVector)
+            setKnotPoint lineNode 5 1 (lineEndB - tickVector)
+            setKnotPoint lineNode 5 2 (lineEndB + tickVector)
+            updateShape lineNode
+            true
+        )
+        catch
+        (
+            false
+        )
+    ),
+
+    fn updateTextNode textNode labelText layout textGap:12.0 =
+    (
+        if textNode == undefined or not isValidNode textNode then return false
+        if layout == undefined or not layout.valid then return false
+
+        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * textGap)
+
+        try
+        (
+            textNode.pos = textPosition
+            textNode.ResetString()
+            textNode.AppendString labelText
+            true
+        )
+        catch
+        (
+            false
+        )
+    ),
+
     fn createLineNode layout lineThickness:1.5 terminalSize:14.0 extensionOverhang:8.0 material:undefined =
     (
         local lineNode = splineShape name:(uniqueName "AMENO_DIM_")
@@ -182,6 +234,76 @@ struct AmenoDimensionGraphicsService
         decorateGraphicNode textNode dimensionId "label" dimensionsLayer
 
         AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode layout:layout displayText:labelText
+    ),
+
+    fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 =
+    (
+        local sceneState = ensureSceneReady()
+
+        if sceneState.status != #ready then throw ("Ameno não conseguiu preparar a cena: " + sceneState.detail)
+
+        local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
+        if not layout.valid then throw ("Não foi possível criar a prévia: " + layout.errorMessage)
+
+        local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
+        local result = undefined
+
+        with undo off
+        (
+            local dimensionMaterial = createDimensionMaterial()
+            local lineNode = createLineNode layout material:dimensionMaterial
+            local textNode = createTextNode measurement.text layout material:dimensionMaterial
+            local dimensionId = "preview-" + (lineNode.handle as string)
+
+            try (lineNode.isHidden = false) catch ()
+            try (textNode.isHidden = false) catch ()
+            decorateGraphicNode lineNode dimensionId "preview-lines" sceneState.dimensionsLayer
+            decorateGraphicNode textNode dimensionId "preview-label" sceneState.dimensionsLayer
+            setTextProperty lineNode "Ameno.Kind" "dimensionPreview"
+            setTextProperty textNode "Ameno.Kind" "dimensionPreview"
+            setTextProperty lineNode "Ameno.Preview" "1"
+            setTextProperty textNode "Ameno.Preview" "1"
+
+            result = AmenoGraphicDimensionRecord dimensionId:dimensionId lineNode:lineNode textNode:textNode layout:layout displayText:measurement.text
+        )
+
+        result
+    ),
+
+    fn updatePreviewDimension preview pointA pointB offsetPoint outputUnit:#meters precision:2 =
+    (
+        if preview == undefined then return undefined
+
+        local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
+        if not layout.valid then return undefined
+
+        local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
+
+        with undo off
+        (
+            updateLineSplinePoints preview.lineNode layout
+            updateTextNode preview.textNode measurement.text layout
+        )
+
+        preview.layout = layout
+        preview.displayText = measurement.text
+        preview
+    ),
+
+    fn removePreviewDimension preview =
+    (
+        if preview == undefined then return false
+
+        local nodes = #()
+        if preview.lineNode != undefined and isValidNode preview.lineNode do append nodes preview.lineNode
+        if preview.textNode != undefined and isValidNode preview.textNode do append nodes preview.textNode
+
+        with undo off
+        (
+            for node in nodes where node != undefined and isValidNode node do delete node
+        )
+
+        true
     ),
 
     fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 =

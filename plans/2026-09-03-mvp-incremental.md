@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 aprovada no viewport, em render comum sob as condições informadas e na limpeza.
+**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 aprovada no viewport, em render comum sob as condições informadas e na limpeza; E4 pronta para teste manual.
 
 ## Estratégia de execução
 
@@ -27,7 +27,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E1 | `Preparar esta cena` cria a infraestrutura Ameno com segurança | Aprovada |
 | E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Aprovada em Batch |
 | E3 | Uma cota gráfica de teste é construída na cena | Aprovada no viewport, Arnold/V-Ray com luz e limpeza |
-| E4 | Cota alinhada é criada com três cliques e preview | Não iniciada |
+| E4 | Cota alinhada é criada com três cliques e preview | Pronta para teste no Max |
 | E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Não iniciada |
 | E6 | Valor medido, arredondado e manual podem ser revisados | Não iniciada |
 | E7 | Estilo edita fonte, texto, linhas e terminais | Não iniciada |
@@ -178,6 +178,39 @@ Ainda não haverá interação de três cliques nem associatividade.
 ---
 
 ## E4 — Ferramenta de três cliques
+
+**Estado:** pronta para teste manual no 3ds Max 2026.3 em 2026-09-03.
+**Implementação:** `Contents/scripts/ameno/core/ameno_dimension_tool.ms`, integrado ao `ameno_bootstrap.ms`, `ameno_runtime.ms`, `ameno_main_panel.ms` e ao construtor gráfico da E3.
+**Evidência automatizada:** `test_bootstrap.ms` passou no Batch isolado, verificando carregamento do `MouseTool`, criação/atualização/remoção da prévia, fluxo A/B/afastamento e cancelamento sem resíduos. `test_installed_package.ms` aprovou a cópia `ApplicationPlugins` com a E4 carregada.
+**Instalação:** `tools/install-dev.ps1` atualizou `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`; reinicie o 3ds Max antes do teste visual.
+
+### Como usar
+
+1. Abra `Ameno Tools` e prepare a cena se o painel indicar infraestrutura pendente.
+2. Clique em **Criar cota**.
+3. No viewport, clique no ponto A, clique no ponto B e clique no terceiro ponto para definir o afastamento da linha.
+4. Mova o mouse entre o segundo e o terceiro clique para ver a prévia; o texto é recalculado conforme a distância.
+5. Use Esc ou o botão direito para cancelar. A prévia é temporária e não fica na cena.
+6. O Snap não é ligado pelo plugin; quando estiver ligado no Max, o `MouseTool` usa o limite 3D do Snap atual.
+
+### Implementação e segurança
+
+- a prévia cria apenas dois nós em `AMENO_COTAS`, marcados `Ameno.Kind=dimensionPreview` e `Ameno.Preview=1`;
+- o controlador e os filhos permanentes só nascem no terceiro clique;
+- o commit reutiliza `AmenoDimensionGraphics.createDimension` e mantém a entrada de Undo `Ameno: criar cota`;
+- cancelamento, erro e shutdown removem a prévia com `undo off`;
+- pontos são projetados para o plano XY, mesma regra da E2/E3 atual;
+- a ferramenta não altera renderer, luzes, LightMix, Render Elements ou o estado do Snap.
+
+### Gate no Max
+
+- criar uma cota horizontal, vertical e diagonal;
+- testar os dois lados da linha e A/B invertidos;
+- cancelar após o primeiro e após o segundo clique e confirmar que não sobram nós;
+- usar Ctrl+Z após o terceiro clique e confirmar que a cota inteira desaparece em uma entrada;
+- repetir `Criar cota` sem duplicar preview ou controlador.
+
+O botão `Criar cota de teste` permanece disponível para regressão da E3.
 
 ### Objetivo
 
@@ -353,4 +386,4 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 
 ## Próxima ação
 
-Iniciar a **E4 — Ferramenta de três cliques**. A investigação de um overlay Corona independente de luz permanece planejada para a E9, sem alterar o Beauty/LightMix da cena.
+Reiniciar o 3ds Max e executar o gate manual da **E4 — Ferramenta de três cliques**. A investigação de um overlay Corona independente de luz permanece planejada para a E9, sem alterar o Beauty/LightMix da cena.

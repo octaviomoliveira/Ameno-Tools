@@ -7,6 +7,8 @@ global AmenoSceneSetup
 global AmenoUnitService
 global AmenoDimensionMath
 global AmenoDimensionGraphics
+global AmenoDimensionTool
+global AmenoDimensionMouseTool
 
 (
     local testFile = getSourceFileName()
@@ -25,6 +27,8 @@ global AmenoDimensionGraphics
     if AmenoUnitService == undefined then throw "Serviço de unidades não foi carregado pelo bootstrap."
     if AmenoDimensionMath == undefined then throw "Núcleo de matemática de cotas não foi carregado pelo bootstrap."
     if AmenoDimensionGraphics == undefined then throw "Construtor gráfico de cotas não foi carregado pelo bootstrap."
+    if AmenoDimensionTool == undefined then throw "Ferramenta interativa E4 não foi carregada pelo bootstrap."
+    if (classOf AmenoDimensionMouseTool) != MouseTool then throw "MouseTool E4 não foi registrado."
 
     local coronaInfo = AmenoRendererProbe.classify "CoronaRenderer"
     local vrayCpuInfo = AmenoRendererProbe.classify "V_Ray_7_Hotfix_1"
@@ -130,6 +134,46 @@ global AmenoDimensionGraphics
     if not (AmenoDimensionGraphics.removeDimension rebuiltRecord.dimensionId) then throw "Remoção da cota gráfica falhou."
     if (AmenoDimensionGraphics.findNodesForDimension rebuiltRecord.dimensionId).count != 0 then throw "Remoção da cota gráfica deixou resíduos."
     if objects.count != objectCountBeforeGraphics then throw "Ciclo gráfico criar/reconstruir/remover não restaurou a contagem de nós."
+
+    local previewRecord = AmenoDimensionGraphics.createPreviewDimension [0, 0, 0] [100, 0, 0] [0, 20, 0]
+    if previewRecord == undefined then throw "Prévia E4 não retornou registro."
+    if previewRecord.controller != undefined then throw "Prévia E4 não pode criar controlador permanente."
+    if previewRecord.lineNode == undefined or previewRecord.textNode == undefined then throw "Prévia E4 não criou linhas e texto."
+    if (AmenoDimensionGraphics.readTextProperty previewRecord.lineNode "Ameno.Kind") != "dimensionPreview" then throw "Prévia E4 não foi identificada como temporária."
+    if objects.count != (objectCountBeforeGraphics + 2) then throw "Prévia E4 deveria adicionar apenas dois nós temporários."
+
+    local updatedPreview = AmenoDimensionGraphics.updatePreviewDimension previewRecord [0, 0, 0] [120, 0, 0] [0, 30, 0]
+    if updatedPreview == undefined then throw "Atualização da prévia E4 falhou."
+    if not (AmenoDimensionMath.nearlyEqual updatedPreview.layout.measuredSceneUnits 120.0) then throw "Atualização da prévia E4 não atualizou a medida."
+    if updatedPreview.displayText == "" then throw "Atualização da prévia E4 perdeu o texto."
+    if not (AmenoDimensionGraphics.removePreviewDimension updatedPreview) then throw "Remoção da prévia E4 falhou."
+    if objects.count != objectCountBeforeGraphics then throw "Remoção da prévia E4 deixou resíduos."
+
+    resetMaxFile #noPrompt
+    AmenoApp.prepareScene()
+    local interactiveBaseline = objects.count
+    if not AmenoDimensionTool.begin() then throw "AmenoDimensionTool não iniciou no teste de três cliques."
+    AmenoDimensionTool.handlePoint 1 [0, 0, 0]
+    AmenoDimensionTool.handlePoint 2 [100, 0, 0]
+    if AmenoDimensionTool.preview == undefined then throw "E4 não criou prévia após o segundo ponto."
+    local commitResult = AmenoDimensionTool.handlePoint 3 [0, 20, 0]
+    if commitResult != #stop then throw "E4 não encerrou o fluxo após o terceiro ponto."
+    if AmenoDimensionTool.lastCommittedRecord == undefined then throw "E4 não guardou a cota criada."
+    if (AmenoDimensionGraphics.findControllers role:"interactive").count != 1 then throw "E4 não criou um controlador interativo."
+    AmenoDimensionTool.cancel()
+    if objects.count != (interactiveBaseline + 3) then throw "E4 deixou quantidade inesperada após commit."
+    if not (AmenoDimensionGraphics.removeDimension AmenoDimensionTool.lastCommittedRecord.dimensionId) then throw "Limpeza da cota interativa de teste falhou."
+    if objects.count != interactiveBaseline then throw "Limpeza da cota interativa deixou resíduos."
+
+    resetMaxFile #noPrompt
+    AmenoApp.prepareScene()
+    local cancelBaseline = objects.count
+    if not AmenoDimensionTool.begin() then throw "AmenoDimensionTool não iniciou no teste de cancelamento."
+    AmenoDimensionTool.handlePoint 1 [0, 0, 0]
+    AmenoDimensionTool.handlePoint 2 [100, 0, 0]
+    if AmenoDimensionTool.preview == undefined then throw "E4 não criou prévia para o cancelamento."
+    AmenoDimensionTool.cancel()
+    if objects.count != cancelBaseline then throw "Cancelamento E4 deixou nós temporários."
 
     fileIn macroPath quiet:true
 
