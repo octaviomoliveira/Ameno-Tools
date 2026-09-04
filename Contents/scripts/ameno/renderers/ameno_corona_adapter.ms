@@ -24,12 +24,26 @@ struct AmenoCoronaAdapterState
     pngType = #true24,
     pngInterlaced = false,
     savedOutputPath = "",
-    savedSaveFile = false
+    savedSaveFile = false,
+    -- critérios de parada salvos como pares #(propName, value); "" = não encontrado
+    savedPassesEntry = #("", undefined),
+    savedNoiseEntry  = #("", undefined)
 )
 
 struct AmenoCoronaRendererAdapterService
 (
     adapterId = "corona-overlay-v1",
+
+    -- Limite seguro para o passe de overlay.
+    -- CoronaLightMtl (emissivo puro, sem GI) converge em 1 passe;
+    -- 20 passes é um teto conservador caso a detecção de convergência falhe.
+    OVERLAY_MAX_PASSES = 20,
+    -- 1 % de ruído: convergência rápida, imperceptível em linhas/texto.
+    OVERLAY_NOISE_LEVEL = 0.01,
+
+    -- Lista de nomes de propriedade de passes e noise em diferentes versões do Corona.
+    PASSES_PROPS = #("imageSampler_passes", "rendererPasses", "maxPasses", "limit_passes"),
+    NOISE_PROPS  = #("imageSampler_noiseLevel", "denoising_threshold", "noiseLevel", "limit_noise"),
 
     fn validate request =
     (
@@ -49,6 +63,23 @@ struct AmenoCoronaRendererAdapterService
         true
     ),
 
+    -- Tenta ler o primeiro nome de propriedade disponível no renderer.
+    -- Retorna #(propName, value) ou #("", undefined).
+    fn readFirstRendererProp r propNames =
+    (
+        local found = #("", undefined)
+        for propName in propNames while found[1] == "" do
+        (
+            if isProperty r propName then
+            (
+                local v = undefined
+                try (v = getProperty r propName) catch ()
+                if v != undefined do found = #(propName, v)
+            )
+        )
+        found
+    ),
+
     fn captureState =
     (
         local state = AmenoCoronaAdapterState renderer:renderers.current
@@ -57,6 +88,9 @@ struct AmenoCoronaRendererAdapterService
         try (state.pngInterlaced = pngio.getInterlaced()) catch ()
         try (state.savedOutputPath = renderOutputFilename) catch (state.savedOutputPath = "")
         try (state.savedSaveFile = renderSaveFile) catch (state.savedSaveFile = false)
+        local r = renderers.current
+        state.savedPassesEntry = readFirstRendererProp r PASSES_PROPS
+        state.savedNoiseEntry  = readFirstRendererProp r NOISE_PROPS
         state
     ),
 
@@ -65,10 +99,19 @@ struct AmenoCoronaRendererAdapterService
         pngio.setAlpha true
         pngio.setType #true24
         pngio.setInterlaced false
+
         -- Corona ignora o parâmetro outputfile do comando render;
         -- a saída deve ser configurada via renderOutputFilename + renderSaveFile.
         renderOutputFilename = request.outputPath
         renderSaveFile = true
+
+        -- Forçar critério de parada para o passe de overlay.
+        -- CoronaLightMtl converge em 1 passe; estes limites garantem término
+        -- mesmo se o usuário tiver 0 % de ruído (critério de parada infinito).
+        local r = renderers.current
+        for propName in NOISE_PROPS  do try (if isProperty r propName do setProperty r propName OVERLAY_NOISE_LEVEL) catch ()
+        for propName in PASSES_PROPS do try (if isProperty r propName do setProperty r propName OVERLAY_MAX_PASSES)  catch ()
+
         true
     ),
 
@@ -81,6 +124,15 @@ struct AmenoCoronaRendererAdapterService
         try (pngio.setInterlaced state.pngInterlaced) catch ()
         try (renderOutputFilename = state.savedOutputPath) catch ()
         try (renderSaveFile = state.savedSaveFile) catch ()
+
+        -- Restaurar critérios de parada originais do usuário.
+        local r = renderers.current
+        if state.savedPassesEntry[1] != "" do
+            try (if isProperty r state.savedPassesEntry[1] do
+                setProperty r state.savedPassesEntry[1] state.savedPassesEntry[2]) catch ()
+        if state.savedNoiseEntry[1] != "" do
+            try (if isProperty r state.savedNoiseEntry[1] do
+                setProperty r state.savedNoiseEntry[1] state.savedNoiseEntry[2]) catch ()
 
         if state.renderer != renderers.current then
         (
@@ -149,6 +201,13 @@ struct AmenoCoronaRendererAdapterService
         )
 
         try (if renderedBitmap != undefined do close renderedBitmap) catch ()
+
+        -- O Corona trata Esc como "parar e salvar" — arquivo parcial fica em disco.
+        -- Removemos o arquivo para garantir "Cancelado · cena restaurada" consistente:
+        -- sem arquivo em disco = sem ambiguidade sobre o que foi gerado.
+        if wasCancelled and (doesFileExist request.outputPath) do
+            try (deleteFile request.outputPath) catch ()
+
         AmenoAdapterRenderResult cancelled:wasCancelled
     ),
 
