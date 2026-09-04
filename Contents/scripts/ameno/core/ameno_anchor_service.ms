@@ -273,6 +273,12 @@ struct AmenoAnchorServiceDefinition
 
         if indexTable == undefined do rebuildIndex()
 
+        -- Rebuild lazy: se o índice está vazio mas há controladores na cena,
+        -- o init() ocorreu antes de qualquer cota ser criada (ou a cena foi
+        -- reaberta). Reindexar agora para não perder a notificação atual.
+        if (indexTable.count == 0) and (::AmenoDimensionGraphics.findControllers()).count > 0 do
+            rebuildIndex()
+
         for animHandle in nd do
         (
             local k = animHandle as string

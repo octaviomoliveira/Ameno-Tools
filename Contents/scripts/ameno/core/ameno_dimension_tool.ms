@@ -287,6 +287,14 @@ struct AmenoDimensionToolService
                     removePreview()
                     nodeA = undefined
                     nodeB = undefined
+                    -- Notifica o serviço de âncoras para que a nova cota entre no índice
+                    -- reativo imediatamente. Sem isso, o indexTable ficaria desatualizado
+                    -- até o próximo reinício, e o NodeEventCallback ignoraria movimentos
+                    -- nos objetos ancorados.
+                    if ::AmenoAnchorService != undefined do
+                    (
+                        try (::AmenoAnchorService.rebuildIndex()) catch ()
+                    )
                     true
                 )
                 catch
