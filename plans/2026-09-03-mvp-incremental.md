@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 a E4 aprovadas; E5 implementada e testada em Batch; aguardando gate manual no Max.
+**Estado atual:** E1 a E5 aprovadas; E6 em desenvolvimento.
 
 ## Estratégia de execução
 
@@ -28,8 +28,8 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Aprovada em Batch |
 | E3 | Uma cota gráfica de teste é construída na cena | Aprovada no viewport, Arnold/V-Ray com luz e limpeza |
 | E4 | Cota alinhada é criada com três cliques e preview | Aprovada no Max |
-| E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Pronta para teste no Max |
-| E6 | Valor medido, arredondado e manual podem ser revisados | Não iniciada |
+| E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Aprovada no Max |
+| E6 | Valor medido, arredondado e manual podem ser revisados | Em desenvolvimento |
 | E7 | Estilo edita fonte, texto, linhas e terminais | Não iniciada |
 | E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Não iniciada |
 | E9 | Corona renderiza somente as cotas em arquivo transparente | Não iniciada |
@@ -249,10 +249,11 @@ Entregar a primeira cota realmente utilizável.
 
 ## E5 — Persistência e ciclo de vida
 
-**Estado:** implementada e aprovada em testes automatizados no 3ds Max 2026.3 Batch e no pacote instalado via `ApplicationPlugins`. Aguardando validação manual no Max.
+**Estado:** aprovada no 3ds Max 2026.3 em 2026-09-04 após validação manual do usuário.
 **Implementação:** `Contents/scripts/ameno/core/ameno_dimension_ca.ms`, integrado ao `ameno_bootstrap.ms`, `ameno_dimension_graphics.ms`, `ameno_runtime.ms`, `ameno_main_panel.ms` e documentado na ADR `0008-e5-custom-attributes-persistence.md`.
 **Evidência automatizada:** `test_bootstrap.ms` aprovou no Batch isolado a criação de Custom Attributes versionados (`AmenoDimensionCA`), ciclo completo de salvar cena em `.max`, reset e reabertura com preservação exata dos dados geométricos e de formatação, renomeação livre de nós mantendo integridade e identidade, simulação de exclusão acidental de nós visuais e regeneração via `AmenoApp.repairDimensions()`, e Undo atômico em um único passo. `test_installed_package.ms` aprovou a presença e funcionamento de `AmenoDimensionCA` na instalação do `ApplicationPlugins`.
 **Instalação:** `tools/install-dev.ps1` atualizou `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`; a cópia instalada foi conferida e testada via Batch isolado.
+**Gate manual aprovado em 2026-09-04:** o usuário confirmou que a cota persistiu perfeitamente após o ciclo de salvar e reabrir a cena `.max`, a exclusão acidental de filhos gráficos foi recuperada via botão "Reparar cotas" sem duplicar controladores na layer de sistema, e o Undo atômico removeu a cota inteira em uma única ação. A E5 está encerrada.
 
 ### Objetivo
 

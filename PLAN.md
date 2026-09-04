@@ -32,7 +32,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E3 aprovada no uso visual informado pelo usuário: Arnold exibiu a cota no render, V-Ray exibiu a cota com a iluminação da cena e `Limpar cotas de teste` removeu a cota sem resíduos. A diferença observada no Corona sem luz fica registrada como requisito da E9 (overlay independente), não como bloqueio da criação gráfica da E3.
 - E4 implementada e aprovada em Batch isolado no 3ds Max 2026.3: o `MouseTool` conduz A/B/afastamento, atualiza uma prévia temporária, cria a cota permanente pelo construtor da E3 e cancela sem deixar nós. Após o primeiro teste manual, o encerramento automático no terceiro evento foi removido: a ferramenta agora só termina quando o commit confirma sucesso e mostra a exceção real se houver falha.
 - E4 aprovada manualmente no 3ds Max em 2026-09-04: o fluxo de três cliques criou uma cota permanente de `4,05 m`, o painel mostrou `1 cota(s) ativa(s)` e a geometria permaneceu visível no viewport.
-- E5 implementada e aprovada em testes automatizados no 3ds Max 2026.3 Batch e no pacote instalado via `ApplicationPlugins`: controlador Point técnico agora possui Custom Attributes versionados (`AmenoDimensionCA` v1); persistência geométrica comprovada em ciclo save/load de arquivo `.max`; renomeação livre de nós preserva a identidade da cota; rotina de inspeção e reparo não-destrutivo (`inspectDimension`, `repairDimension`, botão `Reparar cotas` no painel) regenera nós visuais ausentes sem duplicar controladores; callbacks de ciclo de vida (`#filePostOpen`, `#postSceneReset`) sincronizam diagnósticos ao abrir cenas; Undo atômico (`max undo`) validado em um único passo.
+- E5 implementada e aprovada manualmente no 3ds Max 2026.3 em 2026-09-04: controlador Point técnico utiliza Custom Attributes versionados (`AmenoDimensionCA` v1); persistência comprovada em ciclo save/load de arquivo `.max`; renomeação livre de nós preserva a identidade da cota; rotina de inspeção e reparo não-destrutivo (`inspectDimension`, `repairDimension`, botão `Reparar cotas` no painel) regenera nós visuais ausentes sem duplicar controladores; callbacks de ciclo de vida (`#filePostOpen`, `#postSceneReset`) sincronizam diagnósticos ao abrir cenas; Undo atômico (`max undo`) validado em um único passo.
 - Pacote instalado com E1, E2, E3, E4 e E5 validado em Batch isolado; as cópias dos módulos críticos foram conferidas por SHA-256 contra o fonte.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
@@ -44,14 +44,14 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- E5 — persistência, Undo e reabertura — implementada, instalada no `ApplicationPlugins` e aprovada em Batch isolado; aguardando gate manual no 3ds Max.
+- E6 — valores medidos, arredondados e manuais — em planejamento e desenvolvimento inicial; E5 encerrada e aprovada pelo usuário.
 - A E2 foi concluída por solicitação explícita, pois é um núcleo puro e independente da cena.
 - A falha de bootstrap relatada após a primeira instalação da E3 foi corrigida: `throw getCurrentException()` é inválido dentro de `catch` no MAXScript e foi substituído por `throw`. O teste Batch passou a usar perfil isolado, portanto não exige fechar a sessão interativa do usuário.
 - O diagnóstico adicional de render foi encerrado sem alterar a cena do usuário: o resultado confirmado é Arnold funcionando, V-Ray funcionando quando há luz na cena e limpeza funcionando. Não serão mantidos probes temporários no repositório.
 
 ## Próximo passo executável
 
-Executar a validação manual da **E5 — Persistência, Undo e reabertura** no 3ds Max: reiniciar o 3ds Max, criar uma cota com a ferramenta de três cliques, salvar o arquivo `.max`, fechar e reabrir a cena; confirmar que o painel reconhece a cota ativa e que a geometria permanece íntegra; testar exclusão acidental de uma linha ou texto e clicar em `Reparar cotas` para validar a restauração sem resíduos; confirmar Undo atômico em um único passo.
+Planejar e implementar a primeira fatia da **E6 — Valores medidos, arredondados e manuais**: suporte aos modos de exibição (`#measured`, `#rounded`, `#manualNumeric`, `#manualText`), delta entre medido e exibido, motivo do override, inspeção e edição da cota selecionada no painel, e sinalização visual em âmbar com marcador `M` exclusiva na viewport (mantendo render limpo).
 
 ## Decisões que ainda exigem validação
 
@@ -82,6 +82,7 @@ Executar a validação manual da **E5 — Persistência, Undo e reabertura** no 
 | 2026-09-03 | Corrigir o desaparecimento da prévia no terceiro clique. | Removido o limite `numPoints:3`: o MouseTool permanece ativo até o commit retornar sucesso, preserva a prévia em erro e o painel exibe a exceção. Teste Batch e teste do pacote instalado passaram. | `ameno_dimension_tool.ms`, `ameno_main_panel.ms`, commit `6ce2200` |
 | 2026-09-04 | Confirmar a correção do terceiro clique no uso real. | Fluxo manual aprovado no Max: A/B/afastamento criou e manteve uma cota permanente de `4,05 m`; painel indicou `1 cota(s) ativa(s)`. E4 encerrada; próximo passo é E5. | captura do viewport/painel fornecida pelo usuário; commits `6ce2200` e `a868a4c` |
 | 2026-09-04 | Implementar E5: persistência, Custom Attributes e ciclo de vida. | E5 implementada e aprovada em Batch isolado e no pacote ApplicationPlugins; aguardando validação manual no Max. | commit `9c78acf`, `ameno_dimension_ca.ms`, `0008-e5-custom-attributes-persistence.md` |
+| 2026-09-04 | Validar manualmente a E5 e iniciar a E6. | E5 aprovada no Max pelo usuário (save/load, reparo de filhos gráficos e Undo); E6 iniciada no planejamento. | confirmação textual do usuário, PLAN.md, plans/2026-09-03-mvp-incremental.md |
 
 ## Como retomar sem contexto
 
