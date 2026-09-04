@@ -211,7 +211,10 @@ struct AmenoDimensionGraphicsService
     fn configureLineShape lineNode thickness =
     (
         if isProperty lineNode #render_renderable do lineNode.render_renderable = true
+        if isProperty lineNode #render_displayRenderMesh do lineNode.render_displayRenderMesh = true
+        if isProperty lineNode #render_useViewportSettings do lineNode.render_useViewportSettings = false
         if isProperty lineNode #render_thickness do lineNode.render_thickness = thickness
+        if isProperty lineNode #render_viewport_thickness do lineNode.render_viewport_thickness = thickness
         if isProperty lineNode #render_sides do lineNode.render_sides = 4
         if isProperty lineNode #render_angle do lineNode.render_angle = 0.0
 
@@ -373,8 +376,8 @@ struct AmenoDimensionGraphicsService
         textNode.size = resolvedHeight
         textNode.tracking = resolvedTracking
         textNode.ResetString()
-        textNode.SetFont resolvedFont 0
         textNode.ResetStyle()
+        textNode.SetFont resolvedFont 0
         try (textNode.SetBold resolvedBold) catch ()
         try (textNode.SetItalic resolvedItalic) catch ()
         textNode.AppendString labelText
@@ -412,8 +415,8 @@ struct AmenoDimensionGraphicsService
         markerNode.alignment = 1
         markerNode.size = resolvedHeight * 0.8
         markerNode.ResetString()
-        markerNode.SetFont resolvedFont 0
         markerNode.ResetStyle()
+        markerNode.SetFont resolvedFont 0
         markerNode.AppendString "[M]"
 
         try (markerNode.wirecolor = (color 245 166 35)) catch ()
@@ -923,8 +926,24 @@ struct AmenoDimensionGraphicsService
             resolvedStyle = ::AmenoStyleService.getStyle sId
         )
 
+        local wasSelected = false
+        local oldNodes = findNodesForDimension dimensionId
+        for n in oldNodes where isValidNode n do
+        (
+            if n.isSelected do wasSelected = true
+        )
+
         removeVisualNodes dimensionId
-        createVisualNodes controller layout audit sceneState.dimensionsLayer style:resolvedStyle
+        local created = createVisualNodes controller layout audit sceneState.dimensionsLayer style:resolvedStyle
+
+        if wasSelected and created != undefined do
+        (
+            local toSelect = #()
+            if created.lineNode != undefined and isValidNode created.lineNode do append toSelect created.lineNode
+            if created.textNode != undefined and isValidNode created.textNode do append toSelect created.textNode
+            if toSelect.count > 0 do selectMore toSelect
+        )
+        created
     ),
 
     fn rebuildDimensionsByStyle targetStyleId =

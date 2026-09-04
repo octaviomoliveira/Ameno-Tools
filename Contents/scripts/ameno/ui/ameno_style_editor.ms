@@ -124,6 +124,27 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
         true
     )
 
+    fn syncToStyleId targetStyleId =
+    (
+        if targetStyleId == undefined or targetStyleId == "" do return false
+        local fIdx = 0
+        for i = 1 to currentStyles.count do
+        (
+            if currentStyles[i].styleId == targetStyleId do
+            (
+                fIdx = i
+                exit
+            )
+        )
+        if fIdx > 0 and fIdx != ddlStyles.selection do
+        (
+            ddlStyles.selection = fIdx
+            activeStyle = currentStyles[fIdx]
+            loadActiveStyleToUI()
+        )
+        true
+    )
+
     fn readCurrentUIIntoActiveStyle =
     (
         if activeStyle == undefined then return undefined
@@ -148,6 +169,26 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
         activeStyle
     )
 
+    fn applyCurrentUIToScene autoRebuild:true =
+    (
+        if ::AmenoStyleService == undefined or activeStyle == undefined then return false
+
+        local updated = readCurrentUIIntoActiveStyle()
+        if updated != undefined then
+        (
+            ::AmenoStyleService.saveStyle updated
+            if autoRebuild do
+            (
+                ::AmenoStyleService.updateStyleAndRebuild updated
+            )
+            local count = if ::AmenoStyleService != undefined then ::AmenoStyleService.countDimensionsUsingStyle updated.styleId else 0
+            lblInUse.text = "Em uso: " + (count as string) + " cota(s) nesta cena."
+            if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
+            true
+        )
+        else false
+    )
+
     on AmenoStyleEditorRollout open do
     (
         if ::AmenoStyleService != undefined then
@@ -156,6 +197,19 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
             ddlFonts.items = currentFonts
             refreshStyleList()
         )
+        callbacks.removeScripts id:#ameno_style_editor_sync
+        callbacks.addScript #selectionSetChanged "if AmenoStyleEditorRollout != undefined and AmenoStyleEditorRollout.open do (
+            local ctrl = if AmenoApp != undefined then AmenoApp.getSelectedDimensionController() else undefined
+            if ctrl != undefined and isValidNode ctrl do (
+                local sId = if ::AmenoDimensionCA != undefined then (local r = ::AmenoDimensionCA.readCA ctrl; if r != undefined then r.styleId else \"\") else \"\"
+                if sId != \"\" and sId != undefined do AmenoStyleEditorRollout.syncToStyleId sId
+            )
+        )" id:#ameno_style_editor_sync
+    )
+
+    on AmenoStyleEditorRollout close do
+    (
+        callbacks.removeScripts id:#ameno_style_editor_sync
     )
 
     on ddlStyles selected idx do
@@ -182,20 +236,36 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
         )
     )
 
+    -- Handlers com atualização ao vivo
+    on ddlFonts selected idx do applyCurrentUIToScene autoRebuild:true
+    on chkBold changed state do applyCurrentUIToScene autoRebuild:true
+    on chkItalic changed state do applyCurrentUIToScene autoRebuild:true
+    on spnFontSize changed val do applyCurrentUIToScene autoRebuild:true
+    on spnTracking changed val do applyCurrentUIToScene autoRebuild:true
+    on spnTextGap changed val do applyCurrentUIToScene autoRebuild:true
+    on spnLineThickness changed val do applyCurrentUIToScene autoRebuild:true
+
     on btnThin pressed do
     (
         spnLineThickness.value = 0.8
+        applyCurrentUIToScene autoRebuild:true
     )
 
     on btnNorm pressed do
     (
         spnLineThickness.value = 1.5
+        applyCurrentUIToScene autoRebuild:true
     )
 
     on btnThick pressed do
     (
         spnLineThickness.value = 2.5
+        applyCurrentUIToScene autoRebuild:true
     )
+
+    on spnOverhang changed val do applyCurrentUIToScene autoRebuild:true
+    on ddlTerminalType selected idx do applyCurrentUIToScene autoRebuild:true
+    on spnTerminalSize changed val do applyCurrentUIToScene autoRebuild:true
 
     on btnUpdateBatch pressed do
     (
@@ -216,6 +286,8 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
     (
         if ::AmenoStyleService != undefined and activeStyle != undefined then
         (
+            local updated = readCurrentUIIntoActiveStyle()
+            if updated != undefined do ::AmenoStyleService.saveStyle updated
             local count = ::AmenoStyleService.applyStyleToSelection activeStyle.styleId
             loadActiveStyleToUI()
             if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()

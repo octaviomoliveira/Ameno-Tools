@@ -271,6 +271,26 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:770
         if AmenoApp != undefined do AmenoApp.openStyleEditor()
     )
 
+    on ddlSelStyle selected idx do
+    (
+        global AmenoApp
+        global AmenoStyleService
+
+        if AmenoApp != undefined and ::AmenoStyleService != undefined then
+        (
+            local ctrl = AmenoApp.getSelectedDimensionController()
+            if ctrl != undefined and isValidNode ctrl then
+            (
+                if idx > 0 and idx <= styleIds.count then
+                (
+                    local targetId = styleIds[idx]
+                    ::AmenoStyleService.applyStyleToDimension ctrl targetId
+                    AmenoRefreshMainPanel()
+                )
+            )
+        )
+    )
+
     on btnApplySelStyle pressed do
     (
         global AmenoApp

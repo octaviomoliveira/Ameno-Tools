@@ -437,16 +437,33 @@ global AmenoStyleRecord
     -- 5. Testar abertura do editor visual e sincronização de UI
     AmenoShowStyleEditor()
     if AmenoStyleEditorRollout == undefined or not AmenoStyleEditorRollout.open then throw "E7: Editor de Estilos não abriu corretamente."
+
+    -- Testar sincronização automática de estilo pela seleção
+    AmenoStyleEditorRollout.syncToStyleId "editorial"
+    if AmenoStyleEditorRollout.ddlStyles.selection == 0 then throw "E7: syncToStyleId falhou."
+
+    -- Testar aplicação de UI ao vivo
+    AmenoStyleEditorRollout.spnFontSize.value = 32.0
+    AmenoStyleEditorRollout.applyCurrentUIToScene autoRebuild:true
+    local editedArch = AmenoStyleService.getStyle "editorial"
+    if editedArch.fontSize != 32.0 then throw "E7: applyCurrentUIToScene não atualizou fontSize."
+
     destroyDialog AmenoStyleEditorRollout
 
     -- 6. Testar aplicação de estilo à seleção e diretamente ao controlador
     local dimSelTest = AmenoDimensionGraphics.createDimension [0, 0, 0] [150, 0, 0] [0, 30, 0] styleId:"default"
+    if dimSelTest.lineNode.render_displayRenderMesh != true then throw "E7: render_displayRenderMesh deve ser true para espessura visível no viewport."
+    if dimSelTest.lineNode.render_useViewportSettings != false then throw "E7: render_useViewportSettings deve ser false."
+
     select #(dimSelTest.lineNode, dimSelTest.textNode)
     local appliedSelCount = AmenoStyleService.applyStyleToSelection "editorial"
     if appliedSelCount != 1 then throw "E7: Aplicação de estilo à seleção falhou."
     local auditApplied = AmenoDimensionGraphics.getDimensionAudit dimSelTest.controller
     local recAfterSel = AmenoDimensionCA.readCA dimSelTest.controller
     if recAfterSel.styleId != "editorial" then throw "E7: Estilo após applyStyleToSelection não é editorial."
+
+    -- Testar preservação de seleção ao reconstruir
+    if selection.count == 0 then throw "E7: Seleção foi perdida durante o rebuild da cota."
 
     AmenoStyleService.applyStyleToDimension dimSelTest.controller "technical"
     local recAfterCtrl = AmenoDimensionCA.readCA dimSelTest.controller
