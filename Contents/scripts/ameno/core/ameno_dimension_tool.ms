@@ -46,6 +46,50 @@ struct AmenoDimensionToolService
     (
         local candidateNode = undefined
 
+        -- O ponto retornado pelo Vertex Snap e mais confiavel que o primeiro
+        -- ray hit: em planta, o raio pode atravessar outra face antes do vertice.
+        -- Procuramos primeiro o vertice avaliado mais proximo em todas as
+        -- geometrias elegiveis cujo bounding box contem o ponto clicado.
+        if pointValue != undefined and ::AmenoDimensionCA != undefined do
+        (
+            local vertexTolerance = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
+            local closestVertexNode = undefined
+            local closestVertexHit = undefined
+            local closestVertexDistance = 1e30
+
+            for obj in geometry where isValidNode obj and not obj.isHidden do
+            (
+                local k = ::AmenoDimensionGraphics.readTextProperty obj "Ameno.Kind"
+                if (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
+                (
+                    local insideCandidateBounds = false
+                    try
+                    (
+                        local bbMin = obj.min
+                        local bbMax = obj.max
+                        insideCandidateBounds = pointValue.x >= (bbMin.x - vertexTolerance) and pointValue.x <= (bbMax.x + vertexTolerance) and \
+                                                pointValue.y >= (bbMin.y - vertexTolerance) and pointValue.y <= (bbMax.y + vertexTolerance) and \
+                                                pointValue.z >= (bbMin.z - vertexTolerance) and pointValue.z <= (bbMax.z + vertexTolerance)
+                    )
+                    catch ()
+
+                    if insideCandidateBounds do
+                    (
+                        local vertexHit = ::AmenoDimensionCA.findNearestVertex obj pointValue maxDistance:vertexTolerance
+                        if vertexHit != undefined and vertexHit.distance < closestVertexDistance do
+                        (
+                            closestVertexNode = obj
+                            closestVertexHit = vertexHit
+                            closestVertexDistance = vertexHit.distance
+                        )
+                    )
+                )
+            )
+
+            if closestVertexNode != undefined and closestVertexHit != undefined then
+                return (AmenoDimensionAnchorHit node:closestVertexNode vertexId:closestVertexHit.vertexId vertexWorldPoint:closestVertexHit.worldPoint)
+        )
+
         -- 1. Tentativa via raycasting na cena (usando viewport-relative screenPoint)
         try
         (

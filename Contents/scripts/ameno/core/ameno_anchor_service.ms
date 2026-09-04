@@ -17,6 +17,7 @@ global AmenoDimensionMath
 global AmenoStyleService
 global AmenoRefreshMainPanel
 global AmenoRegisterTransformWatcher
+global AmenoRegisterGeometryWatcher
 
 -- Função global para registrar watcher de transform em nós âncora.
 -- Usa execute() com handle embutido na string para evitar closure e race condition.
@@ -42,6 +43,27 @@ fn AmenoRegisterTransformWatcher theNode =
     try (execute watchScript) catch ()
 )
 
+-- O NodeEventCallback permanece como rede global, mas algumas stacks de Edit Poly
+-- nao entregam o evento de forma consistente durante a edicao interativa. Este
+-- change handler fica ligado diretamente ao no ancorado e usa a mesma dirty queue.
+fn AmenoRegisterGeometryWatcher theNode =
+(
+    local h = getHandleByAnim theNode
+    local hStr = h as string
+    local cbBody = \
+        "if ::AmenoAnchorService != undefined and " + \
+        "::AmenoAnchorService.indexTable != undefined and " + \
+        "(hasDictValue ::AmenoAnchorService.indexTable \"" + hStr + "\") do (" + \
+        "local _cl = getDictValue ::AmenoAnchorService.indexTable \"" + hStr + "\";" + \
+        "if _cl != undefined do (" + \
+        "for _c in _cl where isValidNode _c do ::AmenoAnchorService.markDirty _c;" + \
+        "if ::AmenoAnchorService.dirtyQueue.count > 0 do ::AmenoAnchorService.flushQueue()))"
+    local watchScript = \
+        "when geometry (getAnimByHandle " + hStr + ") changes id:#ameno_geometry_watchers do (" + \
+        cbBody + ")"
+    try (execute watchScript) catch ()
+)
+
 
 struct AmenoAnchorServiceDefinition
 (
@@ -58,6 +80,7 @@ struct AmenoAnchorServiceDefinition
 
         -- Remove watchers anteriores antes de recriar o índice
         try (deleteAllChangeHandlers id:#ameno_watchers) catch ()
+        try (deleteAllChangeHandlers id:#ameno_geometry_watchers) catch ()
 
         local controllers = ::AmenoDimensionGraphics.findControllers()
         local watchedHandles = #()
@@ -86,6 +109,8 @@ struct AmenoAnchorServiceDefinition
                         append watchedHandles hA
                         if ::AmenoRegisterTransformWatcher != undefined do
                             try (::AmenoRegisterTransformWatcher rec.nodeA) catch ()
+                        if ::AmenoRegisterGeometryWatcher != undefined do
+                            try (::AmenoRegisterGeometryWatcher rec.nodeA) catch ()
                     )
                 )
 
@@ -108,6 +133,8 @@ struct AmenoAnchorServiceDefinition
                         append watchedHandles hB
                         if ::AmenoRegisterTransformWatcher != undefined do
                             try (::AmenoRegisterTransformWatcher rec.nodeB) catch ()
+                        if ::AmenoRegisterGeometryWatcher != undefined do
+                            try (::AmenoRegisterGeometryWatcher rec.nodeB) catch ()
                     )
                 )
             )
@@ -560,6 +587,7 @@ struct AmenoAnchorServiceDefinition
         callbacks.removeScripts id:#ameno_anchors
         -- Remove os watchers de transform registrados por rebuildIndex
         try (deleteAllChangeHandlers id:#ameno_watchers) catch ()
+        try (deleteAllChangeHandlers id:#ameno_geometry_watchers) catch ()
         if anchorCallback != undefined do
         (
             try (anchorCallback.enabled = false) catch ()
@@ -594,6 +622,7 @@ struct AmenoAnchorServiceDefinition
                 controllerStructured:(fn onCtrl ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesChanged ev nd) \
                 modelStructured:(fn onStruct ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesChanged ev nd) \
                 geometryChanged:(fn onGeom ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesChanged ev nd) \
+                topologyChanged:(fn onTopo ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesChanged ev nd) \
                 deleted:(fn onDel ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesDeleted ev nd) \
                 delay:50 mouseUp:false
             isCallbackActive = true

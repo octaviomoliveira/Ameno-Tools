@@ -8,6 +8,7 @@ global AmenoApp
 global AmenoDimensionCA
 global AmenoDimensionGraphics
 global AmenoAnchorService
+global AmenoDimensionTool
 
 -- Cria uma instancia real do schema anterior ANTES de carregar o schema v5.
 -- Como o attribID e global, avaliar o bootstrap v5 migra a instancia existente.
@@ -128,6 +129,8 @@ local polyPointB = polyPointA + [240, 80, 0]
 local polyOffset = polyPointA + [0, 60, 0]
 local nearestPoly = AmenoDimensionCA.findNearestVertex polyNode polyPointA maxDistance:0.01
 expectTrue "vertice mais proximo do Poly foi detectado" (nearestPoly != undefined and nearestPoly.vertexId == polyVertexId)
+local toolHitPoly = AmenoDimensionTool.detectHitNode polyPointA
+expectTrue "ferramenta captura vertice pelo ponto de snap" (toolHitPoly != undefined and toolHitPoly.node == polyNode and toolHitPoly.vertexId == polyVertexId)
 
 local polyDim = AmenoDimensionGraphics.createDimension polyPointA polyPointB polyOffset role:"test-subobject" \
     nodeA:polyNode anchorVertexIdA:polyVertexId dimensionMode:#horizontal
@@ -175,6 +178,23 @@ AmenoAnchorService.handleNodesChanged #geometryChanged #((getHandleByAnim meshNo
 local meshRecord = AmenoDimensionCA.readCA meshCtrl
 expectPointNear "ponto B acompanha movimento do vertice Mesh" meshRecord.pointB expectedMeshWorld
 expectEqual "vertex ID B permanece persistido" meshRecord.anchorVertexIdB meshVertexId
+
+format "\n=== A4b: leitura usa geometria avaliada no topo da modifier stack ===\n"
+local stackedNode = Box name:"AMENO_TEST_STACK" length:120 width:80 height:200
+convertToPoly stackedNode
+stackedNode.position = [900, 100, 0]
+local stackedVertexId = 1
+local stackedBefore = AmenoDimensionCA.resolveVertexWorld stackedNode stackedVertexId
+local bendModifier = Bend()
+bendModifier.angle = 55
+bendModifier.direction = 20
+bendModifier.bendAxis = 2
+addModifier stackedNode bendModifier
+update stackedNode
+local stackedAfter = AmenoDimensionCA.resolveVertexWorld stackedNode stackedVertexId
+expectTrue "modifier altera a posicao avaliada do vertice" (stackedBefore != undefined and stackedAfter != undefined and (length (stackedAfter - stackedBefore)) > 0.001)
+local stackedHit = AmenoDimensionCA.findNearestVertex stackedNode stackedAfter maxDistance:0.01
+expectTrue "busca encontra vertice no topo da stack" (stackedHit != undefined and stackedHit.vertexId == stackedVertexId)
 
 format "\n=== A5: topologia invalida preserva posicao e marca orfa ===\n"
 polyRecord = AmenoDimensionCA.readCA polyCtrl

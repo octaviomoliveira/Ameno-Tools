@@ -254,6 +254,19 @@ struct AmenoDimensionCAService
     (
         if anchorNode == undefined or not isValidNode anchorNode then return 0
 
+        -- A ancora deve enxergar o resultado no topo da modifier stack. Ler apenas
+        -- baseObject ignora deslocamentos feitos por Edit Poly/Edit Mesh modifiers.
+        local evaluatedMesh = undefined
+        local evaluatedCount = 0
+        try
+        (
+            evaluatedMesh = snapshotAsMesh anchorNode
+            if evaluatedMesh != undefined do evaluatedCount = getNumVerts evaluatedMesh
+        )
+        catch ()
+        if evaluatedMesh != undefined do try (delete evaluatedMesh) catch ()
+        if evaluatedCount > 0 then return evaluatedCount
+
         local baseObject = undefined
         try (baseObject = anchorNode.baseObject) catch ()
         if baseObject == undefined then return 0
@@ -284,6 +297,23 @@ struct AmenoDimensionCAService
 
     fn getVertexWorldUnchecked anchorNode vertexId =
     (
+        if anchorNode == undefined or not isValidNode anchorNode or vertexId < 1 then return undefined
+
+        -- snapshotAsMesh retorna a geometria avaliada no topo da stack e seus
+        -- vertices em coordenadas mundiais. Assim Edit Poly, Edit Mesh e
+        -- deformadores deixam de ser invisiveis para a ancora.
+        local evaluatedMesh = undefined
+        local evaluatedWorldPoint = undefined
+        try
+        (
+            evaluatedMesh = snapshotAsMesh anchorNode
+            if evaluatedMesh != undefined and vertexId <= (getNumVerts evaluatedMesh) do
+                evaluatedWorldPoint = getVert evaluatedMesh vertexId
+        )
+        catch ()
+        if evaluatedMesh != undefined do try (delete evaluatedMesh) catch ()
+        if evaluatedWorldPoint != undefined then return evaluatedWorldPoint
+
         -- Com o nó como argumento, polyOp/meshOp devolvem no sistema de
         -- coordenadas corrente. Pedir #world evita aplicar o transform duas vezes
         -- e inclui corretamente object offsets/pivôs.
@@ -308,7 +338,7 @@ struct AmenoDimensionCAService
     fn resolveVertexWorld anchorNode vertexId =
     (
         if anchorNode == undefined or not isValidNode anchorNode then return undefined
-        if vertexId < 1 or vertexId > (getVertexCount anchorNode) then return undefined
+        if vertexId < 1 then return undefined
         getVertexWorldUnchecked anchorNode vertexId
     ),
 
@@ -317,24 +347,44 @@ struct AmenoDimensionCAService
         if anchorNode == undefined or not isValidNode anchorNode then return undefined
         if worldPoint == undefined then return undefined
 
-        local vertexCount = getVertexCount anchorNode
-        if vertexCount < 1 then return undefined
-
         local bestId = -1
         local bestPoint = undefined
         local bestDistance = 1e30
 
-        for vertexId = 1 to vertexCount do
+        -- Uma unica avaliacao da stack por busca evita snapshotAsMesh por vertice.
+        local evaluatedMesh = undefined
+        try (evaluatedMesh = snapshotAsMesh anchorNode) catch ()
+        if evaluatedMesh != undefined then
         (
-            local candidatePoint = getVertexWorldUnchecked anchorNode vertexId
-            if candidatePoint != undefined do
+            local vertexCount = getNumVerts evaluatedMesh
+            for vertexId = 1 to vertexCount do
             (
+                local candidatePoint = getVert evaluatedMesh vertexId
                 local candidateDistance = length (candidatePoint - worldPoint)
                 if candidateDistance < bestDistance do
                 (
                     bestId = vertexId
                     bestPoint = candidatePoint
                     bestDistance = candidateDistance
+                )
+            )
+            try (delete evaluatedMesh) catch ()
+        )
+        else
+        (
+            local vertexCount = getVertexCount anchorNode
+            for vertexId = 1 to vertexCount do
+            (
+                local candidatePoint = getVertexWorldUnchecked anchorNode vertexId
+                if candidatePoint != undefined do
+                (
+                    local candidateDistance = length (candidatePoint - worldPoint)
+                    if candidateDistance < bestDistance do
+                    (
+                        bestId = vertexId
+                        bestPoint = candidatePoint
+                        bestDistance = candidateDistance
+                    )
                 )
             )
         )

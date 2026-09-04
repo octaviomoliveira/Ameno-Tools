@@ -1,7 +1,7 @@
 ﻿# 0015 — Limitação: Âncoras não rastreiam edições de sub-objeto (EditPoly/EditMesh)
 
 **Data:** 2026-09-04  
-**Status:** Implementado e instalado como E10.7 · validação interativa pendente
+**Status:** E10.7.1 corrigida e reinstalada · novo gate interativo pendente
 **Contexto:** Detectado durante gate manual da E10.1
 
 ---
@@ -134,3 +134,23 @@ escopo tecnico permanece o mesmo e o plano incremental esta em
 - `ameno_dimension_ca.ms` — `resolvePoints`, `AmenoDimensionRecord`
 - `ameno_dimension_tool.ms` — `detectHitNode`
 - ADR 0011 (E8 — Sistema de Ancoras)
+
+---
+
+## Adendo E10.7.1 — resultado do primeiro gate manual
+
+O primeiro teste no 3ds Max mostrou que mover o vértice ainda não atualizava a cota.
+A implementação inicial consultava primeiro o `baseObject`, o que não representa a
+geometria produzida por Edit Poly/Edit Mesh acima dele na modifier stack. Além disso,
+a captura do nó dependia do primeiro objeto interceptado pelo raycast.
+
+A correção passa a:
+
+- resolver e localizar IDs com `snapshotAsMesh`, que avalia o topo da modifier stack;
+- buscar o vértice globalmente pelo ponto exato devolvido pelo Vertex Snap;
+- manter um change handler `when geometry` diretamente em cada nó ancorado, além do
+  `NodeEventCallback` global;
+- ouvir também `topologyChanged` para falhar com segurança quando IDs forem removidos.
+
+Cotas criadas antes da captura de vertex ID continuam retrocompatíveis por `localPoint`.
+Para fazê-las rastrear subobjetos, é necessário reancorar A/B ou criar uma nova cota.

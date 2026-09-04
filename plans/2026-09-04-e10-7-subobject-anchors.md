@@ -1,7 +1,7 @@
 # E10.7 — Âncoras por vértice em Editable Poly e Editable Mesh
 
 **Data:** 2026-09-04
-**Estado:** implementação e instalação concluídas; gate Batch bloqueado pelo executor e gate interativo pendente
+**Estado:** correção E10.7.1 implementada e reinstalada após falha do primeiro gate manual; reteste pendente
 **Origem:** ADR 0015
 
 ## Por que E10.7
@@ -84,6 +84,23 @@ para outro vértice silenciosamente.
 - [x] instalar o pacote de desenvolvimento;
 - [ ] validar manualmente criação com snap e edição Vertex no Max.
 
+### E10.7-f — Correção após o primeiro gate manual
+
+- [x] registrar que a cota permaneceu na posição anterior após mover o vértice;
+- [x] substituir a leitura exclusiva de `baseObject` por `snapshotAsMesh`, avaliando o
+  topo da modifier stack em coordenadas mundiais;
+- [x] tornar a captura independente do primeiro ray hit, buscando globalmente o vértice
+  mais próximo do ponto devolvido pelo Vertex Snap;
+- [x] adicionar `when geometry <node> changes` por nó ancorado, mantendo o
+  `NodeEventCallback` como segunda rede de eventos;
+- [x] incluir `topologyChanged` no callback global;
+- [x] ampliar o teste para captura pela ferramenta e geometria avaliada com modificador;
+- [x] reinstalar o pacote de desenvolvimento;
+- [ ] repetir o gate manual com uma cota nova ou reancorada.
+
+**Gate:** o ID deve ser capturado mesmo quando o raio encontra outra face, e o ponto deve
+acompanhar o vértice resultante de Editable Poly/Edit Mesh no topo da modifier stack.
+
 ## Estado da validação anterior
 
 - `main` auditada em `ec3038b`, limpa e sincronizada com `origin/main`;
@@ -100,6 +117,10 @@ para outro vértice silenciosamente.
 - `tools/validate-package.ps1` aprovou novamente a estrutura do pacote;
 - a cópia de desenvolvimento foi instalada em
   `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`.
+- o primeiro gate manual falhou: a malha mudou, mas a cota permaneceu na posição antiga;
+- a revisão pós-gate identificou duas lacunas concretas: a resolução priorizava
+  `baseObject`, ignorando Edit Poly/Edit Mesh acima dele, e a captura dependia do primeiro
+  objeto retornado pelo raycast. A E10.7.1 corrige ambas e adiciona watcher direto.
 
 ## Limites conhecidos
 
@@ -112,7 +133,7 @@ para outro vértice silenciosamente.
 
 ## Próximo gate
 
-Abrir o 3ds Max 2026, validar uma cota criada com Vertex Snap sobre um Editable Poly e
-mover o vértice em modo subobjeto. Depois validar um Editable Mesh e confirmar que
-cotas antigas continuam acompanhando apenas o transform do objeto. O gate Batch deve
-ser retomado separadamente após estabilizar o executor, sem bloquear o gate manual.
+Reiniciar o 3ds Max 2026 e testar uma cota nova criada com Vertex
+Snap sobre um Editable Poly. Se a cota atual for reutilizada, reancorar A/B para que ela
+receba o novo ID de vértice. Depois mover o vértice no topo da modifier stack e repetir
+com Editable Mesh. O gate Batch será retomado após estabilizar o executor.
