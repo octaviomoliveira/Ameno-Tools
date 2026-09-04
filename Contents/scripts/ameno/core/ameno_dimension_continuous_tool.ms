@@ -426,7 +426,7 @@ struct AmenoDimensionContinuousToolService
         if segIdx < 1 or segIdx >= points.count then return false
         local pA = points[segIdx]
         local pB = points[segIdx + 1]
-        local off = defaultOffset pA pB
+        local calcOff = defaultOffset pA pB
 
         try
         (
@@ -436,11 +436,11 @@ struct AmenoDimensionContinuousToolService
                 append segmentPreviews undefined
 
             if segmentPreviews[segIdx] == undefined then
-                segmentPreviews[segIdx] = AmenoDimensionGraphics.createPreviewDimension pA pB off \
+                segmentPreviews[segIdx] = AmenoDimensionGraphics.createPreviewDimension pA pB calcOff \
                     outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
             else
                 segmentPreviews[segIdx] = AmenoDimensionGraphics.updatePreviewDimension segmentPreviews[segIdx] \
-                    pA pB off outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
+                    pA pB calcOff outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
         )
         catch ()
         true
@@ -451,15 +451,15 @@ struct AmenoDimensionContinuousToolService
         if points.count == 0 then return false
         local pA = points[points.count]
         if (length (cursorPoint - pA)) <= 0.00001 then return false
-        local off = defaultOffset pA cursorPoint
+        local calcOff = defaultOffset pA cursorPoint
 
         try
         (
             if activePreview == undefined then
-                activePreview = AmenoDimensionGraphics.createPreviewDimension pA cursorPoint off \
+                activePreview = AmenoDimensionGraphics.createPreviewDimension pA cursorPoint calcOff \
                     outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
             else
-                activePreview = AmenoDimensionGraphics.updatePreviewDimension activePreview pA cursorPoint off \
+                activePreview = AmenoDimensionGraphics.updatePreviewDimension activePreview pA cursorPoint calcOff \
                     outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
         )
         catch ()
