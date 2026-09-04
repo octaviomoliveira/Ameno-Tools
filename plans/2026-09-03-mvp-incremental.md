@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 a E9 aprovadas interativamente no 3ds Max 2026; E10 em desenvolvimento; E11 planejada para o novo Editor Visual e Preview ao Vivo.
+**Estado atual:** E1 a E9 aprovadas interativamente no 3ds Max 2026; E10 pronta para teste manual no Max; E11 planejada para o novo Editor Visual e Preview ao Vivo.
 
 ## Estratégia de execução
 
@@ -34,7 +34,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Aprovada no Max |
 | E8.1 | Estabilização das âncoras, estilos e interface | Aprovada no Max |
 | E9 | Corona renderiza somente as cotas em arquivo transparente | Aprovada interativamente |
-| E10 | Fluxo de produção, V-Ray CPU e estabilização do MVP | Em desenvolvimento |
+| E10 | Fluxo de produção, V-Ray CPU e estabilização do MVP | Pronta para teste no Max |
 | E11 | Editor Visual e Preview ao Vivo | Planejada após a E10 |
 
 

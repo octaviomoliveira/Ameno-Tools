@@ -50,7 +50,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- E10 — Fluxo de produção e estabilização: cotas horizontal/vertical, seleção múltipla, bake, adapter V-Ray CPU, testes de escala (1–1000 cotas) e empacotamento alpha interno.
+- Validação interativa do gate manual da **E10** no 3ds Max 2026 pelo usuário (modos H/V, lote/bake, V-Ray CPU, relatório de diagnóstico e pacote alpha).
 
 ## Planejado após a E10
 
@@ -58,14 +58,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-Implementar a **E10 — Fluxo de produção e estabilização**:
-
-1. cotas horizontal e vertical reutilizando o núcleo alinhado;
-2. seleção múltipla, atualização em lote e bake;
-3. V-Ray CPU pelo mesmo contrato do adapter Corona;
-4. cenas-fixture, relatório de diagnóstico e documentação de uso;
-5. testes com 1, 10, 100, 500 e 1000 cotas;
-6. empacotamento de uma versão alpha interna para uma planta real.
+1. **Gate manual interativo da E10 no 3ds Max 2026**:
+   - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
+   - Validar seleção múltipla e alteração em lote de unidades/precisão e Bake de âncoras;
+   - Validar render de overlay no Corona ou V-Ray CPU;
+   - Emitir Relatório de Diagnóstico no painel.
+2. **Após aprovação da E10 pelo usuário**: Iniciar a **E11 — Editor Visual e Preview ao Vivo**.
 
 
 ## Decisões que ainda exigem validação
