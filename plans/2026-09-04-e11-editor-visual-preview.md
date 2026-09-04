@@ -4,7 +4,7 @@
 
 **Alvo inicial:** 3ds Max 2026
 
-**Estado:** E11.0 e E11.1 concluídas e testadas na branch `feature/e11-visual-editor` (48/48 testes aprovados em `test_e11_1_draft.ms`); pronta para avançar para E11.2
+**Estado:** E11.0, E11.1 e E11.2 concluídas e testadas na branch `feature/e11-visual-editor` (38/38 testes aprovados em `test_e11_2_shell.ms`); pronta para avançar para E11.3
 **Referência visual:** mockup “Ameno — Editor de estilo” fornecido pelo usuário em 2026-09-04
 
 ## Contexto
@@ -178,6 +178,17 @@ Se o registro persistente evoluir, criar versão nova com migração idempotente
 - incluir tooltips e ordem de tabulação;
 - lembrar apenas preferências de interface seguras, como tamanho da janela e fundo do preview;
 - manter o painel principal compacto: o botão existente apenas abre o novo editor.
+
+**Status E11.2 (Concluído em 2026-09-04):**
+- Módulo `Contents/scripts/ameno/ui/ameno_style_editor_wpf.ms` implementado com janela WPF moderna baseada no mockup do usuário.
+- Layout de duas colunas com `GridSplitter` responsivo: cabeçalho com ComboBox de estilos, indicador dirty e presets; coluna esquerda com preview container, zoom e alternância de fundo; coluna direita com seções colapsáveis para Texto, Linhas e Terminais; rodapé com atalhos de teclado visíveis e botões de ação.
+- Padrão Singleton mantido: chamadas a `open()` retornam e focam a mesma instância sem duplicar janelas.
+- Atalhos de teclado capturados globalmente via `PreviewKeyDown`: `Esc` (Cancelar), `Ctrl+S` (Salvar estilo), `Ctrl+Enter` (Aplicar às selecionadas).
+- Tooltips contextuais e ordem de tabulação (`TabIndex`) sequencial em todos os controles interativos.
+- Preferências de interface seguras (largura, altura, fundo claro/escuro) salvas e recuperadas de arquivo INI no `#plugcfg`, com zero poluição da cena `.max`.
+- Sincronização bidirecional completa com `StyleDraft`: mutações na UI marcam rascunho como dirty e atualizam indicador visual.
+- Suíte automatizada `tests/maxscript/test_e11_2_shell.ms` executada sob 3ds Max 2026.3 headless com **38/38 testes aprovados (100% de cobertura)**.
+- Baterias de regressão `test_e11_1_draft.ms` e `test_bootstrap.ms` executadas com **100% de aprovação**.
 
 ### E11.3 — Renderer do preview
 

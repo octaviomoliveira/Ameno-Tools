@@ -35,6 +35,8 @@ global AmenoDiagnosticReport
 global AmenoDiagnosticService
 global AmenoStyleEditorRollout
 global AmenoShowStyleEditor
+global AmenoStyleEditorWPF
+global AmenoStyleEditorWindow
 global AmenoMainPanelRollout
 global AmenoRenderRollout
 global AmenoShowMainPanel
@@ -95,6 +97,7 @@ struct AmenoBootstrapService
             @"core\ameno_diagnostic_service.ms",
             @"core\ameno_runtime.ms",
             @"ui\ameno_style_editor.ms",
+            @"ui\ameno_style_editor_wpf.ms",
             @"ui\ameno_main_panel.ms"
         )
 
