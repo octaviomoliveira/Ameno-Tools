@@ -10,6 +10,7 @@
 global AmenoDimensionGraphics
 global AmenoDimensionCA
 global AmenoDimensionRecord
+global AmenoStyleService
 
 struct AmenoDimensionAuditRecord
 (
@@ -34,7 +35,8 @@ struct AmenoGraphicDimensionRecord
     markerNode = undefined,
     layout = undefined,
     displayText = "",
-    audit = undefined
+    audit = undefined,
+    style = undefined
 )
 
 struct AmenoDimensionGraphicsService
@@ -128,6 +130,84 @@ struct AmenoDimensionGraphicsService
         splineIndex
     ),
 
+    fn addClosedPolygonSpline shapeNode points =
+    (
+        local splineIndex = addNewSpline shapeNode
+        for p in points do addKnot shapeNode splineIndex #corner #line p
+        close shapeNode splineIndex
+        splineIndex
+    ),
+
+    fn addOpenPolylineSpline shapeNode points =
+    (
+        local splineIndex = addNewSpline shapeNode
+        for p in points do addKnot shapeNode splineIndex #corner #line p
+        splineIndex
+    ),
+
+    fn addTerminals shapeNode layout terminalType terminalSize =
+    (
+        local lineEndA = layout.linePointA
+        local lineEndB = layout.linePointB
+
+        case terminalType of
+        (
+            #arrowClosed:
+            (
+                local arrowLen = terminalSize
+                local arrowHalfWidth = terminalSize * 0.25
+                local wingA1 = lineEndA + (layout.direction * arrowLen) + (layout.perpendicular * arrowHalfWidth)
+                local wingA2 = lineEndA + (layout.direction * arrowLen) - (layout.perpendicular * arrowHalfWidth)
+                addClosedPolygonSpline shapeNode #(lineEndA, wingA1, wingA2)
+
+                local wingB1 = lineEndB - (layout.direction * arrowLen) + (layout.perpendicular * arrowHalfWidth)
+                local wingB2 = lineEndB - (layout.direction * arrowLen) - (layout.perpendicular * arrowHalfWidth)
+                addClosedPolygonSpline shapeNode #(lineEndB, wingB1, wingB2)
+            )
+            #arrowOpen:
+            (
+                local arrowLen = terminalSize
+                local arrowHalfWidth = terminalSize * 0.25
+                local wingA1 = lineEndA + (layout.direction * arrowLen) + (layout.perpendicular * arrowHalfWidth)
+                local wingA2 = lineEndA + (layout.direction * arrowLen) - (layout.perpendicular * arrowHalfWidth)
+                addOpenPolylineSpline shapeNode #(wingA1, lineEndA, wingA2)
+
+                local wingB1 = lineEndB - (layout.direction * arrowLen) + (layout.perpendicular * arrowHalfWidth)
+                local wingB2 = lineEndB - (layout.direction * arrowLen) - (layout.perpendicular * arrowHalfWidth)
+                addOpenPolylineSpline shapeNode #(wingB1, lineEndB, wingB2)
+            )
+            #dot:
+            (
+                local r = terminalSize * 0.35
+                local dotA = #(
+                    lineEndA + (layout.direction * r),
+                    lineEndA + (layout.perpendicular * r),
+                    lineEndA - (layout.direction * r),
+                    lineEndA - (layout.perpendicular * r)
+                )
+                addClosedPolygonSpline shapeNode dotA
+
+                local dotB = #(
+                    lineEndB + (layout.direction * r),
+                    lineEndB + (layout.perpendicular * r),
+                    lineEndB - (layout.direction * r),
+                    lineEndB - (layout.perpendicular * r)
+                )
+                addClosedPolygonSpline shapeNode dotB
+            )
+            #none:
+            (
+                -- sem terminais
+            )
+            default: -- #tick (traço arquitetônico)
+            (
+                local tickVector = normalize (layout.direction + layout.perpendicular) * (terminalSize * 0.5)
+                addLineSpline shapeNode (lineEndA - tickVector) (lineEndA + tickVector)
+                addLineSpline shapeNode (lineEndB - tickVector) (lineEndB + tickVector)
+            )
+        )
+    ),
+
     fn configureLineShape lineNode thickness =
     (
         if isProperty lineNode #render_renderable do lineNode.render_renderable = true
@@ -139,29 +219,62 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
-    fn updateLineSplinePoints lineNode layout terminalSize:14.0 extensionOverhang:8.0 =
+    fn updateLineSplinePoints lineNode layout style:undefined terminalSize:14.0 extensionOverhang:8.0 terminalType:#tick =
     (
         if lineNode == undefined or not isValidNode lineNode then return false
         if layout == undefined or not layout.valid then return false
 
-        local lineEndA = layout.linePointA
-        local lineEndB = layout.linePointB
-        local extensionEndA = lineEndA + (layout.perpendicular * extensionOverhang)
-        local extensionEndB = lineEndB + (layout.perpendicular * extensionOverhang)
-        local tickVector = normalize (layout.direction + layout.perpendicular) * (terminalSize * 0.5)
+        local resolvedTerminalType = terminalType
+        local resolvedTerminalSize = terminalSize
+        local resolvedOverhang = extensionOverhang
 
+        if style != undefined do
+        (
+            resolvedTerminalType = style.terminalType
+            resolvedTerminalSize = style.terminalSize
+            resolvedOverhang = style.extensionOverhang
+        )
+
+        -- Se for tick padrão com 5 splines
+        if resolvedTerminalType == #tick and (numSplines lineNode) == 5 then
+        (
+            local lineEndA = layout.linePointA
+            local lineEndB = layout.linePointB
+            local extensionEndA = lineEndA + (layout.perpendicular * resolvedOverhang)
+            local extensionEndB = lineEndB + (layout.perpendicular * resolvedOverhang)
+            local tickVector = normalize (layout.direction + layout.perpendicular) * (resolvedTerminalSize * 0.5)
+
+            try
+            (
+                setKnotPoint lineNode 1 1 layout.projectedA
+                setKnotPoint lineNode 1 2 extensionEndA
+                setKnotPoint lineNode 2 1 layout.projectedB
+                setKnotPoint lineNode 2 2 extensionEndB
+                setKnotPoint lineNode 3 1 lineEndA
+                setKnotPoint lineNode 3 2 lineEndB
+                setKnotPoint lineNode 4 1 (lineEndA - tickVector)
+                setKnotPoint lineNode 4 2 (lineEndA + tickVector)
+                setKnotPoint lineNode 5 1 (lineEndB - tickVector)
+                setKnotPoint lineNode 5 2 (lineEndB + tickVector)
+                updateShape lineNode
+                return true
+            )
+            catch ()
+        )
+
+        -- Caso contrário, reconstrói as splines no mesmo nó
         try
         (
-            setKnotPoint lineNode 1 1 layout.projectedA
-            setKnotPoint lineNode 1 2 extensionEndA
-            setKnotPoint lineNode 2 1 layout.projectedB
-            setKnotPoint lineNode 2 2 extensionEndB
-            setKnotPoint lineNode 3 1 lineEndA
-            setKnotPoint lineNode 3 2 lineEndB
-            setKnotPoint lineNode 4 1 (lineEndA - tickVector)
-            setKnotPoint lineNode 4 2 (lineEndA + tickVector)
-            setKnotPoint lineNode 5 1 (lineEndB - tickVector)
-            setKnotPoint lineNode 5 2 (lineEndB + tickVector)
+            while (numSplines lineNode) > 0 do deleteSpline lineNode 1
+            local lineEndA = layout.linePointA
+            local lineEndB = layout.linePointB
+            local extensionEndA = lineEndA + (layout.perpendicular * resolvedOverhang)
+            local extensionEndB = lineEndB + (layout.perpendicular * resolvedOverhang)
+
+            addLineSpline lineNode layout.projectedA extensionEndA
+            addLineSpline lineNode layout.projectedB extensionEndB
+            addLineSpline lineNode lineEndA lineEndB
+            addTerminals lineNode layout resolvedTerminalType resolvedTerminalSize
             updateShape lineNode
             true
         )
@@ -171,12 +284,15 @@ struct AmenoDimensionGraphicsService
         )
     ),
 
-    fn updateTextNode textNode labelText layout textGap:12.0 =
+    fn updateTextNode textNode labelText layout style:undefined textGap:12.0 =
     (
         if textNode == undefined or not isValidNode textNode then return false
         if layout == undefined or not layout.valid then return false
 
-        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * textGap)
+        local resolvedGap = textGap
+        if style != undefined do resolvedGap = style.textGap
+
+        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * resolvedGap)
 
         try
         (
@@ -191,40 +307,76 @@ struct AmenoDimensionGraphicsService
         )
     ),
 
-    fn createLineNode layout lineThickness:1.5 terminalSize:14.0 extensionOverhang:8.0 material:undefined =
+    fn createLineNode layout style:undefined lineThickness:1.5 terminalType:#tick terminalSize:14.0 extensionOverhang:8.0 material:undefined =
     (
+        local resolvedThickness = lineThickness
+        local resolvedTerminalType = terminalType
+        local resolvedTerminalSize = terminalSize
+        local resolvedOverhang = extensionOverhang
+
+        if style != undefined do
+        (
+            resolvedThickness = style.lineThickness
+            resolvedTerminalType = style.terminalType
+            resolvedTerminalSize = style.terminalSize
+            resolvedOverhang = style.extensionOverhang
+        )
+
         local lineNode = splineShape name:(uniqueName "AMENO_DIM_")
         local lineEndA = layout.linePointA
         local lineEndB = layout.linePointB
-        local extensionEndA = lineEndA + (layout.perpendicular * extensionOverhang)
-        local extensionEndB = lineEndB + (layout.perpendicular * extensionOverhang)
-        local tickVector = normalize (layout.direction + layout.perpendicular) * (terminalSize * 0.5)
+        local extensionEndA = lineEndA + (layout.perpendicular * resolvedOverhang)
+        local extensionEndB = lineEndB + (layout.perpendicular * resolvedOverhang)
 
         addLineSpline lineNode layout.projectedA extensionEndA
         addLineSpline lineNode layout.projectedB extensionEndB
         addLineSpline lineNode lineEndA lineEndB
-        addLineSpline lineNode (lineEndA - tickVector) (lineEndA + tickVector)
-        addLineSpline lineNode (lineEndB - tickVector) (lineEndB + tickVector)
+        addTerminals lineNode layout resolvedTerminalType resolvedTerminalSize
         updateShape lineNode
 
-        configureLineShape lineNode lineThickness
+        configureLineShape lineNode resolvedThickness
         if material != undefined do lineNode.material = material
 
         lineNode
     ),
 
-    fn createTextNode labelText layout textHeight:20.0 textGap:12.0 fontName:"Arial" material:undefined =
+    fn createTextNode labelText layout style:undefined textHeight:20.0 textGap:12.0 fontName:"Arial" bold:false italic:false tracking:0.0 material:undefined =
     (
-        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * textGap)
+        local resolvedHeight = textHeight
+        local resolvedGap = textGap
+        local resolvedFont = fontName
+        local resolvedBold = bold
+        local resolvedItalic = italic
+        local resolvedTracking = tracking
+
+        if style != undefined do
+        (
+            resolvedHeight = style.fontSize
+            resolvedGap = style.textGap
+            resolvedFont = style.fontName
+            resolvedBold = style.bold
+            resolvedItalic = style.italic
+            resolvedTracking = style.tracking
+        )
+
+        if AmenoStyleService != undefined do
+        (
+            resolvedFont = AmenoStyleService.validateFont resolvedFont
+        )
+
+        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * resolvedGap)
         local textNode = TextPlus name:(uniqueName "AMENO_LABEL_") pos:textPosition
 
         textNode.layouttype = 0
         textNode.plane = 1
         textNode.alignment = 1
-        textNode.size = textHeight
+        textNode.size = resolvedHeight
+        textNode.tracking = resolvedTracking
         textNode.ResetString()
-        textNode.SetFont fontName 0
+        textNode.SetFont resolvedFont 0
         textNode.ResetStyle()
+        try (textNode.SetBold resolvedBold) catch ()
+        try (textNode.SetItalic resolvedItalic) catch ()
         textNode.AppendString labelText
 
         try (textNode.renderable = true) catch ()
@@ -233,18 +385,34 @@ struct AmenoDimensionGraphicsService
         textNode
     ),
 
-    fn createMarkerNode layout textHeight:20.0 textGap:12.0 fontName:"Arial" =
+    fn createMarkerNode layout style:undefined textHeight:20.0 textGap:12.0 fontName:"Arial" =
     (
-        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * textGap)
-        local markerPosition = textPosition + (layout.direction * (textHeight * 2.0))
+        local resolvedHeight = textHeight
+        local resolvedGap = textGap
+        local resolvedFont = fontName
+
+        if style != undefined do
+        (
+            resolvedHeight = style.fontSize
+            resolvedGap = style.textGap
+            resolvedFont = style.fontName
+        )
+
+        if AmenoStyleService != undefined do
+        (
+            resolvedFont = AmenoStyleService.validateFont resolvedFont
+        )
+
+        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * resolvedGap)
+        local markerPosition = textPosition + (layout.direction * (resolvedHeight * 2.0))
         local markerNode = TextPlus name:(uniqueName "AMENO_MARK_") pos:markerPosition
 
         markerNode.layouttype = 0
         markerNode.plane = 1
         markerNode.alignment = 1
-        markerNode.size = textHeight * 0.8
+        markerNode.size = resolvedHeight * 0.8
         markerNode.ResetString()
-        markerNode.SetFont fontName 0
+        markerNode.SetFont resolvedFont 0
         markerNode.ResetStyle()
         markerNode.AppendString "[M]"
 
@@ -362,7 +530,7 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
-    fn createController pointA pointB offsetPoint systemLayer role:"test" outputUnit:#meters precision:2 =
+    fn createController pointA pointB offsetPoint systemLayer role:"test" outputUnit:#meters precision:2 styleId:"default" =
     (
         local controller = Point name:(uniqueName "AMENO_DIM_CTRL_") size:5.0
         local dimensionId = "dimension-" + (controller.handle as string)
@@ -390,7 +558,7 @@ struct AmenoDimensionGraphicsService
             rec.manualReason = ""
             rec.lastMeasuredMm = 0.0
             rec.lastDeltaMm = 0.0
-            rec.styleId = "default"
+            rec.styleId = styleId
 
             AmenoDimensionCA.applyCA controller rec
         )
@@ -399,6 +567,7 @@ struct AmenoDimensionGraphicsService
         setTextProperty controller "Ameno.DimensionId" dimensionId
         setTextProperty controller "Ameno.DimensionRole" (role as string)
         setTextProperty controller "Ameno.SchemaVersion" (schemaVersion as string)
+        setTextProperty controller "Ameno.StyleId" styleId
         setPointProperty controller "Ameno.PointA" pointA
         setPointProperty controller "Ameno.PointB" pointB
         setPointProperty controller "Ameno.OffsetPoint" offsetPoint
@@ -406,7 +575,7 @@ struct AmenoDimensionGraphicsService
         controller
     ),
 
-    fn createVisualNodes controller layout auditOrText dimensionsLayer =
+    fn createVisualNodes controller layout auditOrText dimensionsLayer style:undefined =
     (
         local dimensionId = readTextProperty controller "Ameno.DimensionId"
         local audit = undefined
@@ -422,14 +591,31 @@ struct AmenoDimensionGraphicsService
             labelText = auditOrText as string
         )
 
+        local resolvedStyle = style
+        if resolvedStyle == undefined and AmenoStyleService != undefined do
+        (
+            local sId = "default"
+            if AmenoDimensionCA != undefined and isValidNode controller do
+            (
+                local rec = AmenoDimensionCA.readCA controller
+                if rec != undefined and rec.styleId != undefined and rec.styleId != "" do sId = rec.styleId
+            )
+            if sId == "default" and isValidNode controller do
+            (
+                local propId = readTextProperty controller "Ameno.StyleId"
+                if propId != undefined and propId != "" do sId = propId
+            )
+            resolvedStyle = AmenoStyleService.getStyle sId
+        )
+
         local dimensionMaterial = createDimensionMaterial()
-        local lineNode = createLineNode layout material:dimensionMaterial
-        local textNode = createTextNode labelText layout material:dimensionMaterial
+        local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
+        local textNode = createTextNode labelText layout style:resolvedStyle material:dimensionMaterial
         local markerNode = undefined
 
         if audit != undefined and audit.isManual then
         (
-            markerNode = createMarkerNode layout
+            markerNode = createMarkerNode layout style:resolvedStyle
             decorateGraphicNode markerNode dimensionId "marker" dimensionsLayer
             try (lineNode.wirecolor = (color 245 166 35)) catch ()
             try (textNode.wirecolor = (color 245 166 35)) catch ()
@@ -443,10 +629,10 @@ struct AmenoDimensionGraphicsService
         decorateGraphicNode lineNode dimensionId "lines" dimensionsLayer
         decorateGraphicNode textNode dimensionId "label" dimensionsLayer
 
-        AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode markerNode:markerNode layout:layout displayText:labelText audit:audit
+        AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode markerNode:markerNode layout:layout displayText:labelText audit:audit style:resolvedStyle
     ),
 
-    fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 =
+    fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" =
     (
         local sceneState = ensureSceneReady()
 
@@ -457,12 +643,14 @@ struct AmenoDimensionGraphicsService
 
         local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
         local result = undefined
+        local resolvedStyle = undefined
+        if AmenoStyleService != undefined do resolvedStyle = AmenoStyleService.getStyle styleId
 
         with undo off
         (
             local dimensionMaterial = createDimensionMaterial()
-            local lineNode = createLineNode layout material:dimensionMaterial
-            local textNode = createTextNode measurement.text layout material:dimensionMaterial
+            local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
+            local textNode = createTextNode measurement.text layout style:resolvedStyle material:dimensionMaterial
             local dimensionId = "preview-" + (lineNode.handle as string)
 
             try (lineNode.isHidden = false) catch ()
@@ -474,13 +662,13 @@ struct AmenoDimensionGraphicsService
             setTextProperty lineNode "Ameno.Preview" "1"
             setTextProperty textNode "Ameno.Preview" "1"
 
-            result = AmenoGraphicDimensionRecord dimensionId:dimensionId lineNode:lineNode textNode:textNode layout:layout displayText:measurement.text
+            result = AmenoGraphicDimensionRecord dimensionId:dimensionId lineNode:lineNode textNode:textNode layout:layout displayText:measurement.text style:resolvedStyle
         )
 
         result
     ),
 
-    fn updatePreviewDimension preview pointA pointB offsetPoint outputUnit:#meters precision:2 =
+    fn updatePreviewDimension preview pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" =
     (
         if preview == undefined then return undefined
 
@@ -488,15 +676,18 @@ struct AmenoDimensionGraphicsService
         if not layout.valid then return undefined
 
         local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
+        local resolvedStyle = undefined
+        if AmenoStyleService != undefined do resolvedStyle = AmenoStyleService.getStyle styleId
 
         with undo off
         (
-            updateLineSplinePoints preview.lineNode layout
-            updateTextNode preview.textNode measurement.text layout
+            updateLineSplinePoints preview.lineNode layout style:resolvedStyle
+            updateTextNode preview.textNode measurement.text layout style:resolvedStyle
         )
 
         preview.layout = layout
         preview.displayText = measurement.text
+        preview.style = resolvedStyle
         preview
     ),
 
@@ -516,7 +707,7 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
-    fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 =
+    fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" =
     (
         local sceneState = ensureSceneReady()
 
@@ -532,7 +723,7 @@ struct AmenoDimensionGraphicsService
         (
             undo "Ameno: criar cota" on
             (
-                controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision
+                controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId
                 local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
                 if AmenoDimensionCA != undefined do
                 (
@@ -672,7 +863,7 @@ struct AmenoDimensionGraphicsService
         calculateAudit controller layout outputUnit:outputUnit precision:record.precision
     ),
 
-    fn rebuildDimension controller =
+    fn rebuildDimension controller style:undefined =
     (
         if controller == undefined or not isValidNode controller then throw "O controlador da cota não existe mais."
 
@@ -719,8 +910,55 @@ struct AmenoDimensionGraphicsService
             AmenoDimensionCA.applyCA controller record
         )
 
+        local resolvedStyle = style
+        if resolvedStyle == undefined and AmenoStyleService != undefined do
+        (
+            local sId = "default"
+            if record != undefined and record.styleId != undefined and record.styleId != "" then sId = record.styleId
+            else
+            (
+                local propId = readTextProperty controller "Ameno.StyleId"
+                if propId != undefined and propId != "" do sId = propId
+            )
+            resolvedStyle = AmenoStyleService.getStyle sId
+        )
+
         removeVisualNodes dimensionId
-        createVisualNodes controller layout audit sceneState.dimensionsLayer
+        createVisualNodes controller layout audit sceneState.dimensionsLayer style:resolvedStyle
+    ),
+
+    fn rebuildDimensionsByStyle targetStyleId =
+    (
+        local controllers = findControllers()
+        local count = 0
+        local styleObj = undefined
+        if AmenoStyleService != undefined do styleObj = AmenoStyleService.getStyle targetStyleId
+
+        for ctrl in controllers where isValidNode ctrl do
+        (
+            local sId = "default"
+            if AmenoDimensionCA != undefined do
+            (
+                local rec = AmenoDimensionCA.readCA ctrl
+                if rec != undefined and rec.styleId != undefined and rec.styleId != "" do sId = rec.styleId
+            )
+            if sId == "default" do
+            (
+                local p = readTextProperty ctrl "Ameno.StyleId"
+                if p != undefined and p != "" do sId = p
+            )
+
+            if sId == targetStyleId do
+            (
+                try
+                (
+                    rebuildDimension ctrl style:styleObj
+                    count += 1
+                )
+                catch ()
+            )
+        )
+        count
     ),
 
     fn setDimensionMode controller mode manualValueMm:undefined manualText:undefined reason:undefined incrementMm:undefined =

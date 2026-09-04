@@ -41,6 +41,8 @@ global AmenoDimensionTool
     )
     if not markerFound then throw "E6 instalado: Marcador [M] não encontrado."
     AmenoDimensionGraphics.removeDimension testDim.dimensionId
+    if AmenoStyleService == undefined then throw "O pacote instalado não carregou o serviço de estilos da E7."
+    if (AmenoStyleService.listStyles()).count < 3 then throw "O pacote instalado não possui os presets de estilo da E7."
 
-    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5 e E6.\n" AmenoVersion.appVersion
+    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5, E6 e E7.\n" AmenoVersion.appVersion
 )

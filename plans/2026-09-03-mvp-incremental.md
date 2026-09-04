@@ -341,25 +341,48 @@ Permitir que a cota represente levantamento e intenção de projeto sem esconder
 
 ## E7 — Editor visual de estilo
 
+**Estado:** implementada e validada em testes automatizados no 3ds Max 2026.3; aguardando validação manual no 3ds Max interativo.
+**Implementação:** `Contents/scripts/ameno/core/ameno_style_service.ms`, `Contents/scripts/ameno/ui/ameno_style_editor.ms`, atualizações em `ameno_dimension_graphics.ms`, `ameno_dimension_tool.ms`, `ameno_runtime.ms`, `ameno_main_panel.ms`, e documentada na ADR `docs/decisions/0010-e7-style-system-and-visual-editor.md`.
+**Evidência automatizada:** `test_bootstrap.ms` e `test_installed_package.ms` aprovaram no 3ds Max Batch isolado:
+1. Inicialização do `AmenoStyleService` com os 3 presets de fábrica (*Arquitetônico*, *Editorial*, *Técnico*).
+2. Construção correta dos 5 tipos de terminais vetoriais na mesma spline (`#tick`, `#arrowClosed`, `#arrowOpen`, `#dot`, `#none`), herdando `render_thickness` e material de cota.
+3. Configuração de tipografia no TextPlus (`fontSize`, `tracking`, `fontName`, `bold`, `italic`, `textGap`) com fallback para Arial.
+4. Atualização de estilo em lote (`updateStyleAndRebuild`), atualizando todas as cotas da cena que utilizam o estilo.
+5. Undo atômico: reversão da atualização em lote de todas as cotas com um único `max undo`.
+6. Persistência de biblioteca de estilos no arquivo `.max` via UserProps de `rootNode` (`Ameno.Styles`), com reabertura e integridade comprovadas.
+**Instalação:** `tools/install-dev.ps1` sincronizou a versão atualizada no `ApplicationPlugins\AmenoTools`.
+
 ### Objetivo
 
-Editar aparência com a clareza do TextPlus, sem expor controles irrelevantes à cotagem.
+Editar aparência com a clareza do TextPlus, sem expor controles irrelevantes à cotagem, oferecendo padrões estéticos refinados para plantas humanizadas com render vetorial idêntico em Corona, V-Ray e Arnold.
 
-### Primeira fatia
+### Implementação
 
-- fonte instalada, peso, tamanho, tracking e cor;
-- espessuras `Fina`, `Normal`, `Forte` e valor personalizado;
-- terminais: traço, seta cheia, seta aberta, ponto e nenhum;
-- preview de uma cota no próprio editor;
-- `Aplicar às selecionadas`, `Salvar como novo` e `Atualizar estilo`;
-- Cancelar restaura o snapshot anterior.
+- Modelo `AmenoStyleRecord` e serviço `AmenoStyleService`;
+- Presets: *Arquitetônico* (Arial 20 pt, Traço 45° 14 mm, espessura 1.5 mm), *Editorial* (Georgia 22 pt, Ponto 8 mm, espessura 1.0 mm), *Técnico* (Arial 16 pt, Seta Fechada 16 mm, espessura 1.2 mm);
+- 5 tipos canônicos de terminais geométricos na mesma `SplineShape`: `#tick`, `#arrowClosed`, `#arrowOpen`, `#dot`, `#none`;
+- Espessuras rápidas de linha com atalhos: `Fina (0.8)`, `Normal (1.5)`, `Forte (2.5)` e spinner de ajuste contínuo;
+- Lista dinâmica de fontes instaladas no Windows via classe .NET `System.Drawing.FontFamily` e fallback gracioso;
+- Atualização em lote com reconstrução automática de todas as cotas vinculadas;
+- Reversibilidade total: Undo atômico no 3ds Max;
+- Persistência na cena: estilos salvos com o `.max` via UserProps em `rootNode`, garantindo portabilidade sem arquivos externos;
+- Editor visual dedicado `AmenoStyleEditorRollout` e integração no painel principal `AmenoMainPanelRollout`.
 
-### Gate
+### Gate no Max
 
-- um estilo altera todas as cotas vinculadas em um único Undo;
-- estilos diferentes coexistem;
-- fonte ausente usa fallback e gera diagnóstico;
-- terminais esquerdo/direito ficam corretamente espelhados.
+1. Abrir o 3ds Max 2026 com o Ameno Tools instalado.
+2. Abrir o painel Ameno Tools e clicar no botão **Editor de Estilos...**:
+   - Confirmar abertura do editor "Ameno Dimensions — Editor de Estilos".
+   - Confirmar que o dropdown lista os presets *Arquitetônico*, *Editorial* e *Técnico*.
+3. Alternar entre os estilos no editor e verificar a atualização dinâmica dos campos (fontes, tamanhos, terminais e espessuras).
+4. Criar uma cota na cena e aplicar o estilo *Editorial*:
+   - Confirmar que a cota assume terminais em ponto/losango e espessura fina (1.0).
+5. Criar outra cota e aplicar o estilo *Técnico*:
+   - Confirmar que a cota assume setas fechadas e espessura 1.2.
+6. No Editor de Estilos, selecionar o estilo *Arquitetônico*, alterar a espessura para `Forte (2.5)` e clicar em **Atualizar Estilo (Em Lote)**:
+   - Confirmar que as cotas usando o estilo Arquitetônico na cena aumentam de espessura imediatamente.
+7. Pressionar `Ctrl+Z` (Undo) e verificar que todas as cotas retornam à espessura original em um único passo.
+8. Renderizar a cena (Corona, V-Ray ou Arnold) e verificar que as setas e pontos renderizam perfeitamente como geometria fina, com o mesmo material autoluminoso da cota.
 
 ---
 

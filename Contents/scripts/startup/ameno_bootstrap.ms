@@ -52,10 +52,12 @@ struct AmenoBootstrapService
             @"core\ameno_scene_setup.ms",
             @"core\ameno_dimensions_math.ms",
             @"core\ameno_dimension_ca.ms",
+            @"core\ameno_style_service.ms",
             @"core\ameno_dimension_graphics.ms",
             @"core\ameno_dimension_tool.ms",
             @"renderers\ameno_renderer_probe.ms",
             @"core\ameno_runtime.ms",
+            @"ui\ameno_style_editor.ms",
             @"ui\ameno_main_panel.ms"
         )
 

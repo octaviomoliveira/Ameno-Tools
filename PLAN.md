@@ -33,7 +33,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E4 implementada e aprovada em Batch isolado no 3ds Max 2026.3: o `MouseTool` conduz A/B/afastamento, atualiza uma prévia temporária, cria a cota permanente pelo construtor da E3 e cancela sem deixar nós. Após o primeiro teste manual, o encerramento automático no terceiro evento foi removido: a ferramenta agora só termina quando o commit confirma sucesso e mostra a exceção real se houver falha.
 - E4 aprovada manualmente no 3ds Max em 2026-09-04: o fluxo de três cliques criou uma cota permanente de `4,05 m`, o painel mostrou `1 cota(s) ativa(s)` e a geometria permaneceu visível no viewport.
 - E5 implementada e aprovada manualmente no 3ds Max 2026.3 em 2026-09-04: controlador Point técnico utiliza Custom Attributes versionados (`AmenoDimensionCA` v1); persistência comprovada em ciclo save/load de arquivo `.max`; renomeação livre de nós preserva a identidade da cota; rotina de inspeção e reparo não-destrutivo (`inspectDimension`, `repairDimension`, botão `Reparar cotas` no painel) regenera nós visuais ausentes sem duplicar controladores; callbacks de ciclo de vida (`#filePostOpen`, `#postSceneReset`) sincronizam diagnósticos ao abrir cenas; Undo atômico (`max undo`) validado em um único passo.
-- Pacote instalado com E1, E2, E3, E4 e E5 validado em Batch isolado; as cópias dos módulos críticos foram conferidas por SHA-256 contra o fonte.
+- E6 implementada e aprovada manualmente no 3ds Max 2026.3 em 2026-09-04: valores medidos, arredondados e manuais com auditoria de delta e motivo; marcador `[M]` com cor âmbar exibido apenas na viewport (`renderable = false`), mantendo o render de produção 100% limpo e sem advertência visual; persistência de overrides em `.max` e reversão para medido.
+- E7 implementada e validada em Batch isolado no 3ds Max 2026.3 e no pacote instalado via `ApplicationPlugins`: serviço de estilos de cena (`AmenoStyleService`), presets Arquitetônico, Editorial e Técnico, tipografia avançada via TextPlus (peso, itálico, tracking, tamanho, fontes instaladas), 5 tipos de terminais vetoriais na mesma spline (`#tick`, `#arrowClosed`, `#arrowOpen`, `#dot`, `#none`), espessura de render configurável (0.8, 1.5, 2.5), atualização de estilos em lote em 1 único Undo, persistência de estilos em UserProps de `rootNode` da cena `.max` e editor visual dedicado (`AmenoStyleEditorRollout`).
+- Pacote instalado com E1 a E7 validado em Batch isolado e instalado em `ApplicationPlugins\AmenoTools`.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
 - Regras decididas para `AMENO_COTAS`, geometria renderizável, render separado de cotas e preservação do Beauty, LightMix e Render Elements existentes.
@@ -44,14 +46,20 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- E6 — valores medidos, arredondados e manuais — em planejamento e desenvolvimento inicial; E5 encerrada e aprovada pelo usuário.
+- E7 — Editor visual de estilo: aguardando validação interativa do usuário no 3ds Max 2026 (teste do painel de estilos, aplicação às selecionadas, atualização em lote e renderização dos terminais).
 - A E2 foi concluída por solicitação explícita, pois é um núcleo puro e independente da cena.
 - A falha de bootstrap relatada após a primeira instalação da E3 foi corrigida: `throw getCurrentException()` é inválido dentro de `catch` no MAXScript e foi substituído por `throw`. O teste Batch passou a usar perfil isolado, portanto não exige fechar a sessão interativa do usuário.
 - O diagnóstico adicional de render foi encerrado sem alterar a cena do usuário: o resultado confirmado é Arnold funcionando, V-Ray funcionando quando há luz na cena e limpeza funcionando. Não serão mantidos probes temporários no repositório.
 
 ## Próximo passo executável
 
-Planejar e implementar a primeira fatia da **E6 — Valores medidos, arredondados e manuais**: suporte aos modos de exibição (`#measured`, `#rounded`, `#manualNumeric`, `#manualText`), delta entre medido e exibido, motivo do override, inspeção e edição da cota selecionada no painel, e sinalização visual em âmbar com marcador `M` exclusiva na viewport (mantendo render limpo).
+Apresentar ao usuário o roteiro de validação interativa no 3ds Max 2026 para a **E7 — Editor visual de estilo**:
+1. Abrir o painel Ameno Tools e clicar em **Editor de Estilos...**;
+2. Alternar entre os presets (*Arquitetônico*, *Editorial*, *Técnico*) e verificar a atualização dos campos (fontes, peso, espessura, terminais);
+3. Criar ou selecionar cotas e aplicar estilos diferentes;
+4. Modificar uma espessura/fonte e clicar em **Atualizar Estilo (Em Lote)**, confirmando a atualização de todas as cotas vinculadas;
+5. Pressionar `Ctrl+Z` e verificar que a atualização em lote reverte com um único Undo;
+6. Renderizar uma cota com setas ou pontos e verificar que os terminais aparecem perfeitamente no render (mesmo material e espessura da linha).
 
 ## Decisões que ainda exigem validação
 
@@ -84,6 +92,7 @@ Planejar e implementar a primeira fatia da **E6 — Valores medidos, arredondado
 | 2026-09-04 | Implementar E5: persistência, Custom Attributes e ciclo de vida. | E5 implementada e aprovada em Batch isolado e no pacote ApplicationPlugins; aguardando validação manual no Max. | commit `9c78acf`, `ameno_dimension_ca.ms`, `0008-e5-custom-attributes-persistence.md` |
 | 2026-09-04 | Validar manualmente a E5 e iniciar a E6. | E5 aprovada no Max pelo usuário (save/load, reparo de filhos gráficos e Undo); E6 iniciada no planejamento. | confirmação do usuário, commit `3cb9017`, `PLAN.md` |
 | 2026-09-04 | Implementar E6: valores medidos, arredondados e manuais com marcador viewport-only. | E6 aprovada no Max pelo usuário (override 1,10m com medido 1,09m, [M] no viewport e ausente no render); E7 iniciada no planejamento. | captura do viewport/Arnold RenderView fornecida pelo usuário, commits `8fed0e0` e `e60a47a`, `PLAN.md` |
+| 2026-09-04 | Implementar E7: editor visual de estilo, tipografia TextPlus, terminais vetoriais e espessuras. | E7 implementada e validada em Batch isolado e no pacote ApplicationPlugins; aguardando validação interativa no Max. | `ameno_style_service.ms`, `ameno_style_editor.ms`, `0010-e7-style-system-and-visual-editor.md`, `.test-output/*` |
 
 ## Como retomar sem contexto
 

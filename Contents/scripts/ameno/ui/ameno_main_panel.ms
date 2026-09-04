@@ -1,4 +1,4 @@
-global AmenoMainPanelRollout
+﻿global AmenoMainPanelRollout
 global AmenoRefreshMainPanel
 global AmenoShowMainPanel
 
@@ -7,6 +7,8 @@ fn AmenoRefreshMainPanel =
     global AmenoApp
     global AmenoVersion
     global AmenoDimensionGraphics
+    global AmenoDimensionCA
+    global AmenoStyleService
 
     if AmenoApp != undefined and AmenoMainPanelRollout != undefined and AmenoMainPanelRollout.open do
     (
@@ -20,6 +22,26 @@ fn AmenoRefreshMainPanel =
         AmenoMainPanelRollout.lblSceneDetail.text = sceneInfo.detail
         AmenoMainPanelRollout.btnPrepare.caption = if sceneInfo.status == #ready then "Verificar infraestrutura" else "Preparar esta cena"
         AmenoMainPanelRollout.lblDimensions.text = AmenoApp.refreshDimensions()
+
+        -- E7: Atualiza lista de estilos
+        local styleList = #()
+        local styleIds = #()
+        if AmenoStyleService != undefined do
+        (
+            local allStyles = AmenoStyleService.listStyles()
+            for s in allStyles do
+            (
+                append styleList s.name
+                append styleIds s.styleId
+            )
+        )
+        if styleList.count == 0 do
+        (
+            styleList = #("Arquitetônico")
+            styleIds = #("default")
+        )
+        AmenoMainPanelRollout.ddlSelStyle.items = styleList
+        AmenoMainPanelRollout.styleIds = styleIds
 
         -- E6: Inspeção da cota selecionada
         local ctrl = AmenoApp.getSelectedDimensionController()
@@ -45,6 +67,23 @@ fn AmenoRefreshMainPanel =
                 AmenoMainPanelRollout.edtManualText.text = if audit.mode == #manualText then audit.displayText else ""
                 AmenoMainPanelRollout.edtReason.text = audit.manualReason
 
+                -- Estilo da cota selecionada
+                local rec = if AmenoDimensionCA != undefined then AmenoDimensionCA.readCA ctrl else undefined
+                local sId = "default"
+                if rec != undefined and rec.styleId != undefined and rec.styleId != "" then sId = rec.styleId
+                else
+                (
+                    local p = AmenoDimensionGraphics.readTextProperty ctrl "Ameno.StyleId"
+                    if p != undefined and p != "" do sId = p
+                )
+
+                local sIdx = findItem styleIds sId
+                if sIdx > 0 then AmenoMainPanelRollout.ddlSelStyle.selection = sIdx
+                else AmenoMainPanelRollout.ddlSelStyle.selection = 1
+
+                AmenoMainPanelRollout.ddlSelStyle.enabled = true
+                AmenoMainPanelRollout.btnApplySelStyle.enabled = true
+
                 AmenoMainPanelRollout.rdoMode.enabled = true
                 AmenoMainPanelRollout.spnRounding.enabled = true
                 AmenoMainPanelRollout.spnManualVal.enabled = true
@@ -64,6 +103,9 @@ fn AmenoRefreshMainPanel =
             AmenoMainPanelRollout.edtManualText.text = ""
             AmenoMainPanelRollout.edtReason.text = ""
 
+            AmenoMainPanelRollout.ddlSelStyle.enabled = false
+            AmenoMainPanelRollout.btnApplySelStyle.enabled = false
+
             AmenoMainPanelRollout.rdoMode.enabled = false
             AmenoMainPanelRollout.spnRounding.enabled = false
             AmenoMainPanelRollout.spnManualVal.enabled = false
@@ -75,8 +117,10 @@ fn AmenoRefreshMainPanel =
     )
 )
 
-rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:710
+rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:770
 (
+    local styleIds = #()
+
     label lblBrand "AMENO TOOLS" pos:[20,16] width:340 height:24 align:#left
     label lblVersion "" pos:[20,44] width:340 height:18 align:#left
 
@@ -90,30 +134,35 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:710
     label lblSceneDetail "" pos:[26,214] width:320 height:18 align:#left
     button btnPrepare "Preparar esta cena" pos:[198,228] width:156 height:24
 
-    groupBox grpDimensions "Ameno Dimensions" pos:[12,268] width:356 height:142
+    groupBox grpDimensions "Ameno Dimensions" pos:[12,268] width:356 height:172
     label lblDimensions "Ameno Dimensions · 0 cota(s) ativa(s)." pos:[26,290] width:320 height:18 align:#left
     button btnCreate "Criar cota" pos:[26,316] width:156 height:24
     button btnRepair "Reparar cotas" pos:[198,316] width:156 height:24
     button btnCreateTest "Criar cota de teste" pos:[26,346] width:156 height:24
     button btnClearTests "Limpar cotas de teste" pos:[198,346] width:156 height:24
-    label lblTestHint "Preview temporário; Esc/botão direito cancela." pos:[26,376] width:320 height:18 align:#left
+    button btnStyleEditor "Editor de Estilos..." pos:[26,376] width:328 height:24
+    label lblTestHint "Preview temporário; Esc/botão direito cancela." pos:[26,408] width:320 height:18 align:#left
 
-    groupBox grpAudit "Inspeção e Modos de Valor (E6)" pos:[12,420] width:356 height:244
-    label lblSelName "Selecione uma cota na cena para editar." pos:[26,442] width:320 height:18 align:#left
-    label lblMeasured "Medido: -" pos:[26,462] width:150 height:18 align:#left
-    label lblDisplay "Exibido: -" pos:[186,462] width:160 height:18 align:#left
-    label lblDelta "Delta: -" pos:[26,482] width:320 height:18 align:#left
+    groupBox grpAudit "Inspeção e Estilos (E6 / E7)" pos:[12,448] width:356 height:272
+    label lblSelName "Selecione uma cota na cena para editar." pos:[26,468] width:320 height:18 align:#left
+    label lblMeasured "Medido: -" pos:[26,488] width:150 height:18 align:#left
+    label lblDisplay "Exibido: -" pos:[186,488] width:160 height:18 align:#left
+    label lblDelta "Delta: -" pos:[26,508] width:320 height:18 align:#left
 
-    radiobuttons rdoMode "Modo de Valor:" pos:[26,504] labels:#("Medido", "Arredondado", "Numérico Manual", "Texto Manual") default:1 columns:2
-    spinner spnRounding "Passo arred. (cm):" pos:[26,548] width:140 height:18 range:[1, 100, 5] type:#integer fieldWidth:45
-    spinner spnManualVal "Valor Manual (m):" pos:[176,548] width:170 height:18 range:[0.001, 10000.0, 1.0] type:#float scale:0.01 fieldWidth:55
-    edittext edtManualText "Texto:" pos:[26,572] width:320 height:18 text:""
-    edittext edtReason "Motivo:" pos:[26,594] width:320 height:18 text:""
+    radiobuttons rdoMode "Modo de Valor:" pos:[26,528] labels:#("Medido", "Arredondado", "Numérico Manual", "Texto Manual") default:1 columns:2
+    spinner spnRounding "Passo arred. (cm):" pos:[26,572] width:140 height:18 range:[1, 100, 5] type:#integer fieldWidth:45
+    spinner spnManualVal "Valor Manual (m):" pos:[176,572] width:170 height:18 range:[0.001, 10000.0, 1.0] type:#float scale:0.01 fieldWidth:55
+    edittext edtManualText "Texto:" pos:[26,594] width:320 height:18 text:""
+    edittext edtReason "Motivo:" pos:[26,616] width:320 height:18 text:""
 
-    button btnApplyMode "Aplicar Alteração" pos:[26,626] width:156 height:24
-    button btnResetMeasured "Restaurar Medido" pos:[198,626] width:156 height:24
+    label lblStyle "Estilo:" pos:[26,648] width:40 height:18
+    dropdownList ddlSelStyle "" pos:[68,644] width:180 height:21
+    button btnApplySelStyle "Aplicar Estilo" pos:[254,644] width:100 height:22
 
-    button btnClose "Fechar" pos:[278,674] width:90 height:24
+    button btnApplyMode "Aplicar Alteração" pos:[26,680] width:156 height:24
+    button btnResetMeasured "Restaurar Medido" pos:[198,680] width:156 height:24
+
+    button btnClose "Fechar" pos:[278,730] width:90 height:24
 
     on AmenoMainPanelRollout open do
     (
@@ -216,6 +265,35 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:710
         )
     )
 
+    on btnStyleEditor pressed do
+    (
+        global AmenoApp
+        if AmenoApp != undefined do AmenoApp.openStyleEditor()
+    )
+
+    on btnApplySelStyle pressed do
+    (
+        global AmenoApp
+        global AmenoDimensionGraphics
+        global AmenoDimensionCA
+        global AmenoStyleService
+
+        if AmenoApp != undefined and AmenoStyleService != undefined then
+        (
+            local ctrl = AmenoApp.getSelectedDimensionController()
+            if ctrl != undefined and isValidNode ctrl then
+            (
+                local selIdx = ddlSelStyle.selection
+                if selIdx > 0 and selIdx <= styleIds.count then
+                (
+                    local targetId = styleIds[selIdx]
+                    AmenoStyleService.applyStyleToDimension ctrl targetId
+                    AmenoRefreshMainPanel()
+                )
+            )
+        )
+    )
+
     on btnApplyMode pressed do
     (
         global AmenoApp
@@ -284,5 +362,5 @@ fn AmenoShowMainPanel =
 (
     try (destroyDialog AmenoMainPanelRollout) catch ()
 
-    createDialog AmenoMainPanelRollout width:380 height:710 style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) lockWidth:true lockHeight:true
+    createDialog AmenoMainPanelRollout width:380 height:770 style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) lockWidth:true lockHeight:true
 )

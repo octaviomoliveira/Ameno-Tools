@@ -8,6 +8,9 @@ global AmenoLog
 global AmenoVersion
 global AmenoShowMainPanel
 global AmenoMainPanelRollout
+global AmenoStyleService
+global AmenoShowStyleEditor
+global AmenoStyleEditorRollout
 
 struct AmenoRuntime
 (
@@ -120,8 +123,27 @@ struct AmenoRuntime
         res
     ),
 
+    fn getStyles =
+    (
+        if AmenoStyleService != undefined then AmenoStyleService.listStyles() else #()
+    ),
+
+    fn applyStyleToSelection styleId =
+    (
+        if AmenoStyleService == undefined then return 0
+        local count = AmenoStyleService.applyStyleToSelection styleId
+        refreshDimensions()
+        count
+    ),
+
+    fn openStyleEditor =
+    (
+        if AmenoShowStyleEditor != undefined do AmenoShowStyleEditor()
+    ),
+
     fn onSceneOpened =
     (
+        if AmenoStyleService != undefined do AmenoStyleService.loadFromScene()
         refreshScene()
         refreshDimensions()
         if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
@@ -130,6 +152,7 @@ struct AmenoRuntime
 
     fn onSceneReset =
     (
+        if AmenoStyleService != undefined do AmenoStyleService.loadFromScene()
         refreshScene()
         refreshDimensions()
         if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
@@ -165,6 +188,7 @@ struct AmenoRuntime
         try (stopTool AmenoDimensionMouseTool) catch ()
         try (if AmenoDimensionTool != undefined do AmenoDimensionTool.cancel()) catch ()
         try (destroyDialog AmenoMainPanelRollout) catch ()
+        try (destroyDialog AmenoStyleEditorRollout) catch ()
         started = false
         true
     )

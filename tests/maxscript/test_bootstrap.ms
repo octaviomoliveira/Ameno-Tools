@@ -10,6 +10,8 @@ global AmenoDimensionCA
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
+global AmenoStyleService
+global AmenoStyleRecord
 
 (
     local testFile = getSourceFileName()
@@ -341,7 +343,98 @@ global AmenoDimensionMouseTool
     local auditAfterUndo = AmenoDimensionGraphics.getDimensionAudit loadedE6Ctrl
     if auditAfterUndo.mode != #measured then throw "E6: Undo não reverteu a mudança de modo para #measured."
 
+    -- E7 — Sistema de Estilos Visuais e Editor
+    resetMaxFile #noPrompt
+    AmenoApp.prepareScene()
+    if AmenoStyleService == undefined then throw "E7: AmenoStyleService não foi carregado."
+
+    local defaultStyles = AmenoStyleService.listStyles()
+    if defaultStyles.count < 3 then throw "E7: Deveriam existir pelo menos 3 presets padrão de estilo."
+    local archStyle = AmenoStyleService.getStyle "default"
+    local editStyle = AmenoStyleService.getStyle "editorial"
+    local techStyle = AmenoStyleService.getStyle "technical"
+
+    if archStyle.name != "Arquitetônico" or archStyle.terminalType != #tick then throw "E7: Preset Arquitetônico incorreto."
+    if editStyle.name != "Editorial" or editStyle.terminalType != #dot then throw "E7: Preset Editorial incorreto."
+    if techStyle.name != "Técnico" or techStyle.terminalType != #arrowClosed then throw "E7: Preset Técnico incorreto."
+
+    -- 1. Criação de cotas com os 5 tipos de terminais
+    local dimTick = AmenoDimensionGraphics.createDimension [0, 0, 0] [100, 0, 0] [0, 20, 0] styleId:"default"
+    if dimTick.lineNode.render_thickness != archStyle.lineThickness then throw "E7: Espessura da linha não corresponde ao estilo."
+
+    local arrowClosedStyle = AmenoStyleRecord styleId:"t_arrowC" terminalType:#arrowClosed terminalSize:16.0 lineThickness:1.2
+    local arrowOpenStyle = AmenoStyleRecord styleId:"t_arrowO" terminalType:#arrowOpen terminalSize:16.0 lineThickness:1.2
+    local dotStyle = AmenoStyleRecord styleId:"t_dot" terminalType:#dot terminalSize:8.0 lineThickness:1.0
+    local noneStyle = AmenoStyleRecord styleId:"t_none" terminalType:#none terminalSize:0.0 lineThickness:0.8
+
+    AmenoStyleService.saveStyle arrowClosedStyle
+    AmenoStyleService.saveStyle arrowOpenStyle
+    AmenoStyleService.saveStyle dotStyle
+    AmenoStyleService.saveStyle noneStyle
+
+    local dimArrowC = AmenoDimensionGraphics.createDimension [0, 50, 0] [100, 50, 0] [0, 70, 0] styleId:"t_arrowC"
+    local dimArrowO = AmenoDimensionGraphics.createDimension [0, 100, 0] [100, 100, 0] [0, 120, 0] styleId:"t_arrowO"
+    local dimDot = AmenoDimensionGraphics.createDimension [0, 150, 0] [100, 150, 0] [0, 170, 0] styleId:"t_dot"
+    local dimNone = AmenoDimensionGraphics.createDimension [0, 200, 0] [100, 200, 0] [0, 220, 0] styleId:"t_none"
+
+    if (numSplines dimArrowC.lineNode) < 5 then throw "E7: Spline com setas fechadas deveria possuir as splines dos terminais."
+    if (numSplines dimArrowO.lineNode) < 5 then throw "E7: Spline com setas abertas deveria possuir as splines dos terminais."
+    if (numSplines dimDot.lineNode) < 5 then throw "E7: Spline com pontos em losango deveria possuir as splines dos terminais."
+    if (numSplines dimNone.lineNode) != 3 then throw "E7: Cota sem terminais (#none) deveria possuir exatamente 3 splines (extA, extB, cota)."
+
+    -- 2. Propriedades de tipografia no TextPlus
+    if dimTick.textNode.size != archStyle.fontSize then throw "E7: Tamanho do TextPlus não corresponde ao estilo."
+
+    -- 3. Atualização de estilo em lote com Undo atômico
+    local batchStyle = AmenoStyleRecord styleId:"batch_test" name:"Batch Test" fontSize:18.0 lineThickness:1.0 terminalType:#tick terminalSize:10.0
+    AmenoStyleService.saveStyle batchStyle
+
+    local batchDim1 = AmenoDimensionGraphics.createDimension [0, 300, 0] [200, 300, 0] [0, 330, 0] styleId:"batch_test"
+    local batchDim2 = AmenoDimensionGraphics.createDimension [0, 400, 0] [200, 400, 0] [0, 430, 0] styleId:"batch_test"
+
+    if (AmenoStyleService.countDimensionsUsingStyle "batch_test") != 2 then throw "E7: Contagem de cotas usando o estilo incorreta."
+
+    -- Modificar propriedades do estilo (espessura 1.0 -> 2.5, tamanho 18.0 -> 28.0)
+    batchStyle.lineThickness = 2.5
+    batchStyle.fontSize = 28.0
+    local updatedBatchCount = AmenoStyleService.updateStyleAndRebuild batchStyle
+    if updatedBatchCount != 2 then throw "E7: Atualização em lote deveria ter reconstruído 2 cotas."
+
+    local reloadedNodes1 = AmenoDimensionGraphics.findNodesForDimension batchDim1.dimensionId
+    local foundLine1 = undefined
+    local foundText1 = undefined
+    for n in reloadedNodes1 do
+    (
+        if (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "lines" do foundLine1 = n
+        if (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "label" do foundText1 = n
+    )
+    if foundLine1 == undefined or foundLine1.render_thickness != 2.5 then throw "E7: Cota 1 não assumiu nova espessura após atualização em lote."
+    if foundText1 == undefined or foundText1.size != 28.0 then throw "E7: Cota 1 não assumiu novo tamanho após atualização em lote."
+
+    -- Testar Undo atômico da atualização em lote
+    max undo
+    local lineAfterUndo = undefined
+    for n in (AmenoDimensionGraphics.findNodesForDimension batchDim1.dimensionId) do
+    (
+        if (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "lines" do lineAfterUndo = n
+    )
+    if lineAfterUndo != undefined and lineAfterUndo.render_thickness != 1.0 then throw "E7: Undo atômico não reverteu a espessura para 1.0."
+
+    -- 4. Persistência de Estilos de Cena no arquivo .max
+    local customSavedStyle = AmenoStyleService.saveAsNewStyle "Persistido_Max" batchStyle
+    local tempE7Scene = pathConfig.appendPath tempMaxDir "ameno_e7_test.max"
+    deleteFile tempE7Scene
+    saveMaxFile tempE7Scene clearNeedSaveFlag:true quiet:true
+
+    resetMaxFile #noPrompt
+    loadMaxFile tempE7Scene quiet:true
+    deleteFile tempE7Scene
+    AmenoStyleService.loadFromScene()
+
+    local loadedCustom = AmenoStyleService.getStyle customSavedStyle.styleId
+    if loadedCustom == undefined or loadedCustom.name != "Persistido_Max" then throw "E7: Estilo customizado não persistiu no arquivo .max."
+
     fileIn macroPath quiet:true
 
-    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5 e E6 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
+    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6 e E7 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
 )

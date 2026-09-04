@@ -27,6 +27,7 @@ struct AmenoDimensionToolService
     lastError = "",
     previewOutputUnit = #meters,
     previewPrecision = 2,
+    activeStyleId = "default",
 
     fn flattenPoint pointValue =
     (
@@ -122,11 +123,11 @@ struct AmenoDimensionToolService
         (
             if preview == undefined then
             (
-                preview = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision
+                preview = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId
             )
             else
             (
-                preview = AmenoDimensionGraphics.updatePreviewDimension preview pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision
+                preview = AmenoDimensionGraphics.updatePreviewDimension preview pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId
             )
 
             preview != undefined
@@ -204,7 +205,7 @@ struct AmenoDimensionToolService
                 local created = undefined
                 try
                 (
-                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision
+                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId
                     lastCommittedRecord = created
                     removePreview()
                     true
