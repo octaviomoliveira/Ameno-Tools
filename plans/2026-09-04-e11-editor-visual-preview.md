@@ -4,7 +4,7 @@
 
 **Alvo inicial:** 3ds Max 2026
 
-**Estado:** E11.0, E11.1 e E11.2 concluídas e testadas na branch `feature/e11-visual-editor` (38/38 testes aprovados em `test_e11_2_shell.ms`); pronta para avançar para E11.3
+**Estado:** E11.0–E11.5 implementadas e testadas; branch `feature/e11-visual-editor` integrada na `main`, pacote validado e instalação unificada concluída. Gate manual no 3ds Max pendente.
 **Referência visual:** mockup “Ameno — Editor de estilo” fornecido pelo usuário em 2026-09-04
 
 ## Contexto
@@ -306,16 +306,16 @@ Durante o arraste, atualizar apenas o canvas, com debounce máximo de 16–33 ms
 - nenhuma regressão nas cotas, estilos, âncoras, render Corona/V-Ray ou Undo;
 - pacote instalado e testes automatizados aprovados;
 - `PLAN.md`, plano incremental, documentação e ADR sincronizados;
-- commit publicado em `origin/main` somente após o gate manual.
+- branch integrada e publicada na `main` para permitir o gate manual unificado solicitado pelo usuário; o encerramento visual da E11 depende desse gate.
 
 ## Ordem de execução
 
-1. concluir e aprovar a E10 em andamento;
-2. executar somente a prova E11.0;
-3. registrar a escolha tecnológica em ADR e pedir gate;
-4. implementar E11.1–E11.4 em fatias pequenas;
-5. executar E11.5 e o gate manual completo;
-6. não iniciar uma etapa posterior enquanto a E11 estiver pendente.
+1. [x] executar e aprovar a prova E11.0;
+2. [x] registrar a escolha tecnológica na ADR 0019;
+3. [x] implementar E11.1–E11.4 em fatias pequenas;
+4. [x] executar E11.5, validar o pacote e instalar a versão unificada;
+5. [x] integrar `feature/e11-visual-editor` na `main` após sincronizar com E10.7;
+6. [ ] executar o gate manual completo no 3ds Max 2026.
 
 ## Regras de colaboração
 

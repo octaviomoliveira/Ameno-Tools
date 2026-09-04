@@ -40,6 +40,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E9 implementada e aprovada em testes automatizados no 3ds Max 2026.3 com Corona 13: painel `Render Separado de Cotas`, escopos Todas/Selecionadas, PNG transparente com nome automático e proteção contra sobrescrita, herança da viewport/câmera ativa, frame, resolução, pixel aspect e Crop/Region, material `CoronaLightMtl` visível diretamente e no alpha com emissão desligada, isolamento temporário dos nós e restauração transacional após sucesso, exceção e cancelamento. Um render Corona real confirmou cotas opacas sobre fundo transparente, sem a geometria comum da cena.
 - E9 implementada e aprovada interativamente no 3ds Max 2026.3 com Corona 13 em 2026-09-04: rollout `Render Separado de Cotas` no painel, PNG com fundo transparente e somente linhas/textos de cotas, nome automático e proteção contra sobrescrita (`_001`), herança de câmera/frame/resolução/pixel aspect/Crop do Render Setup, restauração transacional da cena confirmada ("A cena foi restaurada."); bugs corrigidos durante o gate: `renderOutputFilename`/`renderSaveFile` obrigatórios para Corona gravar o PNG (`outputfile` ignorado), critérios de parada do Corona agora forçados para 1 % de noise e 20 passes máximos no passe de overlay.
 - E10.7.2 implementada e aprovada manualmente no 3ds Max 2026 em 2026-09-04: Vertex Snap registra `A=vN / B=vN`, as extremidades resolvem a malha avaliada e a cota acompanha o deslocamento dos vértices em edição de subobjeto. O usuário confirmou o gate final como "sucesso absoluto".
+- E11.0–E11.5 implementadas e integradas na `main` em 2026-09-04: editor visual WPF .NET 8, `StyleDraft` transacional, preview vetorial 2D ao vivo, aplicação/persistência, fallback para o rollout legado e correção do tema escuro. O pacote estrutural foi aprovado e a instalação unificada E10.7 + E11 foi verificada por 22/22 arquivos idênticos por SHA-256.
 - Pacote instalado com E1 a E9 validado em Batch isolado e aprovado em sessão interativa no 3ds Max 2026.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
@@ -52,10 +53,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 ## Em andamento
 
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
+- Gate manual do **Editor Visual E11** no 3ds Max 2026 com a versão unificada instalada.
 
-## Planejado após a E10
+## E11 integrada
 
-- E11 — Editor Visual e Preview ao Vivo: substituir o rollout funcional da E7 por uma interface moderna baseada no mockup do usuário, com preview 2D isolado da cena e fluxo transacional `Cancelar` / `Aplicar às selecionadas` / `Salvar estilo`. Plano detalhado em `plans/2026-09-04-e11-editor-visual-preview.md`.
+- E11 — Editor Visual e Preview ao Vivo: implementação mesclada da branch `feature/e11-visual-editor`, validada estruturalmente e instalada. Falta somente o gate visual e funcional do usuário no 3ds Max. Plano detalhado em `plans/2026-09-04-e11-editor-visual-preview.md`.
 
 ## Próximo passo executável
 
@@ -64,8 +66,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
    - Validar seleção múltipla e alteração em lote de unidades/precisão e Bake de âncoras;
    - Validar render de overlay no Corona ou V-Ray CPU;
    - Emitir Relatório de Diagnóstico no painel.
-2. Retomar o gate Batch E10.7 e as regressões E10.1/E10.2/E10.4 quando o executor isolado estiver estável.
-3. Após aprovação manual, atualizar a branch visual da E11 com a `main` estabilizada antes da integração.
+2. Abrir o **Editor de Estilos E11** e executar o gate visual: preview ao vivo, tema escuro, Cancelar, Aplicar às selecionadas, Salvar estilo, Undo/Redo e persistência após reabrir a cena.
+3. Retomar o gate Batch E10.7 e as regressões E10.1/E10.2/E10.4 quando o executor isolado estiver estável.
 
 
 ## Decisões que ainda exigem validação
@@ -115,6 +117,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-04 | Avaliar viabilidade após a E10.7.1 ainda falhar no Max. | Viável pela API oficial: o Max expõe nó e ponto mundial do Snap e eventos de geometria. E10.7.2 usa esses dados diretamente, corrige reancoragem que passava o record como nó, força coordenadas mundiais e adiciona feedback `A=vN / B=vN`; pacote reinstalado e novo gate pendente. | `snapMode.node`, `snapMode.worldHitpoint`, `ameno_dimension_tool.ms`, `ameno_main_panel.ms`, `docs/decisions/0015-subobject-anchor-limitation.md`, `tools/install-dev.ps1` |
 | 2026-09-04 | Confirmar o resultado final da E10.7.2 em edição de subobjeto. | Concluída e aprovada manualmente: Vertex Snap persistiu os IDs e a cota acompanhou o deslocamento dos vértices; o usuário confirmou "sucesso absoluto". | confirmação textual e vídeo `WhatsApp Video 2026-09-04 at 18.52.27.mp4`; commit funcional `32a00a7` |
 | 2026-09-04 | Implementação completa da Etapa E11 (E11.0 a E11.5): Editor Visual de Estilos com Preview Vetorial 2D ao Vivo (WPF .NET 8), StyleDraft transacional, Persistência, Integração e Instalação no ApplicationPlugins. | E11.0 (Spike WPF .NET 8 aprovado, ADR 0019), E11.1 (StyleDraft e Schema v2 retrocompatível), E11.2 (Shell WPF moderno, 2 colunas com GridSplitter, atalhos e preferências INI), E11.3 (Renderer vetorial 2D no Canvas WPF com planta neutra, 5 terminais e zoom), E11.4 (Persistência atômica, deduplicação de nós, rollback de snapshot e reatividade à seleção), E11.5 (Ponto de entrada integrado no painel principal, fallback diagnósticável para rollout legado, ciclo de vida robusto com reset de cena, empacotamento determinístico e instalação funcional no ApplicationPlugins). Suítes automatizadas 100% aprovadas. Pronto para Gate Manual no 3ds Max. | commits `4c61f20`, `e309892`, `6a60dcf`, `acd810d`, `cbc5927`, `ADR 0019`, `tests/maxscript/test_e11_*.ms`, `test_installed_package.ms` |
+| 2026-09-04 | Integrar `feature/e11-visual-editor` na `main`, validar, instalar a versão unificada com E10.7 e publicar. | Merge concluído com um único conflito documental em `PLAN.md`, reconciliado preservando os históricos E10.7 e E11. Validação estrutural aprovada; instalação em `ApplicationPlugins` conferida com 22/22 arquivos e zero diferenças SHA-256. Pronto para o gate interativo unificado após reiniciar o Max. | merge `5aa6afc`; `tools/validate-package.ps1`; `tools/install-dev.ps1` |
 
 ## Como retomar sem contexto
 

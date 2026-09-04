@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 a E9 aprovadas interativamente no 3ds Max 2026; E10 pronta para teste manual no Max; E11 planejada para o novo Editor Visual e Preview ao Vivo.
+**Estado atual:** E1 a E9 e E10.7 aprovadas interativamente no 3ds Max 2026; gates acumulados restantes da E10 pendentes; E11.0–E11.5 implementadas, integradas e instaladas, aguardando gate manual.
 
 ## Estratégia de execução
 
@@ -526,7 +526,7 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 
 ## E11 — Editor Visual e Preview ao Vivo
 
-**Estado:** planejada; iniciar após a aprovação da E10 pelo usuário.
+**Estado:** implementada e integrada na `main` em 2026-09-04; pacote validado e instalado, aguardando gate visual e funcional no 3ds Max 2026.
 
 Substituir o rollout funcional criado na E7 por um editor visual coerente com o mockup aprovado pelo usuário. A “viewport” desta etapa é um preview 2D embutido e isolado da cena, não uma viewport 3D adicional do Max.
 
@@ -536,4 +536,4 @@ Substituir o rollout funcional criado na E7 por um editor visual coerente com o 
 
 ## Próxima ação
 
-Concluir os gates interativos acumulados restantes da **E10** e, em seguida, atualizar a branch visual da E11 com a `main` estabilizada. A regressão Batch da E10.7 permanece no backlog até o executor isolado voltar a iniciar o Max de forma confiável.
+Executar o gate interativo unificado da **E10 + E11** no 3ds Max 2026 recém-reiniciado. A regressão Batch da E10.7 permanece no backlog até o executor isolado voltar a iniciar o Max de forma confiável.
