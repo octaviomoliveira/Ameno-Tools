@@ -4,10 +4,92 @@
 */
 
 global AmenoStyleRecord
+global AmenoPreviewModel
+global AmenoStyleDraft
 global AmenoStyleServiceDefinition
 global AmenoStyleService
 global AmenoDimensionGraphics
 global AmenoDimensionCA
+
+struct AmenoPreviewModel
+(
+    sampleValue = "3,50 m",
+    fontName = "Arial",
+    fontSize = 20.0,
+    bold = false,
+    italic = false,
+    tracking = 0.0,
+    textGap = 12.0,
+    textMaskEnabled = true,
+    lineThickness = 1.5,
+    extensionOverhang = 8.0,
+    extensionGap = 0.0,
+    terminalType = #tick,
+    terminalSize = 14.0,
+    terminalPlacement = #auto, -- #auto, #inside, #outside
+    terminalAngle = 45.0,
+    annotationColor = "245,245,245",
+    textColor = "",
+    previewScale = 1.0,
+    darkBackground = true,
+    zoom = 1.0
+)
+
+struct AmenoStyleDraft
+(
+    sourceStyleId = "default",
+    styleRecord = undefined,
+    isDirty = false,
+    sampleValue = "3,50 m",
+    previewDarkBg = true,
+    previewZoom = 1.0,
+
+    fn markDirty =
+    (
+        isDirty = true
+    ),
+
+    fn cloneDraft =
+    (
+        local d = AmenoStyleDraft()
+        d.sourceStyleId = sourceStyleId
+        d.styleRecord = if ::AmenoStyleService != undefined then ::AmenoStyleService.cloneStyle styleRecord else undefined
+        d.isDirty = isDirty
+        d.sampleValue = sampleValue
+        d.previewDarkBg = previewDarkBg
+        d.previewZoom = previewZoom
+        d
+    ),
+
+    fn toPreviewModel =
+    (
+        local pm = AmenoPreviewModel()
+        if styleRecord != undefined do
+        (
+            pm.fontName = styleRecord.fontName
+            pm.fontSize = styleRecord.fontSize
+            pm.bold = styleRecord.bold
+            pm.italic = styleRecord.italic
+            pm.tracking = styleRecord.tracking
+            pm.textGap = styleRecord.textGap
+            pm.textMaskEnabled = styleRecord.textMaskEnabled
+            pm.lineThickness = styleRecord.lineThickness
+            pm.extensionOverhang = styleRecord.extensionOverhang
+            pm.extensionGap = styleRecord.extensionGap
+            pm.terminalType = styleRecord.terminalType
+            pm.terminalSize = styleRecord.terminalSize
+            pm.terminalPlacement = styleRecord.terminalPlacement
+            pm.terminalAngle = styleRecord.terminalAngle
+            pm.annotationColor = styleRecord.annotationColor
+            pm.textColor = styleRecord.textColor
+            pm.previewScale = styleRecord.previewScale
+        )
+        pm.sampleValue = sampleValue
+        pm.darkBackground = previewDarkBg
+        pm.zoom = previewZoom
+        pm
+    )
+)
 
 struct AmenoStyleRecord
 (
@@ -23,7 +105,13 @@ struct AmenoStyleRecord
     extensionOverhang = 8.0,
     extensionGap = 0.0,
     terminalType = #tick, -- #tick, #arrowClosed, #arrowOpen, #dot, #none
-    terminalSize = 14.0
+    terminalSize = 14.0,
+    textMaskEnabled = false,
+    annotationColor = "245,245,245",
+    textColor = "",
+    terminalPlacement = #auto, -- #auto, #inside, #outside
+    terminalAngle = 45.0,
+    previewScale = 1.0
 )
 
 global AmenoStyleRegistryCA = attributes AmenoStyleRegistryData
@@ -111,15 +199,15 @@ struct AmenoStyleServiceDefinition
         local presets = #()
 
         -- Preset 1: Arquitetônico (Padrão)
-        local arch = AmenoStyleRecord styleId:"default" name:"Arquitetônico" fontName:"Arial" fontSize:20.0 bold:false italic:false tracking:0.0 textGap:12.0 lineThickness:1.5 extensionOverhang:8.0 extensionGap:0.0 terminalType:#tick terminalSize:14.0
+        local arch = AmenoStyleRecord styleId:"default" name:"Arquitetônico" fontName:"Arial" fontSize:20.0 bold:false italic:false tracking:0.0 textGap:12.0 lineThickness:1.5 extensionOverhang:8.0 extensionGap:0.0 terminalType:#tick terminalSize:14.0 textMaskEnabled:true annotationColor:"245,245,245" textColor:"" terminalPlacement:#auto terminalAngle:45.0 previewScale:1.0
         append presets arch
 
         -- Preset 2: Editorial
-        local edit = AmenoStyleRecord styleId:"editorial" name:"Editorial" fontName:"Georgia" fontSize:22.0 bold:false italic:false tracking:10.0 textGap:10.0 lineThickness:1.0 extensionOverhang:5.0 extensionGap:0.0 terminalType:#dot terminalSize:8.0
+        local edit = AmenoStyleRecord styleId:"editorial" name:"Editorial" fontName:"Georgia" fontSize:22.0 bold:false italic:false tracking:10.0 textGap:10.0 lineThickness:1.0 extensionOverhang:5.0 extensionGap:0.0 terminalType:#dot terminalSize:8.0 textMaskEnabled:true annotationColor:"245,245,245" textColor:"" terminalPlacement:#auto terminalAngle:45.0 previewScale:1.0
         append presets edit
 
         -- Preset 3: Técnico
-        local tech = AmenoStyleRecord styleId:"technical" name:"Técnico" fontName:"Arial" fontSize:16.0 bold:false italic:false tracking:0.0 textGap:8.0 lineThickness:1.2 extensionOverhang:6.0 extensionGap:0.0 terminalType:#arrowClosed terminalSize:16.0
+        local tech = AmenoStyleRecord styleId:"technical" name:"Técnico" fontName:"Arial" fontSize:16.0 bold:false italic:false tracking:0.0 textGap:8.0 lineThickness:1.2 extensionOverhang:6.0 extensionGap:0.0 terminalType:#arrowClosed terminalSize:16.0 textMaskEnabled:true annotationColor:"245,245,245" textColor:"" terminalPlacement:#auto terminalAngle:45.0 previewScale:1.0
         append presets tech
 
         presets
@@ -140,7 +228,13 @@ struct AmenoStyleServiceDefinition
                          extensionOverhang:style.extensionOverhang \
                          extensionGap:style.extensionGap \
                          terminalType:style.terminalType \
-                         terminalSize:style.terminalSize
+                         terminalSize:style.terminalSize \
+                         textMaskEnabled:style.textMaskEnabled \
+                         annotationColor:style.annotationColor \
+                         textColor:style.textColor \
+                         terminalPlacement:style.terminalPlacement \
+                         terminalAngle:style.terminalAngle \
+                         previewScale:style.previewScale
     ),
 
     fn serializeStyles =
@@ -161,7 +255,13 @@ struct AmenoStyleServiceDefinition
                 (s.extensionOverhang as string),
                 (s.extensionGap as string),
                 (s.terminalType as string),
-                (s.terminalSize as string)
+                (s.terminalSize as string),
+                (if s.textMaskEnabled then "1" else "0"),
+                (escapeStr s.annotationColor),
+                (escapeStr s.textColor),
+                (s.terminalPlacement as string),
+                (s.terminalAngle as string),
+                (s.previewScale as string)
             )
             local lineStr = ""
             for i = 1 to parts.count do
@@ -205,8 +305,24 @@ struct AmenoStyleServiceDefinition
                 s.lineThickness = tokens[9] as float
                 s.extensionOverhang = tokens[10] as float
                 s.extensionGap = tokens[11] as float
-                s.terminalType = tokens[12] as name
+                local termStr = tokens[12]
+                if termStr != undefined and termStr.count > 0 and termStr[1] == "#" do termStr = substring termStr 2 -1
+                s.terminalType = termStr as name
                 s.terminalSize = tokens[13] as float
+
+                -- Propriedades v2 opcionais com defaults defensivos para compatibilidade retroativa com E7-E10
+                if tokens.count >= 14 and tokens[14] != "" do s.textMaskEnabled = (tokens[14] == "1")
+                if tokens.count >= 15 and tokens[15] != "" do s.annotationColor = unescapeStr tokens[15]
+                if tokens.count >= 16 and tokens[16] != "" do s.textColor = unescapeStr tokens[16]
+                if tokens.count >= 17 and tokens[17] != "" do
+                (
+                    local placeStr = tokens[17]
+                    if placeStr.count > 0 and placeStr[1] == "#" do placeStr = substring placeStr 2 -1
+                    s.terminalPlacement = placeStr as name
+                )
+                if tokens.count >= 18 and tokens[18] != "" do s.terminalAngle = tokens[18] as float
+                if tokens.count >= 19 and tokens[19] != "" do s.previewScale = tokens[19] as float
+
                 append loadedStyles s
             )
         )
@@ -467,7 +583,7 @@ struct AmenoStyleServiceDefinition
 
         undo "Ameno: atualizar estilo de cotas" on
         (
-            local regNode = ensureRegistryNode()
+            local regNode = this.ensureRegistryNode()
 
             -- Atualiza no array em memória
             local found = false
@@ -475,16 +591,16 @@ struct AmenoStyleServiceDefinition
             (
                 if styles[i].styleId == styleRecord.styleId do
                 (
-                    styles[i] = cloneStyle styleRecord
+                    styles[i] = this.cloneStyle styleRecord
                     found = true
                     exit
                 )
             )
-            if not found do append styles (cloneStyle styleRecord)
+            if not found do append styles (this.cloneStyle styleRecord)
 
-            local dataStr = serializeStyles()
+            local dataStr = this.serializeStyles()
             cachedSerialized = dataStr
-            if regNode != undefined and isValidNode regNode and (hasRegistryCA regNode) do
+            if regNode != undefined and isValidNode regNode and (this.hasRegistryCA regNode) do
             (
                 regNode.AmenoStyleRegistryData.stylesData = dataStr
             )
@@ -497,13 +613,132 @@ struct AmenoStyleServiceDefinition
                 if ::AmenoDimensionCA != undefined do rec = ::AmenoDimensionCA.readCA c
                 if rec != undefined and rec.styleId == styleRecord.styleId do
                 (
-                    ::AmenoDimensionGraphics.rebuildDimension c style:(cloneStyle styleRecord)
+                    ::AmenoDimensionGraphics.rebuildDimension c style:(this.cloneStyle styleRecord)
                     updatedCount += 1
                 )
             )
         )
 
         updatedCount
+    ),
+
+    fn createDraftFromStyle styleId =
+    (
+        local baseStyle = this.getStyle styleId
+        local draft = AmenoStyleDraft()
+        draft.sourceStyleId = baseStyle.styleId
+        draft.styleRecord = this.cloneStyle baseStyle
+        draft.isDirty = false
+        draft
+    ),
+
+    fn createDraftFromPreset presetId =
+    (
+        local presets = this.createDefaultPresets()
+        local chosen = undefined
+        for p in presets where p.styleId == presetId do
+        (
+            chosen = p
+            exit
+        )
+        if chosen == undefined do chosen = presets[1]
+        local draft = AmenoStyleDraft()
+        draft.sourceStyleId = chosen.styleId
+        draft.styleRecord = this.cloneStyle chosen
+        draft.isDirty = true
+        draft
+    ),
+
+    fn discardDraft draft =
+    (
+        if draft != undefined do
+        (
+            draft.isDirty = false
+            draft.styleRecord = undefined
+        )
+        true
+    ),
+
+    fn saveDraftAsStyle draft =
+    (
+        if draft == undefined or draft.styleRecord == undefined then return 0
+        local oldStyle = this.getStyle draft.styleRecord.styleId
+        local snapshot = this.cloneStyle oldStyle
+        try
+        (
+            local updatedCount = this.updateStyleAndRebuild draft.styleRecord
+            draft.isDirty = false
+            draft.sourceStyleId = draft.styleRecord.styleId
+            updatedCount
+        )
+        catch
+        (
+            if snapshot != undefined do this.saveStyle snapshot
+            throw
+        )
+    ),
+
+    fn saveDraftAsNewStyle draft newName:undefined =
+    (
+        if draft == undefined or draft.styleRecord == undefined then return undefined
+        local newRecord = this.saveAsNewStyle newName draft.styleRecord
+        draft.sourceStyleId = newRecord.styleId
+        draft.styleRecord = this.cloneStyle newRecord
+        draft.isDirty = false
+        newRecord
+    ),
+
+    fn applyDraftToSelection draft =
+    (
+        if draft == undefined or draft.styleRecord == undefined then return 0
+        if selection.count == 0 then return 0
+        global AmenoDimensionGraphics
+        global AmenoDimensionCA
+
+        local controllersToUpdate = #()
+        for obj in selection where isValidNode obj do
+        (
+            local dimId = if ::AmenoDimensionGraphics != undefined then ::AmenoDimensionGraphics.getDimensionId obj else ""
+            if dimId != "" do
+            (
+                local nodes = ::AmenoDimensionGraphics.findNodesForDimension dimId
+                for n in nodes where isValidNode n do
+                (
+                    if (::AmenoDimensionGraphics.readTextProperty n "Ameno.Kind") == "dimension" or (::AmenoDimensionCA != undefined and ::AmenoDimensionCA.hasCA n) then
+                    (
+                        if (findItem controllersToUpdate n) == 0 do append controllersToUpdate n
+                    )
+                )
+            )
+        )
+
+        if controllersToUpdate.count == 0 then return 0
+
+        local oldStyle = this.getStyle draft.styleRecord.styleId
+        local snapshot = this.cloneStyle oldStyle
+        try
+        (
+            undo "Ameno: aplicar estilo às selecionadas" on
+            (
+                this.saveStyle draft.styleRecord
+                for c in controllersToUpdate do
+                (
+                    local rec = ::AmenoDimensionCA.readCA c
+                    if rec != undefined do
+                    (
+                        rec.styleId = draft.styleRecord.styleId
+                        ::AmenoDimensionCA.applyCA c rec
+                        ::AmenoDimensionGraphics.rebuildDimension c style:(this.cloneStyle draft.styleRecord)
+                    )
+                )
+            )
+            controllersToUpdate.count
+        )
+        catch
+        (
+            if snapshot != undefined do this.saveStyle snapshot
+            throw
+        )
     )
 )
 

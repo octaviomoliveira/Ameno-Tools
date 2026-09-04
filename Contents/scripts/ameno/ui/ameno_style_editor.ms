@@ -304,8 +304,23 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
     )
 )
 
-fn AmenoShowStyleEditor =
+fn AmenoShowStyleEditor preferWpf:false styleId:undefined =
 (
+    if preferWpf and ::AmenoStyleEditorWPF != undefined then
+    (
+        try
+        (
+            return ::AmenoStyleEditorWPF.open styleId:styleId
+        )
+        catch
+        (
+            local exc = getCurrentException() as string
+            if ::AmenoLog != undefined do
+                ::AmenoLog.error ("Falha ao abrir editor visual WPF: " + exc + ". Recorrendo ao editor legado.")
+            format "[Ameno][ERROR] Falha ao abrir editor visual WPF: %. Recorrendo ao editor legado.\n" exc
+        )
+    )
+
     try (destroyDialog AmenoStyleEditorRollout) catch ()
     createDialog AmenoStyleEditorRollout width:400 height:520 style:#(#style_titlebar, #style_sysmenu, #style_toolwindow) lockWidth:true lockHeight:true
 )
