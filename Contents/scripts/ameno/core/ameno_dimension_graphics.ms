@@ -612,7 +612,7 @@ struct AmenoDimensionGraphicsService
     ),
 
     fn createController pointA pointB offsetPoint systemLayer role:"test" outputUnit:#meters precision:2 styleId:"default" \
-        anchorType:"world" nodeA:undefined localPointA:undefined nodeB:undefined localPointB:undefined =
+        anchorType:"world" nodeA:undefined localPointA:undefined nodeB:undefined localPointB:undefined dimensionMode:#aligned =
     (
         local controller = Point name:(uniqueName "AMENO_DIM_CTRL_") size:5.0
         local dimensionId = "dimension-" + (controller.handle as string)
@@ -624,9 +624,10 @@ struct AmenoDimensionGraphicsService
         if AmenoDimensionCA != undefined do
         (
             local rec = AmenoDimensionRecord()
-            rec.schemaVersion = 3
+            rec.schemaVersion = 4
             rec.dimensionId = dimensionId
             rec.dimensionRole = (role as string)
+            rec.dimensionMode = (dimensionMode as string)
             rec.pointA = pointA
             rec.pointB = pointB
             rec.offsetPoint = offsetPoint
@@ -739,13 +740,13 @@ struct AmenoDimensionGraphicsService
         AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode markerNode:markerNode layout:layout displayText:labelText audit:audit style:resolvedStyle
     ),
 
-    fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" =
+    fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned =
     (
         local sceneState = ensureSceneReady()
 
         if sceneState.status != #ready then throw ("Ameno não conseguiu preparar a cena: " + sceneState.detail)
 
-        local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
+        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:mode
         if not layout.valid then throw ("Não foi possível criar a prévia: " + layout.errorMessage)
 
         local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
@@ -775,11 +776,11 @@ struct AmenoDimensionGraphicsService
         result
     ),
 
-    fn updatePreviewDimension preview pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" =
+    fn updatePreviewDimension preview pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned =
     (
         if preview == undefined then return undefined
 
-        local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
+        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:mode
         if not layout.valid then return undefined
 
         local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
@@ -815,7 +816,7 @@ struct AmenoDimensionGraphicsService
     ),
 
     fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" \
-        anchorType:"world" nodeA:undefined localPointA:undefined nodeB:undefined localPointB:undefined =
+        anchorType:"world" nodeA:undefined localPointA:undefined nodeB:undefined localPointB:undefined dimensionMode:#aligned =
     (
         local sceneState = ensureSceneReady()
 
@@ -838,7 +839,7 @@ struct AmenoDimensionGraphicsService
         else if nodeA != undefined then resolvedAnchorType = "nodeA"
         else if nodeB != undefined then resolvedAnchorType = "nodeB"
 
-        local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
+        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:dimensionMode
         if not layout.valid then throw ("Não foi possível criar a cota: " + layout.errorMessage)
 
         local controller = undefined
@@ -849,7 +850,7 @@ struct AmenoDimensionGraphicsService
             undo "Ameno: criar cota" on
             (
                 controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId \
-                    anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA nodeB:nodeB localPointB:resolvedLocalB
+                    anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA nodeB:nodeB localPointB:resolvedLocalB dimensionMode:dimensionMode
                 local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
                 if AmenoDimensionCA != undefined do
                 (
@@ -980,7 +981,9 @@ struct AmenoDimensionGraphicsService
         if AmenoDimensionCA != undefined do record = AmenoDimensionCA.readCA controller
         if record == undefined then return undefined
 
-        local layout = AmenoDimensionMath.alignedLayout record.pointA record.pointB record.offsetPoint
+        local mode = #aligned
+        try (mode = record.dimensionMode as name) catch ()
+        local layout = AmenoDimensionMath.layoutForMode record.pointA record.pointB record.offsetPoint mode:mode
         if not layout.valid then return undefined
 
         local outputUnit = #meters
@@ -1040,7 +1043,9 @@ struct AmenoDimensionGraphicsService
         if pointA == undefined or pointB == undefined or offsetPoint == undefined then throw "Os dados geométricos da cota estão incompletos."
         if sceneState.status != #ready then throw ("Ameno não conseguiu preparar a cena: " + sceneState.detail)
 
-        local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
+        local mode = #aligned
+        if record != undefined do try (mode = record.dimensionMode as name) catch ()
+        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:mode
         if not layout.valid then throw ("Não foi possível reconstruir a cota: " + layout.errorMessage)
 
         local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision

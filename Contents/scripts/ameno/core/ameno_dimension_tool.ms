@@ -28,6 +28,7 @@ struct AmenoDimensionToolService
     previewOutputUnit = #meters,
     previewPrecision = 2,
     activeStyleId = "default",
+    activeMode = #aligned, -- E10.1: #aligned | #horizontal | #vertical
     nodeA = undefined,
     nodeB = undefined,
 
@@ -184,11 +185,12 @@ struct AmenoDimensionToolService
     fn updatePreview pointAValue pointBValue offsetPointValue =
     (
         local layout = undefined
-        try (layout = AmenoDimensionMath.alignedLayout pointAValue pointBValue offsetPointValue) catch ()
+        try (layout = AmenoDimensionMath.layoutForMode pointAValue pointBValue offsetPointValue mode:activeMode) catch ()
 
         if layout == undefined or not layout.valid then
         (
-            displayTempPrompt "Ameno Dimensions: os pontos A e B não podem coincidir." 1200
+            local errMsg = if layout != undefined then layout.errorMessage else "os pontos A e B não podem coincidir."
+            displayTempPrompt ("Ameno Dimensions: " + errMsg) 1200
             return false
         )
 
@@ -196,11 +198,11 @@ struct AmenoDimensionToolService
         (
             if preview == undefined then
             (
-                preview = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId
+                preview = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
             )
             else
             (
-                preview = AmenoDimensionGraphics.updatePreviewDimension preview pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId
+                preview = AmenoDimensionGraphics.updatePreviewDimension preview pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
             )
 
             preview != undefined
@@ -282,7 +284,7 @@ struct AmenoDimensionToolService
                 local created = undefined
                 try
                 (
-                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId nodeA:nodeA nodeB:nodeB
+                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId nodeA:nodeA nodeB:nodeB dimensionMode:activeMode
                     lastCommittedRecord = created
                     removePreview()
                     nodeA = undefined

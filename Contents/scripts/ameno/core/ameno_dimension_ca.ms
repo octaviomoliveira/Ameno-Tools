@@ -25,9 +25,10 @@ struct AmenoResolvedAnchorPoints
 
 struct AmenoDimensionRecord
 (
-    schemaVersion = 3,
+    schemaVersion = 4,
     dimensionId = "",
     dimensionRole = "user",
+    dimensionMode = "aligned", -- E10.1: "aligned" | "horizontal" | "vertical"
     pointA = [0, 0, 0],
     pointB = [0, 0, 0],
     offsetPoint = [0, 0, 0],
@@ -53,13 +54,14 @@ struct AmenoDimensionRecord
 
 AmenoDimensionCADef = attributes AmenoDimensionData
 attribID:#(0x414d454e, 0x44494d31) -- 'AMEN', 'DIM1'
-version:3
+version:4
 (
     parameters main
     (
-        schemaVersion type:#integer default:3
+        schemaVersion type:#integer default:4
         dimensionId type:#string default:""
         dimensionRole type:#string default:"user"
+        dimensionMode type:#string default:"aligned"  -- E10.1: "aligned" | "horizontal" | "vertical"
         pointA type:#point3 default:[0, 0, 0]
         pointB type:#point3 default:[0, 0, 0]
         offsetPoint type:#point3 default:[0, 0, 0]
@@ -87,7 +89,7 @@ version:3
 struct AmenoDimensionCAService
 (
     def = AmenoDimensionCADef,
-    schemaVersion = 3,
+    schemaVersion = 4,
 
     fn hasCA node =
     (
@@ -111,6 +113,7 @@ struct AmenoDimensionCAService
         ca.schemaVersion = record.schemaVersion
         ca.dimensionId = record.dimensionId
         ca.dimensionRole = (record.dimensionRole as string)
+        if isProperty ca #dimensionMode do ca.dimensionMode = (record.dimensionMode as string)
         ca.pointA = record.pointA
         ca.pointB = record.pointB
         ca.offsetPoint = record.offsetPoint
@@ -147,6 +150,8 @@ struct AmenoDimensionCAService
             rec.schemaVersion = ca.schemaVersion
             rec.dimensionId = ca.dimensionId
             rec.dimensionRole = ca.dimensionRole
+            -- E10.1: campo dimensionMode lido com guard para compatibilidade com CA v3
+            if isProperty ca #dimensionMode then rec.dimensionMode = ca.dimensionMode else rec.dimensionMode = "aligned"
             rec.pointA = ca.pointA
             rec.pointB = ca.pointB
             rec.offsetPoint = ca.offsetPoint
@@ -281,19 +286,41 @@ struct AmenoDimensionCAService
         if changedA or changedB then
         (
             resolved.changed = true
-            -- Manter o afastamento perpendicular anterior
-            local oldLayout = AmenoDimensionMath.alignedLayout record.pointA record.pointB record.offsetPoint
+            -- Manter o afastamento perpendicular no modo correto da cota
+            local mode = #aligned
+            try (mode = record.dimensionMode as name) catch ()
+            local oldLayout = AmenoDimensionMath.layoutForMode record.pointA record.pointB record.offsetPoint mode:mode
             local offsetDist = if oldLayout.valid then oldLayout.signedOffsetSceneUnits else 20.0
-            local newVec = [worldB.x - worldA.x, worldB.y - worldA.y, 0.0]
-            if (length newVec) > 0.00001 then
+
+            -- Para horizontal: perpendicular fixo = Y; afastamento = deslocamento em Y
+            -- Para vertical:   perpendicular fixo = X; afastamento = deslocamento em X
+            -- Para aligned:    perpendicular derivado do novo vetor AB
+            case mode of
             (
-                local newDir = normalize newVec
-                local newPerp = normalize (cross [0, 0, 1] newDir)
-                resolved.offsetPoint = [worldA.x, worldA.y, 0.0] + (newPerp * offsetDist)
-            )
-            else
-            (
-                resolved.offsetPoint = record.offsetPoint
+                #horizontal:
+                (
+                    -- Y do offset em relação ao Y de A
+                    resolved.offsetPoint = [worldA.x, worldA.y + offsetDist, 0.0]
+                )
+                #vertical:
+                (
+                    -- X do offset em relação ao X de A
+                    resolved.offsetPoint = [worldA.x + offsetDist, worldA.y, 0.0]
+                )
+                default:
+                (
+                    local newVec = [worldB.x - worldA.x, worldB.y - worldA.y, 0.0]
+                    if (length newVec) > 0.00001 then
+                    (
+                        local newDir = normalize newVec
+                        local newPerp = normalize (cross [0, 0, 1] newDir)
+                        resolved.offsetPoint = [worldA.x, worldA.y, 0.0] + (newPerp * offsetDist)
+                    )
+                    else
+                    (
+                        resolved.offsetPoint = record.offsetPoint
+                    )
+                )
             )
         )
         else

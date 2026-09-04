@@ -28,7 +28,8 @@ struct AmenoAlignedDimensionLayout
     signedOffsetSceneUnits = 0.0,
     side = #positive,
     measuredSceneUnits = 0.0,
-    measuredMillimeters = 0.0
+    measuredMillimeters = 0.0,
+    dimensionMode = #aligned  -- E10.1: #aligned | #horizontal | #vertical
 )
 
 struct AmenoUnitServiceDefinition
@@ -163,6 +164,7 @@ struct AmenoDimensionMathDefinition
         [point.x, point.y, 0.0]
     ),
 
+    -- Cota alinhada: mede e segue o vetor AB projetado no plano XY.
     fn alignedLayout pointA pointB offsetPoint millimetersPerSceneUnit:undefined toleranceSceneUnits:0.00001 =
     (
         local projectedA = projectToWorldXY pointA
@@ -173,7 +175,7 @@ struct AmenoDimensionMathDefinition
 
         if measuredSceneUnits <= toleranceSceneUnits then
         (
-            return AmenoAlignedDimensionLayout pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset errorCode:#coincidentPoints errorMessage:"Os pontos A e B coincidem no plano XY."
+            return AmenoAlignedDimensionLayout pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset errorCode:#coincidentPoints errorMessage:"Os pontos A e B coincidem no plano XY." dimensionMode:#aligned
         )
 
         local resolvedMillimetersPerSceneUnit = millimetersPerSceneUnit
@@ -182,7 +184,7 @@ struct AmenoDimensionMathDefinition
 
         if resolvedMillimetersPerSceneUnit <= 0.0 then
         (
-            return AmenoAlignedDimensionLayout pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset errorCode:#invalidUnitScale errorMessage:"A escala de unidades da cena deve ser maior que zero."
+            return AmenoAlignedDimensionLayout pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset errorCode:#invalidUnitScale errorMessage:"A escala de unidades da cena deve ser maior que zero." dimensionMode:#aligned
         )
 
         local direction = normalize measurementVector
@@ -191,7 +193,94 @@ struct AmenoDimensionMathDefinition
         local linePointA = projectedA + (perpendicular * signedOffset)
         local linePointB = projectedB + (perpendicular * signedOffset)
 
-        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit)
+        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit) dimensionMode:#aligned
+    ),
+
+    -- Cota horizontal: mede somente a componente X de A para B.
+    -- A linha principal é horizontal; linhas de extensão sobem/descem até o afastamento.
+    fn horizontalLayout pointA pointB offsetPoint millimetersPerSceneUnit:undefined toleranceSceneUnits:0.00001 =
+    (
+        local projectedA = projectToWorldXY pointA
+        local projectedB = projectToWorldXY pointB
+        local projectedOffset = projectToWorldXY offsetPoint
+
+        local dx = projectedB.x - projectedA.x
+        local measuredSceneUnits = abs dx
+
+        if measuredSceneUnits <= toleranceSceneUnits then
+        (
+            return AmenoAlignedDimensionLayout pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset errorCode:#zeroProjection errorMessage:"A projeção horizontal (eixo X) entre A e B é zero." dimensionMode:#horizontal
+        )
+
+        local resolvedMillimetersPerSceneUnit = millimetersPerSceneUnit
+        if resolvedMillimetersPerSceneUnit == undefined do resolvedMillimetersPerSceneUnit = AmenoUnitService.currentMillimetersPerSceneUnit()
+        if resolvedMillimetersPerSceneUnit <= 0.0 then
+        (
+            return AmenoAlignedDimensionLayout pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset errorCode:#invalidUnitScale errorMessage:"A escala de unidades da cena deve ser maior que zero." dimensionMode:#horizontal
+        )
+
+        -- Direção sempre horizontal (X), perpendicular sempre vertical (Y)
+        local direction = if dx >= 0.0 then [1, 0, 0] else [-1, 0, 0]
+        local perpendicular = [0, 1, 0]
+
+        -- Afastamento: componente Y do ponto de offset em relação a A
+        local signedOffset = projectedOffset.y - projectedA.y
+
+        -- Pontos de extremidade da linha principal: X de cada âncora, Y do afastamento
+        local linePointA = [projectedA.x, projectedA.y + signedOffset, 0.0]
+        local linePointB = [projectedB.x, projectedA.y + signedOffset, 0.0]
+
+        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit) dimensionMode:#horizontal
+    ),
+
+    -- Cota vertical: mede somente a componente Y de A para B.
+    -- A linha principal é vertical; linhas de extensão vão à esquerda/direita até o afastamento.
+    fn verticalLayout pointA pointB offsetPoint millimetersPerSceneUnit:undefined toleranceSceneUnits:0.00001 =
+    (
+        local projectedA = projectToWorldXY pointA
+        local projectedB = projectToWorldXY pointB
+        local projectedOffset = projectToWorldXY offsetPoint
+
+        local dy = projectedB.y - projectedA.y
+        local measuredSceneUnits = abs dy
+
+        if measuredSceneUnits <= toleranceSceneUnits then
+        (
+            return AmenoAlignedDimensionLayout pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset errorCode:#zeroProjection errorMessage:"A projeção vertical (eixo Y) entre A e B é zero." dimensionMode:#vertical
+        )
+
+        local resolvedMillimetersPerSceneUnit = millimetersPerSceneUnit
+        if resolvedMillimetersPerSceneUnit == undefined do resolvedMillimetersPerSceneUnit = AmenoUnitService.currentMillimetersPerSceneUnit()
+        if resolvedMillimetersPerSceneUnit <= 0.0 then
+        (
+            return AmenoAlignedDimensionLayout pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset errorCode:#invalidUnitScale errorMessage:"A escala de unidades da cena deve ser maior que zero." dimensionMode:#vertical
+        )
+
+        -- Direção sempre vertical (Y), perpendicular sempre horizontal (X)
+        local direction = if dy >= 0.0 then [0, 1, 0] else [0, -1, 0]
+        local perpendicular = [1, 0, 0]
+
+        -- Afastamento: componente X do ponto de offset em relação a A
+        local signedOffset = projectedOffset.x - projectedA.x
+
+        -- Pontos de extremidade da linha principal: X do afastamento, Y de cada âncora
+        local linePointA = [projectedA.x + signedOffset, projectedA.y, 0.0]
+        local linePointB = [projectedA.x + signedOffset, projectedB.y, 0.0]
+
+        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit) dimensionMode:#vertical
+    ),
+
+    -- Dispatcher público: escolhe o layout correto pelo modo.
+    -- mode: #aligned (default), #horizontal, #vertical
+    -- Cenas antigas sem modo assumem #aligned.
+    fn layoutForMode pointA pointB offsetPoint mode:#aligned millimetersPerSceneUnit:undefined toleranceSceneUnits:0.00001 =
+    (
+        case mode of
+        (
+            #horizontal: horizontalLayout pointA pointB offsetPoint millimetersPerSceneUnit:millimetersPerSceneUnit toleranceSceneUnits:toleranceSceneUnits
+            #vertical:   verticalLayout   pointA pointB offsetPoint millimetersPerSceneUnit:millimetersPerSceneUnit toleranceSceneUnits:toleranceSceneUnits
+            default:     alignedLayout    pointA pointB offsetPoint millimetersPerSceneUnit:millimetersPerSceneUnit toleranceSceneUnits:toleranceSceneUnits
+        )
     ),
 
     fn nearlyEqual valueA valueB tolerance:0.0001 =

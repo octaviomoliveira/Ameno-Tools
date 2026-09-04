@@ -209,12 +209,28 @@ fn AmenoRefreshMainPanel =
 rollout AmenoDimRollout "Criação de Cotas" width:344
 (
     label lblDimensions "Ameno Dimensions · 0 cota(s) ativa(s)." pos:[14, 10] width:316 height:18 align:#left
-    button btnCreate "Criar cota (3 cliques)" pos:[14, 34] width:150 height:26
-    button btnRepair "Reparar cotas" pos:[180, 34] width:150 height:26
-    button btnCreateTest "Criar cota de teste" pos:[14, 66] width:150 height:24
-    button btnClearTests "Limpar de teste" pos:[180, 66] width:150 height:24
-    button btnStyleEditor "Editor de Estilos..." pos:[14, 96] width:316 height:24
-    label lblTestHint "Preview em tempo real · Esc ou botão direito cancela." pos:[14, 126] width:316 height:18 align:#left
+    -- E10.1: seletor de modo de cota
+    radiobuttons rdoMode "Modo:" pos:[14, 32] labels:#("Alinhada", "Horizontal", "Vertical") default:1 columns:3
+    button btnCreate "Criar cota (3 cliques)" pos:[14, 62] width:150 height:26
+    button btnRepair "Reparar cotas" pos:[180, 62] width:150 height:26
+    button btnCreateTest "Criar cota de teste" pos:[14, 94] width:150 height:24
+    button btnClearTests "Limpar de teste" pos:[180, 94] width:150 height:24
+    button btnStyleEditor "Editor de Estilos..." pos:[14, 124] width:316 height:24
+    label lblTestHint "Preview em tempo real · Esc ou botão direito cancela." pos:[14, 154] width:316 height:18 align:#left
+
+    on rdoMode changed state do
+    (
+        global AmenoDimensionTool
+        if AmenoDimensionTool != undefined do
+        (
+            case state of
+            (
+                1: AmenoDimensionTool.activeMode = #aligned
+                2: AmenoDimensionTool.activeMode = #horizontal
+                3: AmenoDimensionTool.activeMode = #vertical
+            )
+        )
+    )
 
     on btnCreate pressed do
     (
