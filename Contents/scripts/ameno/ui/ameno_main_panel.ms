@@ -1,4 +1,4 @@
-﻿global AmenoMainPanelRollout
+global AmenoMainPanelRollout
 global AmenoRefreshMainPanel
 global AmenoShowMainPanel
 
@@ -26,9 +26,9 @@ fn AmenoRefreshMainPanel =
         -- E7: Atualiza lista de estilos
         local styleList = #()
         local styleIds = #()
-        if AmenoStyleService != undefined do
+        if ::AmenoStyleService != undefined do
         (
-            local allStyles = AmenoStyleService.listStyles()
+            local allStyles = ::AmenoStyleService.listStyles()
             for s in allStyles do
             (
                 append styleList s.name
@@ -278,7 +278,7 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:770
         global AmenoDimensionCA
         global AmenoStyleService
 
-        if AmenoApp != undefined and AmenoStyleService != undefined then
+        if AmenoApp != undefined and ::AmenoStyleService != undefined then
         (
             local ctrl = AmenoApp.getSelectedDimensionController()
             if ctrl != undefined and isValidNode ctrl then
@@ -287,7 +287,7 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:770
                 if selIdx > 0 and selIdx <= styleIds.count then
                 (
                     local targetId = styleIds[selIdx]
-                    AmenoStyleService.applyStyleToDimension ctrl targetId
+                    ::AmenoStyleService.applyStyleToDimension ctrl targetId
                     AmenoRefreshMainPanel()
                 )
             )

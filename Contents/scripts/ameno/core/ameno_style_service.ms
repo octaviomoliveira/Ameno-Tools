@@ -1,4 +1,4 @@
-﻿/*
+/*
     E7 — Sistema de Estilos Visuais do Ameno Dimensions.
     Gerencia estilos tipográficos e geométricos (fontes, peso, espessuras, terminais).
 */
@@ -6,6 +6,8 @@
 global AmenoStyleRecord
 global AmenoStyleServiceDefinition
 global AmenoStyleService
+global AmenoDimensionGraphics
+global AmenoDimensionCA
 
 struct AmenoStyleRecord
 (
@@ -265,14 +267,18 @@ struct AmenoStyleServiceDefinition
 
     fn countDimensionsUsingStyle styleId =
     (
+        global AmenoDimensionGraphics
+        global AmenoDimensionCA
         if styleId == undefined or styleId == "" then return 0
+        if ::AmenoDimensionGraphics == undefined then return 0
+
         local count = 0
-        local controllers = AmenoDimensionGraphics.findControllers()
+        local controllers = ::AmenoDimensionGraphics.findControllers()
 
         for c in controllers where isValidNode c do
         (
             local rec = undefined
-            if AmenoDimensionCA != undefined do rec = AmenoDimensionCA.readCA c
+            if ::AmenoDimensionCA != undefined do rec = ::AmenoDimensionCA.readCA c
             if rec != undefined and rec.styleId == styleId do count += 1
         )
         count
@@ -280,35 +286,41 @@ struct AmenoStyleServiceDefinition
 
     fn applyStyleToDimension controller styleId =
     (
+        global AmenoDimensionGraphics
+        global AmenoDimensionCA
         if controller == undefined or not isValidNode controller then return false
-        if AmenoDimensionCA == undefined then return false
+        if ::AmenoDimensionCA == undefined or ::AmenoDimensionGraphics == undefined then return false
 
-        local rec = AmenoDimensionCA.readCA controller
+        local rec = ::AmenoDimensionCA.readCA controller
         if rec == undefined then return false
 
         undo "Ameno: aplicar estilo" on
         (
             rec.styleId = styleId
-            AmenoDimensionCA.applyCA controller rec
-            AmenoDimensionGraphics.rebuildDimension controller
+            ::AmenoDimensionCA.applyCA controller rec
+            ::AmenoDimensionGraphics.rebuildDimension controller
         )
         true
     ),
 
     fn applyStyleToSelection styleId =
     (
+        global AmenoDimensionGraphics
+        global AmenoDimensionCA
         if selection.count == 0 then return 0
+        if ::AmenoDimensionGraphics == undefined or ::AmenoDimensionCA == undefined then return 0
+
         local controllersToUpdate = #()
 
         for obj in selection where isValidNode obj do
         (
-            local dimId = AmenoDimensionGraphics.getDimensionId obj
+            local dimId = ::AmenoDimensionGraphics.getDimensionId obj
             if dimId != "" do
             (
-                local nodes = AmenoDimensionGraphics.findNodesForDimension dimId
+                local nodes = ::AmenoDimensionGraphics.findNodesForDimension dimId
                 for n in nodes where isValidNode n do
                 (
-                    if (AmenoDimensionGraphics.readTextProperty n "Ameno.Kind") == "dimension" or (AmenoDimensionCA != undefined and AmenoDimensionCA.hasCA n) then
+                    if (::AmenoDimensionGraphics.readTextProperty n "Ameno.Kind") == "dimension" or (::AmenoDimensionCA.hasCA n) then
                     (
                         if (findItem controllersToUpdate n) == 0 do append controllersToUpdate n
                     )
@@ -322,12 +334,12 @@ struct AmenoStyleServiceDefinition
         (
             for c in controllersToUpdate do
             (
-                local rec = AmenoDimensionCA.readCA c
+                local rec = ::AmenoDimensionCA.readCA c
                 if rec != undefined do
                 (
                     rec.styleId = styleId
-                    AmenoDimensionCA.applyCA c rec
-                    AmenoDimensionGraphics.rebuildDimension c
+                    ::AmenoDimensionCA.applyCA c rec
+                    ::AmenoDimensionGraphics.rebuildDimension c
                 )
             )
         )
@@ -337,10 +349,13 @@ struct AmenoStyleServiceDefinition
 
     fn updateStyleAndRebuild styleRecord =
     (
+        global AmenoDimensionGraphics
+        global AmenoDimensionCA
         if styleRecord == undefined then return 0
         saveStyle styleRecord
+        if ::AmenoDimensionGraphics == undefined then return 0
 
-        local controllers = AmenoDimensionGraphics.findControllers()
+        local controllers = ::AmenoDimensionGraphics.findControllers()
         local updatedCount = 0
 
         undo "Ameno: atualizar estilo de cotas" on
@@ -348,10 +363,10 @@ struct AmenoStyleServiceDefinition
             for c in controllers where isValidNode c do
             (
                 local rec = undefined
-                if AmenoDimensionCA != undefined do rec = AmenoDimensionCA.readCA c
+                if ::AmenoDimensionCA != undefined do rec = ::AmenoDimensionCA.readCA c
                 if rec != undefined and rec.styleId == styleRecord.styleId do
                 (
-                    AmenoDimensionGraphics.rebuildDimension c
+                    ::AmenoDimensionGraphics.rebuildDimension c
                     updatedCount += 1
                 )
             )

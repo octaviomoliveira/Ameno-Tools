@@ -7,6 +7,25 @@ global AmenoBootstrap
 global AmenoApp
 global AmenoRuntime
 global AmenoStartupError
+global AmenoVersion
+global AmenoLog
+global AmenoRendererProbe
+global AmenoSceneSetup
+global AmenoUnitService
+global AmenoDimensionMath
+global AmenoDimensionCA
+global AmenoDimensionRecord
+global AmenoStyleRecord
+global AmenoStyleServiceDefinition
+global AmenoStyleService
+global AmenoDimensionGraphics
+global AmenoDimensionTool
+global AmenoDimensionMouseTool
+global AmenoStyleEditorRollout
+global AmenoShowStyleEditor
+global AmenoMainPanelRollout
+global AmenoShowMainPanel
+global AmenoRefreshMainPanel
 
 struct AmenoBootstrapService
 (
@@ -52,8 +71,8 @@ struct AmenoBootstrapService
             @"core\ameno_scene_setup.ms",
             @"core\ameno_dimensions_math.ms",
             @"core\ameno_dimension_ca.ms",
-            @"core\ameno_style_service.ms",
             @"core\ameno_dimension_graphics.ms",
+            @"core\ameno_style_service.ms",
             @"core\ameno_dimension_tool.ms",
             @"renderers\ameno_renderer_probe.ms",
             @"core\ameno_runtime.ms",

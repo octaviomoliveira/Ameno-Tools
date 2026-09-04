@@ -1,4 +1,4 @@
-﻿/*
+/*
     E7 — Editor Visual de Estilos do Ameno Dimensions.
     Interface para controle tipográfico, espessuras e terminais com atualização em lote.
 */
@@ -8,6 +8,8 @@ global AmenoShowStyleEditor
 global AmenoStyleService
 global AmenoApp
 global AmenoRefreshMainPanel
+global AmenoDimensionGraphics
+global AmenoDimensionCA
 
 rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:400 height:520
 (
@@ -94,15 +96,15 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
         ddlTerminalType.selection = terminalTypeToIndex activeStyle.terminalType
         spnTerminalSize.value = activeStyle.terminalSize
 
-        local count = if AmenoStyleService != undefined then AmenoStyleService.countDimensionsUsingStyle activeStyle.styleId else 0
+        local count = if ::AmenoStyleService != undefined then ::AmenoStyleService.countDimensionsUsingStyle activeStyle.styleId else 0
         lblInUse.text = "Em uso: " + (count as string) + " cota(s) nesta cena."
         true
     )
 
     fn refreshStyleList selectedId:undefined =
     (
-        if AmenoStyleService == undefined then return false
-        currentStyles = AmenoStyleService.listStyles()
+        if ::AmenoStyleService == undefined then return false
+        currentStyles = ::AmenoStyleService.listStyles()
 
         local names = #()
         local selIdx = 1
@@ -148,9 +150,9 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
 
     on AmenoStyleEditorRollout open do
     (
-        if AmenoStyleService != undefined then
+        if ::AmenoStyleService != undefined then
         (
-            currentFonts = AmenoStyleService.getInstalledFonts()
+            currentFonts = ::AmenoStyleService.getInstalledFonts()
             ddlFonts.items = currentFonts
             refreshStyleList()
         )
@@ -167,11 +169,11 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
 
     on btnNewStyle pressed do
     (
-        if AmenoStyleService != undefined then
+        if ::AmenoStyleService != undefined then
         (
             local base = readCurrentUIIntoActiveStyle()
             local defName = if base != undefined then ("Novo " + base.name) else "Novo Estilo"
-            local created = AmenoStyleService.saveAsNewStyle defName base
+            local created = ::AmenoStyleService.saveAsNewStyle defName base
             if created != undefined do
             (
                 refreshStyleList selectedId:created.styleId
@@ -197,12 +199,12 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
 
     on btnUpdateBatch pressed do
     (
-        if AmenoStyleService != undefined and activeStyle != undefined then
+        if ::AmenoStyleService != undefined and activeStyle != undefined then
         (
             local updated = readCurrentUIIntoActiveStyle()
             if updated != undefined then
             (
-                local count = AmenoStyleService.updateStyleAndRebuild updated
+                local count = ::AmenoStyleService.updateStyleAndRebuild updated
                 loadActiveStyleToUI()
                 if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
                 messageBox ("Estilo \"" + updated.name + "\" atualizado.\n\n" + (count as string) + " cota(s) reconstruída(s) na cena.") title:"Ameno Dimensions"
@@ -212,9 +214,9 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
 
     on btnApplySelection pressed do
     (
-        if AmenoStyleService != undefined and activeStyle != undefined then
+        if ::AmenoStyleService != undefined and activeStyle != undefined then
         (
-            local count = AmenoStyleService.applyStyleToSelection activeStyle.styleId
+            local count = ::AmenoStyleService.applyStyleToSelection activeStyle.styleId
             loadActiveStyleToUI()
             if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
             messageBox ("Estilo \"" + activeStyle.name + "\" aplicado a " + (count as string) + " cota(s) selecionada(s).") title:"Ameno Dimensions"

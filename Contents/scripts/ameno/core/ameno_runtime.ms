@@ -125,25 +125,25 @@ struct AmenoRuntime
 
     fn getStyles =
     (
-        if AmenoStyleService != undefined then AmenoStyleService.listStyles() else #()
+        if ::AmenoStyleService != undefined then ::AmenoStyleService.listStyles() else #()
     ),
 
     fn applyStyleToSelection styleId =
     (
-        if AmenoStyleService == undefined then return 0
-        local count = AmenoStyleService.applyStyleToSelection styleId
+        if ::AmenoStyleService == undefined then return 0
+        local count = ::AmenoStyleService.applyStyleToSelection styleId
         refreshDimensions()
         count
     ),
 
     fn openStyleEditor =
     (
-        if AmenoShowStyleEditor != undefined do AmenoShowStyleEditor()
+        if ::AmenoShowStyleEditor != undefined do ::AmenoShowStyleEditor()
     ),
 
     fn onSceneOpened =
     (
-        if AmenoStyleService != undefined do AmenoStyleService.loadFromScene()
+        if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
         refreshScene()
         refreshDimensions()
         if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
@@ -152,7 +152,7 @@ struct AmenoRuntime
 
     fn onSceneReset =
     (
-        if AmenoStyleService != undefined do AmenoStyleService.loadFromScene()
+        if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
         refreshScene()
         refreshDimensions()
         if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()

@@ -434,6 +434,24 @@ global AmenoStyleRecord
     local loadedCustom = AmenoStyleService.getStyle customSavedStyle.styleId
     if loadedCustom == undefined or loadedCustom.name != "Persistido_Max" then throw "E7: Estilo customizado não persistiu no arquivo .max."
 
+    -- 5. Testar abertura do editor visual e sincronização de UI
+    AmenoShowStyleEditor()
+    if AmenoStyleEditorRollout == undefined or not AmenoStyleEditorRollout.open then throw "E7: Editor de Estilos não abriu corretamente."
+    destroyDialog AmenoStyleEditorRollout
+
+    -- 6. Testar aplicação de estilo à seleção e diretamente ao controlador
+    local dimSelTest = AmenoDimensionGraphics.createDimension [0, 0, 0] [150, 0, 0] [0, 30, 0] styleId:"default"
+    select #(dimSelTest.lineNode, dimSelTest.textNode)
+    local appliedSelCount = AmenoStyleService.applyStyleToSelection "editorial"
+    if appliedSelCount != 1 then throw "E7: Aplicação de estilo à seleção falhou."
+    local auditApplied = AmenoDimensionGraphics.getDimensionAudit dimSelTest.controller
+    local recAfterSel = AmenoDimensionCA.readCA dimSelTest.controller
+    if recAfterSel.styleId != "editorial" then throw "E7: Estilo após applyStyleToSelection não é editorial."
+
+    AmenoStyleService.applyStyleToDimension dimSelTest.controller "technical"
+    local recAfterCtrl = AmenoDimensionCA.readCA dimSelTest.controller
+    if recAfterCtrl.styleId != "technical" then throw "E7: Estilo após applyStyleToDimension não é technical."
+
     fileIn macroPath quiet:true
 
     format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6 e E7 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName

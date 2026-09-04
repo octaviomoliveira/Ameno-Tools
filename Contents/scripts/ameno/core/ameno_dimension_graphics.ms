@@ -359,9 +359,9 @@ struct AmenoDimensionGraphicsService
             resolvedTracking = style.tracking
         )
 
-        if AmenoStyleService != undefined do
+        if ::AmenoStyleService != undefined do
         (
-            resolvedFont = AmenoStyleService.validateFont resolvedFont
+            resolvedFont = ::AmenoStyleService.validateFont resolvedFont
         )
 
         local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * resolvedGap)
@@ -398,9 +398,9 @@ struct AmenoDimensionGraphicsService
             resolvedFont = style.fontName
         )
 
-        if AmenoStyleService != undefined do
+        if ::AmenoStyleService != undefined do
         (
-            resolvedFont = AmenoStyleService.validateFont resolvedFont
+            resolvedFont = ::AmenoStyleService.validateFont resolvedFont
         )
 
         local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (layout.perpendicular * resolvedGap)
@@ -592,7 +592,7 @@ struct AmenoDimensionGraphicsService
         )
 
         local resolvedStyle = style
-        if resolvedStyle == undefined and AmenoStyleService != undefined do
+        if resolvedStyle == undefined and ::AmenoStyleService != undefined do
         (
             local sId = "default"
             if AmenoDimensionCA != undefined and isValidNode controller do
@@ -605,7 +605,7 @@ struct AmenoDimensionGraphicsService
                 local propId = readTextProperty controller "Ameno.StyleId"
                 if propId != undefined and propId != "" do sId = propId
             )
-            resolvedStyle = AmenoStyleService.getStyle sId
+            resolvedStyle = ::AmenoStyleService.getStyle sId
         )
 
         local dimensionMaterial = createDimensionMaterial()
@@ -644,7 +644,7 @@ struct AmenoDimensionGraphicsService
         local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
         local result = undefined
         local resolvedStyle = undefined
-        if AmenoStyleService != undefined do resolvedStyle = AmenoStyleService.getStyle styleId
+        if ::AmenoStyleService != undefined do resolvedStyle = ::AmenoStyleService.getStyle styleId
 
         with undo off
         (
@@ -677,7 +677,7 @@ struct AmenoDimensionGraphicsService
 
         local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
         local resolvedStyle = undefined
-        if AmenoStyleService != undefined do resolvedStyle = AmenoStyleService.getStyle styleId
+        if ::AmenoStyleService != undefined do resolvedStyle = ::AmenoStyleService.getStyle styleId
 
         with undo off
         (
@@ -911,7 +911,7 @@ struct AmenoDimensionGraphicsService
         )
 
         local resolvedStyle = style
-        if resolvedStyle == undefined and AmenoStyleService != undefined do
+        if resolvedStyle == undefined and ::AmenoStyleService != undefined do
         (
             local sId = "default"
             if record != undefined and record.styleId != undefined and record.styleId != "" then sId = record.styleId
@@ -920,7 +920,7 @@ struct AmenoDimensionGraphicsService
                 local propId = readTextProperty controller "Ameno.StyleId"
                 if propId != undefined and propId != "" do sId = propId
             )
-            resolvedStyle = AmenoStyleService.getStyle sId
+            resolvedStyle = ::AmenoStyleService.getStyle sId
         )
 
         removeVisualNodes dimensionId
@@ -932,7 +932,7 @@ struct AmenoDimensionGraphicsService
         local controllers = findControllers()
         local count = 0
         local styleObj = undefined
-        if AmenoStyleService != undefined do styleObj = AmenoStyleService.getStyle targetStyleId
+        if ::AmenoStyleService != undefined do styleObj = ::AmenoStyleService.getStyle targetStyleId
 
         for ctrl in controllers where isValidNode ctrl do
         (
