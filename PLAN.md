@@ -59,7 +59,7 @@ Validar visualmente a **E1 — Preparar a cena** após recarregar o 3ds Max: abr
 | 2026-09-03 | Priorizar 3ds Max 2026; Corona primeiro, com compatibilidade planejada para V-Ray. | Decidido e documentado | `docs/decisions/0005-*`, `0006-*` |
 | 2026-09-03 | Centralizar o projeto em `D:\Ameno\_tools` e manter planos atualizados para continuidade via Antigravity. | Concluído | Repositório Git íntegro em `D:\Ameno\_tools`; origem removida após confirmação de vazio |
 | 2026-09-03 | Confirmar o pacote aberto no 3ds Max e dividir o funcionamento do plugin em etapas pequenas. | Concluído no planejamento; E1 é a próxima implementação | `plans/2026-09-03-mvp-incremental.md` |
-| 2026-09-03 | Seguir para E1 e registrar cada etapa em Markdown e GitHub. | E1 implementada, testada em Batch e pronta para validação visual; GitHub bloqueado porque nenhum remoto está configurado | `Contents/scripts/ameno/core/ameno_scene_setup.ms`, `.test-output/*e1*` |
+| 2026-09-03 | Seguir para E1 e registrar cada etapa em Markdown e GitHub. | E1 implementada, testada em Batch e pronta para validação visual; commit local `92bddd1`; GitHub bloqueado porque nenhum remoto está configurado | `Contents/scripts/ameno/core/ameno_scene_setup.ms`, `.test-output/*e1*` |
 
 ## Como retomar sem contexto
 
