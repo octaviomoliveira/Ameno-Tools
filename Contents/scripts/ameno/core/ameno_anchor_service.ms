@@ -16,6 +16,32 @@ global AmenoDimensionGraphics
 global AmenoDimensionMath
 global AmenoStyleService
 global AmenoRefreshMainPanel
+global AmenoRegisterTransformWatcher
+
+-- Função global para registrar watcher de transform em nós âncora.
+-- Usa execute() com handle embutido na string para evitar closure e race condition.
+-- "when transform X changes" PRECISA estar no nível de script (não em função),
+-- então compilamos a string em runtime via execute().
+fn AmenoRegisterTransformWatcher theNode =
+(
+    local h = getHandleByAnim theNode
+    local hStr = h as string
+    -- Embutir o handle como literal na string do callback evita qualquer
+    -- dependência de variáveis externas quando o handler disparar mais tarde.
+    local cbBody = \
+        "if ::AmenoAnchorService != undefined and " + \
+        "::AmenoAnchorService.indexTable != undefined and " + \
+        "(hasDictValue ::AmenoAnchorService.indexTable \"" + hStr + "\") do (" + \
+        "local _cl = getDictValue ::AmenoAnchorService.indexTable \"" + hStr + "\";" + \
+        "if _cl != undefined do (" + \
+        "for _c in _cl where isValidNode _c do ::AmenoAnchorService.markDirty _c;" + \
+        "if ::AmenoAnchorService.dirtyQueue.count > 0 do ::AmenoAnchorService.flushQueue()))"
+    local watchScript = \
+        "when transform (getAnimByHandle " + hStr + ") changes id:#ameno_watchers do (" + \
+        cbBody + ")"
+    try (execute watchScript) catch ()
+)
+
 
 struct AmenoAnchorServiceDefinition
 (
@@ -30,7 +56,12 @@ struct AmenoAnchorServiceDefinition
         indexTable = Dictionary #string
         if ::AmenoDimensionGraphics == undefined or ::AmenoDimensionCA == undefined then return 0
 
+        -- Remove watchers anteriores antes de recriar o índice
+        try (deleteAllChangeHandlers id:#ameno_watchers) catch ()
+
         local controllers = ::AmenoDimensionGraphics.findControllers()
+        local watchedHandles = #()
+
         for ctrl in controllers where isValidNode ctrl do
         (
             local rec = ::AmenoDimensionCA.readCA ctrl
@@ -48,6 +79,14 @@ struct AmenoAnchorServiceDefinition
                     (
                         putDictValue indexTable kA #(ctrl)
                     )
+                    -- Registra watcher de transform para este nó (uma vez por nó)
+                    local hA = getHandleByAnim rec.nodeA
+                    if (findItem watchedHandles hA) == 0 do
+                    (
+                        append watchedHandles hA
+                        if ::AmenoRegisterTransformWatcher != undefined do
+                            try (::AmenoRegisterTransformWatcher rec.nodeA) catch ()
+                    )
                 )
 
                 if (rec.anchorType == "nodeB" or rec.anchorType == "both") and rec.nodeB != undefined and isValidNode rec.nodeB do
@@ -62,11 +101,20 @@ struct AmenoAnchorServiceDefinition
                     (
                         putDictValue indexTable kB #(ctrl)
                     )
+                    -- Registra watcher de transform para este nó (uma vez por nó)
+                    local hB = getHandleByAnim rec.nodeB
+                    if (findItem watchedHandles hB) == 0 do
+                    (
+                        append watchedHandles hB
+                        if ::AmenoRegisterTransformWatcher != undefined do
+                            try (::AmenoRegisterTransformWatcher rec.nodeB) catch ()
+                    )
                 )
             )
         )
         controllers.count
     ),
+
 
     fn markDirty controller =
     (
@@ -478,6 +526,8 @@ struct AmenoAnchorServiceDefinition
     fn shutdown =
     (
         callbacks.removeScripts id:#ameno_anchors
+        -- Remove os watchers de transform registrados por rebuildIndex
+        try (deleteAllChangeHandlers id:#ameno_watchers) catch ()
         if anchorCallback != undefined do
         (
             try (anchorCallback.enabled = false) catch ()
