@@ -201,6 +201,26 @@ Os testes abaixo são futuros. Para o MVP, aplicar primeiro a seção `Render se
 - preview usa a mesma proporção da saída final;
 - assinatura pixel-perfect detecta câmera ou resolução divergente.
 
+### Evidência da E9 em 2026-09-04
+
+Coberto automaticamente no 3ds Max 2026.3:
+
+- bootstrap e pacote instalado carregam serviço e adapter Corona;
+- escopos Todas/Selecionadas retornam somente linhas e TextPlus da cota;
+- resolução e pixel aspect são herdados; Crop/Region usa o estado da viewport ativa;
+- nome conflitante recebe sufixo e não é sobrescrito silenciosamente;
+- sucesso, exceção simulada e cancelamento restauram nós, materiais e layer;
+- `CoronaLightMtl` fica visível diretamente e no alpha com emissão desligada;
+- prova real no Corona 13 produz anotação opaca, fundo transparente e exclui a geometria comum da cena.
+
+Permanece no gate manual da E9:
+
+- composição pixel-perfect sobre uma planta/câmera real;
+- comparação antes/depois de Beauty, LightMix, Render Elements e VFB do arquivo de produção;
+- cancelamento real por `Esc` durante um passe do usuário.
+
+Permanecem para E10 ou etapas futuras: EXR, cor configurável por estilo, assinatura pixel-perfect automatizada, render farm e matriz de exposição/tone mapping/Bloom & Glare/denoise.
+
 ## Renderizadores
 
 Para cada renderizador oficialmente suportado:

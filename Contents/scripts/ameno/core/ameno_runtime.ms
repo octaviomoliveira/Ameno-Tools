@@ -12,6 +12,7 @@ global AmenoStyleService
 global AmenoShowStyleEditor
 global AmenoStyleEditorRollout
 global AmenoAnchorService
+global AmenoRenderCotasService
 
 struct AmenoRuntime
 (
@@ -21,6 +22,7 @@ struct AmenoRuntime
     dimensionStatus = "",
     lastTestDimension = undefined,
     lastInteractiveDimension = undefined,
+    lastRenderResult = undefined,
     started = false,
 
     fn refreshRenderer =
@@ -170,6 +172,20 @@ struct AmenoRuntime
     fn openStyleEditor =
     (
         if ::AmenoShowStyleEditor != undefined do ::AmenoShowStyleEditor()
+    ),
+
+    fn defaultRenderCotasPath =
+    (
+        if ::AmenoRenderCotasService == undefined then "" else ::AmenoRenderCotasService.defaultOutputPath()
+    ),
+
+    fn renderCotas outputPath:"" selectionMode:#all =
+    (
+        if ::AmenoRenderCotasService == undefined then throw "O serviço Renderizar Cotas não foi carregado."
+
+        local request = ::AmenoRenderCotasService.createRequest outputPath:outputPath selectionMode:selectionMode overwrite:false
+        lastRenderResult = ::AmenoRenderCotasService.renderDimensions request
+        lastRenderResult
     ),
 
     fn onSceneOpened =

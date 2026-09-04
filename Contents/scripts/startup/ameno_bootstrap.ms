@@ -22,9 +22,16 @@ global AmenoAnchorService
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
+global AmenoCoronaRendererAdapter
+global AmenoAdapterRenderResult
+global AmenoOutputVerification
+global AmenoRenderCotasRequest
+global AmenoRenderCotasResult
+global AmenoRenderCotasService
 global AmenoStyleEditorRollout
 global AmenoShowStyleEditor
 global AmenoMainPanelRollout
+global AmenoRenderRollout
 global AmenoShowMainPanel
 global AmenoRefreshMainPanel
 
@@ -77,6 +84,8 @@ struct AmenoBootstrapService
             @"core\ameno_style_service.ms",
             @"core\ameno_dimension_tool.ms",
             @"renderers\ameno_renderer_probe.ms",
+            @"renderers\ameno_corona_adapter.ms",
+            @"core\ameno_render_cotas_service.ms",
             @"core\ameno_runtime.ms",
             @"ui\ameno_style_editor.ms",
             @"ui\ameno_main_panel.ms"

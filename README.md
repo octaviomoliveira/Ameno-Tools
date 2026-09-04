@@ -4,7 +4,7 @@ Suíte modular de ferramentas para 3ds Max. O primeiro módulo, **Ameno Dimensio
 
 ## Estado
 
-Fundação técnica `0.0.1` executável no 3ds Max 2026. As etapas E1 a E8.1 foram concluídas e aprovadas interativamente: infraestrutura de cena idempotente (`AMENO_COTAS`), construtor gráfico de cotas com ferramenta de três cliques, persistência atômica via Custom Attributes versionados, medições auditáveis com overrides manuais, editor visual de estilos com tipografia TextPlus e terminais vetoriais, e âncoras associativas com reatividade contínua em tempo real e resiliência a cotas órfãs. A próxima etapa é a E9 (renderização de overlay transparente isolado no Corona).
+Fundação técnica `0.0.1` executável no 3ds Max 2026. As etapas E1 a E8.1 foram concluídas e aprovadas interativamente: infraestrutura de cena idempotente (`AMENO_COTAS`), construtor gráfico de cotas com ferramenta de três cliques, persistência atômica via Custom Attributes versionados, medições auditáveis com overrides manuais, editor visual de estilos com tipografia TextPlus e terminais vetoriais, e âncoras associativas com reatividade contínua em tempo real e resiliência a cotas órfãs. A E9 está implementada, aprovada em testes automatizados e instalada para o gate manual: o rollout `Render Separado de Cotas` gera um PNG transparente independente no Corona sem modificar Beauty, LightMix ou Render Elements.
 
 
 Decisões já tomadas:
@@ -55,6 +55,7 @@ Decisões pendentes:
 - [ADR 0004 — Sobrescritas manuais auditáveis](docs/decisions/0004-auditable-manual-overrides.md)
 - [ADR 0005 — Max 2026 primeiro](docs/decisions/0005-max-2026-first.md)
 - [ADR 0006 — Corona primeiro, V-Ray compatível](docs/decisions/0006-corona-primary-vray-secondary.md)
+- [ADR 0013 — Overlay separado de cotas no Corona](docs/decisions/0013-e9-corona-separate-overlay.md)
 
 ## Princípios
 
@@ -78,6 +79,12 @@ Executar o smoke test dentro do 3ds Max 2026 Batch:
 
 ```powershell
 .\tools\test-maxscript.ps1
+```
+
+Executar a prova real da E9 com Corona instalado:
+
+```powershell
+.\tools\test-maxscript.ps1 -TestScript tests\maxscript\test_e9_corona_render.ms
 ```
 
 Instalar a cópia de desenvolvimento no perfil do usuário:

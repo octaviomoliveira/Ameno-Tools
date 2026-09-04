@@ -252,18 +252,14 @@ Esse fluxo facilita composição, correção de cor e versões com/sem informaç
 ## Painel Renderizar Cotas — MVP
 
 ```text
-┌─ RENDERIZAR COTAS ─────────────────┐
-│ Câmera: CAM_Planta_01              │
-│ Saída: 3840 × 2160 · Pixel 1,0     │
-│ Renderer: Corona · suportado       │
-│                                    │
-│ Cotas: (•) Todas  ( ) Selecionadas │
-│ Formato: [PNG + Alpha ▾]           │
-│ Path: .../CAM_Planta_AMENO_COTAS   │
-│ [✓] Fundo transparente             │
-│ [✓] Abrir pasta ao concluir        │
-│                                    │
-│ [Preview] [RENDERIZAR COTAS]       │
+┌─ RENDER SEPARADO DE COTAS ─────────┐
+│ Corona pronto · PNG transparente   │
+│ Incluir: (•) Todas ( ) Selecionadas│
+│ PNG: [ .../Cena_AMENO_COTAS_f0000 ]│
+│                         [...] [Auto]│
+│ [       RENDERIZAR COTAS          ]│
+│ Usa vista, frame, resolução, pixel │
+│ aspect e crop atuais.              │
 └────────────────────────────────────┘
 ```
 
@@ -273,9 +269,10 @@ Ao clicar:
 2. atualiza as cotas;
 3. renderiza somente `AMENO_COTAS`;
 4. restaura a cena;
-5. informa o arquivo pronto para o Photoshop.
+5. reabre e verifica o PNG/alpha;
+6. informa o arquivo pronto para o Photoshop.
 
-Nenhuma configuração de LightMix ou Render Elements aparece nesse fluxo.
+`Auto` recompõe o nome a partir da cena e do frame atual. Se o arquivo já existir, o app acrescenta `_001`, `_002` etc. Nenhuma configuração de LightMix ou Render Elements aparece nesse fluxo.
 
 ```text
 ┌─ SAÍDA DAS COTAS ──────────────────┐

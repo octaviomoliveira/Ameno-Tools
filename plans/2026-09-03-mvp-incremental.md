@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 a E8.1 aprovadas interativamente no 3ds Max 2026; E9 pronta para planejamento e implementação.
+**Estado atual:** E1 a E8.1 aprovadas interativamente no 3ds Max 2026; E9 implementada, testada e instalada, aguardando gate manual.
 
 ## Estratégia de execução
 
@@ -33,7 +33,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E7 | Estilo edita fonte, texto, linhas e terminais | Aprovada no Max |
 | E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Aprovada no Max |
 | E8.1 | Estabilização das âncoras, estilos e interface | Aprovada no Max |
-| E9 | Corona renderiza somente as cotas em arquivo transparente | Próxima etapa (não iniciada) |
+| E9 | Corona renderiza somente as cotas em arquivo transparente | Pronta para teste no Max |
 | E10 | Fluxo de produção, V-Ray CPU e estabilização do MVP | Não iniciada |
 
 
@@ -464,7 +464,18 @@ Fazer as cotas acompanharem alterações arquitetônicas (translação/rotação
 
 ## E9 — Renderizar somente cotas no Corona
 
-**Estado:** não iniciada (próxima etapa a planejar e implementar).
+**Estado:** pronta para teste no Max.
+
+**Implementação:** `Contents/scripts/ameno/core/ameno_render_cotas_service.ms`, `Contents/scripts/ameno/renderers/ameno_corona_adapter.ms` e rollout `Render Separado de Cotas` em `Contents/scripts/ameno/ui/ameno_main_panel.ms`.
+
+**Evidência automatizada em 2026-09-04:**
+
+- smoke test integral E1–E9 aprovado no 3ds Max 2026.3;
+- pacote instalado via `ApplicationPlugins` aprovado em processo Batch isolado;
+- transações simuladas de sucesso, exceção e cancelamento restauraram nós, materiais e layer;
+- teste real com Corona 13 produziu PNG 160 × 90 com cotas no alpha (`1338` pixels opacos) e fundo transparente (`13062` pixels transparentes), sem renderizar a geometria comum da cena;
+- material de anotação validado com `emitLight = false`, `visibleDirect = true`, `affectAlpha = true`, sem reflexo/refração no passe isolado;
+- E10 não foi iniciada: a etapa só avança após o gate manual abaixo.
 
 
 Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements do usuário.
@@ -510,10 +521,12 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 
 ## Próxima ação
 
-Iniciar o planejamento e desenvolvimento da **E9 — Renderizar somente cotas no Corona**:
-1. Criar o painel e serviço `Renderizar Cotas` integrado à interface do Ameno Tools;
-2. Configurar herança de câmera, frame, resolução, pixel aspect e crop do Render Setup;
-3. Isolar temporariamente a layer `AMENO_COTAS` sem alterar Beauty, LightMix ou Render Elements do usuário;
-4. Gerar o arquivo PNG transparente do overlay de cotas para composição no Photoshop;
-5. Garantir restauração transacional completa da cena e dos parâmetros de render em caso de sucesso, cancelamento ou erro.
+Executar o gate manual da **E9 — Renderizar somente cotas no Corona** no 3ds Max reiniciado:
 
+1. criar ou abrir uma cena iluminada com Corona, câmera de planta e cotas Ameno;
+2. renderizar `Todas` e depois `Selecionadas` pelo rollout `Render Separado de Cotas`;
+3. sobrepor o PNG no Beauty e confirmar alinhamento de câmera, frame, resolução, pixel aspect e Crop/Region;
+4. confirmar fundo transparente e ausência de geometria da planta no overlay;
+5. comparar antes/depois de Beauty, LightMix, Render Elements, layers, visibilidades e materiais;
+6. cancelar um render com `Esc` e confirmar restauração da cena;
+7. somente após aprovação textual do usuário, marcar E9 como aprovada e abrir E10.

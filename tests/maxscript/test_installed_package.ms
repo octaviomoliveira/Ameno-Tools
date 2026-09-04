@@ -10,6 +10,8 @@ global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoStyleService
 global AmenoAnchorService
+global AmenoCoronaRendererAdapter
+global AmenoRenderCotasService
 
 (
     if AmenoApp == undefined then throw "O pacote instalado não criou AmenoApp."
@@ -23,6 +25,8 @@ global AmenoAnchorService
     if AmenoDimensionTool == undefined then throw "O pacote instalado não carregou a ferramenta interativa da E4."
     if AmenoStyleService == undefined then throw "O pacote instalado não carregou o serviço de estilos da E7."
     if AmenoAnchorService == undefined then throw "O pacote instalado não carregou o serviço de âncoras da E8."
+    if AmenoCoronaRendererAdapter == undefined then throw "O pacote instalado não carregou o adapter Corona da E9."
+    if AmenoRenderCotasService == undefined then throw "O pacote instalado não carregou o serviço Renderizar Cotas da E9."
 
     local installedE2Format = AmenoUnitService.formatMillimeters 19555.0 outputUnit:#meters precision:2 decimalSeparator:#comma roundingIncrementMillimeters:100.0
     if installedE2Format.text != "19,60 m" then throw "O núcleo E2 instalado formatou a medida incorretamente."
@@ -75,5 +79,14 @@ global AmenoAnchorService
 
     AmenoDimensionGraphics.removeDimension instDim.dimensionId
 
-    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5, E6, E7, E8 e E8.1.\n" AmenoVersion.appVersion
+    -- E9: contrato do adapter e coleta de escopo no pacote instalado, sem iniciar render real.
+    local installedCoronaMaterial = AmenoCoronaRendererAdapter.createAnnotationMaterial()
+    if installedCoronaMaterial.emitLight or not installedCoronaMaterial.visibleDirect or not installedCoronaMaterial.affectAlpha then throw "E9 instalado: Material Corona de overlay inválido."
+
+    local installedE9Dim = AmenoDimensionGraphics.createDimension [0, 0, 0] [120, 0, 0] [0, 30, 0]
+    local installedE9Targets = AmenoRenderCotasService.collectTargetNodes #all
+    if installedE9Targets.count < 2 then throw "E9 instalado: Serviço não encontrou linhas e texto da cota."
+    AmenoDimensionGraphics.removeDimension installedE9Dim.dimensionId
+
+    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5, E6, E7, E8, E8.1 e núcleo E9.\n" AmenoVersion.appVersion
 )

@@ -13,6 +13,37 @@ global AmenoDimensionMouseTool
 global AmenoStyleService
 global AmenoStyleRecord
 global AmenoAnchorService
+global AmenoCoronaRendererAdapter
+global AmenoRenderCotasService
+global AmenoRenderCotasRequest
+global AmenoRenderCotasResult
+global AmenoAdapterRenderResult
+global AmenoOutputVerification
+
+struct AmenoE9MockAdapter
+(
+    mode = #success,
+
+    fn validate request = true,
+    fn captureState = #mockState,
+    fn configureOutput request = true,
+    fn restore state = true,
+    fn createAnnotationMaterial colorValue:(color 245 245 245) =
+    (
+        local mtl = standardMaterial name:(uniqueName "AMENO_E9_MOCK_MTL_")
+        mtl.diffuse = colorValue
+        mtl
+    ),
+    fn renderOverlay request =
+    (
+        if mode == #failure do throw "Falha simulada E9 após isolamento."
+        AmenoAdapterRenderResult cancelled:(mode == #cancel)
+    ),
+    fn verifyOutput request =
+    (
+        AmenoOutputVerification valid:true width:request.width height:request.height hasAlpha:true
+    )
+)
 
 (
     local testFile = getSourceFileName()
@@ -35,6 +66,8 @@ global AmenoAnchorService
     if AmenoDimensionTool == undefined then throw "Ferramenta interativa E4 não foi carregada pelo bootstrap."
     if (classOf AmenoDimensionMouseTool) != MouseTool then throw "MouseTool E4 não foi registrado."
     if AmenoAnchorService == undefined then throw "Serviço de âncoras E8 não foi carregado pelo bootstrap."
+    if AmenoCoronaRendererAdapter == undefined then throw "Adapter Corona E9 não foi carregado pelo bootstrap."
+    if AmenoRenderCotasService == undefined then throw "Serviço Renderizar Cotas E9 não foi carregado pelo bootstrap."
 
     local coronaInfo = AmenoRendererProbe.classify "CoronaRenderer"
     local vrayCpuInfo = AmenoRendererProbe.classify "V_Ray_7_Hotfix_1"
@@ -664,7 +697,92 @@ global AmenoAnchorService
     local expectedGapScene = AmenoDimensionGraphics.toSceneUnits 10.0
     if not (AmenoDimensionMath.nearlyEqual firstSplineKnot1.y (700.0 + expectedGapScene) tolerance:0.1) then throw "E8.1: extensionGap não foi aplicado corretamente à geometria da spline."
 
+    -- E9 — Render Separado de Cotas / Corona
+    resetMaxFile #noPrompt
+    local e9Scene = AmenoApp.prepareScene()
+    local e9OtherNode = box name:"E9_USER_GEOMETRY" pos:[0, 0, 0]
+    local e9Dimension = AmenoDimensionGraphics.createDimension [0, 0, 0] [200, 0, 0] [0, 40, 0]
+    local e9LineMaterial = e9Dimension.lineNode.material
+    local e9TextMaterial = e9Dimension.textNode.material
+    local e9OtherRenderable = e9OtherNode.renderable
+    local e9OtherRenderByLayer = e9OtherNode.renderByLayer
+    local e9LayerOn = e9Scene.dimensionsLayer.on
+    local e9LayerHidden = e9Scene.dimensionsLayer.ishidden
+    local e9LayerRenderable = e9Scene.dimensionsLayer.renderable
+
+    -- 1. Contrato do material Corona: visível na câmera e no alpha, sem emitir luz.
+    local coronaOverlayMaterial = AmenoCoronaRendererAdapter.createAnnotationMaterial()
+    if coronaOverlayMaterial.emitLight then throw "E9: Material Corona não pode emitir luz para a cena/LightMix."
+    if not coronaOverlayMaterial.visibleDirect then throw "E9: Material Corona precisa ser visível diretamente."
+    if not coronaOverlayMaterial.affectAlpha then throw "E9: Material Corona precisa contribuir para o alpha."
+    if coronaOverlayMaterial.visibleRefl or coronaOverlayMaterial.visibleRefract then throw "E9: Material Corona não deve aparecer em reflexos/refrações no passe isolado."
+
+    -- 2. Escopo: todas as cotas e somente selecionadas incluem linhas + TextPlus, nunca marcador/controlador.
+    local allTargets = AmenoRenderCotasService.collectTargetNodes #all
+    if allTargets.count != 2 then throw ("E9: Escopo todas deveria retornar 2 nós gráficos; retornou " + (allTargets.count as string))
+    select e9Dimension.lineNode
+    local selectedTargets = AmenoRenderCotasService.collectTargetNodes #selected
+    if selectedTargets.count != 2 then throw "E9: Selecionar uma parte da cota deveria incluir linhas e texto da mesma cota."
+
+    -- 3. Herança do Render Setup e proteção contra sobrescrita.
+    local oldRenderWidth = renderWidth
+    local oldRenderHeight = renderHeight
+    local oldPixelAspect = renderPixelAspect
+    renderWidth = 321
+    renderHeight = 123
+    renderPixelAspect = 1.25
+
+    local e9Request = AmenoRenderCotasService.createRequest outputPath:(pathConfig.appendPath (getDir #temp) "ameno_e9_overlay.png") selectionMode:#all overwrite:true
+    if e9Request.width != 321 or e9Request.height != 123 then throw "E9: Resolução não foi herdada do Render Setup."
+    if not (AmenoDimensionMath.nearlyEqual e9Request.pixelAspect 1.25) then throw "E9: Pixel aspect não foi herdado do Render Setup."
+
+    local conflictPath = pathConfig.appendPath (getDir #temp) "ameno_e9_conflict.png"
+    deleteFile conflictPath
+    local conflictFile = createFile conflictPath
+    format "Ameno E9" to:conflictFile
+    close conflictFile
+    local safePath = AmenoRenderCotasService.resolveOutputPath conflictPath overwrite:false
+    if safePath == conflictPath then throw "E9: Proteção contra sobrescrita não criou nome alternativo."
+    deleteFile conflictPath
+
+    renderWidth = oldRenderWidth
+    renderHeight = oldRenderHeight
+    renderPixelAspect = oldPixelAspect
+
+    -- 4. Sucesso transacional com adapter injetado: isolamento ocorre e todo estado volta ao original.
+    e9Scene.dimensionsLayer.on = false
+    e9Scene.dimensionsLayer.ishidden = true
+    e9Scene.dimensionsLayer.renderable = false
+    local successAdapter = AmenoE9MockAdapter mode:#success
+    local successResult = AmenoRenderCotasService.renderDimensions e9Request adapter:successAdapter
+    if not successResult.success or successResult.cancelled then throw "E9: Transação simulada de sucesso falhou."
+    if not successResult.hasAlpha then throw "E9: Resultado de sucesso não confirmou alpha."
+    if e9OtherNode.renderable != e9OtherRenderable or e9OtherNode.renderByLayer != e9OtherRenderByLayer then throw "E9: Geometria do usuário não foi restaurada após sucesso."
+    if e9Dimension.lineNode.material != e9LineMaterial or e9Dimension.textNode.material != e9TextMaterial then throw "E9: Materiais das cotas não foram restaurados após sucesso."
+    if e9Scene.dimensionsLayer.on != false or e9Scene.dimensionsLayer.ishidden != true or e9Scene.dimensionsLayer.renderable != false then throw "E9: Estado da layer não foi restaurado após sucesso."
+
+    -- 5. Exceção após isolamento restaura nós, materiais e layer.
+    local failureAdapter = AmenoE9MockAdapter mode:#failure
+    local failureResult = AmenoRenderCotasService.renderDimensions e9Request adapter:failureAdapter
+    if failureResult.success or failureResult.errorMessage == "" then throw "E9: Falha simulada não foi reportada."
+    if e9OtherNode.renderable != e9OtherRenderable or e9OtherNode.renderByLayer != e9OtherRenderByLayer then throw "E9: Geometria do usuário não foi restaurada após exceção."
+    if e9Dimension.lineNode.material != e9LineMaterial or e9Dimension.textNode.material != e9TextMaterial then throw "E9: Materiais não foram restaurados após exceção."
+    if e9Scene.dimensionsLayer.on != false or e9Scene.dimensionsLayer.ishidden != true or e9Scene.dimensionsLayer.renderable != false then throw "E9: Layer não foi restaurada após exceção."
+    if AmenoRenderCotasService.isRendering then throw "E9: Trava de render permaneceu ativa após exceção."
+
+    -- 6. Cancelamento restaura o estado com resultado explícito.
+    local cancelAdapter = AmenoE9MockAdapter mode:#cancel
+    local cancelResult = AmenoRenderCotasService.renderDimensions e9Request adapter:cancelAdapter
+    if cancelResult.success or not cancelResult.cancelled then throw "E9: Cancelamento simulado não foi reconhecido."
+    if e9OtherNode.renderable != e9OtherRenderable or e9OtherNode.renderByLayer != e9OtherRenderByLayer then throw "E9: Geometria do usuário não foi restaurada após cancelamento."
+    if e9Dimension.lineNode.material != e9LineMaterial or e9Dimension.textNode.material != e9TextMaterial then throw "E9: Materiais não foram restaurados após cancelamento."
+    if e9Scene.dimensionsLayer.on != false or e9Scene.dimensionsLayer.ishidden != true or e9Scene.dimensionsLayer.renderable != false then throw "E9: Layer não foi restaurada após cancelamento."
+
+    e9Scene.dimensionsLayer.on = e9LayerOn
+    e9Scene.dimensionsLayer.ishidden = e9LayerHidden
+    e9Scene.dimensionsLayer.renderable = e9LayerRenderable
+
     fileIn macroPath quiet:true
 
-    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6, E7, E8 e E8.1 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
+    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4, E5, E6, E7, E8, E8.1 e núcleo transacional E9 aprovados.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
 )

@@ -520,6 +520,19 @@ Fallback renderer-agnostic:
 
 O segundo passe é exibido claramente no painel e não pode modificar permanentemente a cena.
 
+### Implementação E9 — Corona
+
+A primeira implementação vertical desse contrato está dividida em dois módulos:
+
+- `AmenoRenderCotasService`: request/result neutros, coleta Todas/Selecionadas, nome de arquivo, snapshot dos nós/layers/materiais, isolamento e restauração;
+- `AmenoCoronaRendererAdapter`: validação do renderer, material `CoronaLightMtl`, configuração PNG, chamada `render()` e verificação do arquivo.
+
+O serviço sincroniza as âncoras incrementalmente antes de capturar os alvos. A sincronização não força rebuild: isso preserva as referências selecionadas e evita substituir nós entre a coleta e o isolamento. Somente `lines` e `label` são renderizados; controller e marker continuam técnicos/viewport-only.
+
+A chamada de render não recebe `camera:`, portanto o Max usa a viewport/câmera ativa. Frame, largura, altura e pixel aspect são passados explicitamente; Crop/Region reutiliza o retângulo corrente da viewport. O passe desliga Render Elements e VFB apenas nos argumentos da chamada, sem editar a configuração persistente do usuário.
+
+O adapter captura e restaura as opções globais do encoder PNG. O serviço captura e restaura `renderable`, `renderByLayer`, `primaryVisibility`, estado oculto, material, propriedades da layer de cotas e layer corrente. A mesma fase final roda após sucesso, exceção ou `Esc`; arquivos parciais novos são removidos quando o passe não termina com sucesso.
+
 ## LightMix
 
 LightMix é tratado como canal de entrega e não como sinônimo de Beauty. O adapter deve detectar:

@@ -3,6 +3,7 @@ global AmenoEnvRollout
 global AmenoDimRollout
 global AmenoAuditRollout
 global AmenoAnchorRollout
+global AmenoRenderRollout
 global AmenoRefreshMainPanel
 global AmenoShowMainPanel
 
@@ -43,6 +44,18 @@ fn AmenoRefreshMainPanel =
         try
         (
             AmenoDimRollout.lblDimensions.text = AmenoApp.refreshDimensions()
+        )
+        catch ()
+    )
+
+    if AmenoRenderRollout != undefined and AmenoRenderRollout.open do
+    (
+        try
+        (
+            local canRender = (info.family == #corona)
+            AmenoRenderRollout.btnRenderCotas.enabled = canRender
+            AmenoRenderRollout.lblRenderSupport.text = if canRender then "Corona pronto · PNG transparente" else "Ative o Corona para usar a E9"
+            if AmenoRenderRollout.edtOutput.text == "" do AmenoRenderRollout.edtOutput.text = AmenoApp.defaultRenderCotasPath()
         )
         catch ()
     )
@@ -465,6 +478,70 @@ rollout AmenoAnchorRollout "Âncoras e Diagnóstico" width:344
     )
 )
 
+rollout AmenoRenderRollout "Render Separado de Cotas" width:344
+(
+    label lblRenderSupport "Verificando Corona..." pos:[14, 10] width:316 height:18 align:#left
+    radiobuttons rdoRenderScope "Incluir:" pos:[14, 32] labels:#("Todas", "Selecionadas") default:1 columns:2
+    edittext edtOutput "PNG:" pos:[14, 64] width:234 height:18 text:""
+    button btnBrowseOutput "..." pos:[256, 62] width:32 height:22 tooltip:"Escolher arquivo PNG"
+    button btnResetOutput "Auto" pos:[294, 62] width:36 height:22 tooltip:"Voltar ao nome automático"
+    button btnRenderCotas "Renderizar Cotas" pos:[14, 92] width:316 height:28
+    label lblRenderHint "Usa a vista, frame, resolução, pixel aspect e crop atuais." pos:[14, 124] width:316 height:18 align:#left
+
+    on btnBrowseOutput pressed do
+    (
+        global AmenoApp
+        local suggestedPath = edtOutput.text
+        if suggestedPath == "" and AmenoApp != undefined do suggestedPath = AmenoApp.defaultRenderCotasPath()
+
+        local chosenPath = getSaveFileName caption:"Salvar overlay de cotas" filename:suggestedPath types:"PNG com alpha (*.png)|*.png|"
+        if chosenPath != undefined do edtOutput.text = chosenPath
+    )
+
+    on btnResetOutput pressed do
+    (
+        global AmenoApp
+        if AmenoApp != undefined do edtOutput.text = AmenoApp.defaultRenderCotasPath()
+    )
+
+    on btnRenderCotas pressed do
+    (
+        global AmenoApp
+        if AmenoApp == undefined then return ()
+
+        local scope = if rdoRenderScope.state == 2 then #selected else #all
+        btnRenderCotas.enabled = false
+        lblRenderSupport.text = "Renderizando cotas... Esc cancela."
+
+        try
+        (
+            local result = AmenoApp.renderCotas outputPath:edtOutput.text selectionMode:scope
+            if result.success then
+            (
+                edtOutput.text = result.outputPath
+                lblRenderSupport.text = "Concluído · alpha confirmado"
+                messageBox ("Overlay criado com sucesso:\n\n" + result.outputPath + "\n\nA cena foi restaurada.") title:"Ameno Dimensions"
+            )
+            else if result.cancelled then
+            (
+                lblRenderSupport.text = "Cancelado · cena restaurada"
+            )
+            else
+            (
+                lblRenderSupport.text = "Falha · cena restaurada"
+                messageBox ("Não foi possível renderizar as cotas:\n\n" + result.errorMessage) title:"Ameno Dimensions"
+            )
+        )
+        catch
+        (
+            lblRenderSupport.text = "Falha · confira o diagnóstico"
+            messageBox ("Falha inesperada no passe de cotas:\n\n" + (getCurrentException() as string)) title:"Ameno Dimensions"
+        )
+
+        if ::AmenoRefreshMainPanel != undefined do ::AmenoRefreshMainPanel()
+    )
+)
+
 rollout AmenoEnvRollout "Ambiente e Cena" width:344
 (
     label lblRenderer "Detectando renderer..." pos:[14, 10] width:316 height:18 align:#left
@@ -502,6 +579,7 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:640
     on AmenoMainPanelRollout open do
     (
         addSubRollout subPanel AmenoDimRollout rolledUp:false
+        addSubRollout subPanel AmenoRenderRollout rolledUp:false
         addSubRollout subPanel AmenoAuditRollout rolledUp:false
         addSubRollout subPanel AmenoAnchorRollout rolledUp:false
         addSubRollout subPanel AmenoEnvRollout rolledUp:true

@@ -42,22 +42,26 @@ O arquivo final precisa declarar claramente:
 - espaço de cor/transform aplicado;
 - se alguma correção do VFB foi incorporada.
 
-### Evidência inicial da E3
+### Evidência inicial da E3 e E9
 
-O construtor gráfico atual foi validado visualmente no Arnold e no V-Ray com iluminação disponível na cena; a limpeza também foi confirmada. O caso Corona sem luz, no qual o usuário observou máscara/alpha sem conteúdo no Beauty, não será usado para justificar luz automática. Ele pertence ao contrato do overlay isolado da E9 e continuará como uma capacidade a validar do adapter Corona.
+O construtor gráfico foi validado visualmente no Arnold e no V-Ray com iluminação disponível na cena; a limpeza também foi confirmada. O caso Corona sem luz, no qual o usuário observou máscara/alpha sem conteúdo no Beauty, não foi usado para justificar luz automática. A E9 resolveu o problema pelo overlay isolado: o material temporário fica visível diretamente e no alpha sem depender de iluminação.
 
 O app não deve aparentar uma cor no VFB e salvar outra sem avisar. PNG serve ao fluxo rápido; EXR preserva maior liberdade de composição.
 
 ## Corona adapter
 
-O Corona é o gate de qualidade do MVP. A primeira prova compara duas estratégias de material:
+O Corona é o gate de qualidade do MVP. A prova da E9 comparou as capacidades necessárias e adotou:
 
-1. Corona Light Material visível diretamente e no alpha, com `Emit light` desligado;
-2. Corona Physical Material com self-illumination e alpha forçado como opaco.
+1. `CoronaLightMtl` visível diretamente e no alpha;
+2. `emitLight = false`, para não iluminar a cena nem participar como luz do LightMix;
+3. reflexos e refrações desligados durante o passe isolado;
+4. `renderElements:false` e `vfb:false`, preservando o setup de produção.
 
-A escolha será baseada em cor, alpha, TextPlus, splines, memória e tempo com 1, 100, 500 e 1000 cotas. A documentação oficial confirma que o Corona Light Material pode ser visível diretamente e no alpha com emissão desligada; isso o torna um candidato forte para o overlay separado.
+A escolha foi confirmada em Corona 13 no 3ds Max 2026.3: splines e TextPlus apareceram no PNG 160 × 90, com `1338` pixels opacos de anotação e `13062` pixels transparentes de fundo. A geometria comum da cena foi excluída e restaurada ao final. A matriz de desempenho com 100, 500 e 1000 cotas permanece para a estabilização da E10.
 
 O adapter não cria LightSelect, não executa setup de LightMix e não reaproveita o canal LightMix. O arquivo de cotas nasce independente e é composto depois.
+
+O serviço comum preserva a viewport/câmera ativa e herda frame, resolução, pixel aspect e Crop/Region. O nome automático inclui cena e frame, e conflitos recebem sufixo incremental. Somente o adapter Corona conhece `CoronaLightMtl`; a futura implementação V-Ray reutilizará o mesmo contrato de request, isolamento, verificação e restauração.
 
 ## V-Ray CPU adapter
 
@@ -89,7 +93,7 @@ As cotas persistem com estilos lógicos, como `annotation-dark`, e não com depe
 
 ## Versões suportadas
 
-A primeira release registra as versões exatas usadas nos testes. Até executarmos o protótipo no computador de desenvolvimento, não será inventado um número mínimo de Corona ou V-Ray.
+A prova atual foi executada com Corona 13 e 3ds Max 2026.3. Isso registra uma combinação aprovada para desenvolvimento, mas ainda não define a versão mínima comercial; V-Ray também permanece sem versão mínima até a E10.
 
 ## Referências oficiais
 
