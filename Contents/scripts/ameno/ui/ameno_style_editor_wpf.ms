@@ -445,6 +445,28 @@ struct AmenoStyleEditorWPFDefinition
         true
     ),
 
+    fn onSceneReset =
+    (
+        if window == undefined do return false
+        isSyncingUI = true
+        try
+        (
+            populateStyleList()
+            if ::AmenoStyleService != undefined do
+            (
+                currentDraft = ::AmenoStyleService.createDraftFromStyle "default"
+                loadDraftToUI()
+                updateInUseCount()
+                updatePreview()
+            )
+        )
+        catch ()
+        isSyncingUI = false
+        if txtPreviewStatus != undefined do
+            txtPreviewStatus.Text = "Pronto"
+        true
+    ),
+
     fn populateStyleList =
     (
         if cbStyleSelect == undefined or ::AmenoStyleService == undefined do return false

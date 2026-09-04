@@ -10,6 +10,9 @@ $contentsPath = Join-Path $repositoryRoot 'Contents'
 
 & (Join-Path $PSScriptRoot 'validate-package.ps1')
 
+if (Test-Path -LiteralPath $Destination) {
+    Remove-Item -LiteralPath $Destination -Recurse -Force
+}
 New-Item -ItemType Directory -Force -Path $Destination | Out-Null
 Copy-Item -LiteralPath $manifestPath -Destination $Destination -Force
 Copy-Item -LiteralPath $contentsPath -Destination $Destination -Recurse -Force

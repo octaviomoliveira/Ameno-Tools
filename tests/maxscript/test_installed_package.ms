@@ -12,6 +12,10 @@ global AmenoStyleService
 global AmenoAnchorService
 global AmenoCoronaRendererAdapter
 global AmenoRenderCotasService
+global AmenoPreviewRenderer
+global AmenoStyleEditorWPF
+global AmenoStyleDraft
+global AmenoPreviewModel
 
 (
     if AmenoApp == undefined then throw "O pacote instalado não criou AmenoApp."
@@ -88,5 +92,29 @@ global AmenoRenderCotasService
     if installedE9Targets.count < 2 then throw "E9 instalado: Serviço não encontrou linhas e texto da cota."
     AmenoDimensionGraphics.removeDimension installedE9Dim.dimensionId
 
-    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1, E2, E3, E4, E5, E6, E7, E8, E8.1 e núcleo E9.\n" AmenoVersion.appVersion
+    -- E11: Editor visual de estilos e preview ao vivo no pacote instalado
+    if AmenoPreviewRenderer == undefined then throw "E11 instalado: AmenoPreviewRenderer não foi carregado."
+    if AmenoStyleEditorWPF == undefined then throw "E11 instalado: AmenoStyleEditorWPF não foi carregado."
+    if AmenoPreviewModel == undefined or AmenoStyleDraft == undefined then throw "E11 instalado: Structs de rascunho ausentes."
+
+    -- Verificar independência de caminhos (deve carregar do ApplicationPlugins)
+    local instRoot = AmenoBootstrap.rootPath
+    if (matchPattern instRoot pattern:"*\\_worktrees\\*") or (matchPattern instRoot pattern:"*\\_tools\\*") then
+        throw ("E11 instalado: O pacote está apontando para o repositório em vez do ApplicationPlugins: " + instRoot)
+
+    -- Testar ciclo de abertura e fechamento do editor WPF via AmenoApp
+    local instWin = AmenoApp.openStyleEditor()
+    if instWin == undefined or not AmenoStyleEditorWPF.isOpen() then
+        throw "E11 instalado: Falha ao abrir AmenoStyleEditorWPF através de AmenoApp.openStyleEditor()."
+
+    -- Verificar rascunho inicial
+    if AmenoStyleEditorWPF.currentDraft == undefined or AmenoStyleEditorWPF.currentDraft.sourceStyleId != "default" then
+        throw "E11 instalado: Draft inicial incorreto no editor WPF."
+
+    -- Fechar editor instalado
+    AmenoStyleEditorWPF.close()
+    if AmenoStyleEditorWPF.isOpen() then
+        throw "E11 instalado: AmenoStyleEditorWPF não fechou corretamente."
+
+    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1-E10 e E11 Visual Editor.\n" AmenoVersion.appVersion
 )

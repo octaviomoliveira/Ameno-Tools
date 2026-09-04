@@ -319,8 +319,23 @@ struct AmenoRuntime
         count
     ),
 
-    fn openStyleEditor =
+    fn openStyleEditor styleId:undefined useLegacy:false =
     (
+        if not useLegacy and ::AmenoStyleEditorWPF != undefined then
+        (
+            try
+            (
+                return ::AmenoStyleEditorWPF.open styleId:styleId
+            )
+            catch
+            (
+                local exc = getCurrentException() as string
+                if ::AmenoLog != undefined do
+                    ::AmenoLog.error ("Falha ao abrir editor visual WPF: " + exc + ". Acionando fallback para editor legado.")
+                format "[Ameno][ERROR] Falha ao abrir editor visual WPF: %. Acionando fallback para editor legado.\n" exc
+            )
+        )
+
         if ::AmenoShowStyleEditor != undefined do ::AmenoShowStyleEditor()
     ),
 
@@ -357,6 +372,10 @@ struct AmenoRuntime
     (
         if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
         if ::AmenoAnchorService != undefined do ::AmenoAnchorService.init()
+        if ::AmenoStyleEditorWPF != undefined and ::AmenoStyleEditorWPF.isOpen() do
+        (
+            try (::AmenoStyleEditorWPF.onSceneReset()) catch ()
+        )
         refreshScene()
         refreshDimensions()
         if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
@@ -367,6 +386,10 @@ struct AmenoRuntime
     (
         if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
         if ::AmenoAnchorService != undefined do ::AmenoAnchorService.init()
+        if ::AmenoStyleEditorWPF != undefined and ::AmenoStyleEditorWPF.isOpen() do
+        (
+            try (::AmenoStyleEditorWPF.onSceneReset()) catch ()
+        )
         refreshScene()
         refreshDimensions()
         if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
@@ -405,6 +428,7 @@ struct AmenoRuntime
         try (if AmenoDimensionTool != undefined do AmenoDimensionTool.cancel()) catch ()
         try (destroyDialog AmenoMainPanelRollout) catch ()
         try (destroyDialog AmenoStyleEditorRollout) catch ()
+        try (if ::AmenoStyleEditorWPF != undefined do ::AmenoStyleEditorWPF.close()) catch ()
         started = false
         true
     )

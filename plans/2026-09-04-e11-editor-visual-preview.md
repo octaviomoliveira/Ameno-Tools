@@ -244,6 +244,16 @@ Durante o arraste, atualizar apenas o canvas, com debounce máximo de 16–33 ms
 - instalar a cópia de desenvolvimento;
 - executar gate manual antes de remover definitivamente o editor antigo.
 
+**Status E11.5 (Concluído em 2026-09-04):**
+- Integração e host padrão: `AmenoRuntime.openStyleEditor` e o botão `Editor de Estilos...` do painel principal atualizados para abrir o editor moderno WPF (`AmenoStyleEditorWPF.open()`) como ponto de entrada principal por padrão.
+- Fallback diagnosticável: se o host WPF falhar no carregamento ou emitir exceção, `AmenoRuntime.openStyleEditor` e `AmenoShowStyleEditor` capturam o erro, registram diagnóstico informativo no log (`AmenoLog.error`) e abrem de forma transparente o rollout legado (`AmenoStyleEditorRollout`).
+- Ciclo de vida robusto: método `onSceneReset` implementado no `AmenoStyleEditorWPF` para atualização atômica e segura do rascunho ativo quando a cena é resetada ou reaberta com o editor em execução, com encerramento seguro no `AmenoRuntime.shutdown()`.
+- Instalação e empacotamento: script `tools/install-dev.ps1` reforçado com limpeza prévia determinística de diretório destino, instalando o pacote completo para `%APPDATA%\Autodesk\ApplicationPlugins\AmenoTools`.
+- Independência de caminhos: validação automatizada de que o pacote instalado carrega seus módulos (`ameno_preview_renderer.ms`, `ameno_style_editor_wpf.ms`, etc.) autonomamente a partir do `ApplicationPlugins`, sem referências a diretórios do repositório local.
+- Suíte `tests/maxscript/test_e11_5_integration.ms` executada sob 3ds Max 2026.3 headless com **20/20 testes aprovados (100% de cobertura)** cobrindo 20 ciclos de Show/Close sem acúmulo de callbacks, reset de cena com editor aberto, fallback simulado com log, integração com painel principal e isolamento estrito de cena (0 nós criados).
+- Suíte de pacote instalado `tests/maxscript/test_installed_package.ms` executada sob 3ds Max 2026.3 headless com **100% de aprovação**, validando a presença e operação do editor visual no ambiente real do `ApplicationPlugins`.
+- Baterias de regressão completas (`test_e11_1_draft.ms`, `test_e11_2_shell.ms`, `test_e11_3_preview.ms`, `test_e11_4_persistence.ms`, `test_bootstrap.ms`) todas executadas com **100% de aprovação**.
+
 ## Testes automatizados
 
 ### Modelo e transação
