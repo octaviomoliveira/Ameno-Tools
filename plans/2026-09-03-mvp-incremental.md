@@ -109,6 +109,7 @@ Nenhuma linha, texto, mouse tool, callback associativo ou render de cotas.
 **Estado:** aprovada em testes automatizados no 3ds Max 2026.3.
 **Implementação:** `Contents/scripts/ameno/core/ameno_dimensions_math.ms`.
 **Evidência automatizada:** layout positivo/negativo/diagonal, pontos coincidentes, conversões de unidade, arredondamento por incremento e formatação de `19,555 m` para `19,60 m` passaram no Batch e no pacote instalado via `ApplicationPlugins`.
+**Commit local:** `70c0fb2` (`feat: add pure dimension measurement core`).
 
 ### Objetivo
 
