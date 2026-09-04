@@ -208,7 +208,7 @@ struct AmenoDimensionGraphicsService
         catch
         (
             if controller != undefined and isValidNode controller do delete controller
-            throw getCurrentException()
+            throw
         )
 
         result

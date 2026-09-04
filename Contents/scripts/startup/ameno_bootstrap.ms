@@ -6,6 +6,7 @@
 global AmenoBootstrap
 global AmenoApp
 global AmenoRuntime
+global AmenoStartupError
 
 struct AmenoBootstrapService
 (
@@ -34,7 +35,8 @@ struct AmenoBootstrapService
             )
             catch
             (
-                format "[Ameno][ERROR] Falha ao carregar %: %\n" fullPath (getCurrentException())
+                AmenoStartupError = "Falha ao carregar " + fullPath + ": " + (getCurrentException() as string)
+                format "[Ameno][ERROR] %\n" AmenoStartupError
                 false
             )
         )
@@ -42,6 +44,8 @@ struct AmenoBootstrapService
 
     fn start =
     (
+        AmenoStartupError = ""
+
         local moduleFiles = #(
             @"core\ameno_version.ms",
             @"core\ameno_logger.ms",

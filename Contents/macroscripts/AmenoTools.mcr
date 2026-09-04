@@ -7,10 +7,16 @@ buttonText:"Ameno Tools"
     on execute do
     (
         global AmenoApp
+        global AmenoStartupError
 
         if AmenoApp == undefined then
         (
-            messageBox "O núcleo do Ameno Tools não foi carregado. Reinicie o 3ds Max e confira o PackageContents.xml." title:"Ameno Tools"
+            local startupDetail = ""
+            try (startupDetail = AmenoStartupError) catch ()
+
+            if startupDetail == undefined or startupDetail == "" do startupDetail = "Reinicie o 3ds Max e confira o PackageContents.xml."
+
+            messageBox ("O núcleo do Ameno Tools não foi carregado.\n\n" + startupDetail) title:"Ameno Tools"
         )
         else
         (

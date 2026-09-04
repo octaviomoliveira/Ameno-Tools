@@ -146,7 +146,8 @@ A E2 foi executada antes da validação visual da E1 por autorização explícit
 **Estado:** pronta para teste no Max desde 2026-09-03, após aprovação visual da E1.
 **Implementação:** `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, integrada em `ameno_bootstrap.ms`, `ameno_runtime.ms` e `ameno_main_panel.ms`.
 **Instalação:** cópia de desenvolvimento atualizada em `ApplicationPlugins`; o hash SHA-256 do módulo instalado corresponde ao fonte.
-**Automação preparada:** `tests/maxscript/test_bootstrap.ms` testa criar, reconstruir e remover a cota sem resíduos. A execução foi adiada porque o `3dsmaxbatch.exe` fica aguardando enquanto a sessão interativa do usuário permanece aberta.
+**Evidência automatizada:** `tests/maxscript/test_bootstrap.ms` passou no 3ds Max 2026.3 e testou criar, reconstruir e remover a cota sem resíduos; `test_installed_package.ms` também aprovou E1, E2 e E3 dentro de `ApplicationPlugins`. Ambos usam `tests/maxscript/batch-isolated.ini`, perfil que evita bloquear a sessão interativa.
+**Correção de bootstrap:** a primeira cópia da E3 falhou porque MAXScript só permite `throw` sem argumento dentro de `catch`. A ocorrência foi reproduzida em Batch isolado, corrigida e validada. O bootstrap e o macro agora preservam e mostram o diagnóstico detalhado se outro módulo falhar.
 
 ### Objetivo
 

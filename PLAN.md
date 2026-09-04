@@ -28,7 +28,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E1 aprovada visualmente no 3ds Max: painel exibiu `Cena preparada`, `AMENO_COTAS` e `AMENO_SYSTEM`; registro e estilo padrão apareceram na layer de sistema.
 - E2 implementada e aprovada em testes automatizados no 3ds Max 2026.3: layout de cota alinhada no plano XY, conversão canônica para milímetros, arredondamento por incremento e formatação determinística.
 - E2 não cria objetos, layers, callbacks ou histórico de Undo; ela recebe pontos e devolve dados prontos para a representação gráfica da E3.
-- E3 implementada e instalada para validação no Max: construtor gráfico cria controlador oculto, cinco segmentos de spline e rótulo TextPlus a partir de três pontos conhecidos; a reconstrução remove e recria somente os filhos gráficos.
+- E3 implementada e validada em Batch isolado no 3ds Max 2026.3: construtor gráfico cria controlador oculto, cinco segmentos de spline e rótulo TextPlus a partir de três pontos conhecidos; a reconstrução remove e recria somente os filhos gráficos.
+- Pacote instalado com E1, E2 e E3 validado em Batch isolado; a cópia de `ameno_dimension_graphics.ms` foi conferida por SHA-256 contra o fonte.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
 - Regras decididas para `AMENO_COTAS`, geometria renderizável, render separado de cotas e preservação do Beauty, LightMix e Render Elements existentes.
@@ -41,7 +42,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 - E3 — primeiro construtor gráfico — implementada e instalada; aguardando gate visual e de render no Max.
 - A E2 foi concluída por solicitação explícita, pois é um núcleo puro e independente da cena.
-- Os testes de Batch da E3 estão prontos, mas foram adiados porque uma sessão interativa do 3ds Max está aberta e bloqueia o Batch antes da execução do script. Não encerrar a sessão do usuário para contornar isso.
+- A falha de bootstrap relatada após a primeira instalação da E3 foi corrigida: `throw getCurrentException()` é inválido dentro de `catch` no MAXScript e foi substituído por `throw`. O teste Batch passou a usar perfil isolado, portanto não exige fechar a sessão interativa do usuário.
 
 ## Próximo passo executável
 
@@ -68,7 +69,8 @@ Fechar e reabrir o **3ds Max 2026**, abrir `Ameno Tools`, clicar em **Criar cota
 | 2026-09-03 | Conectar `github.com/octaviomoliveira/Ameno-Tools` e seguir para E2. | `origin/main` publicado; E2 implementada e aprovada em Batch e no pacote instalado; commits `70c0fb2` e `78e54d7` publicados | `Contents/scripts/ameno/core/ameno_dimensions_math.ms`, `.test-output/*e2*` |
 | 2026-09-03 | Conferir a tela atual do Ameno Tools para validar E1. | Instalação confirmada por hash; a tela mostrada pertence à sessão anterior ao reload. Aguardando reinicialização completa do 3ds Max | `ApplicationPlugins\AmenoTools\Contents\scripts\ameno\ui\ameno_main_panel.ms` |
 | 2026-09-03 | Reabrir o Max e validar E1; seguir para a próxima etapa. | E1 aprovada visualmente; E3 iniciada | captura do painel e Layer Explorer fornecida pelo usuário |
-| 2026-09-03 | Seguir após reiniciar o Max. | E3 implementada e instalada; aguardando gate manual. Batch foi preservado para depois que a sessão interativa for fechada. | `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, cópia `ApplicationPlugins` conferida por SHA-256 |
+| 2026-09-03 | Seguir após reiniciar o Max. | E3 implementada e instalada; aguardando gate manual. A validação Batch foi concluída depois em perfil isolado. | `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, cópia `ApplicationPlugins` conferida por SHA-256 |
+| 2026-09-03 | Corrigir tela “O núcleo do Ameno Tools não foi carregado”. | Corrigido, testado no 3ds Max 2026.3 em Batch isolado e no pacote `ApplicationPlugins`; a mensagem futura agora inclui o módulo/erro reais. | `ameno_dimension_graphics.ms`, `ameno_bootstrap.ms`, `AmenoTools.mcr`, `.test-output/*e3*` |
 
 ## Como retomar sem contexto
 
