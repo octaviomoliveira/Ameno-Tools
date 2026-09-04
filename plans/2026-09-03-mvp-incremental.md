@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 a E7 aprovadas; E8 pronta para teste no Max.
+**Estado atual:** E1 a E8.1 aprovadas interativamente no 3ds Max 2026; E9 pronta para planejamento e implementação.
 
 ## Estratégia de execução
 
@@ -31,9 +31,11 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Aprovada no Max |
 | E6 | Valor medido, arredondado e manual podem ser revisados | Aprovada no Max |
 | E7 | Estilo edita fonte, texto, linhas e terminais | Aprovada no Max |
-| E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Pronta para teste no Max |
-| E9 | Corona renderiza somente as cotas em arquivo transparente | Não iniciada |
+| E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Aprovada no Max |
+| E8.1 | Estabilização das âncoras, estilos e interface | Aprovada no Max |
+| E9 | Corona renderiza somente as cotas em arquivo transparente | Próxima etapa (não iniciada) |
 | E10 | Fluxo de produção, V-Ray CPU e estabilização do MVP | Não iniciada |
+
 
 ---
 
@@ -390,7 +392,7 @@ Editar aparência com a clareza do TextPlus, sem expor controles irrelevantes à
 
 ## E8 — Âncoras, atualização e diagnóstico
 
-**Estado:** pronta para teste manual no 3ds Max 2026.3 em 2026-09-04.
+**Estado:** aprovada no 3ds Max 2026.3 em 2026-09-04.
 **Implementação:** `Contents/scripts/ameno/core/ameno_anchor_service.ms`, `Contents/scripts/ameno/core/ameno_dimension_ca.ms` (Schema v3 com nós e coordenadas locais), atualizações em `ameno_dimension_graphics.ms`, `ameno_dimension_tool.ms`, `ameno_runtime.ms`, `ameno_main_panel.ms` e documentada na ADR `docs/decisions/0011-e8-anchors-dirty-queue-diagnostics.md`.
 **Evidência automatizada:** `test_bootstrap.ms` e `test_installed_package.ms` aprovaram no 3ds Max Batch isolado:
 1. Criação associativa ligada a nós (`nodeA`, `nodeB`) e cálculo de coordenadas no espaço local (`localPointA`, `localPointB`).
@@ -403,6 +405,7 @@ Editar aparência com a clareza do TextPlus, sem expor controles irrelevantes à
 8. Garantia mandatória de sincronização síncrona pré-render (`#preRender`), executando `flushQueue` e `syncAll` antes de qualquer frame em Corona, V-Ray ou Arnold.
 9. Benchmark de escalabilidade com 100 cotas ativas sincronizadas em lote.
 **Instalação:** `tools/install-dev.ps1` sincronizou a versão atualizada no `ApplicationPlugins\AmenoTools`.
+**Gate manual aprovado em 2026-09-04:** o usuário validou no 3ds Max 2026 interativo a criação de cotas ancoradas em caixas/paredes, movimentação/rotação de geometria com recálculo dinâmico, seleção de âncoras, detecção de cotas órfãs ao deletar objetos e fluxo de reancoragem a novos objetos.
 
 ### Objetivo
 
@@ -441,49 +444,28 @@ Fazer as cotas acompanharem alterações arquitetônicas (translação/rotação
 
 ## E8.1 — Estabilização das Âncoras, Estilos e Interface
 
-**Estado:** implementada e aprovada em testes automatizados no 3ds Max 2026.3 e no pacote instalado via `ApplicationPlugins` em 2026-09-04; aguardando validação interativa do usuário.
+**Estado:** aprovada no 3ds Max 2026.3 em 2026-09-04 após validação interativa completa.
 **Implementação:**
-- `Contents/scripts/ameno/core/ameno_anchor_service.ms`: inclusão de `controllerOtherEvent` e `controllerStructured` no `NodeEventCallback`, inicialização centralizada no runtime com idempotência e `shutdown()` seguro, trava anti-recursão `isSyncing`, sincronização reativa com `with undo off`, otimização in-place via `updateDimensionFast` e índice reverso $O(1)$ por `Dictionary #string`.
+- `Contents/scripts/ameno/core/ameno_anchor_service.ms`: reatividade em tempo real assegurada via watchers dinâmicos `when transform (getAnimByHandle h) changes` compilados em runtime por `execute()` para cada nó âncora; índice reverso $O(1)$ por `Dictionary #string`; sincronização reativa com `with undo off` preservando o histórico de Undo do usuário; inclusão de `controllerOtherEvent` e `controllerStructured` no `NodeEventCallback`; inicialização centralizada e idempotente no `ameno_runtime.ms`; trava anti-recursão `isSyncing` e otimização in-place via `updateDimensionFast`.
 - `Contents/scripts/ameno/core/ameno_style_service.ms`: persistência atômica via Custom Attribute `AmenoStyleRegistryCA` no helper de sistema `AMENO_STYLE_REGISTRY` integrado ao histórico nativo de Undo/Redo do 3ds Max, retorno defensivo de clones em `getStyle()` e `listStyles()`, e escape seguro de caracteres (`|`, `;`).
 - `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`: conversão obrigatória para unidades de cena (`toSceneUnits`) em todas as dimensões de estilo (`lineThickness`, `fontSize`, `terminalSize`, `extensionOverhang`, `extensionGap`, `textGap`), implementação geométrica de `extensionGap` na spline, e hierarquia estrita de prioridade visual de viewport (Órfã vermelha `230 70 70` > Manual âmbar `245 166 35` > Normal `245 245 245`) mantendo o material de render neutro.
-- `Contents/scripts/ameno/core/ameno_dimension_tool.ms`: repasse correto de coordenadas de viewport para `handlePoint` e raycast iterativo filtrando nós técnicos Ameno.
+- `Contents/scripts/ameno/core/ameno_dimension_tool.ms`: chamada de `AmenoAnchorService.rebuildIndex()` imediatamente após a criação bem-sucedida de cota, garantindo reatividade instantânea no primeiro movimento sem necessidade de reancoragem prévia; repasse correto de coordenadas de viewport para `handlePoint` e raycast iterativo filtrando nós técnicos Ameno.
 - `Contents/scripts/ameno/ui/ameno_main_panel.ms`: redimensionamento compacto para 380 × 640 px (compatível com 1366 × 768 px) com `subRollout` nativo (seções Cota, Auditoria, Âncoras e Ambiente) e reancoragem interativa usando `pickPoint snap:#3D`.
 **Evidência automatizada:** `test_bootstrap.ms` e `test_installed_package.ms` aprovados com código 0 no 3ds Max 2026.3 Batch, cobrindo idempotência, Undo de estilos, escala em unidades de cena, prioridade de wirecolor, `extensionGap`, separação de schemas e sincronização de 100 cotas em 2.095 segundos.
 **Instalação:** `tools/install-dev.ps1` sincronizou a versão atualizada no `ApplicationPlugins\AmenoTools`.
-
-### Gate no Max (Roteiro de Validação pelo Usuário)
-
-1. **Reatividade de Movimento**:
-   - Criar 2 caixas (`Box001`, `Box002`) e criar uma cota entre elas com a ferramenta de cota.
-   - Mover ou rotacionar `Box002` com a ferramenta de movimentação do 3ds Max:
-   - **Verificar**: a cota estica e acompanha o movimento imediatamente no viewport, atualizando o valor da medida.
-2. **Histórico de Undo Limpo**:
-   - Mover a caixa várias vezes no viewport.
-   - Pressionar `Ctrl+Z`:
-   - **Verificar**: o Max desfaz os movimentos da caixa sem poluição com passos intermediários internos da cota.
-3. **Detecção e Sinalização de Cota Órfã**:
-   - Deletar `Box002` (tecla Delete):
-   - **Verificar**: a cota **não desaparece**. Ela congela na última posição física válida e o arame + texto assumem imediatamente a cor vermelha de alerta `(230, 70, 70)`. O painel exibe o alerta de cota órfã.
-4. **Prioridade Visual com Override Manual**:
-   - Criar uma cota, aplicar override manual (ex: digitar 2,50 m). O arame/texto ficam na cor âmbar `(245, 166, 35)`.
-   - Deletar um dos objetos de suporte:
-   - **Verificar**: a cota deve assumir a cor **vermelha** de alerta de órfã (o alerta crítico de órfã sobrepõe a indicação de manual).
-5. **Reancoragem com Snap 3D**:
-   - Criar uma nova caixa `Box003`.
-   - Com a cota órfã selecionada, clicar no botão **Reancorar Ponto B** (com Snaps 3D ligados ou desligados) e clicar em qualquer vértice/ponto do `Box003`:
-   - **Verificar**: a cota se reconecta ao ponto clicado, o status de órfã é removido, a cor volta ao normal e a medida atualiza.
-6. **Undo do Editor de Estilos**:
-   - Abrir o Editor de Estilos (`Abrir Editor`), alterar a espessura de render ou tamanho de texto e aplicar.
-   - Pressionar `Ctrl+Z` (Undo do 3ds Max):
-   - **Verificar**: as cotas revertem para a espessura anterior e o registro do estilo sincroniza perfeitamente. Pressionar `Ctrl+Y` (Redo) reaplica a alteração.
-7. **Ergonomia do Painel**:
-   - Verificar que a janela do Ameno Tools cabe com folga na tela (altura máxima 640 px) e os grupos podem ser recolhidos e expandidos suavemente.
+**Gate manual aprovado em 2026-09-04:** o usuário validou no 3ds Max 2026 interativo:
+1. **Reatividade em tempo real**: mover e rotacionar objetos faz a cota acompanhar a geometria imediatamente durante o drag;
+2. **Histórico de Undo limpo**: `Ctrl+Z` reverte apenas os movimentos do usuário sem passos espúrios de cota;
+3. **Cotas órfãs**: ao excluir um objeto de âncora, a cota não se perde e torna-se vermelha `(230, 70, 70)` com alerta no painel;
+4. **Reancoragem**: clicar em reancorar e selecionar novo nó restaura a cota para estado normal e recalculado;
+5. **Editor de estilos e Undo**: modificações de estilo com suporte nativo a Undo/Redo no 3ds Max.
 
 ---
 
 ## E9 — Renderizar somente cotas no Corona
 
-### Objetivo
+**Estado:** não iniciada (próxima etapa a planejar e implementar).
+
 
 Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements do usuário.
 
@@ -528,4 +510,10 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 
 ## Próxima ação
 
-Realizar a validação interativa do gate da **E8 — Âncoras, atualização e diagnóstico** no 3ds Max 2026.3 com o usuário (criação de cota com âncoras em caixas/paredes, movimentação/rotação reativa, exclusão com cota órfã destacada em vermelho, reancoragem manual e reparo em lote para coordenadas mundiais). Após a aprovação, prosseguir para a **E9 — Renderizar somente cotas no Corona**.
+Iniciar o planejamento e desenvolvimento da **E9 — Renderizar somente cotas no Corona**:
+1. Criar o painel e serviço `Renderizar Cotas` integrado à interface do Ameno Tools;
+2. Configurar herança de câmera, frame, resolução, pixel aspect e crop do Render Setup;
+3. Isolar temporariamente a layer `AMENO_COTAS` sem alterar Beauty, LightMix ou Render Elements do usuário;
+4. Gerar o arquivo PNG transparente do overlay de cotas para composição no Photoshop;
+5. Garantir restauração transacional completa da cena e dos parâmetros de render em caso de sucesso, cancelamento ou erro.
+

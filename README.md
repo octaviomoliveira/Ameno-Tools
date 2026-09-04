@@ -4,7 +4,8 @@ Suíte modular de ferramentas para 3ds Max. O primeiro módulo, **Ameno Dimensio
 
 ## Estado
 
-Fundação técnica `0.0.1` executável no 3ds Max 2026. O pacote carrega, registra a ação `Ameno Tools`, abre o painel e diagnostica o renderer. A E1 implementa `Preparar esta cena`; a E2 implementa o núcleo puro de geometria, unidades, arredondamento e formatação. A ferramenta gráfica de criação de cotas ainda está em desenvolvimento.
+Fundação técnica `0.0.1` executável no 3ds Max 2026. As etapas E1 a E8.1 foram concluídas e aprovadas interativamente: infraestrutura de cena idempotente (`AMENO_COTAS`), construtor gráfico de cotas com ferramenta de três cliques, persistência atômica via Custom Attributes versionados, medições auditáveis com overrides manuais, editor visual de estilos com tipografia TextPlus e terminais vetoriais, e âncoras associativas com reatividade contínua em tempo real e resiliência a cotas órfãs. A próxima etapa é a E9 (renderização de overlay transparente isolado no Corona).
+
 
 Decisões já tomadas:
 
