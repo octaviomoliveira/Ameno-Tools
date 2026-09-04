@@ -324,6 +324,21 @@ struct AmenoRuntime
         if ::AmenoShowStyleEditor != undefined do ::AmenoShowStyleEditor()
     ),
 
+    fn generateDiagnosticReport =
+    (
+        if ::AmenoDiagnosticService != undefined then ::AmenoDiagnosticService.generateReport() else undefined
+    ),
+
+    fn printDiagnosticReport =
+    (
+        if ::AmenoDiagnosticService != undefined then ::AmenoDiagnosticService.printReport() else ""
+    ),
+
+    fn exportDiagnosticReport targetPath =
+    (
+        if ::AmenoDiagnosticService != undefined then ::AmenoDiagnosticService.exportReportToFile targetPath else false
+    ),
+
     fn defaultRenderCotasPath =
     (
         if ::AmenoRenderCotasService == undefined then "" else ::AmenoRenderCotasService.defaultOutputPath()

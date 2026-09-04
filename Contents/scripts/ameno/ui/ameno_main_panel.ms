@@ -568,6 +568,19 @@ rollout AmenoAnchorRollout "Âncoras e Diagnóstico" width:344
             if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
         )
     )
+
+    -- E10.4: Relatório de Diagnóstico da Cena
+    button btnDiagnosticReport "Relatório de Diagnóstico" pos:[14, 228] width:316 height:24 tooltip:"Gera relatório completo de saúde, âncoras e modos de todas as cotas da cena"
+
+    on btnDiagnosticReport pressed do
+    (
+        global AmenoApp
+        if AmenoApp != undefined do
+        (
+            local txt = AmenoApp.printDiagnosticReport()
+            messageBox txt title:"Ameno - Diagnóstico de Cena"
+        )
+    )
 )
 
 rollout AmenoRenderRollout "Render Separado de Cotas" width:344

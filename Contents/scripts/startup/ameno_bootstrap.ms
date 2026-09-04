@@ -29,6 +29,8 @@ global AmenoOutputVerification
 global AmenoRenderCotasRequest
 global AmenoRenderCotasResult
 global AmenoRenderCotasService
+global AmenoDiagnosticReport
+global AmenoDiagnosticService
 global AmenoStyleEditorRollout
 global AmenoShowStyleEditor
 global AmenoMainPanelRollout
@@ -88,6 +90,7 @@ struct AmenoBootstrapService
             @"renderers\ameno_corona_adapter.ms",
             @"renderers\ameno_vray_adapter.ms",
             @"core\ameno_render_cotas_service.ms",
+            @"core\ameno_diagnostic_service.ms",
             @"core\ameno_runtime.ms",
             @"ui\ameno_style_editor.ms",
             @"ui\ameno_main_panel.ms"
