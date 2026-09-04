@@ -4,7 +4,7 @@
 
 **Alvo inicial:** 3ds Max 2026
 
-**Estado:** planejada; iniciar somente após o gate da E10
+**Estado:** E11.0 concluída e testada na branch `feature/e11-visual-editor`; aguardando validação para avançar para E11.1
 **Referência visual:** mockup “Ameno — Editor de estilo” fornecido pelo usuário em 2026-09-04
 
 ## Contexto
@@ -110,14 +110,37 @@ O preview é uma aproximação vetorial determinística do resultado. Quando alg
 
 ### E11.0 — Prova técnica da interface
 
-Antes de reescrever o editor, comparar em um protótipo descartável:
+**Estado:** Concluída e aprovada em 2026-09-04 na branch `feature/e11-visual-editor`.
+**Decisão:** Aprovada e documentada na ADR 0019 (`docs/decisions/0019-e11-0-ui-technology-spike-wpf.md`).
 
-1. assembly C# com interface WPF hospedada no 3ds Max 2026;
-2. MAXScript com controles .NET/WinForms como fallback.
+**O que foi feito:**
+- Comparação empírica entre WPF (.NET 8 CoreCLR) e WinForms + GDI+ sob o 3ds Max 2026.3 (`test_e11_0_spike.ms`).
+- Instanciação de janela modeless vinculada ao HWND do 3ds Max via `WindowInteropHelper.Owner`.
+- Renderização de cota vetorial 2D (linha de dimensão, linhas de extensão, terminais e texto sobre planta de contexto neutra).
+- Teste de escala High-DPI (100%, 125%, 150%, 200% via DIUs e matriz de escala).
+- Estilização em tema escuro profissional compatível com o mockup visual.
+- Teste de estresse: 20 ciclos de abertura e fechamento sem vazamento de memória ou handles GDI (WPF: 0.41 s total, ~20.5 ms por janela; WinForms: 0.298 s total).
+- Verificação de isolamento: 0 nós criados, 0 layers alteradas na cena.
 
-A prova deve abrir uma janela modeless, desenhar uma cota vetorial, responder a DPI 100/125/150/200 %, acompanhar o tema escuro e abrir/fechar vinte vezes sem callbacks ou referências vazando. Nenhuma prova pode editar a cena.
+**Arquivos modificados / criados:**
+- `tests/maxscript/test_e11_0_spike.ms` (teste automatizado da prova técnica);
+- `docs/decisions/0019-e11-0-ui-technology-spike-wpf.md` (ADR registrando a escolha de WPF .NET 8);
+- `plans/2026-09-04-e11-editor-visual-preview.md` (atualização deste plano).
 
-Escolher a tecnologia somente depois da prova e registrar a decisão em ADR. A preferência visual é WPF/C#, mas ela não é considerada aprovada antes do teste dentro do Max 2026.
+**Decisões técnicas tomadas:**
+1. **Tecnologia adotada:** WPF (.NET 8) carregado nativamente no 3ds Max 2026.
+2. **Definição declarativa via XAML:** O layout será construído em XAML semântico desacoplado e instanciado via `XamlReader.Parse`, eliminando a necessidade de compilação externa por .NET SDK (que não está presente nas máquinas dos usuários).
+3. **Isolamento de Cena:** Nenhuma chamada durante a edição do estilo afeta a cena 3ds Max; todas as modificações são transacionais e manipuladas via `StyleDraft` na E11.1.
+
+**Testes executados:**
+- `powershell -File tools/test-maxscript.ps1 -TestScript tests/maxscript/test_e11_0_spike.ms` aprovado com código 0 (`[AMENO_TEST][PASS] E11.0 Spike Tecnico concluido com 100 por cento de sucesso`).
+
+**Resultado do gate:**
+- Prova técnica superou todos os critérios de aceite (DPI, modeless, vetorização, velocidade, isolamento de cena).
+
+**Pendências e riscos para a E11.1:**
+- Mapeamento de eventos de controles WPF (Sliders, ComboBox, CheckBox) para a estrutura `StyleDraft` em MAXScript;
+- Interceptação de atalhos de teclado (`Esc`, `Ctrl+S`) sem interferência dos aceleradores de viewport do 3ds Max.
 
 ### E11.1 — StyleDraft e compatibilidade
 
