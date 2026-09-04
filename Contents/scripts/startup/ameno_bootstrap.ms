@@ -24,6 +24,8 @@ global AmenoAnchorService
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
+global AmenoDimensionContinuousTool
+global AmenoDimensionContinuousMouseTool
 global AmenoCoronaRendererAdapter
 global AmenoVRayRendererAdapter
 global AmenoAdapterRenderResult
@@ -91,6 +93,7 @@ struct AmenoBootstrapService
             @"core\ameno_anchor_service.ms",
             @"core\ameno_style_service.ms",
             @"core\ameno_dimension_tool.ms",
+            @"core\ameno_dimension_continuous_tool.ms",
             @"renderers\ameno_renderer_probe.ms",
             @"renderers\ameno_corona_adapter.ms",
             @"renderers\ameno_vray_adapter.ms",

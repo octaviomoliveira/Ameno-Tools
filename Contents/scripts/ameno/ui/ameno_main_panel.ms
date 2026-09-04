@@ -217,25 +217,22 @@ rollout AmenoDimRollout "Criação de Cotas" width:344
     label lblDimensions "Ameno Dimensions · 0 cota(s) ativa(s)." pos:[14, 10] width:316 height:18 align:#left
     -- E10.1: seletor de modo de cota
     radiobuttons rdoMode "Modo:" pos:[14, 32] labels:#("Alinhada", "Horizontal", "Vertical") default:1 columns:3
-    button btnCreate "Criar cota (3 cliques)" pos:[14, 62] width:150 height:26
-    button btnRepair "Reparar cotas" pos:[180, 62] width:150 height:26
-    button btnCreateTest "Criar cota de teste" pos:[14, 94] width:150 height:24
-    button btnClearTests "Limpar de teste" pos:[180, 94] width:150 height:24
-    button btnStyleEditor "Editor de Estilos..." pos:[14, 124] width:316 height:24
-    label lblTestHint "Preview em tempo real · Esc ou botão direito cancela." pos:[14, 154] width:316 height:18 align:#left
+    button btnCreate           "Criar cota (3 cliques)"          pos:[14, 62]  width:150 height:26
+    button btnRepair           "Reparar cotas"                   pos:[180, 62] width:150 height:26
+    button btnCreateContinuous "Cotação contínua (N pontos)"     pos:[14, 94]  width:316 height:26
+    button btnCreateTest       "Criar cota de teste"             pos:[14, 126] width:150 height:24
+    button btnClearTests       "Limpar de teste"                 pos:[180, 126] width:150 height:24
+    button btnStyleEditor      "Editor de Estilos..."            pos:[14, 156] width:316 height:24
+    label  lblTestHint         "Preview em tempo real · duplo-clique confirma · Esc cancela." \
+                                                                 pos:[14, 186] width:316 height:18 align:#left
 
     on rdoMode changed state do
     (
         global AmenoDimensionTool
-        if AmenoDimensionTool != undefined do
-        (
-            case state of
-            (
-                1: AmenoDimensionTool.activeMode = #aligned
-                2: AmenoDimensionTool.activeMode = #horizontal
-                3: AmenoDimensionTool.activeMode = #vertical
-            )
-        )
+        global AmenoDimensionContinuousTool
+        local modeSymbol = case state of (1: #aligned; 2: #horizontal; 3: #vertical; default: #aligned)
+        if AmenoDimensionTool != undefined          do AmenoDimensionTool.activeMode          = modeSymbol
+        if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.activeMode = modeSymbol
     )
 
     on btnCreate pressed do
@@ -260,6 +257,42 @@ rollout AmenoDimRollout "Criação de Cotas" width:344
             )
         )
     )
+
+    on btnCreateContinuous pressed do
+    (
+        global AmenoDimensionContinuousTool
+        global AmenoApp
+        if AmenoDimensionContinuousTool == undefined then
+        (
+            messageBox "A ferramenta de cotação contínua (E12) não foi carregada." title:"Ameno Tools"
+        )
+        else
+        (
+            try
+            (
+                -- Sincroniza modo atual do painel
+                AmenoDimensionContinuousTool.activeMode = case rdoMode.state of
+                    (1: #aligned; 2: #horizontal; 3: #vertical; default: #aligned)
+
+                -- Sincroniza estilo, unidade e precisão com AmenoApp
+                if AmenoApp != undefined do
+                (
+                    try (if AmenoApp.activeStyleId   != undefined do AmenoDimensionContinuousTool.activeStyleId   = AmenoApp.activeStyleId)   catch ()
+                    try (if AmenoApp.previewOutputUnit != undefined do AmenoDimensionContinuousTool.previewOutputUnit = AmenoApp.previewOutputUnit) catch ()
+                    try (if AmenoApp.previewPrecision  != undefined do AmenoDimensionContinuousTool.previewPrecision  = AmenoApp.previewPrecision)  catch ()
+                )
+
+                AmenoDimensionContinuousTool.start()
+
+                if ::AmenoRefreshMainPanel != undefined do ::AmenoRefreshMainPanel()
+            )
+            catch
+            (
+                messageBox ("Não foi possível iniciar a cotação contínua:\n" + (getCurrentException() as string)) title:"Ameno Tools"
+            )
+        )
+    )
+
 
     on btnRepair pressed do
     (
