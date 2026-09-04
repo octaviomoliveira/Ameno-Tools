@@ -82,7 +82,7 @@ Planejar e implementar a primeira fatia da **E6 — Valores medidos, arredondado
 | 2026-09-03 | Corrigir o desaparecimento da prévia no terceiro clique. | Removido o limite `numPoints:3`: o MouseTool permanece ativo até o commit retornar sucesso, preserva a prévia em erro e o painel exibe a exceção. Teste Batch e teste do pacote instalado passaram. | `ameno_dimension_tool.ms`, `ameno_main_panel.ms`, commit `6ce2200` |
 | 2026-09-04 | Confirmar a correção do terceiro clique no uso real. | Fluxo manual aprovado no Max: A/B/afastamento criou e manteve uma cota permanente de `4,05 m`; painel indicou `1 cota(s) ativa(s)`. E4 encerrada; próximo passo é E5. | captura do viewport/painel fornecida pelo usuário; commits `6ce2200` e `a868a4c` |
 | 2026-09-04 | Implementar E5: persistência, Custom Attributes e ciclo de vida. | E5 implementada e aprovada em Batch isolado e no pacote ApplicationPlugins; aguardando validação manual no Max. | commit `9c78acf`, `ameno_dimension_ca.ms`, `0008-e5-custom-attributes-persistence.md` |
-| 2026-09-04 | Validar manualmente a E5 e iniciar a E6. | E5 aprovada no Max pelo usuário (save/load, reparo de filhos gráficos e Undo); E6 iniciada no planejamento. | confirmação textual do usuário, PLAN.md, plans/2026-09-03-mvp-incremental.md |
+| 2026-09-04 | Validar manualmente a E5 e iniciar a E6. | E5 aprovada no Max pelo usuário (save/load, reparo de filhos gráficos e Undo); E6 iniciada no planejamento. | confirmação do usuário, commit `3cb9017`, `PLAN.md` |
 
 ## Como retomar sem contexto
 
