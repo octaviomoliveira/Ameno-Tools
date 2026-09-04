@@ -170,15 +170,15 @@ struct AmenoDimensionToolService
         local candidate = flattenPoint pointValue
         if candidate == undefined then return undefined
 
-        case clickNumber of
+        case stage of
         (
-            1:
+            #pointA:
             (
                 pointA = candidate
                 setStage #pointB
                 undefined
             )
-            2:
+            #pointB:
             (
                 if pointA == undefined then return undefined
 
@@ -194,7 +194,7 @@ struct AmenoDimensionToolService
                 setStage #offset
                 undefined
             )
-            3:
+            #offset:
             (
                 if pointA == undefined or pointB == undefined then return undefined
 
@@ -291,7 +291,7 @@ struct AmenoDimensionToolService
         local toolResult = #abort
         try
         (
-            toolResult = startTool AmenoDimensionMouseTool prompt:"Ameno Dimensions: clique A, B e o afastamento" snap:#3D numPoints:3
+            toolResult = startTool AmenoDimensionMouseTool prompt:"Ameno Dimensions: clique A, B e o afastamento" snap:#3D
         )
         catch
         (
@@ -307,7 +307,7 @@ struct AmenoDimensionToolService
 
 AmenoDimensionTool = AmenoDimensionToolService()
 
-tool AmenoDimensionMouseTool prompt:"Ameno Dimensions: clique A, B e o afastamento" numPoints:3
+tool AmenoDimensionMouseTool prompt:"Ameno Dimensions: clique A, B e o afastamento"
 (
     on start do
     (

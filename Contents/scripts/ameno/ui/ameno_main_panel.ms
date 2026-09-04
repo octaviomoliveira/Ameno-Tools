@@ -70,6 +70,7 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:450
     on btnCreate pressed do
     (
         global AmenoApp
+        global AmenoDimensionTool
 
         if AmenoApp != undefined then
         (
@@ -77,6 +78,10 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:450
             (
                 local record = AmenoApp.startDimensionTool()
                 if record != undefined do select #(record.lineNode, record.textNode)
+                if record == undefined and AmenoDimensionTool != undefined and AmenoDimensionTool.lastError != "" do
+                (
+                    messageBox ("A cota não foi criada. A prévia foi preservada durante a falha.\n\n" + AmenoDimensionTool.lastError) title:"Ameno Dimensions"
+                )
                 AmenoRefreshMainPanel()
             )
             catch

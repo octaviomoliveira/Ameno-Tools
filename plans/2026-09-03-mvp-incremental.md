@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 aprovada no viewport, em render comum sob as condições informadas e na limpeza; E4 pronta para teste manual.
+**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 aprovada no viewport, em render comum sob as condições informadas e na limpeza; E4 corrigida após o primeiro teste manual e pronta para novo teste.
 
 ## Estratégia de execução
 
@@ -179,10 +179,12 @@ Ainda não haverá interação de três cliques nem associatividade.
 
 ## E4 — Ferramenta de três cliques
 
-**Estado:** pronta para teste manual no 3ds Max 2026.3 em 2026-09-03.
+**Estado:** correção pós-validação pronta para novo teste manual no 3ds Max 2026.3 em 2026-09-03.
 **Implementação:** `Contents/scripts/ameno/core/ameno_dimension_tool.ms`, integrado ao `ameno_bootstrap.ms`, `ameno_runtime.ms`, `ameno_main_panel.ms` e ao construtor gráfico da E3.
 **Evidência automatizada:** `test_bootstrap.ms` passou no Batch isolado, verificando carregamento do `MouseTool`, criação/atualização/remoção da prévia, fluxo A/B/afastamento e cancelamento sem resíduos. `test_installed_package.ms` aprovou a cópia `ApplicationPlugins` com a E4 carregada.
 **Instalação:** `tools/install-dev.ps1` atualizou `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`; reinicie o 3ds Max antes do teste visual.
+
+**Correção após o primeiro teste:** o limite automático `numPoints:3` foi removido. Se a atualização ou o commit falhar no terceiro clique, o Max não encerra silenciosamente o comando: a prévia permanece, a ferramenta aceita outra tentativa no afastamento e, ao sair, o painel mostra o erro registrado.
 
 ### Como usar
 
@@ -208,7 +210,8 @@ Ainda não haverá interação de três cliques nem associatividade.
 - testar os dois lados da linha e A/B invertidos;
 - cancelar após o primeiro e após o segundo clique e confirmar que não sobram nós;
 - usar Ctrl+Z após o terceiro clique e confirmar que a cota inteira desaparece em uma entrada;
-- repetir `Criar cota` sem duplicar preview ou controlador.
+- repetir `Criar cota` sem duplicar preview ou controlador;
+- se houver falha no commit, confirmar que a prévia não desaparece e que o painel informa o erro.
 
 O botão `Criar cota de teste` permanece disponível para regressão da E3.
 

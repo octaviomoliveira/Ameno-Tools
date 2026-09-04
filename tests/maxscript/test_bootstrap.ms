@@ -156,6 +156,13 @@ global AmenoDimensionMouseTool
     AmenoDimensionTool.handlePoint 1 [0, 0, 0]
     AmenoDimensionTool.handlePoint 2 [100, 0, 0]
     if AmenoDimensionTool.preview == undefined then throw "E4 não criou prévia após o segundo ponto."
+    local graphicsService = AmenoDimensionGraphics
+    AmenoDimensionGraphics = undefined
+    local failedCommitResult = AmenoDimensionTool.handlePoint 3 [50, 20, 0]
+    AmenoDimensionGraphics = graphicsService
+    if failedCommitResult == #stop then throw "E4 deveria manter a ferramenta ativa após afastamento inválido."
+    if AmenoDimensionTool.preview == undefined then throw "E4 perdeu a prévia após afastamento inválido."
+    if AmenoDimensionTool.stage != #offset then throw "E4 saiu da etapa de afastamento após falha de commit."
     local commitResult = AmenoDimensionTool.handlePoint 3 [0, 20, 0]
     if commitResult != #stop then throw "E4 não encerrou o fluxo após o terceiro ponto."
     if AmenoDimensionTool.lastCommittedRecord == undefined then throw "E4 não guardou a cota criada."
@@ -177,5 +184,5 @@ global AmenoDimensionMouseTool
 
     fileIn macroPath quiet:true
 
-    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2 e E3 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
+    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3 e E4 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
 )
