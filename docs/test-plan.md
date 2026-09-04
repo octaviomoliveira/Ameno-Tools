@@ -145,7 +145,8 @@ Casos de referência:
 
 ## Layers
 
-- primeira cota cria `AMENO_COTAS`;
+- `Preparar esta cena` cria `AMENO_COTAS` e `AMENO_SYSTEM`;
+- a primeira cota chama a preparação se a infraestrutura ainda não existir;
 - cotas seguintes reutilizam a layer;
 - layer de usuário com nome conflitante não é apropriada;
 - layer renomeada continua sendo encontrada;

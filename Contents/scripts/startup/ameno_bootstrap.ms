@@ -45,6 +45,7 @@ struct AmenoBootstrapService
         local moduleFiles = #(
             @"core\ameno_version.ms",
             @"core\ameno_logger.ms",
+            @"core\ameno_scene_setup.ms",
             @"renderers\ameno_renderer_probe.ms",
             @"core\ameno_runtime.ms",
             @"ui\ameno_main_panel.ms"

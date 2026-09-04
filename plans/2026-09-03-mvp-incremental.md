@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E0 concluída; E1 é a próxima etapa.
+**Estado atual:** E1 implementada e aprovada em Batch; aguarda validação visual manual no 3ds Max antes da E2.
 
 ## Estratégia de execução
 
@@ -24,7 +24,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | Etapa | Entrega visível | Estado |
 | --- | --- | --- |
 | E0 | Pacote abre, mostra versão e reconhece o Corona | Aprovada |
-| E1 | `Preparar esta cena` cria a infraestrutura Ameno com segurança | Próxima |
+| E1 | `Preparar esta cena` cria a infraestrutura Ameno com segurança | Pronta para teste manual |
 | E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Não iniciada |
 | E3 | Uma cota gráfica de teste é construída na cena | Não iniciada |
 | E4 | Cota alinhada é criada com três cliques e preview | Não iniciada |
@@ -57,6 +57,10 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 
 ## E1 — Preparar esta cena
 
+**Estado:** pronta para teste manual.
+**Implementação:** `Contents/scripts/ameno/core/ameno_scene_setup.ms`.
+**Evidência automatizada:** 3ds Max 2026.3 Batch aprovou criação, repetição sem duplicatas, restauração da layer corrente e conflito de nome `AMENO_COTAS`; a cópia instalada via `ApplicationPlugins` também carregou a E1.
+
 ### Objetivo
 
 Criar uma base segura e repetível antes de existir qualquer cota.
@@ -88,6 +92,10 @@ Criar uma base segura e repetível antes de existir qualquer cota.
 3. preparar uma cópia de uma cena real;
 4. confirmar que renderer, unidades, layer corrente e objetos permaneceram iguais;
 5. salvar, reabrir e confirmar estado `pronta`.
+
+### Registro para fechar a E1
+
+Depois do gate visual aprovado, atualizar este arquivo e `PLAN.md` para `Aprovada`, anexar a data/versão do Max e registrar o commit/push correspondente. Só então a E2 pode ser iniciada.
 
 ### Fora desta etapa
 
@@ -327,4 +335,3 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 ## Próxima ação
 
 Implementar somente a **E1 — Preparar esta cena**. Quando estiver pronta, instalar a build de desenvolvimento, executar o gate no 3ds Max aberto e registrar o resultado no `PLAN.md` antes de começar a E2.
-

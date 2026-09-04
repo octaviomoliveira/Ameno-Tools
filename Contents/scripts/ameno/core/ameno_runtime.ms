@@ -1,5 +1,6 @@
 global AmenoApp
 global AmenoRendererProbe
+global AmenoSceneSetup
 global AmenoLog
 global AmenoVersion
 global AmenoShowMainPanel
@@ -9,6 +10,7 @@ struct AmenoRuntime
 (
     rootPath = "",
     rendererInfo = undefined,
+    sceneInfo = undefined,
     started = false,
 
     fn refreshRenderer =
@@ -17,9 +19,22 @@ struct AmenoRuntime
         rendererInfo
     ),
 
+    fn refreshScene =
+    (
+        sceneInfo = AmenoSceneSetup.inspect()
+        sceneInfo
+    ),
+
+    fn prepareScene =
+    (
+        sceneInfo = AmenoSceneSetup.prepare()
+        sceneInfo
+    ),
+
     fn start =
     (
         refreshRenderer()
+        refreshScene()
         started = true
 
         AmenoLog.info (AmenoVersion.displayName() + " carregado.")
