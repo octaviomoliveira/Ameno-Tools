@@ -341,16 +341,18 @@ Permitir que a cota represente levantamento e intenção de projeto sem esconder
 
 ## E7 — Editor visual de estilo
 
-**Estado:** implementada e validada em testes automatizados no 3ds Max 2026.3; aguardando validação manual no 3ds Max interativo.
+**Estado:** aprovada no 3ds Max 2026.3 em 2026-09-04 após validação manual do usuário.
 **Implementação:** `Contents/scripts/ameno/core/ameno_style_service.ms`, `Contents/scripts/ameno/ui/ameno_style_editor.ms`, atualizações em `ameno_dimension_graphics.ms`, `ameno_dimension_tool.ms`, `ameno_runtime.ms`, `ameno_main_panel.ms`, e documentada na ADR `docs/decisions/0010-e7-style-system-and-visual-editor.md`.
 **Evidência automatizada:** `test_bootstrap.ms` e `test_installed_package.ms` aprovaram no 3ds Max Batch isolado:
 1. Inicialização do `AmenoStyleService` com os 3 presets de fábrica (*Arquitetônico*, *Editorial*, *Técnico*).
-2. Construção correta dos 5 tipos de terminais vetoriais na mesma spline (`#tick`, `#arrowClosed`, `#arrowOpen`, `#dot`, `#none`), herdando `render_thickness` e material de cota.
+2. Construção correta dos 5 tipos de terminais vetoriais na mesma spline (`#tick`, `#arrowClosed`, `#arrowOpen`, `#dot`, `#none`), herdando `render_thickness`, espessura visível no viewport (`render_displayRenderMesh = true`) e material de cota.
 3. Configuração de tipografia no TextPlus (`fontSize`, `tracking`, `fontName`, `bold`, `italic`, `textGap`) com fallback para Arial.
-4. Atualização de estilo em lote (`updateStyleAndRebuild`), atualizando todas as cotas da cena que utilizam o estilo.
-5. Undo atômico: reversão da atualização em lote de todas as cotas com um único `max undo`.
-6. Persistência de biblioteca de estilos no arquivo `.max` via UserProps de `rootNode` (`Ameno.Styles`), com reabertura e integridade comprovadas.
+4. Atualização de estilo ao vivo e em lote (`updateStyleAndRebuild`), atualizando todas as cotas da cena que utilizam o estilo.
+5. Preservação da seleção no 3ds Max ao reconstruir nós visuais da cota.
+6. Undo atômico: reversão da atualização em lote de todas as cotas com um único `max undo`.
+7. Persistência de biblioteca de estilos no arquivo `.max` via UserProps de `rootNode` (`Ameno.Styles`), com reabertura e integridade comprovadas.
 **Instalação:** `tools/install-dev.ps1` sincronizou a versão atualizada no `ApplicationPlugins\AmenoTools`.
+**Gate manual aprovado em 2026-09-04:** o usuário validou no 3ds Max 2026 interativo a reatividade completa do Editor de Estilos (ajuste de fontes, tamanhos, terminais e espessuras com atualização em tempo real no viewport, atalhos de espessura ativos, sincronização bidirecional com a cota selecionada e Undo atômico). A E7 está encerrada com aprovação total.
 
 ### Objetivo
 
@@ -457,4 +459,4 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 
 ## Próxima ação
 
-Reiniciar o 3ds Max e executar o gate manual da **E4 — Ferramenta de três cliques**. A investigação de um overlay Corona independente de luz permanece planejada para a E9, sem alterar o Beauty/LightMix da cena.
+Iniciar o planejamento e implementação da **E8 — Âncoras, atualização e diagnóstico**. Acompanhar alterações arquitetônicas (mover/rotacionar objetos) com fila dirty, debounce, suporte a referência órfã e reancoragem sem perda de dados.
