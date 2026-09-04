@@ -4,7 +4,7 @@
 
 **Alvo inicial:** 3ds Max 2026
 
-**Estado:** E11.0 concluída e testada na branch `feature/e11-visual-editor`; aguardando validação para avançar para E11.1
+**Estado:** E11.0 e E11.1 concluídas e testadas na branch `feature/e11-visual-editor` (48/48 testes aprovados em `test_e11_1_draft.ms`); pronta para avançar para E11.2
 **Referência visual:** mockup “Ameno — Editor de estilo” fornecido pelo usuário em 2026-09-04
 
 ## Contexto
@@ -162,6 +162,13 @@ Auditar o schema antes de adicionar propriedades ainda ausentes, especialmente:
 - perfil/escala de preview.
 
 Se o registro persistente evoluir, criar versão nova com migração idempotente. Estilos antigos recebem defaults equivalentes à aparência atual; não regravar cenas apenas por abrir o editor.
+
+**Status E11.1 (Concluído em 2026-09-04):**
+- Structs `AmenoPreviewModel` e `AmenoStyleDraft` implementadas com clone defensivo, desacopladas da cena e da viewport 3D.
+- Schema v2 de `AmenoStyleRecord` estendido com 6 novas propriedades (`textMaskEnabled`, `annotationColor`, `textColor`, `terminalPlacement`, `terminalAngle`, `previewScale`) com serialização/desserialização retrocompatível e defensiva (13 a 19 tokens).
+- Transações atômicas `saveDraftAsStyle`, `saveDraftAsNewStyle`, `discardDraft`, `applyDraftToSelection` com suporte a Undo/Redo e deduplicação de nós.
+- Suíte `tests/maxscript/test_e11_1_draft.ms` executada sob 3ds Max 2026.3 headless com 48/48 testes aprovados (100% de cobertura).
+- Suíte de regressão `test_bootstrap.ms` aprovada com 100% de sucesso.
 
 ### E11.2 — Shell e navegação
 

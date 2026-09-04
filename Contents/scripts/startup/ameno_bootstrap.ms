@@ -16,6 +16,8 @@ global AmenoDimensionMath
 global AmenoDimensionCA
 global AmenoDimensionRecord
 global AmenoStyleRecord
+global AmenoPreviewModel
+global AmenoStyleDraft
 global AmenoStyleServiceDefinition
 global AmenoStyleService
 global AmenoAnchorService
