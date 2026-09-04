@@ -22,7 +22,9 @@ struct AmenoCoronaAdapterState
     renderer = undefined,
     pngAlpha = true,
     pngType = #true24,
-    pngInterlaced = false
+    pngInterlaced = false,
+    savedOutputPath = "",
+    savedSaveFile = false
 )
 
 struct AmenoCoronaRendererAdapterService
@@ -53,6 +55,8 @@ struct AmenoCoronaRendererAdapterService
         try (state.pngAlpha = pngio.getAlpha()) catch ()
         try (state.pngType = pngio.getType()) catch ()
         try (state.pngInterlaced = pngio.getInterlaced()) catch ()
+        try (state.savedOutputPath = renderOutputFilename) catch (state.savedOutputPath = "")
+        try (state.savedSaveFile = renderSaveFile) catch (state.savedSaveFile = false)
         state
     ),
 
@@ -61,6 +65,10 @@ struct AmenoCoronaRendererAdapterService
         pngio.setAlpha true
         pngio.setType #true24
         pngio.setInterlaced false
+        -- Corona ignora o parâmetro outputfile do comando render;
+        -- a saída deve ser configurada via renderOutputFilename + renderSaveFile.
+        renderOutputFilename = request.outputPath
+        renderSaveFile = true
         true
     ),
 
@@ -71,6 +79,8 @@ struct AmenoCoronaRendererAdapterService
         try (pngio.setAlpha state.pngAlpha) catch ()
         try (pngio.setType state.pngType) catch ()
         try (pngio.setInterlaced state.pngInterlaced) catch ()
+        try (renderOutputFilename = state.savedOutputPath) catch ()
+        try (renderSaveFile = state.savedSaveFile) catch ()
 
         if state.renderer != renderers.current then
         (
