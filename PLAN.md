@@ -48,19 +48,19 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- E8.1 — Estabilização das Âncoras, Estilos e Interface: aguardando validação interativa do usuário no 3ds Max 2026.
+- E8.1 — Estabilização das Âncoras, Estilos e Interface: bug de reatividade em tempo real corrigido (commit `853b97a`); aguardando validação interativa no 3ds Max 2026.
 
 ## Próximo passo executável
 
-Apresentar ao usuário o roteiro de validação interativa no 3ds Max 2026 para a **E8.1 — Estabilização das Âncoras, Estilos e Interface**:
-1. Criar dois objetos na cena (ex: duas caixas ou paredes `Box001` e `Box002`);
+**Reiniciar o 3ds Max 2026** (necessário para carregar o pacote atualizado) e validar a E8.1 interativamente:
+
+1. Criar dois objetos na cena (ex: duas caixas `Box001` e `Box002`);
 2. Clicar em **Criar cota** e clicar sobre os dois objetos para definir a cota;
-3. No painel Ameno Tools, verificar que o grupo **Âncoras** identifica `A: Box001` e `B: Box002`;
-4. Mover ou rotacionar os objetos na cena e confirmar que a cota acompanha e atualiza a medida em tempo real (corrige a falha anterior do item 4);
-5. Pressionar `Ctrl+Z` e confirmar que o histórico de Undo do usuário desfaz apenas as transformações dos objetos, sem poluição de Undo;
-6. Deletar um dos objetos e confirmar que a cota **não desaparece**: torna-se órfã com arame e texto vermelhos `(230, 70, 70)` na viewport e badge de alerta no painel (corrige a falha anterior do item 6);
-7. Criar um novo objeto `Box003`, clicar em **Reancorar Ponto B** e clicar em um ponto do novo objeto no viewport (usando snap 3D se desejar), confirmando que a cota se reconecta e volta à cor normal (corrige a falha anterior do item 7);
-8. Abrir o Editor de Estilos, alterar propriedades (ex: espessura da linha), aplicar e testar `Ctrl+Z` / `Ctrl+Y` confirmando que os estilos suportam Undo/Redo atômico.
+3. **Mover ou rotacionar um dos objetos** e confirmar que a cota acompanha e atualiza a medida **em tempo real**, sem precisar reancorar;
+4. Pressionar `Ctrl+Z` e confirmar que o Undo desfaz apenas a transformação, sem poluição de histórico;
+5. Deletar um dos objetos e confirmar que a cota **não desaparece**: torna-se órfã com arame e texto vermelhos `(230, 70, 70)` na viewport;
+6. Criar um `Box003`, clicar em **Reancorar Ponto B** e clicar no novo objeto, confirmando que a cota se reconecta e volta à cor normal;
+7. Abrir o Editor de Estilos, alterar propriedades, aplicar e testar `Ctrl+Z` / `Ctrl+Y`.
 
 ## Decisões que ainda exigem validação
 
@@ -96,6 +96,7 @@ Apresentar ao usuário o roteiro de validação interativa no 3ds Max 2026 para 
 | 2026-09-04 | Implementar E7: editor visual de estilo, tipografia TextPlus, terminais vetoriais e espessuras. | E7 aprovada no Max pelo usuário (reatividade ao vivo, presets, fontes, espessuras e Undo); E8 iniciada no planejamento. | confirmação do usuário, commit `557007c`, `0010-e7-style-system-and-visual-editor.md` |
 | 2026-09-04 | Implementar E8: âncoras geométricas, atualização reativa, cotas órfãs e diagnóstico. | E8 implementada e validada em Batch isolado e no pacote ApplicationPlugins; aguardando validação interativa no Max. | `ameno_anchor_service.ms`, `0011-e8-anchors-dirty-queue-diagnostics.md`, `.test-output/*` |
 | 2026-09-04 | E8.1: Estabilização das âncoras reativas, undo de estilos, escala de cena, prioridade de wirecolor e UI compacta. | Implementada e aprovada em testes automatizados no Batch isolado e pacote instalado; aguardando validação interativa no Max. | `0012-e8-1-anchors-styles-ui-stabilization.md`, `test_bootstrap.ms`, `test_installed_package.ms` |
+| 2026-09-04 | Bug: cota não atualiza em tempo real ao mover objeto — precisava reancorar para atualizar. | Causa raiz: `rebuildIndex()` não era chamado após criar cota; o `indexTable` ficava vazio e o `NodeEventCallback` ignorava os eventos. Corrigido com `rebuildIndex()` após `createDimension` e rebuild lazy no `handleNodesChanged`. Testes automatizados passaram (exit code 0). | commit `853b97a`, `ameno_dimension_tool.ms`, `ameno_anchor_service.ms` |
 
 ## Como retomar sem contexto
 
