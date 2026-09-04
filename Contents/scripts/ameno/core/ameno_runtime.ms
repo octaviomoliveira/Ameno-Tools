@@ -169,6 +169,156 @@ struct AmenoRuntime
         count
     ),
 
+    -- E10.2: retorna array com todos os controladores de cota na selecao atual
+    fn getSelectedDimensionControllers =
+    (
+        local controllers = #()
+        if selection.count == 0 then return controllers
+        for obj in selection where isValidNode obj do
+        (
+            local dimId = AmenoDimensionGraphics.getDimensionId obj
+            if dimId != "" do
+            (
+                local nodes = AmenoDimensionGraphics.findNodesForDimension dimId
+                for n in nodes where isValidNode n do
+                (
+                    local isCtrl = (AmenoDimensionCA != undefined and AmenoDimensionCA.hasCA n)
+                    if isCtrl and (findItem controllers n) == 0 do append controllers n
+                )
+            )
+            -- Tambem aceita controlador selecionado diretamente
+            if AmenoDimensionCA != undefined and AmenoDimensionCA.hasCA obj and (findItem controllers obj) == 0 do
+                append controllers obj
+        )
+        controllers
+    ),
+
+    -- E10.2: aplica unidade de saida a todas as cotas selecionadas em um Undo
+    fn applyUnitToSelected outputUnit =
+    (
+        local ctrls = getSelectedDimensionControllers()
+        if ctrls.count == 0 then return 0
+        local count = 0
+        undo "Ameno: aplicar unidade a selecionadas" on
+        (
+            for ctrl in ctrls where isValidNode ctrl do
+            (
+                if AmenoDimensionCA != undefined do
+                (
+                    local rec = AmenoDimensionCA.readCA ctrl
+                    if rec != undefined do
+                    (
+                        rec.outputUnit = outputUnit as string
+                        AmenoDimensionCA.applyCA ctrl rec
+                        try (AmenoDimensionGraphics.rebuildDimension ctrl) catch ()
+                        count += 1
+                    )
+                )
+            )
+        )
+        refreshDimensions()
+        count
+    ),
+
+    -- E10.2: aplica precisao decimal a todas as cotas selecionadas em um Undo
+    fn applyPrecisionToSelected precision =
+    (
+        local ctrls = getSelectedDimensionControllers()
+        if ctrls.count == 0 then return 0
+        local count = 0
+        undo "Ameno: aplicar precisao a selecionadas" on
+        (
+            for ctrl in ctrls where isValidNode ctrl do
+            (
+                if AmenoDimensionCA != undefined do
+                (
+                    local rec = AmenoDimensionCA.readCA ctrl
+                    if rec != undefined do
+                    (
+                        rec.precision = precision
+                        AmenoDimensionCA.applyCA ctrl rec
+                        try (AmenoDimensionGraphics.rebuildDimension ctrl) catch ()
+                        count += 1
+                    )
+                )
+            )
+        )
+        refreshDimensions()
+        count
+    ),
+
+    -- E10.2: aplica modo de cota (aligned/horizontal/vertical) a selecionadas em um Undo
+    fn applyDimensionModeToSelected mode =
+    (
+        local ctrls = getSelectedDimensionControllers()
+        if ctrls.count == 0 then return 0
+        local count = 0
+        undo "Ameno: aplicar modo a selecionadas" on
+        (
+            for ctrl in ctrls where isValidNode ctrl do
+            (
+                if AmenoDimensionCA != undefined do
+                (
+                    local rec = AmenoDimensionCA.readCA ctrl
+                    if rec != undefined do
+                    (
+                        rec.dimensionMode = mode as string
+                        AmenoDimensionCA.applyCA ctrl rec
+                        try (AmenoDimensionGraphics.rebuildDimension ctrl) catch ()
+                        count += 1
+                    )
+                )
+            )
+        )
+        refreshDimensions()
+        count
+    ),
+
+    -- E10.2: bake — converte ancoras reativas para posicao mundial fixa
+    -- Apos o bake a cota nao segue mais o objeto
+    fn bakeSelected =
+    (
+        local ctrls = getSelectedDimensionControllers()
+        if ctrls.count == 0 then return 0
+        local count = 0
+        undo "Ameno: bake de ancoras a selecionadas" on
+        (
+            for ctrl in ctrls where isValidNode ctrl do
+            (
+                if AmenoDimensionCA != undefined do
+                (
+                    local rec = AmenoDimensionCA.readCA ctrl
+                    if rec == undefined then continue
+                    if rec.anchorType == "world" then continue  -- ja e mundial, nada a fazer
+
+                    -- Resolver posicoes atuais antes de apagar as ancoras
+                    local resolved = AmenoDimensionCA.resolvePoints rec
+                    if resolved == undefined then continue
+
+                    rec.anchorType  = "world"
+                    rec.pointA      = resolved.pointA
+                    rec.pointB      = resolved.pointB
+                    rec.offsetPoint = resolved.offsetPoint
+                    rec.nodeA       = undefined
+                    rec.nodeB       = undefined
+                    rec.localPointA = [0, 0, 0]
+                    rec.localPointB = [0, 0, 0]
+                    rec.isOrphan    = false
+                    rec.orphanReason = ""
+
+                    AmenoDimensionCA.applyCA ctrl rec
+                    try (AmenoDimensionGraphics.rebuildDimension ctrl) catch ()
+                    count += 1
+                )
+            )
+        )
+        -- Remover nos bakeados do indice reativo de ancoras
+        if ::AmenoAnchorService != undefined do
+            try (::AmenoAnchorService.rebuildIndex()) catch ()
+        refreshDimensions()
+        count
+    ),
+
     fn openStyleEditor =
     (
         if ::AmenoShowStyleEditor != undefined do ::AmenoShowStyleEditor()

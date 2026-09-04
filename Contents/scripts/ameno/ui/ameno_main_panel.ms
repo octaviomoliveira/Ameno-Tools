@@ -492,6 +492,76 @@ rollout AmenoAnchorRollout "Âncoras e Diagnóstico" width:344
             if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
         )
     )
+
+    -- E10.2: operacoes em lote nas cotas selecionadas na viewport --------
+    label lblBatch "Selecionadas:" pos:[14, 118] width:316 height:16 align:#left
+
+    -- Linha 1: unidade e precisao
+    dropdownlist ddlBatchUnit "Unidade" pos:[14, 138] width:150 height:21 items:#("metros","centimetros","milimetros") selection:1
+    spinner spnBatchPrecision "Precisao" pos:[180, 138] width:150 height:21 range:[0, 6, 2] type:#integer
+
+    button btnApplyUnit "Aplicar Unidade" pos:[14, 166] width:150 height:24
+    button btnApplyPrecision "Aplicar Precisao" pos:[180, 166] width:150 height:24
+
+    -- Linha 2: modo e bake
+    button btnApplyModeSel "Aplicar Modo Atual" pos:[14, 196] width:150 height:24 tooltip:"Aplica o modo selecionado no radio acima (Alinhada/Horizontal/Vertical) a todas as cotas selecionadas"
+    button btnBakeSel "Bake Ancoras" pos:[180, 196] width:150 height:24 tooltip:"Converte ancoras reativas em posicao mundial fixa. Apos o bake a cota nao segue mais o objeto."
+
+    on ddlBatchUnit selected i do ()  -- sem acao imediata; usado por btnApplyUnit
+
+    on btnApplyUnit pressed do
+    (
+        global AmenoApp
+        global AmenoRefreshMainPanel
+        if AmenoApp == undefined then return ()
+        local unitMap = #("meters", "centimeters", "millimeters")
+        local unit = unitMap[ddlBatchUnit.selection] as name
+        local count = AmenoApp.applyUnitToSelected unit
+        displayTempPrompt ("Ameno: unidade aplicada a " + (count as string) + " cota(s).") 1800
+        if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
+    )
+
+    on btnApplyPrecision pressed do
+    (
+        global AmenoApp
+        global AmenoRefreshMainPanel
+        if AmenoApp == undefined then return ()
+        local count = AmenoApp.applyPrecisionToSelected (spnBatchPrecision.value as integer)
+        displayTempPrompt ("Ameno: precisao aplicada a " + (count as string) + " cota(s).") 1800
+        if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
+    )
+
+    on btnApplyModeSel pressed do
+    (
+        global AmenoApp
+        global AmenoDimensionTool
+        global AmenoRefreshMainPanel
+        if AmenoApp == undefined then return ()
+        local mode = if AmenoDimensionTool != undefined then AmenoDimensionTool.activeMode else #aligned
+        local count = AmenoApp.applyDimensionModeToSelected mode
+        displayTempPrompt ("Ameno: modo " + (mode as string) + " aplicado a " + (count as string) + " cota(s).") 1800
+        if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
+    )
+
+    on btnBakeSel pressed do
+    (
+        global AmenoApp
+        global AmenoRefreshMainPanel
+        if AmenoApp == undefined then return ()
+        local ctrls = AmenoApp.getSelectedDimensionControllers()
+        if ctrls.count == 0 do
+        (
+            displayTempPrompt "Ameno: selecione cotas na cena antes de fazer o bake." 1800
+            return ()
+        )
+        local ok = queryBox ("Bake de " + (ctrls.count as string) + " cota(s) selecionada(s).\nApos o bake as cotas nao seguirao mais os objetos.\n\nContinuar?") title:"Ameno: Bake de Ancoras"
+        if ok do
+        (
+            local count = AmenoApp.bakeSelected()
+            messageBox ("Bake concluido: " + (count as string) + " cota(s) convertida(s) para posicao fixa.") title:"Ameno Dimensions"
+            if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
+        )
+    )
 )
 
 rollout AmenoRenderRollout "Render Separado de Cotas" width:344
