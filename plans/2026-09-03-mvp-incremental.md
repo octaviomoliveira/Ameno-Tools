@@ -60,7 +60,8 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 **Estado:** pronta para teste manual.
 **Implementação:** `Contents/scripts/ameno/core/ameno_scene_setup.ms`.
 **Evidência automatizada:** 3ds Max 2026.3 Batch aprovou criação, repetição sem duplicatas, restauração da layer corrente e conflito de nome `AMENO_COTAS`; a cópia instalada via `ApplicationPlugins` também carregou a E1.
-**Commit local:** `92bddd1` (`feat: prepare Ameno scene infrastructure`). Não há remoto GitHub configurado neste repositório para push.
+**Commit publicado em `origin/main`:** `92bddd1` (`feat: prepare Ameno scene infrastructure`).
+**Verificação visual em 2026-09-03:** a captura recebida mostrou a UI da sessão antiga. A cópia instalada foi comparada por SHA-256 com o checkout e contém `Preparar esta cena` e a E2; é necessário reiniciar completamente o 3ds Max antes de repetir o gate.
 
 ### Objetivo
 

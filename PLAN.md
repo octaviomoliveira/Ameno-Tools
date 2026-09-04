@@ -38,6 +38,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 ## Em andamento
 
 - E1 está **pronta para validação visual manual** no 3ds Max, definida em `plans/2026-09-03-mvp-incremental.md`.
+- A primeira verificação visual encontrou o painel da sessão anterior; os hashes confirmam que a cópia instalada já contém E1 e E2. É necessário encerrar e reabrir o 3ds Max para recarregar o bootstrap.
 - A E2 foi concluída por solicitação explícita, pois é um núcleo puro e independente da cena.
 - A E3 permanece bloqueada até o gate visual da E1 ser aprovado.
 
@@ -64,6 +65,7 @@ Validar visualmente a **E1 — Preparar a cena** após recarregar o 3ds Max: abr
 | 2026-09-03 | Confirmar o pacote aberto no 3ds Max e dividir o funcionamento do plugin em etapas pequenas. | Concluído no planejamento; E1 é a próxima implementação | `plans/2026-09-03-mvp-incremental.md` |
 | 2026-09-03 | Seguir para E1 e registrar cada etapa em Markdown e GitHub. | E1 implementada, testada em Batch e pronta para validação visual; commit local `92bddd1`; GitHub bloqueado porque nenhum remoto está configurado | `Contents/scripts/ameno/core/ameno_scene_setup.ms`, `.test-output/*e1*` |
 | 2026-09-03 | Conectar `github.com/octaviomoliveira/Ameno-Tools` e seguir para E2. | `origin/main` publicado; E2 implementada e aprovada em Batch e no pacote instalado; commits `70c0fb2` e `78e54d7` publicados | `Contents/scripts/ameno/core/ameno_dimensions_math.ms`, `.test-output/*e2*` |
+| 2026-09-03 | Conferir a tela atual do Ameno Tools para validar E1. | Instalação confirmada por hash; a tela mostrada pertence à sessão anterior ao reload. Aguardando reinicialização completa do 3ds Max | `ApplicationPlugins\AmenoTools\Contents\scripts\ameno\ui\ameno_main_panel.ms` |
 
 ## Como retomar sem contexto
 
