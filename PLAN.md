@@ -38,8 +38,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E8 implementada e aprovada manualmente no 3ds Max 2026.3 em 2026-09-04: serviço de âncoras reativas (`AmenoAnchorService`), Schema CA v3 com nós e coordenadas locais (`nodeA`, `localPointA`, `nodeB`, `localPointB`), detecção automática de nós ao criar cotas, recálculo dinâmico da linha de cota ao mover/rotacionar objetos, resiliência total com detecção de cotas órfãs (`isOrphan = true`) e coloração de alerta avermelhada `(color 230 70 70)` no viewport sem sumir da cena, seleção de âncoras (`selectAnchors`), reancoragem interativa A/B no painel, reparo em lote para coordenadas mundiais (`repairOrphans`), persistência de nós em arquivo `.max` e garantia mandatória de sincronização pré-render (`#preRender`).
 - E8.1 implementada e aprovada manualmente no 3ds Max 2026.3 em 2026-09-04: reatividade contínua e em tempo real a movimentos Select-and-Move via watchers nativos `when transform (getAnimByHandle h) changes` compilados em runtime por `execute()` para cada nó âncora; índice reverso $O(1)$ por `Dictionary #string`; histórico de Undo do usuário 100% limpo com `with undo off`; persistência atômica de estilos via Custom Attribute `AmenoStyleRegistryCA` no helper `AMENO_STYLE_REGISTRY` (suportando `max undo` e `max redo`); escala física real em milímetros (`toSceneUnits`) em todas as dimensões de estilo; suporte a `extensionGap` na spline; hierarquia de prioridade visual no viewport (1º Órfã vermelha `230 70 70` > 2º Manual âmbar `245 166 35` > 3º Normal); atualização rápida in-place (`updateDimensionFast`); interface compacta (altura <= 640 px) com `subRollout` nativo; e reancoragem interativa com `pickPoint snap:#3D`.
 - E9 implementada e aprovada em testes automatizados no 3ds Max 2026.3 com Corona 13: painel `Render Separado de Cotas`, escopos Todas/Selecionadas, PNG transparente com nome automático e proteção contra sobrescrita, herança da viewport/câmera ativa, frame, resolução, pixel aspect e Crop/Region, material `CoronaLightMtl` visível diretamente e no alpha com emissão desligada, isolamento temporário dos nós e restauração transacional após sucesso, exceção e cancelamento. Um render Corona real confirmou cotas opacas sobre fundo transparente, sem a geometria comum da cena.
-- Pacote instalado com E1 a E8.1 validado em Batch isolado e aprovado em sessão interativa no 3ds Max 2026.
-- Pacote de desenvolvimento com o núcleo E9 instalado em `ApplicationPlugins` e aprovado em Batch isolado; o gate visual da E9 na sessão interativa do usuário permanece pendente.
+- E9 implementada e aprovada interativamente no 3ds Max 2026.3 com Corona 13 em 2026-09-04: rollout `Render Separado de Cotas` no painel, PNG com fundo transparente e somente linhas/textos de cotas, nome automático e proteção contra sobrescrita (`_001`), herança de câmera/frame/resolução/pixel aspect/Crop do Render Setup, restauração transacional da cena confirmada ("A cena foi restaurada."); bugs corrigidos durante o gate: `renderOutputFilename`/`renderSaveFile` obrigatórios para Corona gravar o PNG (`outputfile` ignorado), critérios de parada do Corona agora forçados para 1 % de noise e 20 passes máximos no passe de overlay.
+- Pacote instalado com E1 a E9 validado em Batch isolado e aprovado em sessão interativa no 3ds Max 2026.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
 - Regras decididas para `AMENO_COTAS`, geometria renderizável, render separado de cotas e preservação do Beauty, LightMix e Render Elements existentes.
@@ -50,17 +50,18 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- E9 — Renderizar somente cotas no Corona: implementação, render real automatizado e pacote instalado aprovados; aguardando validação manual do usuário no 3ds Max.
+- E10 — Fluxo de produção e estabilização: cotas horizontal/vertical, seleção múltipla, bake, adapter V-Ray CPU, testes de escala (1–1000 cotas) e empacotamento alpha interno.
 
 ## Próximo passo executável
 
-Reiniciar o 3ds Max e executar o gate manual da **E9 — Renderizar somente cotas no Corona**:
+Implementar a **E10 — Fluxo de produção e estabilização**:
 
-1. abrir uma cena com Corona ativo, uma câmera/planta e ao menos uma cota Ameno;
-2. no rollout `Render Separado de Cotas`, testar `Todas` e `Selecionadas`;
-3. confirmar que o PNG contém somente linhas/textos de cota sobre fundo transparente e encaixa sobre a planta;
-4. confirmar que Beauty, LightMix, Render Elements, materiais, layers e visibilidades da cena não mudaram;
-5. cancelar um passe com `Esc` e confirmar a mensagem `Cancelado · cena restaurada`.
+1. cotas horizontal e vertical reutilizando o núcleo alinhado;
+2. seleção múltipla, atualização em lote e bake;
+3. V-Ray CPU pelo mesmo contrato do adapter Corona;
+4. cenas-fixture, relatório de diagnóstico e documentação de uso;
+5. testes com 1, 10, 100, 500 e 1000 cotas;
+6. empacotamento de uma versão alpha interna para uma planta real.
 
 
 ## Decisões que ainda exigem validação
@@ -101,6 +102,7 @@ Reiniciar o 3ds Max e executar o gate manual da **E9 — Renderizar somente cota
 | 2026-09-04 | Bug persistente: reatividade em tempo real ainda não funcionava após `853b97a`. | Causa raiz final: `NodeEventCallback` não captura Select-and-Move interativo — os eventos não chegavam com handles de nó válidos. Solução: `execute()` com `when transform (getAnimByHandle h) changes` compila o watcher em runtime, com handle embutido na string para evitar closure/race condition. E8.1 **aprovada interativamente** pelo usuário. | commit `4373f34`, `ameno_anchor_service.ms` |
 | 2026-09-04 | Finalizar e aprovar E8 / E8.1 no 3ds Max; atualizar planos e abrir E9 no GitHub. | E8 e E8.1 concluídas e aprovadas interativamente pelo usuário; documentação e planos incremental e compartilhado sincronizados; E9 é a próxima etapa (render overlay Corona). | Confirmação do usuário; `PLAN.md`, `plans/2026-09-03-mvp-incremental.md`, commits `bb05a41` e subsequente |
 | 2026-09-04 | Retomar no GPT após a E8.1 concluída no Antigravity e executar o trabalho bruto da E9. | E9 implementada, validada por testes transacionais e por render real no Corona 13, instalada em `ApplicationPlugins` e pronta para o gate manual; E10 permanece bloqueada até a confirmação do usuário. | `ameno_render_cotas_service.ms`, `ameno_corona_adapter.ms`, `test_e9_corona_render.ms`, `0013-e9-corona-separate-overlay.md` |
+| 2026-09-04 | Gate manual da E9 executado e aprovado no 3ds Max 2026.3 com Corona 13. | PNG com fundo transparente gerado, proteção de sobrescrita confirmada, cena restaurada; dois bugs corrigidos durante o gate (`renderOutputFilename` obrigatório, deleção de arquivo parcial ao cancelar); E9 encerrada, E10 aberta. | commits `c1f0488`, `6807b09`; confirmação visual do usuário |
 
 ## Como retomar sem contexto
 

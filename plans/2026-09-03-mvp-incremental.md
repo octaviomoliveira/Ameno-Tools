@@ -33,7 +33,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E7 | Estilo edita fonte, texto, linhas e terminais | Aprovada no Max |
 | E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Aprovada no Max |
 | E8.1 | Estabilização das âncoras, estilos e interface | Aprovada no Max |
-| E9 | Corona renderiza somente as cotas em arquivo transparente | Pronta para teste no Max |
+| E9 | Corona renderiza somente as cotas em arquivo transparente | Aprovada interativamente |
 | E10 | Fluxo de produção, V-Ray CPU e estabilização do MVP | Não iniciada |
 
 
@@ -464,7 +464,7 @@ Fazer as cotas acompanharem alterações arquitetônicas (translação/rotação
 
 ## E9 — Renderizar somente cotas no Corona
 
-**Estado:** pronta para teste no Max.
+**Estado:** aprovada interativamente no 3ds Max 2026.3 com Corona 13 em 2026-09-04. PNG com fundo transparente gerado, proteção de sobrescrita confirmada (`_001`), cena restaurada. Dois bugs corrigidos durante o gate: `renderOutputFilename`/`renderSaveFile` obrigatórios para o Corona gravar o PNG; critério de parada forçado para 1 % noise / 20 passes no passe de overlay.
 
 **Implementação:** `Contents/scripts/ameno/core/ameno_render_cotas_service.ms`, `Contents/scripts/ameno/renderers/ameno_corona_adapter.ms` e rollout `Render Separado de Cotas` em `Contents/scripts/ameno/ui/ameno_main_panel.ms`.
 
@@ -519,14 +519,14 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 - instalação, criação, edição, persistência e render separado aprovados;
 - limitações e versões exatas de Max, Corona e V-Ray registradas.
 
+
 ## Próxima ação
 
-Executar o gate manual da **E9 — Renderizar somente cotas no Corona** no 3ds Max reiniciado:
+Implementar a **E10 — Fluxo de produção e estabilização**:
 
-1. criar ou abrir uma cena iluminada com Corona, câmera de planta e cotas Ameno;
-2. renderizar `Todas` e depois `Selecionadas` pelo rollout `Render Separado de Cotas`;
-3. sobrepor o PNG no Beauty e confirmar alinhamento de câmera, frame, resolução, pixel aspect e Crop/Region;
-4. confirmar fundo transparente e ausência de geometria da planta no overlay;
-5. comparar antes/depois de Beauty, LightMix, Render Elements, layers, visibilidades e materiais;
-6. cancelar um render com `Esc` e confirmar restauração da cena;
-7. somente após aprovação textual do usuário, marcar E9 como aprovada e abrir E10.
+1. cotas horizontal e vertical reutilizando o núcleo alinhado;
+2. seleção múltipla, atualização em lote e bake;
+3. adapter V-Ray CPU pelo mesmo contrato do adapter Corona;
+4. cenas-fixture, relatório de diagnóstico e documentação de uso;
+5. testes de escala com 1, 10, 100, 500 e 1000 cotas;
+6. empacotamento de versão alpha interna para uma planta real.
