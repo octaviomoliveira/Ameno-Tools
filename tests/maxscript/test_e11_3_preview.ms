@@ -122,7 +122,7 @@
     -- TESTE 2: Tipografia (Peso, Itálico, Tamanho e SampleValue)
     format "\n--- Teste 2: Tipografia no Preview ---\n"
     pm.sampleValue = "7,80 m"
-    pm.fontSize = 28.0
+    pm.fontSize = 200.0
     pm.bold = true
     pm.italic = true
     pm.fontName = "Arial"

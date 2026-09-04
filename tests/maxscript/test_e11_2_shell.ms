@@ -76,14 +76,14 @@
     format "\n--- Teste 3: Sincronização StyleDraft -> UI ---\n"
     local draft = AmenoStyleEditorWPF.currentDraft
     assertCondition "Rascunho ativo instanciado" (draft != undefined and draft.styleRecord != undefined)
-    assertCondition "UI reflete tamanho da fonte do estilo padrão (20.0)" (AmenoStyleEditorWPF.sliderFontSize.Value == 20.0)
+    assertCondition "UI reflete tamanho da fonte do estilo padrão (140.0)" (AmenoStyleEditorWPF.sliderFontSize.Value == 140.0)
     assertCondition "UI reflete espessura de linha do estilo padrão (1.5)" (AmenoStyleEditorWPF.sliderLineThickness.Value == 1.5)
     assertCondition "UI inicia com indicador dirty oculto" (AmenoStyleEditorWPF.txtDirtyMark.Visibility == (dotNetClass "System.Windows.Visibility").Collapsed)
 
     -- TESTE 4: Mutações na UI marcam o rascunho como dirty
     format "\n--- Teste 4: Mutações na UI e indicador dirty ---\n"
-    AmenoStyleEditorWPF.sliderFontSize.Value = 32.0
-    assertCondition "Alterar slider de tamanho atualizou o styleRecord no draft" (AmenoStyleEditorWPF.currentDraft.styleRecord.fontSize == 32.0)
+    AmenoStyleEditorWPF.sliderFontSize.Value = 180.0
+    assertCondition "Alterar slider de tamanho atualizou o styleRecord no draft" (AmenoStyleEditorWPF.currentDraft.styleRecord.fontSize == 180.0)
     assertCondition "Draft marcado como dirty apos alteracao de controle" (AmenoStyleEditorWPF.currentDraft.isDirty)
     assertCondition "Indicador visual dirty exibido na UI" (AmenoStyleEditorWPF.txtDirtyMark.Visibility == (dotNetClass "System.Windows.Visibility").Visible)
 
@@ -114,7 +114,16 @@
     AmenoStyleEditorWPF.onPresetClick "technical"
     assertCondition "Preset Técnico carregou terminal de seta fechada" (AmenoStyleEditorWPF.currentDraft.styleRecord.terminalType == #arrowClosed)
     assertCondition "Preset Técnico atualizou ComboBox de terminais na UI" (AmenoStyleEditorWPF.cbTerminalType.SelectedIndex == 1)
+    assertCondition "Preset Técnico carregou fonte Consolas" (AmenoStyleEditorWPF.currentDraft.styleRecord.fontName == "Consolas")
     assertCondition "Preset Técnico marcou draft como dirty para revisão visual" (AmenoStyleEditorWPF.currentDraft.isDirty)
+
+    AmenoStyleEditorWPF.onPresetClick "editorial"
+    assertCondition "Preset Editorial carregou fonte Georgia" (AmenoStyleEditorWPF.currentDraft.styleRecord.fontName == "Georgia")
+    assertCondition "Preset Editorial carregou terminal dot" (AmenoStyleEditorWPF.currentDraft.styleRecord.terminalType == #dot)
+
+    AmenoStyleEditorWPF.onPresetClick "default"
+    assertCondition "Preset Arquitetônico carregou fonte Arial" (AmenoStyleEditorWPF.currentDraft.styleRecord.fontName == "Arial")
+    assertCondition "Preset Arquitetônico carregou terminal tick" (AmenoStyleEditorWPF.currentDraft.styleRecord.terminalType == #tick)
 
     -- TESTE 8: Fechamento Seguro e Limpeza de Singleton
     format "\n--- Teste 8: Fechamento Seguro e Limpeza de Singleton ---\n"

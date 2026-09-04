@@ -96,16 +96,16 @@ struct AmenoStyleRecord
     styleId = "default",
     name = "Arquitetônico",
     fontName = "Arial",
-    fontSize = 20.0,
+    fontSize = 140.0,
     bold = false,
     italic = false,
     tracking = 0.0,
-    textGap = 12.0,
+    textGap = 60.0,
     lineThickness = 1.5,
-    extensionOverhang = 8.0,
+    extensionOverhang = 80.0,
     extensionGap = 0.0,
     terminalType = #tick, -- #tick, #arrowClosed, #arrowOpen, #dot, #none
-    terminalSize = 14.0,
+    terminalSize = 100.0,
     textMaskEnabled = false,
     annotationColor = "245,245,245",
     textColor = "",
@@ -198,16 +198,16 @@ struct AmenoStyleServiceDefinition
     (
         local presets = #()
 
-        -- Preset 1: Arquitetônico (Padrão)
-        local arch = AmenoStyleRecord styleId:"default" name:"Arquitetônico" fontName:"Arial" fontSize:20.0 bold:false italic:false tracking:0.0 textGap:12.0 lineThickness:1.5 extensionOverhang:8.0 extensionGap:0.0 terminalType:#tick terminalSize:14.0 textMaskEnabled:true annotationColor:"245,245,245" textColor:"" terminalPlacement:#auto terminalAngle:45.0 previewScale:1.0
+        -- Preset 1: Arquitetônico (Padrão: Arial/neutro, 140mm, traço 45°)
+        local arch = AmenoStyleRecord styleId:"default" name:"Arquitetônico" fontName:"Arial" fontSize:140.0 bold:false italic:false tracking:0.0 textGap:60.0 lineThickness:1.5 extensionOverhang:80.0 extensionGap:0.0 terminalType:#tick terminalSize:100.0 textMaskEnabled:true annotationColor:"245,245,245" textColor:"" terminalPlacement:#auto terminalAngle:45.0 previewScale:1.0
         append presets arch
 
-        -- Preset 2: Editorial
-        local edit = AmenoStyleRecord styleId:"editorial" name:"Editorial" fontName:"Georgia" fontSize:22.0 bold:false italic:false tracking:10.0 textGap:10.0 lineThickness:1.0 extensionOverhang:5.0 extensionGap:0.0 terminalType:#dot terminalSize:8.0 textMaskEnabled:true annotationColor:"245,245,245" textColor:"" terminalPlacement:#auto terminalAngle:45.0 previewScale:1.0
+        -- Preset 2: Editorial (Georgia/serifado, 150mm, ponto/losango)
+        local edit = AmenoStyleRecord styleId:"editorial" name:"Editorial" fontName:"Georgia" fontSize:150.0 bold:false italic:false tracking:0.0 textGap:50.0 lineThickness:1.2 extensionOverhang:60.0 extensionGap:0.0 terminalType:#dot terminalSize:70.0 textMaskEnabled:true annotationColor:"245,245,245" textColor:"" terminalPlacement:#auto terminalAngle:45.0 previewScale:1.0
         append presets edit
 
-        -- Preset 3: Técnico
-        local tech = AmenoStyleRecord styleId:"technical" name:"Técnico" fontName:"Arial" fontSize:16.0 bold:false italic:false tracking:0.0 textGap:8.0 lineThickness:1.2 extensionOverhang:6.0 extensionGap:0.0 terminalType:#arrowClosed terminalSize:16.0 textMaskEnabled:true annotationColor:"245,245,245" textColor:"" terminalPlacement:#auto terminalAngle:45.0 previewScale:1.0
+        -- Preset 3: Técnico (Consolas/monoespaçado técnico, 120mm, seta fechada)
+        local tech = AmenoStyleRecord styleId:"technical" name:"Técnico" fontName:"Consolas" fontSize:120.0 bold:false italic:false tracking:0.0 textGap:40.0 lineThickness:1.8 extensionOverhang:60.0 extensionGap:0.0 terminalType:#arrowClosed terminalSize:110.0 textMaskEnabled:true annotationColor:"245,245,245" textColor:"" terminalPlacement:#auto terminalAngle:45.0 previewScale:1.0
         append presets tech
 
         presets
@@ -407,7 +407,7 @@ struct AmenoStyleServiceDefinition
     (
         if installedFontsCache != undefined then return installedFontsCache
 
-        local fontList = #("Arial", "Calibri", "Courier New", "Georgia", "Segoe UI", "Tahoma", "Times New Roman", "Verdana")
+        local fontList = #("Arial", "Calibri", "Consolas", "Courier New", "Georgia", "Segoe UI", "Tahoma", "Times New Roman", "Verdana")
         try
         (
             local ffClass = dotnetclass "System.Drawing.FontFamily"
@@ -429,8 +429,14 @@ struct AmenoStyleServiceDefinition
 
     fn validateFont fontName =
     (
+        if fontName == undefined or fontName == "" then return "Arial"
         local fonts = getInstalledFonts()
-        if (findItem fonts fontName) > 0 then fontName else "Arial"
+        local targetLower = toLower (fontName as string)
+        for f in fonts do
+        (
+            if toLower f == targetLower do return f
+        )
+        "Arial"
     ),
 
     fn getStyle styleId =

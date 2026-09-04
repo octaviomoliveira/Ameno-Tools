@@ -114,13 +114,13 @@ struct AmenoStyleEditorWPFDefinition
         window != undefined and (try (window.IsLoaded) catch (false))
     ),
 
-    fn getXAMLString initialWidth:860 initialHeight:560 =
+    fn getXAMLString initialWidth:880 initialHeight:640 =
     (
         local xaml = @"<Window xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
         xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
         Title='Ameno — Editor de Estilo'
         Width='" + (initialWidth as string) + @"' Height='" + (initialHeight as string) + @"'
-        MinWidth='740' MinHeight='480'
+        MinWidth='780' MinHeight='520'
         Background='#1E1E1E' Foreground='#CCCCCC'
         FontFamily='Segoe UI' FontSize='12'
         WindowStartupLocation='CenterOwner'>
@@ -264,7 +264,7 @@ struct AmenoStyleEditorWPFDefinition
                     <TextBlock Text='Presets:' Foreground='#888888' VerticalAlignment='Center' Margin='0,0,8,0' />
                     <Button Name='btnPresetArch' Content='Arquitetônico' Height='24' Padding='8,2' Margin='0,0,4,0' Background='#333337' Foreground='#FFFFFF' BorderBrush='#444444' ToolTip='Carregar preset Arquitetônico (Arial, Traço 45°)' TabIndex='4'/>
                     <Button Name='btnPresetEdit' Content='Editorial' Height='24' Padding='8,2' Margin='0,0,4,0' Background='#333337' Foreground='#FFFFFF' BorderBrush='#444444' ToolTip='Carregar preset Editorial (Georgia, Ponto)' TabIndex='5'/>
-                    <Button Name='btnPresetTech' Content='Técnico' Height='24' Padding='8,2' Margin='0,0,12,0' Background='#333337' Foreground='#FFFFFF' BorderBrush='#444444' ToolTip='Carregar preset Técnico (Seta Fechada)' TabIndex='6'/>
+                    <Button Name='btnPresetTech' Content='Técnico' Height='24' Padding='8,2' Margin='0,0,12,0' Background='#333337' Foreground='#FFFFFF' BorderBrush='#444444' ToolTip='Carregar preset Técnico (Consolas, Seta Fechada)' TabIndex='6'/>
                     <Button Name='btnSaveAsNew' Content='Salvar como Novo...' Height='24' Padding='10,2' Background='#3A3A3D' Foreground='#61AFEF' BorderBrush='#4B5263' ToolTip='Criar um novo estilo a partir das alterações atuais' TabIndex='7'/>
                 </StackPanel>
 
@@ -354,8 +354,8 @@ struct AmenoStyleEditorWPFDefinition
                                         <ColumnDefinition Width='Auto'/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text='Tamanho:' Foreground='#CCCCCC' VerticalAlignment='Center'/>
-                                    <Slider Name='sliderFontSize' Grid.Column='1' Minimum='4' Maximum='200' Value='20' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='21' ToolTip='Tamanho da fonte em milímetros de cena'/>
-                                    <TextBox Name='txtFontSize' Grid.Column='2' Text='20.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' Margin='0,0,8,0' TabIndex='22'/>
+                                    <Slider Name='sliderFontSize' Grid.Column='1' Minimum='10' Maximum='500' Value='140' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='21' ToolTip='Tamanho da fonte em milímetros de cena'/>
+                                    <TextBox Name='txtFontSize' Grid.Column='2' Text='140.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' Margin='0,0,8,0' TabIndex='22'/>
                                     <StackPanel Grid.Column='3' Orientation='Horizontal' VerticalAlignment='Center'>
                                         <CheckBox Name='chkBold' Content='N' FontWeight='Bold' Foreground='#FFFFFF' Margin='0,0,6,0' ToolTip='Negrito' TabIndex='23'/>
                                         <CheckBox Name='chkItalic' Content='I' FontStyle='Italic' Foreground='#FFFFFF' ToolTip='Itálico' TabIndex='24'/>
@@ -370,7 +370,7 @@ struct AmenoStyleEditorWPFDefinition
                                         <ColumnDefinition Width='50'/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text='Tracking:' Foreground='#CCCCCC' VerticalAlignment='Center'/>
-                                    <Slider Name='sliderTracking' Grid.Column='1' Minimum='-50' Maximum='300' Value='0' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='25' ToolTip='Espaçamento entre caracteres'/>
+                                    <Slider Name='sliderTracking' Grid.Column='1' Minimum='-10' Maximum='50' Value='0' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='25' ToolTip='Espaçamento entre caracteres'/>
                                     <TextBox Name='txtTracking' Grid.Column='2' Text='0.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' TabIndex='26'/>
                                 </Grid>
 
@@ -383,15 +383,15 @@ struct AmenoStyleEditorWPFDefinition
                                         <ColumnDefinition Width='Auto'/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text='Afastamento:' Foreground='#CCCCCC' VerticalAlignment='Center'/>
-                                    <Slider Name='sliderTextGap' Grid.Column='1' Minimum='0' Maximum='100' Value='12' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='27' ToolTip='Distância do texto em relação à linha de cota'/>
-                                    <TextBox Name='txtTextGap' Grid.Column='2' Text='12.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' Margin='0,0,8,0' TabIndex='28'/>
+                                    <Slider Name='sliderTextGap' Grid.Column='1' Minimum='0' Maximum='250' Value='60' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='27' ToolTip='Distância do texto em relação à linha de cota'/>
+                                    <TextBox Name='txtTextGap' Grid.Column='2' Text='60.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' Margin='0,0,8,0' TabIndex='28'/>
                                     <CheckBox Name='chkTextMask' Grid.Column='3' Content='Máscara' Foreground='#FFFFFF' VerticalAlignment='Center' ToolTip='Ocultar linhas sob o texto da cota' TabIndex='29'/>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- GRUPO 2: LINHAS DE COTA -->
-                        <Border Background='#202022' BorderBrush='#303034' BorderThickness='1' CornerRadius='3' Padding='8' Margin='0,0,0,10'>
+                        <Border Background='#202022' BorderBrush='#303034' BorderThickness='1' CornerRadius='3' Padding='8' Margin='0,0,0,6'>
                             <StackPanel>
                                 <TextBlock Text='LINHAS DE COTA' Foreground='#61AFEF' FontWeight='Bold' FontSize='11' Margin='0,0,0,8'/>
 
@@ -417,7 +417,7 @@ struct AmenoStyleEditorWPFDefinition
                                         <ColumnDefinition Width='50'/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text='Espessura:' Foreground='#CCCCCC' VerticalAlignment='Center'/>
-                                    <Slider Name='sliderLineThickness' Grid.Column='1' Minimum='0.1' Maximum='20' Value='1.5' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='33' ToolTip='Espessura da linha em milímetros de cena'/>
+                                    <Slider Name='sliderLineThickness' Grid.Column='1' Minimum='0.2' Maximum='10' Value='1.5' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='33' ToolTip='Espessura da linha em milímetros de cena'/>
                                     <TextBox Name='txtLineThickness' Grid.Column='2' Text='1.5' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' TabIndex='34'/>
                                 </Grid>
 
@@ -429,8 +429,8 @@ struct AmenoStyleEditorWPFDefinition
                                         <ColumnDefinition Width='50'/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text='Prolongar:' Foreground='#CCCCCC' VerticalAlignment='Center'/>
-                                    <Slider Name='sliderOverhang' Grid.Column='1' Minimum='0' Maximum='100' Value='8' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='35' ToolTip='Extensão da linha além dos pontos cotados'/>
-                                    <TextBox Name='txtOverhang' Grid.Column='2' Text='8.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' TabIndex='36'/>
+                                    <Slider Name='sliderOverhang' Grid.Column='1' Minimum='0' Maximum='300' Value='80' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='35' ToolTip='Extensão da linha além dos pontos cotados'/>
+                                    <TextBox Name='txtOverhang' Grid.Column='2' Text='80.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' TabIndex='36'/>
                                 </Grid>
 
                                 <!-- Afastamento (Extension Gap) -->
@@ -441,7 +441,7 @@ struct AmenoStyleEditorWPFDefinition
                                         <ColumnDefinition Width='50'/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text='Recuo:' Foreground='#CCCCCC' VerticalAlignment='Center'/>
-                                    <Slider Name='sliderExtensionGap' Grid.Column='1' Minimum='0' Maximum='100' Value='0' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='37' ToolTip='Espaço entre os pontos cotados e o início das extensões'/>
+                                    <Slider Name='sliderExtensionGap' Grid.Column='1' Minimum='0' Maximum='200' Value='0' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='37' ToolTip='Espaço entre os pontos cotados e o início das extensões'/>
                                     <TextBox Name='txtExtensionGap' Grid.Column='2' Text='0.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' TabIndex='38'/>
                                 </Grid>
                             </StackPanel>
@@ -470,8 +470,8 @@ struct AmenoStyleEditorWPFDefinition
                                         <ColumnDefinition Width='50'/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text='Tamanho:' Foreground='#CCCCCC' VerticalAlignment='Center'/>
-                                    <Slider Name='sliderTerminalSize' Grid.Column='1' Minimum='2' Maximum='100' Value='14' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='41' ToolTip='Tamanho do terminal em milímetros'/>
-                                    <TextBox Name='txtTerminalSize' Grid.Column='2' Text='14.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' TabIndex='42'/>
+                                    <Slider Name='sliderTerminalSize' Grid.Column='1' Minimum='10' Maximum='300' Value='100' VerticalAlignment='Center' Margin='0,0,6,0' TabIndex='41' ToolTip='Tamanho do terminal em milímetros'/>
+                                    <TextBox Name='txtTerminalSize' Grid.Column='2' Text='100.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' TabIndex='42'/>
                                 </Grid>
 
                                 <!-- Posição e Ângulo -->
@@ -615,10 +615,11 @@ struct AmenoStyleEditorWPFDefinition
         cbFontName.Items.Clear()
         local fonts = ::AmenoStyleService.getInstalledFonts()
         local selIdx = -1
+        local curFont = if currentDraft != undefined and currentDraft.styleRecord != undefined then (currentDraft.styleRecord.fontName as string) else "Arial"
         for i = 1 to fonts.count do
         (
             cbFontName.Items.Add fonts[i]
-            if currentDraft != undefined and fonts[i] == currentDraft.styleRecord.fontName do
+            if (stricmp fonts[i] curFont) == 0 do
             (
                 selIdx = (i - 1)
             )
@@ -656,13 +657,34 @@ struct AmenoStyleEditorWPFDefinition
         (
             local rec = currentDraft.styleRecord
 
-            -- Font
+            -- Sincronizar seletor de estilo no cabeçalho
+            if cbStyleSelect != undefined and ::AmenoStyleService != undefined do
+            (
+                local styles = ::AmenoStyleService.listStyles()
+                local sIdx = -1
+                for i = 1 to styles.count do
+                (
+                    if styles[i].styleId == currentDraft.sourceStyleId or (stricmp styles[i].name rec.name) == 0 do
+                    (
+                        sIdx = (i - 1)
+                        exit
+                    )
+                )
+                if sIdx >= 0 and cbStyleSelect.SelectedIndex != sIdx do
+                (
+                    cbStyleSelect.SelectedIndex = sIdx
+                )
+            )
+
+            -- Font (busca case-insensitive e coerção segura)
             if cbFontName != undefined do
             (
                 local found = false
+                local targetFont = rec.fontName as string
                 for i = 0 to (cbFontName.Items.Count - 1) do
                 (
-                    if (cbFontName.Items.GetItemAt i) == rec.fontName do
+                    local itemStr = (cbFontName.Items.GetItemAt i) as string
+                    if (stricmp itemStr targetFont) == 0 do
                     (
                         cbFontName.SelectedIndex = i
                         found = true
