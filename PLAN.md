@@ -40,13 +40,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- E3 — primeiro construtor gráfico — implementada e instalada; aguardando gate visual e de render no Max.
+- E3 — primeiro construtor gráfico — aprovada visualmente no viewport; render comum e limpeza final ainda aguardam confirmação explícita.
 - A E2 foi concluída por solicitação explícita, pois é um núcleo puro e independente da cena.
 - A falha de bootstrap relatada após a primeira instalação da E3 foi corrigida: `throw getCurrentException()` é inválido dentro de `catch` no MAXScript e foi substituído por `throw`. O teste Batch passou a usar perfil isolado, portanto não exige fechar a sessão interativa do usuário.
 
 ## Próximo passo executável
 
-Fechar e reabrir o **3ds Max 2026**, abrir `Ameno Tools`, clicar em **Criar cota de teste** e validar a E3: seleção de linha + TextPlus, nós visuais em `AMENO_COTAS`, controlador oculto em `AMENO_SYSTEM`, legibilidade na câmera superior e presença em um render comum. Depois, usar **Limpar cotas de teste** e confirmar ausência de resíduos. A ferramenta de três cliques permanece fora desta etapa.
+Concluir o gate residual da **E3 — Primeiro construtor gráfico**: fazer um render comum, usar **Limpar cotas de teste** e confirmar ausência de resíduos. A criação e a leitura no viewport já foram aprovadas pela captura do usuário; a ferramenta de três cliques permanece fora desta etapa.
 
 ## Decisões que ainda exigem validação
 
@@ -71,6 +71,7 @@ Fechar e reabrir o **3ds Max 2026**, abrir `Ameno Tools`, clicar em **Criar cota
 | 2026-09-03 | Reabrir o Max e validar E1; seguir para a próxima etapa. | E1 aprovada visualmente; E3 iniciada | captura do painel e Layer Explorer fornecida pelo usuário |
 | 2026-09-03 | Seguir após reiniciar o Max. | E3 implementada e instalada; aguardando gate manual. A validação Batch foi concluída depois em perfil isolado. | `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, cópia `ApplicationPlugins` conferida por SHA-256 |
 | 2026-09-03 | Corrigir tela “O núcleo do Ameno Tools não foi carregado”. | Corrigido, testado no 3ds Max 2026.3 em Batch isolado e no pacote `ApplicationPlugins`; a mensagem futura agora inclui o módulo/erro reais. | `ameno_dimension_graphics.ms`, `ameno_bootstrap.ms`, `AmenoTools.mcr`, `.test-output/*e3*` |
+| 2026-09-03 | Confirmar que a E3 funciona no Max após a correção. | Gate visual do viewport aprovado: uma cota ativa aparece com linhas, terminais e TextPlus `5,00 m`; `AMENO_COTAS` está selecionada. Render comum e limpeza ainda pendentes. | captura do viewport/painel fornecida pelo usuário |
 
 ## Como retomar sem contexto
 
