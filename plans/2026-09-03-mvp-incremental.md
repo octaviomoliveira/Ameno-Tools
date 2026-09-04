@@ -288,7 +288,7 @@ Transformar o desenho criado em uma entidade Ameno confiável que sobreviva a sa
 
 ## E6 — Valores medidos, arredondados e manuais
 
-**Estado:** implementada, validada em 3ds Max Batch isolado e no pacote instalado; pronta para validação manual no 3ds Max 2026.3.
+**Estado:** aprovada no 3ds Max 2026.3 em 2026-09-04 após validação manual do usuário.
 **Implementação:** `Contents/scripts/ameno/core/ameno_dimension_ca.ms` (schema v2), `Contents/scripts/ameno/core/ameno_dimension_graphics.ms` (cálculo de audit, marcador viewport-only `[M]`, alteração e restauração de modos), `Contents/scripts/ameno/core/ameno_runtime.ms` (seleção e delegação), `Contents/scripts/ameno/ui/ameno_main_panel.ms` (painel expandido com inspeção reativa via `#selectionSetChanged`), e documentado na ADR `docs/decisions/0009-e6-manual-overrides-viewport-marker.md`.
 **Evidência automatizada:** `test_bootstrap.ms` aprovou no Batch isolado:
 1. Estado inicial medido com delta 0 e sem marcador.
@@ -301,6 +301,7 @@ Transformar o desenho criado em uma entidade Ameno confiável que sobreviva a sa
 8. Reversão atômica via Undo (`max undo`).
 `test_installed_package.ms` aprovou a execução dos overrides no pacote instalado via `ApplicationPlugins`.
 **Instalação:** `tools/install-dev.ps1` sincronizou a versão atualizada no `ApplicationPlugins\AmenoTools`.
+**Gate manual aprovado em 2026-09-04:** o usuário validou no 3ds Max 2026 interativo a cota com override numérico manual (1,10 m com medido 1,09 m, delta +0,01 m), confirmando que o marcador [M] âmbar apareceu na viewport, o painel indicou [MODIFICADA / MANUAL] e no render (Arnold RenderView) o marcador [M] NÃO apareceu, mantendo render 100% limpo e sem advertência visual na saída final. A E6 está encerrada.
 
 ### Objetivo
 
