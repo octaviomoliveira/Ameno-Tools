@@ -81,7 +81,7 @@ Executar a validação manual da **E5 — Persistência, Undo e reabertura** no 
 | 2026-09-03 | Seguir para E4 e criar a ferramenta de três cliques com preview. | Implementada em `ameno_dimension_tool.ms`, integrada ao painel/bootstrap/runtime; smoke test E1–E4 passou e a instalação de desenvolvimento foi atualizada. Aguardando validação manual do fluxo no Max. | `.test-output/listener.log`, `ApplicationPlugins\\AmenoTools`, commit `a33139e` |
 | 2026-09-03 | Corrigir o desaparecimento da prévia no terceiro clique. | Removido o limite `numPoints:3`: o MouseTool permanece ativo até o commit retornar sucesso, preserva a prévia em erro e o painel exibe a exceção. Teste Batch e teste do pacote instalado passaram. | `ameno_dimension_tool.ms`, `ameno_main_panel.ms`, commit `6ce2200` |
 | 2026-09-04 | Confirmar a correção do terceiro clique no uso real. | Fluxo manual aprovado no Max: A/B/afastamento criou e manteve uma cota permanente de `4,05 m`; painel indicou `1 cota(s) ativa(s)`. E4 encerrada; próximo passo é E5. | captura do viewport/painel fornecida pelo usuário; commits `6ce2200` e `a868a4c` |
-| 2026-09-04 | Implementar E5: persistência, Custom Attributes e ciclo de vida. | E5 implementada e aprovada em Batch isolado e no pacote ApplicationPlugins; aguardando validação manual no Max. | `ameno_dimension_ca.ms`, `0008-e5-custom-attributes-persistence.md`, `.test-output/*` |
+| 2026-09-04 | Implementar E5: persistência, Custom Attributes e ciclo de vida. | E5 implementada e aprovada em Batch isolado e no pacote ApplicationPlugins; aguardando validação manual no Max. | commit `9c78acf`, `ameno_dimension_ca.ms`, `0008-e5-custom-attributes-persistence.md` |
 
 ## Como retomar sem contexto
 
