@@ -223,6 +223,18 @@ Durante o arraste, atualizar apenas o canvas, com debounce máximo de 16–33 ms
 - erro durante aplicação: restaurar o snapshot e apresentar mensagem acionável;
 - seleção alterada enquanto o editor está aberto: atualizar somente contexto/contagem, sem perder o draft silenciosamente.
 
+**Status E11.4 (Concluído em 2026-09-04):**
+- Módulos `Contents/scripts/ameno/core/ameno_style_service.ms` e `Contents/scripts/ameno/ui/ameno_style_editor_wpf.ms` atualizados e reforçados com persistência transacional completa.
+- Ação `Cancelar`: descarte seguro do draft em memória (`discardDraft`), fechamento da janela modeless, remoção de callbacks de seleção de cena e preservação estrita de estilos prévios e histórico de Undo/Redo.
+- Ação `Salvar estilo`: atualiza o registro persistente de estilos em CA e `rootNode`, propaga alterações em lote para todas as cotas associadas na cena, sincroniza número de cotas vinculadas e suporta Undo/Redo nativo do 3ds Max em etapa única.
+- Ação `Salvar como novo`: aloca novo identificador (`styleId`), cria cópia derivada com sufixo `(Cópia)`, preserva o estilo original intacto, atualiza a lista de seleção do ComboBox e comuta o draft ativo para o novo estilo.
+- Ação `Aplicar às selecionadas`: deduplicação estrita de nós por `dimensionId` (evita redundâncias quando múltiplos nós da mesma cota como texto, linhas e controlador estão selecionados conjuntamente), aplicando o estilo do draft atômica e confiavelmente com suporte a Undo/Redo.
+- Tratamento de seleção vazia: feedback visual claro no status bar (`txtPreviewStatus`) sem disparar erros em tempo de execução.
+- Callback em tempo real (`#selectionSetChanged` via `onSceneSelectionChanged`): atualiza contadores de uso e contexto de seleção de forma reativa enquanto o editor está aberto, garantindo retenção absoluta de edições não salvas no rascunho (`currentDraft`).
+- Resiliência a falhas com rollback: criação prévia de snapshots defensivos que revertem o estilo original em caso de erro na reconstrução gráfica, acompanhados de mensagens acionáveis na barra de status.
+- Suíte automatizada `tests/maxscript/test_e11_4_persistence.ms` executada sob 3ds Max 2026.3 headless com **36/36 testes aprovados (100% de cobertura)**.
+- Baterias de regressão completas (`test_e11_1_draft.ms`, `test_e11_2_shell.ms`, `test_e11_3_preview.ms`, `test_bootstrap.ms`) executadas com **100% de aprovação**.
+
 ### E11.5 — Integração, testes e instalação
 
 - substituir a abertura do rollout antigo pelo novo host;

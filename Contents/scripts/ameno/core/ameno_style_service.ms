@@ -662,10 +662,20 @@ struct AmenoStyleServiceDefinition
     fn saveDraftAsStyle draft =
     (
         if draft == undefined or draft.styleRecord == undefined then return 0
-        local updatedCount = this.updateStyleAndRebuild draft.styleRecord
-        draft.isDirty = false
-        draft.sourceStyleId = draft.styleRecord.styleId
-        updatedCount
+        local oldStyle = this.getStyle draft.styleRecord.styleId
+        local snapshot = this.cloneStyle oldStyle
+        try
+        (
+            local updatedCount = this.updateStyleAndRebuild draft.styleRecord
+            draft.isDirty = false
+            draft.sourceStyleId = draft.styleRecord.styleId
+            updatedCount
+        )
+        catch
+        (
+            if snapshot != undefined do this.saveStyle snapshot
+            throw
+        )
     ),
 
     fn saveDraftAsNewStyle draft newName:undefined =
@@ -704,21 +714,31 @@ struct AmenoStyleServiceDefinition
 
         if controllersToUpdate.count == 0 then return 0
 
-        undo "Ameno: aplicar estilo às selecionadas" on
+        local oldStyle = this.getStyle draft.styleRecord.styleId
+        local snapshot = this.cloneStyle oldStyle
+        try
         (
-            this.saveStyle draft.styleRecord
-            for c in controllersToUpdate do
+            undo "Ameno: aplicar estilo às selecionadas" on
             (
-                local rec = ::AmenoDimensionCA.readCA c
-                if rec != undefined do
+                this.saveStyle draft.styleRecord
+                for c in controllersToUpdate do
                 (
-                    rec.styleId = draft.styleRecord.styleId
-                    ::AmenoDimensionCA.applyCA c rec
-                    ::AmenoDimensionGraphics.rebuildDimension c style:(this.cloneStyle draft.styleRecord)
+                    local rec = ::AmenoDimensionCA.readCA c
+                    if rec != undefined do
+                    (
+                        rec.styleId = draft.styleRecord.styleId
+                        ::AmenoDimensionCA.applyCA c rec
+                        ::AmenoDimensionGraphics.rebuildDimension c style:(this.cloneStyle draft.styleRecord)
+                    )
                 )
             )
+            controllersToUpdate.count
         )
-        controllersToUpdate.count
+        catch
+        (
+            if snapshot != undefined do this.saveStyle snapshot
+            throw
+        )
     )
 )
 

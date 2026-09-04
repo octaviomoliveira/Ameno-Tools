@@ -415,6 +415,36 @@ struct AmenoStyleEditorWPFDefinition
         txtInUseCount.Text = "Em uso: " + (count as string) + " cota(s)"
     ),
 
+    fn onSceneSelectionChanged =
+    (
+        if window == undefined do return false
+        updateInUseCount()
+        if txtPreviewStatus != undefined do
+        (
+            local selDimCount = 0
+            if ::AmenoDimensionGraphics != undefined do
+            (
+                local dimIds = #()
+                for obj in selection where isValidNode obj do
+                (
+                    local did = ::AmenoDimensionGraphics.getDimensionId obj
+                    if did != "" and (findItem dimIds did) == 0 do
+                    (
+                        append dimIds did
+                        selDimCount += 1
+                    )
+                )
+            )
+            if selDimCount > 0 then
+                txtPreviewStatus.Text = (selDimCount as string) + " cota(s) selecionada(s) pronta(s) para aplicação"
+            else if currentDraft != undefined and currentDraft.isDirty then
+                txtPreviewStatus.Text = "Rascunho com alterações não salvas"
+            else
+                txtPreviewStatus.Text = "Pronto"
+        )
+        true
+    ),
+
     fn populateStyleList =
     (
         if cbStyleSelect == undefined or ::AmenoStyleService == undefined do return false
@@ -565,6 +595,7 @@ struct AmenoStyleEditorWPFDefinition
 
     fn onCancel =
     (
+        callbacks.removeScripts id:#amenoStyleEditorWpfSelection
         if currentDraft != undefined and ::AmenoStyleService != undefined do
         (
             ::AmenoStyleService.discardDraft currentDraft
@@ -576,26 +607,58 @@ struct AmenoStyleEditorWPFDefinition
     fn onSaveStyle =
     (
         if currentDraft == undefined or ::AmenoStyleService == undefined do return 0
-        local count = ::AmenoStyleService.saveDraftAsStyle currentDraft
-        updateDirtyUI()
-        updateInUseCount()
-        if txtPreviewStatus != undefined do
+        try
         (
-            txtPreviewStatus.Text = "Estilo '" + currentDraft.styleRecord.name + "' salvo (" + (count as string) + " cotas sincronizadas)"
+            local count = ::AmenoStyleService.saveDraftAsStyle currentDraft
+            updateDirtyUI()
+            updateInUseCount()
+            if txtPreviewStatus != undefined do
+            (
+                txtPreviewStatus.Text = "Estilo '" + currentDraft.styleRecord.name + "' salvo (" + (count as string) + " cotas sincronizadas)"
+            )
+            count
         )
-        count
+        catch
+        (
+            local err = getCurrentException()
+            if txtPreviewStatus != undefined do
+            (
+                txtPreviewStatus.Text = "Erro ao salvar estilo: " + (err as string)
+            )
+            0
+        )
     ),
 
     fn onApplyToSelection =
     (
         if currentDraft == undefined or ::AmenoStyleService == undefined do return 0
-        local count = ::AmenoStyleService.applyDraftToSelection currentDraft
-        updateInUseCount()
-        if txtPreviewStatus != undefined do
+        if selection.count == 0 do
         (
-            txtPreviewStatus.Text = "Estilo aplicado a " + (count as string) + " cota(s) selecionada(s)"
+            if txtPreviewStatus != undefined do
+            (
+                txtPreviewStatus.Text = "Nenhuma cota selecionada na cena para aplicação"
+            )
+            return 0
         )
-        count
+        try
+        (
+            local count = ::AmenoStyleService.applyDraftToSelection currentDraft
+            updateInUseCount()
+            if txtPreviewStatus != undefined do
+            (
+                txtPreviewStatus.Text = "Estilo aplicado a " + (count as string) + " cota(s) selecionada(s)"
+            )
+            count
+        )
+        catch
+        (
+            local err = getCurrentException()
+            if txtPreviewStatus != undefined do
+            (
+                txtPreviewStatus.Text = "Erro ao aplicar estilo: " + (err as string)
+            )
+            0
+        )
     ),
 
     fn onPresetClick presetId =
@@ -611,18 +674,31 @@ struct AmenoStyleEditorWPFDefinition
     fn onSaveAsNew =
     (
         if currentDraft == undefined or ::AmenoStyleService == undefined do return undefined
-        local newName = currentDraft.styleRecord.name + " (Cópia)"
-        local created = ::AmenoStyleService.saveDraftAsNewStyle currentDraft newName:newName
-        if created != undefined do
+        try
         (
-            populateStyleList()
-            loadDraftToUI()
+            local baseName = currentDraft.styleRecord.name
+            local newName = baseName + " (Cópia)"
+            local created = ::AmenoStyleService.saveDraftAsNewStyle currentDraft newName:newName
+            if created != undefined do
+            (
+                populateStyleList()
+                loadDraftToUI()
+                if txtPreviewStatus != undefined do
+                (
+                    txtPreviewStatus.Text = "Novo estilo criado: " + created.name
+                )
+            )
+            created
+        )
+        catch
+        (
+            local err = getCurrentException()
             if txtPreviewStatus != undefined do
             (
-                txtPreviewStatus.Text = "Novo estilo criado: " + created.name
+                txtPreviewStatus.Text = "Erro ao salvar como novo: " + (err as string)
             )
+            undefined
         )
-        created
     ),
 
     fn onFieldChanged propName newVal =
@@ -665,6 +741,7 @@ struct AmenoStyleEditorWPFDefinition
         -- Closed event para cleanup e persistência de preferências
         dotNet.addEventHandler window "Closed" (fn onClosed sender e =
         (
+            callbacks.removeScripts id:#amenoStyleEditorWpfSelection
             try
             (
                 AmenoStyleEditorWPF.savePreferences (sender.ActualWidth) (sender.ActualHeight) (if AmenoStyleEditorWPF.currentDraft != undefined then AmenoStyleEditorWPF.currentDraft.previewDarkBg else true)
@@ -702,9 +779,9 @@ struct AmenoStyleEditorWPFDefinition
                 AmenoStyleEditorWPF.currentDraft.previewDarkBg = not AmenoStyleEditorWPF.currentDraft.previewDarkBg
                 if AmenoStyleEditorWPF.pnlPreviewHost != undefined do
                 (
-                    local bc = dotNetClass "System.Windows.Media.BrushConverter"
-                    local conv = dotNetObject bc
-                    AmenoStyleEditorWPF.pnlPreviewHost.Background = if AmenoStyleEditorWPF.currentDraft.previewDarkBg then (conv.ConvertFromString "#121212") else (conv.ConvertFromString "#F5F5F5")
+                    local bgHex = if AmenoStyleEditorWPF.currentDraft.previewDarkBg then "#121212" else "#F5F5F5"
+                    if ::AmenoPreviewRenderer != undefined then
+                        AmenoStyleEditorWPF.pnlPreviewHost.Background = ::AmenoPreviewRenderer.createBrush bgHex
                 )
                 AmenoStyleEditorWPF.updatePreview()
             )
@@ -909,13 +986,17 @@ struct AmenoStyleEditorWPFDefinition
         -- Aplicar cor inicial de fundo do preview conforme preferência
         if pnlPreviewHost != undefined do
         (
-            local bc = dotNetClass "System.Windows.Media.BrushConverter"
-            local conv = dotNetObject bc
-            pnlPreviewHost.Background = if initDark then (conv.ConvertFromString "#121212") else (conv.ConvertFromString "#F5F5F5")
+            local bgHex = if initDark then "#121212" else "#F5F5F5"
+            if ::AmenoPreviewRenderer != undefined then
+                pnlPreviewHost.Background = ::AmenoPreviewRenderer.createBrush bgHex
         )
 
         -- Conectar eventos
         bindEvents()
+
+        -- Registrar callback de seleção de cena para manter contadores sincronizados
+        callbacks.removeScripts id:#amenoStyleEditorWpfSelection
+        callbacks.addScript #selectionSetChanged "if ::AmenoStyleEditorWPF != undefined and ::AmenoStyleEditorWPF.isOpen() do ::AmenoStyleEditorWPF.onSceneSelectionChanged()" id:#amenoStyleEditorWpfSelection
 
         -- Renderizar preview inicial
         updatePreview()
