@@ -221,13 +221,23 @@ Armazena referência ao nó, ponto local e última posição mundial válida.
 worldPoint = localPoint * objectTransform
 ```
 
-Esse modo acompanha transformação do objeto sem depender de nome ou índice de vértice.
+Esse modo acompanha transformação do objeto sem depender de nome ou índice de vértice e
+continua sendo o fallback retrocompatível para cotas criadas até o schema v4.
 
-> **Limitação conhecida (ADR 0015):** âncoras locais rastreiam apenas a *matriz de transform*
-> do nó (mover / rotacionar / escalar o objeto inteiro). Edições de sub-objeto (EditPoly,
-> EditMesh, FFD, etc.) não alteram o transform e, portanto, não disparam o watcher. A cota
-> permanece na posição anterior até que o objeto seja movido como um todo.
-> A solução definitiva exige ancoragem por ID de vértice — prevista para etapa futura.
+### Vértice do objeto
+
+No schema v5, uma extremidade pode armazenar `anchorVertexIdA/B`. Quando o valor é maior
+que zero, a posição mundial é consultada em `polyOp` ou `meshOp`; quando é `-1`, vale o
+comportamento por `localPoint`. O callback `geometryChanged` passa pelo mesmo índice
+reverso e pela mesma fila de atualização das transformações.
+
+IDs inválidos não caem silenciosamente em outro ponto: a última posição mundial é
+preservada e a cota é marcada como órfã. `anchorEdgeIdA/B` e `anchorEdgeMidA/B` estão
+reservados no schema, mas midpoint de aresta ainda não está ativo.
+
+> **Limites atuais (ADR 0015 / E10.7):** operações topológicas podem renumerar vértices.
+> A primeira entrega cobre Editable Poly e Editable Mesh no base object. Edit Poly como
+> modificador, FFD e outros deformadores da malha avaliada permanecem para etapa futura.
 
 ### Helper
 

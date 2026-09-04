@@ -14,6 +14,14 @@ global AmenoDimensionMath
 global AmenoSceneSetup
 global AmenoLog
 global AmenoRefreshMainPanel
+global AmenoDimensionAnchorHit
+
+struct AmenoDimensionAnchorHit
+(
+    node = undefined,
+    vertexId = -1,
+    vertexWorldPoint = undefined
+)
 
 struct AmenoDimensionToolService
 (
@@ -31,6 +39,8 @@ struct AmenoDimensionToolService
     activeMode = #aligned, -- E10.1: #aligned | #horizontal | #vertical
     nodeA = undefined,
     nodeB = undefined,
+    anchorVertexIdA = -1,
+    anchorVertexIdB = -1,
 
     fn detectHitNode pointValue screenPoint:undefined =
     (
@@ -100,7 +110,21 @@ struct AmenoDimensionToolService
             catch ()
         )
 
-        candidateNode
+        local result = AmenoDimensionAnchorHit node:candidateNode
+        if candidateNode != undefined and ::AmenoDimensionCA != undefined do
+        (
+            -- O snap do Max entrega o ponto exato; a tolerância cobre pequenas
+            -- diferenças numéricas sem capturar um vértice distante por acidente.
+            local vertexTolerance = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
+            local vertexHit = ::AmenoDimensionCA.findNearestVertex candidateNode pointValue maxDistance:vertexTolerance
+            if vertexHit != undefined do
+            (
+                result.vertexId = vertexHit.vertexId
+                result.vertexWorldPoint = vertexHit.worldPoint
+            )
+        )
+
+        result
     ),
 
     fn flattenPoint pointValue =
@@ -233,6 +257,8 @@ struct AmenoDimensionToolService
         offsetPoint = undefined
         nodeA = undefined
         nodeB = undefined
+        anchorVertexIdA = -1
+        anchorVertexIdB = -1
         preview = undefined
         lastCommittedRecord = undefined
         lastError = ""
@@ -253,7 +279,10 @@ struct AmenoDimensionToolService
             #pointA:
             (
                 pointA = candidate
-                nodeA = detectHitNode pointValue screenPoint:screenPoint
+                local hitA = detectHitNode pointValue screenPoint:screenPoint
+                nodeA = hitA.node
+                anchorVertexIdA = hitA.vertexId
+                if hitA.vertexWorldPoint != undefined do pointA = flattenPoint hitA.vertexWorldPoint
                 setStage #pointB
                 undefined
             )
@@ -268,7 +297,10 @@ struct AmenoDimensionToolService
                 )
 
                 pointB = candidate
-                nodeB = detectHitNode pointValue screenPoint:screenPoint
+                local hitB = detectHitNode pointValue screenPoint:screenPoint
+                nodeB = hitB.node
+                anchorVertexIdB = hitB.vertexId
+                if hitB.vertexWorldPoint != undefined do pointB = flattenPoint hitB.vertexWorldPoint
                 offsetPoint = defaultOffsetPoint pointA pointB
                 updatePreview pointA pointB offsetPoint
                 setStage #offset
@@ -284,11 +316,14 @@ struct AmenoDimensionToolService
                 local created = undefined
                 try
                 (
-                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId nodeA:nodeA nodeB:nodeB dimensionMode:activeMode
+                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId \
+                        nodeA:nodeA anchorVertexIdA:anchorVertexIdA nodeB:nodeB anchorVertexIdB:anchorVertexIdB dimensionMode:activeMode
                     lastCommittedRecord = created
                     removePreview()
                     nodeA = undefined
                     nodeB = undefined
+                    anchorVertexIdA = -1
+                    anchorVertexIdB = -1
                     -- Notifica o serviço de âncoras para que a nova cota entre no índice
                     -- reativo imediatamente. Sem isso, o indexTable ficaria desatualizado
                     -- até o próximo reinício, e o NodeEventCallback ignoraria movimentos
@@ -346,6 +381,8 @@ struct AmenoDimensionToolService
         offsetPoint = undefined
         nodeA = undefined
         nodeB = undefined
+        anchorVertexIdA = -1
+        anchorVertexIdB = -1
         active = false
         stage = #idle
         panelStatus "E4: cota cancelada."

@@ -303,6 +303,12 @@ struct AmenoRuntime
                     rec.nodeB       = undefined
                     rec.localPointA = [0, 0, 0]
                     rec.localPointB = [0, 0, 0]
+                    rec.anchorVertexIdA = -1
+                    rec.anchorVertexIdB = -1
+                    rec.anchorEdgeIdA = -1
+                    rec.anchorEdgeIdB = -1
+                    rec.anchorEdgeMidA = false
+                    rec.anchorEdgeMidB = false
                     rec.isOrphan    = false
                     rec.orphanReason = ""
 

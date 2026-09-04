@@ -46,7 +46,7 @@ struct AmenoGraphicDimensionRecord
 
 struct AmenoDimensionGraphicsService
 (
-    dataSchemaVersion = 3,
+    dataSchemaVersion = 5,
     graphicSchemaVersion = 1,
     schemaVersion = 3, -- mantido para compatibilidade retroativa
     controllerKind = "dimension",
@@ -612,7 +612,8 @@ struct AmenoDimensionGraphicsService
     ),
 
     fn createController pointA pointB offsetPoint systemLayer role:"test" outputUnit:#meters precision:2 styleId:"default" \
-        anchorType:"world" nodeA:undefined localPointA:undefined nodeB:undefined localPointB:undefined dimensionMode:#aligned =
+        anchorType:"world" nodeA:undefined localPointA:undefined anchorVertexIdA:-1 anchorEdgeIdA:-1 anchorEdgeMidA:false \
+        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned =
     (
         local controller = Point name:(uniqueName "AMENO_DIM_CTRL_") size:5.0
         local dimensionId = "dimension-" + (controller.handle as string)
@@ -624,7 +625,7 @@ struct AmenoDimensionGraphicsService
         if AmenoDimensionCA != undefined do
         (
             local rec = AmenoDimensionRecord()
-            rec.schemaVersion = 4
+            rec.schemaVersion = 5
             rec.dimensionId = dimensionId
             rec.dimensionRole = (role as string)
             rec.dimensionMode = (dimensionMode as string)
@@ -646,8 +647,14 @@ struct AmenoDimensionGraphicsService
             rec.anchorType = (anchorType as string)
             rec.nodeA = nodeA
             rec.localPointA = if localPointA != undefined then localPointA else [0, 0, 0]
+            rec.anchorVertexIdA = anchorVertexIdA
+            rec.anchorEdgeIdA = anchorEdgeIdA
+            rec.anchorEdgeMidA = anchorEdgeMidA
             rec.nodeB = nodeB
             rec.localPointB = if localPointB != undefined then localPointB else [0, 0, 0]
+            rec.anchorVertexIdB = anchorVertexIdB
+            rec.anchorEdgeIdB = anchorEdgeIdB
+            rec.anchorEdgeMidB = anchorEdgeMidB
             rec.isOrphan = false
             rec.orphanReason = ""
 
@@ -816,7 +823,8 @@ struct AmenoDimensionGraphicsService
     ),
 
     fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" \
-        anchorType:"world" nodeA:undefined localPointA:undefined nodeB:undefined localPointB:undefined dimensionMode:#aligned =
+        anchorType:"world" nodeA:undefined localPointA:undefined anchorVertexIdA:-1 anchorEdgeIdA:-1 anchorEdgeMidA:false \
+        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned =
     (
         local sceneState = ensureSceneReady()
 
@@ -850,7 +858,8 @@ struct AmenoDimensionGraphicsService
             undo "Ameno: criar cota" on
             (
                 controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId \
-                    anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA nodeB:nodeB localPointB:resolvedLocalB dimensionMode:dimensionMode
+                    anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA anchorVertexIdA:anchorVertexIdA anchorEdgeIdA:anchorEdgeIdA anchorEdgeMidA:anchorEdgeMidA \
+                    nodeB:nodeB localPointB:resolvedLocalB anchorVertexIdB:anchorVertexIdB anchorEdgeIdB:anchorEdgeIdB anchorEdgeMidB:anchorEdgeMidB dimensionMode:dimensionMode
                 local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
                 if AmenoDimensionCA != undefined do
                 (

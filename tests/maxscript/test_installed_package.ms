@@ -70,7 +70,7 @@ global AmenoRenderCotasService
     if not AmenoAnchorService.isCallbackActive then throw "E8.1 instalado: Callback de âncoras inativo."
 
     local instDim = AmenoDimensionGraphics.createDimension [0, 0, 0] [100, 0, 0] [0, 20, 0]
-    if (AmenoDimensionGraphics.readTextProperty instDim.controller "Ameno.DataSchemaVersion") != "3" then throw "E8.1 instalado: DataSchemaVersion incorreto."
+    if (AmenoDimensionGraphics.readTextProperty instDim.controller "Ameno.DataSchemaVersion") != "5" then throw "E8.1 instalado: DataSchemaVersion incorreto."
     if (AmenoDimensionGraphics.readTextProperty instDim.lineNode "Ameno.GraphicSchemaVersion") != "1" then throw "E8.1 instalado: GraphicSchemaVersion incorreto."
 
     local instStyle = AmenoStyleService.getStyle "default"

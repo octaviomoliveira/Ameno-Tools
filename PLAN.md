@@ -50,7 +50,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- Validação interativa do gate manual da **E10** no 3ds Max 2026 pelo usuário (modos H/V, lote/bake, V-Ray CPU, relatório de diagnóstico e pacote alpha).
+- **E10.7 — Âncoras por vértice:** schema CA v5, captura e resolução de vertex ID, reatividade `geometryChanged` e teste de compatibilidade v4 implementados no código. O gate Batch aguarda reinício/fechamento da instância interativa do Max.
+- Validação interativa das funcionalidades acumuladas da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico, pacote alpha e edição de vértices).
 
 ## Planejado após a E10
 
@@ -58,12 +59,14 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-1. **Gate manual interativo da E10 no 3ds Max 2026**:
+1. Fechar ou reiniciar o 3ds Max e executar `tests/maxscript/test_e10_7_subobject_anchors.ms` mais as regressões E10.1/E10.2/E10.4.
+2. Instalar a versão de desenvolvimento e executar o **gate manual interativo da E10 no 3ds Max 2026**:
    - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
+   - Criar uma cota com Vertex Snap em Editable Poly e mover o vértice;
    - Validar seleção múltipla e alteração em lote de unidades/precisão e Bake de âncoras;
    - Validar render de overlay no Corona ou V-Ray CPU;
    - Emitir Relatório de Diagnóstico no painel.
-2. **Após aprovação da E10 pelo usuário**: Iniciar a **E11 — Editor Visual e Preview ao Vivo**.
+3. Após aprovação, atualizar a branch visual da E11 com a `main` estabilizada antes da integração.
 
 
 ## Decisões que ainda exigem validação
@@ -107,6 +110,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-04 | Gate manual da E9 executado e aprovado no 3ds Max 2026.3 com Corona 13. | PNG com fundo transparente gerado, proteção de sobrescrita confirmada, cena restaurada; dois bugs corrigidos durante o gate (`renderOutputFilename` obrigatório, deleção de arquivo parcial ao cancelar); E9 encerrada, E10 aberta. | commits `c1f0488`, `6807b09`; confirmação visual do usuário |
 | 2026-09-04 | Registrar que o mockup do Editor de Estilo ainda não foi implementado e planejar sua “viewport” enquanto a E10 segue em desenvolvimento. | E11 planejada como Editor Visual e Preview ao Vivo; preview definido como canvas 2D isolado da cena, com prova tecnológica, `StyleDraft`, interface moderna, testes e gate manual próprios. Alterações paralelas da E10 foram preservadas fora deste trabalho. | `plans/2026-09-04-e11-editor-visual-preview.md`, índice e plano incremental |
 | 2026-09-04 | Implementação completa da Etapa E10 (E10.1 a E10.6): Modos H/V, Lote/Bake, V-Ray CPU, Diagnóstico/Fixtures, Benchmarks de Escala (1 a 1000 cotas) e Empacotamento Alpha. | E10.1 (Modos Alinhada, H e V), E10.2 (Seleção múltipla, unidade/precisão/modo e bake em 1 Undo), E10.3 (Adapter V-Ray CPU com VRayLightMtl e despacho dinâmico), E10.4 (Serviço de Diagnóstico e fixtures de planta arquitetônica), E10.5 (Benchmarks de escala 1, 10, 100, 500 e 1000 cotas com zero crashes) e E10.6 (Pacote alpha gerado em dist/AmenoTools-0.0.1-alpha.zip e release notes). Todos os testes unitários e de integração passaram com 100% de sucesso. Pronta para validação do usuário no 3ds Max. | commits E10.1–E10.6, ADRs 0014–0018, tests/maxscript/test_e10_*.ms, dist/AmenoTools-0.0.1-alpha.zip |
+| 2026-09-04 | Auditar o trabalho do Antigravity e seguir com a correção de âncoras em edição de subobjeto antes da integração visual. | `main` limpa em `ec3038b`; pacote estrutural válido; E10.1–E10.6 confirmadas no histórico. A correção sugerida como E10.5 no ADR 0015 foi renumerada para E10.7 para evitar colisão. Código e teste dedicados implementados; Batch pendente porque o Max interativo está ativo. | `plans/2026-09-04-e10-7-subobject-anchors.md`, CA v5, `test_e10_7_subobject_anchors.ms` |
 
 ## Como retomar sem contexto
 

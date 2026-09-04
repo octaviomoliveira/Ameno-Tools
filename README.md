@@ -26,7 +26,7 @@ Decisões já tomadas:
 - cotas manuais destacadas somente na viewport;
 - dados separados da representação gráfica;
 - arquitetura preparada para núcleo C++ futuro;
-- sem dependência de índices frágeis de vértice no MVP.
+- âncora por vértice somente quando o clique identifica explicitamente um vértice; cotas antigas e demais cliques preservam o fallback por ponto local.
 
 Decisões pendentes:
 

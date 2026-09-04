@@ -653,11 +653,11 @@ struct AmenoE9MockAdapter
     AmenoAnchorService.init()
     if not AmenoAnchorService.isCallbackActive then throw "E8.1: AmenoAnchorService.init() duplicado desativou os callbacks."
 
-    -- 2. Separação de Schemas (DataSchemaVersion = 3 e GraphicSchemaVersion = 1)
+    -- 2. Separação de Schemas (DataSchemaVersion = 5 e GraphicSchemaVersion = 1)
     local e81Dim = AmenoDimensionGraphics.createDimension [0, 0, 0] [100, 0, 0] [0, 30, 0]
     local dataVer = AmenoDimensionGraphics.readTextProperty e81Dim.controller "Ameno.DataSchemaVersion"
     local graphicVer = AmenoDimensionGraphics.readTextProperty e81Dim.lineNode "Ameno.GraphicSchemaVersion"
-    if dataVer != "3" or graphicVer != "1" then throw "E8.1: Schemas de dados e gráficos não foram separados corretamente."
+    if dataVer != "5" or graphicVer != "1" then throw "E8.1: Schemas de dados e gráficos não foram separados corretamente."
 
     -- 3. Imutabilidade e retorno de clones em getStyle()
     local origStyle = AmenoStyleService.getStyle "default"
