@@ -202,6 +202,6 @@ if failed > 0 do
 )
 
 if failed == 0 then
-    format "E10.2 PASS\n"
+    format "[AMENO_TEST][PASS] E10.2 lote e bake aprovados\n"
 else
     format "E10.2 FAIL\n"

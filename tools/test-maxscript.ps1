@@ -2,7 +2,8 @@
 param(
     [string]$MaxBatchPath = 'C:\Program Files\Autodesk\3ds Max 2026\3dsmaxbatch.exe',
     [string]$ConfigPath,
-    [string]$TestScript
+    [string]$TestScript,
+    [switch]$AllowWhileMaxOpen
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,6 +20,7 @@ if ([string]::IsNullOrWhiteSpace($ConfigPath)) {
 $outputDirectory = Join-Path $repositoryRoot '.test-output'
 $listenerLog = Join-Path $outputDirectory 'listener.log'
 $systemLog = Join-Path $outputDirectory 'system.log'
+$generatedConfigPath = Join-Path $outputDirectory 'batch-isolated.generated.ini'
 
 if (-not (Test-Path -LiteralPath $MaxBatchPath -PathType Leaf)) {
     throw "3dsmaxbatch.exe não encontrado: $MaxBatchPath"
@@ -33,10 +35,37 @@ if (-not (Test-Path -LiteralPath $ConfigPath -PathType Leaf)) {
 }
 
 New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
+
+$resolvedTestScript = (Resolve-Path -LiteralPath $TestScript).Path
+$resolvedConfigPath = (Resolve-Path -LiteralPath $ConfigPath).Path
+$isolatedPlugCfg = Join-Path $outputDirectory 'isolated-plugcfg'
+$isolatedMaxData = Join-Path $outputDirectory 'isolated-maxdata'
+$isolatedTemp = Join-Path $outputDirectory 'isolated-temp'
+
+foreach ($isolatedDirectory in @($isolatedPlugCfg, $isolatedMaxData, $isolatedTemp)) {
+    New-Item -ItemType Directory -Force -Path $isolatedDirectory | Out-Null
+}
+
+# O INI versionado serve como template. Estas três entradas precisam apontar para o
+# worktree corrente para que dois agentes não compartilhem perfil, logs ou temporários.
+$configText = Get-Content -Raw -LiteralPath $resolvedConfigPath
+$configText = [regex]::Replace($configText, '(?m)^PlugCFG=.*$', ('PlugCFG=' + $isolatedPlugCfg))
+$configText = [regex]::Replace($configText, '(?m)^MaxData=.*$', ('MaxData=' + $isolatedMaxData))
+$configText = [regex]::Replace($configText, '(?m)^Temp=.*$', ('Temp=' + $isolatedTemp))
+[System.IO.File]::WriteAllText($generatedConfigPath, $configText, [System.Text.Encoding]::Default)
+
+if (-not $AllowWhileMaxOpen) {
+    $interactiveMax = @(Get-Process -Name '3dsmax' -ErrorAction SilentlyContinue)
+    if ($interactiveMax.Count -gt 0) {
+        $processIds = ($interactiveMax.Id | Sort-Object) -join ', '
+        throw "3ds Max interativo está aberto (PID: $processIds). Feche-o antes do Batch ou use -AllowWhileMaxOpen conscientemente. Nenhum processo Batch foi iniciado."
+    }
+}
+
 Remove-Item -LiteralPath $listenerLog -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath $systemLog -Force -ErrorAction SilentlyContinue
 
-& $MaxBatchPath $TestScript -i $ConfigPath -v 3 -listenerlog $listenerLog -log $systemLog
+& $MaxBatchPath $resolvedTestScript -i $generatedConfigPath -v 3 -listenerlog $listenerLog -log $systemLog
 
 if ($LASTEXITCODE -ne 0) {
     throw "3ds Max Batch terminou com código $LASTEXITCODE. Consulte $systemLog"

@@ -189,6 +189,6 @@ if failed > 0 do
 )
 
 if failed == 0 then
-    format "E10.1 PASS\n"
+    format "[AMENO_TEST][PASS] E10.1 modos de cota aprovados\n"
 else
     format "E10.1 FAIL\n"
