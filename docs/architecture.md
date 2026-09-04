@@ -223,6 +223,12 @@ worldPoint = localPoint * objectTransform
 
 Esse modo acompanha transformação do objeto sem depender de nome ou índice de vértice.
 
+> **Limitação conhecida (ADR 0015):** âncoras locais rastreiam apenas a *matriz de transform*
+> do nó (mover / rotacionar / escalar o objeto inteiro). Edições de sub-objeto (EditPoly,
+> EditMesh, FFD, etc.) não alteram o transform e, portanto, não disparam o watcher. A cota
+> permanece na posição anterior até que o objeto seja movido como um todo.
+> A solução definitiva exige ancoragem por ID de vértice — prevista para etapa futura.
+
 ### Helper
 
 Armazena referência a um Point Helper criado ou escolhido pelo usuário. É indicado quando se deseja controle explícito e animação.
