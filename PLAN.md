@@ -52,6 +52,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 - E10 — Fluxo de produção e estabilização: cotas horizontal/vertical, seleção múltipla, bake, adapter V-Ray CPU, testes de escala (1–1000 cotas) e empacotamento alpha interno.
 
+## Planejado após a E10
+
+- E11 — Editor Visual e Preview ao Vivo: substituir o rollout funcional da E7 por uma interface moderna baseada no mockup do usuário, com preview 2D isolado da cena e fluxo transacional `Cancelar` / `Aplicar às selecionadas` / `Salvar estilo`. Plano detalhado em `plans/2026-09-04-e11-editor-visual-preview.md`.
+
 ## Próximo passo executável
 
 Implementar a **E10 — Fluxo de produção e estabilização**:
@@ -103,6 +107,7 @@ Implementar a **E10 — Fluxo de produção e estabilização**:
 | 2026-09-04 | Finalizar e aprovar E8 / E8.1 no 3ds Max; atualizar planos e abrir E9 no GitHub. | E8 e E8.1 concluídas e aprovadas interativamente pelo usuário; documentação e planos incremental e compartilhado sincronizados; E9 é a próxima etapa (render overlay Corona). | Confirmação do usuário; `PLAN.md`, `plans/2026-09-03-mvp-incremental.md`, commits `bb05a41` e subsequente |
 | 2026-09-04 | Retomar no GPT após a E8.1 concluída no Antigravity e executar o trabalho bruto da E9. | E9 implementada, validada por testes transacionais e por render real no Corona 13, instalada em `ApplicationPlugins` e pronta para o gate manual; E10 permanece bloqueada até a confirmação do usuário. | `ameno_render_cotas_service.ms`, `ameno_corona_adapter.ms`, `test_e9_corona_render.ms`, `0013-e9-corona-separate-overlay.md` |
 | 2026-09-04 | Gate manual da E9 executado e aprovado no 3ds Max 2026.3 com Corona 13. | PNG com fundo transparente gerado, proteção de sobrescrita confirmada, cena restaurada; dois bugs corrigidos durante o gate (`renderOutputFilename` obrigatório, deleção de arquivo parcial ao cancelar); E9 encerrada, E10 aberta. | commits `c1f0488`, `6807b09`; confirmação visual do usuário |
+| 2026-09-04 | Registrar que o mockup do Editor de Estilo ainda não foi implementado e planejar sua “viewport” enquanto a E10 segue em desenvolvimento. | E11 planejada como Editor Visual e Preview ao Vivo; preview definido como canvas 2D isolado da cena, com prova tecnológica, `StyleDraft`, interface moderna, testes e gate manual próprios. Alterações paralelas da E10 foram preservadas fora deste trabalho. | `plans/2026-09-04-e11-editor-visual-preview.md`, índice e plano incremental |
 
 ## Como retomar sem contexto
 

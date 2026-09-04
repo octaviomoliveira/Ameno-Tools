@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 a E8.1 aprovadas interativamente no 3ds Max 2026; E9 implementada, testada e instalada, aguardando gate manual.
+**Estado atual:** E1 a E9 aprovadas interativamente no 3ds Max 2026; E10 em desenvolvimento; E11 planejada para o novo Editor Visual e Preview ao Vivo.
 
 ## Estratégia de execução
 
@@ -34,7 +34,8 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Aprovada no Max |
 | E8.1 | Estabilização das âncoras, estilos e interface | Aprovada no Max |
 | E9 | Corona renderiza somente as cotas em arquivo transparente | Aprovada interativamente |
-| E10 | Fluxo de produção, V-Ray CPU e estabilização do MVP | Não iniciada |
+| E10 | Fluxo de produção, V-Ray CPU e estabilização do MVP | Em desenvolvimento |
+| E11 | Editor Visual e Preview ao Vivo | Planejada após a E10 |
 
 
 ---
@@ -518,6 +519,35 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 - nenhuma perda de dados conhecida;
 - instalação, criação, edição, persistência e render separado aprovados;
 - limitações e versões exatas de Max, Corona e V-Ray registradas.
+
+---
+
+## E11 — Editor Visual e Preview ao Vivo
+
+**Estado:** planejada; iniciar após a aprovação da E10.
+
+Substituir o rollout funcional criado na E7 por um editor visual coerente com o mockup aprovado pelo usuário. A “viewport” desta etapa é um preview 2D embutido e isolado da cena, não uma viewport 3D adicional do Max.
+
+### Entregas
+
+- prova técnica entre WPF/C# e MAXScript + .NET/WinForms;
+- interface moderna com cabeçalho, presets, preview e grupos Texto/Linhas/Terminais;
+- `StyleDraft` em memória: controles não alteram a cena antes do commit;
+- preview vetorial com planta neutra, texto, linhas, máscara, cores e cinco terminais;
+- ações distintas `Cancelar`, `Aplicar às selecionadas`, `Salvar estilo` e `Salvar como novo`;
+- compatibilidade/migração segura dos estilos existentes;
+- funcionamento em DPI 100/125/150/200 % e pacote `ApplicationPlugins` independente do checkout.
+
+### Gate
+
+- aparência aprovada pelo usuário contra o mockup;
+- preview fluido sem criar nós ou rebuildar a cena;
+- Cancelar não altera dados nem Undo;
+- Aplicar/Salvar atualizam em lote com um único Undo e restauração em erro;
+- save/open, fontes ausentes, cinco terminais e pacote instalado aprovados;
+- nenhuma regressão funcional nas etapas E1–E10.
+
+**Plano detalhado:** `plans/2026-09-04-e11-editor-visual-preview.md`.
 
 
 ## Próxima ação
