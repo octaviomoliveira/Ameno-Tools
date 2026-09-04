@@ -6,6 +6,7 @@ global AmenoRendererProbe
 global AmenoSceneSetup
 global AmenoUnitService
 global AmenoDimensionMath
+global AmenoDimensionCA
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
@@ -26,6 +27,7 @@ global AmenoDimensionMouseTool
     if AmenoSceneSetup == undefined then throw "Scene setup não foi carregado pelo bootstrap."
     if AmenoUnitService == undefined then throw "Serviço de unidades não foi carregado pelo bootstrap."
     if AmenoDimensionMath == undefined then throw "Núcleo de matemática de cotas não foi carregado pelo bootstrap."
+    if AmenoDimensionCA == undefined then throw "Serviço de Custom Attributes não foi carregado pelo bootstrap."
     if AmenoDimensionGraphics == undefined then throw "Construtor gráfico de cotas não foi carregado pelo bootstrap."
     if AmenoDimensionTool == undefined then throw "Ferramenta interativa E4 não foi carregada pelo bootstrap."
     if (classOf AmenoDimensionMouseTool) != MouseTool then throw "MouseTool E4 não foi registrado."
@@ -119,6 +121,9 @@ global AmenoDimensionMouseTool
     if graphicRecord.controller.layer != graphicSceneState.systemLayer then throw "Controlador não pertence à layer de sistema."
     if not graphicRecord.controller.isHidden or graphicRecord.controller.renderable then throw "Controlador gráfico deve ficar oculto e fora do render."
     if graphicRecord.displayText == "" then throw "A cota gráfica não recebeu texto formatado."
+    if not (AmenoDimensionCA.hasCA graphicRecord.controller) then throw "Controlador gráfico não possui Custom Attributes Ameno."
+    local caRecord = AmenoDimensionCA.readCA graphicRecord.controller
+    if caRecord == undefined or caRecord.dimensionId != graphicRecord.dimensionId then throw "Custom Attributes do controlador inválidos."
     if (AmenoDimensionGraphics.findNodesForDimension graphicRecord.dimensionId).count != 3 then throw "A cota gráfica deveria registrar três nós."
     if objects.count != (objectCountBeforeGraphics + 3) then throw "A criação gráfica deveria adicionar exatamente três nós."
 
@@ -182,7 +187,59 @@ global AmenoDimensionMouseTool
     AmenoDimensionTool.cancel()
     if objects.count != cancelBaseline then throw "Cancelamento E4 deixou nós temporários."
 
+    -- E5 — Persistência, Save/Load, Reabertura, Renomeação, Reparo e Undo
+    resetMaxFile #noPrompt
+    AmenoApp.prepareScene()
+    local e5Baseline = objects.count
+    local dimToPersist = AmenoDimensionGraphics.createDimension [10, 20, 0] [310, 20, 0] [10, 50, 0]
+    local savedDimId = dimToPersist.dimensionId
+
+    local tempMaxDir = getDir #temp
+    local tempSceneFile = pathConfig.appendPath tempMaxDir "ameno_e5_test.max"
+    deleteFile tempSceneFile
+    saveMaxFile tempSceneFile clearNeedSaveFlag:true quiet:true
+
+    resetMaxFile #noPrompt
+    if (AmenoDimensionGraphics.findControllers()).count != 0 then throw "Reset da cena não limpou os controladores."
+
+    loadMaxFile tempSceneFile quiet:true
+    deleteFile tempSceneFile
+    AmenoApp.refreshDimensions()
+
+    local loadedControllers = AmenoDimensionGraphics.findControllers()
+    if loadedControllers.count != 1 then throw "Cota persistida não foi encontrada após recarregar a cena."
+    local loadedCtrl = loadedControllers[1]
+    if not (AmenoDimensionCA.hasCA loadedCtrl) then throw "Controlador recarregado perdeu Custom Attributes."
+    local loadedCa = AmenoDimensionCA.readCA loadedCtrl
+    if loadedCa == undefined or loadedCa.dimensionId != savedDimId then throw "ID da cota recarregada não corresponde ao salvo."
+    if loadedCa.pointA != [10, 20, 0] or loadedCa.pointB != [310, 20, 0] or loadedCa.offsetPoint != [10, 50, 0] then throw "Pontos geométricos divergentes após load."
+    if (AmenoDimensionGraphics.inspectDimension loadedCtrl) != #healthy then throw "Cota recarregada não está com integridade saudável."
+
+    -- Renomear nós e confirmar que identidade e integridade são preservadas
+    local nodesToRename = AmenoDimensionGraphics.findNodesForDimension savedDimId
+    for n in nodesToRename do n.name = "CustomRenamedNode_" + (random 1000 9999 as string)
+    if (AmenoDimensionGraphics.findControllers()).count != 1 then throw "Cota perdeu identidade após renomear nós."
+    if (AmenoDimensionGraphics.inspectDimension loadedCtrl) != #healthy then throw "Cota perdeu integridade após renomear nós."
+
+    -- Simular exclusão acidental do filho gráfico e executar reparo
+    local nodesBeforeDamage = AmenoDimensionGraphics.findNodesForDimension savedDimId
+    for n in nodesBeforeDamage where (AmenoDimensionGraphics.readTextProperty n "Ameno.GraphicRole") == "label" do delete n
+    if (AmenoDimensionGraphics.inspectDimension loadedCtrl) != #partial then throw "Inspeção deveria acusar estado parcial após exclusão de rótulo."
+    local repairResult = AmenoApp.repairDimensions()
+    if repairResult != 1 then throw "AmenoApp.repairDimensions deveria ter reparado 1 cota."
+    if (AmenoDimensionGraphics.inspectDimension loadedCtrl) != #healthy then throw "Cota deveria estar saudável após o reparo."
+    if (AmenoDimensionGraphics.findNodesForDimension savedDimId).count != 3 then throw "Reparo não restaurou a contagem de 3 nós."
+
+    -- Validação de Undo atômico
+    resetMaxFile #noPrompt
+    AmenoApp.prepareScene()
+    local undoBaseline = objects.count
+    local undoDim = AmenoDimensionGraphics.createDimension [0, 0, 0] [200, 0, 0] [0, 40, 0]
+    if objects.count != (undoBaseline + 3) then throw "Cota para teste de Undo deveria ter criado 3 nós."
+    max undo
+    if objects.count != undoBaseline then throw "Ctrl+Z não desfez a cota inteira em uma única entrada."
+
     fileIn macroPath quiet:true
 
-    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3 e E4 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
+    format "[AMENO_TEST][PASS] Bootstrap %, renderer %, preparação de cena, E2, E3, E4 e E5 aprovadas.\n" AmenoVersion.appVersion AmenoApp.rendererInfo.displayName
 )

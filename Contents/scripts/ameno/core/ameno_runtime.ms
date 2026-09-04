@@ -71,12 +71,41 @@ struct AmenoRuntime
         removedCount
     ),
 
+    fn repairDimensions =
+    (
+        local repairedCount = AmenoDimensionGraphics.repairAllDimensions()
+        refreshScene()
+        refreshDimensions()
+        repairedCount
+    ),
+
+    fn onSceneOpened =
+    (
+        refreshScene()
+        refreshDimensions()
+        if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
+        true
+    ),
+
+    fn onSceneReset =
+    (
+        refreshScene()
+        refreshDimensions()
+        if AmenoRefreshMainPanel != undefined do AmenoRefreshMainPanel()
+        true
+    ),
+
     fn start =
     (
         refreshRenderer()
         refreshScene()
         refreshDimensions()
         started = true
+
+        callbacks.removeScripts id:#ameno_lifecycle
+        callbacks.addScript #filePostOpen "if AmenoApp != undefined do AmenoApp.onSceneOpened()" id:#ameno_lifecycle
+        callbacks.addScript #systemPostNew "if AmenoApp != undefined do AmenoApp.onSceneReset()" id:#ameno_lifecycle
+        callbacks.addScript #postSceneReset "if AmenoApp != undefined do AmenoApp.onSceneReset()" id:#ameno_lifecycle
 
         AmenoLog.info (AmenoVersion.displayName() + " carregado.")
         AmenoLog.info ("Renderer: " + rendererInfo.displayName + " · " + rendererInfo.statusLabel())
@@ -90,6 +119,7 @@ struct AmenoRuntime
 
     fn shutdown =
     (
+        callbacks.removeScripts id:#ameno_lifecycle
         try (stopTool AmenoDimensionMouseTool) catch ()
         try (if AmenoDimensionTool != undefined do AmenoDimensionTool.cancel()) catch ()
         try (destroyDialog AmenoMainPanelRollout) catch ()

@@ -8,6 +8,8 @@
 */
 
 global AmenoDimensionGraphics
+global AmenoDimensionCA
+global AmenoDimensionRecord
 
 struct AmenoGraphicDimensionRecord
 (
@@ -59,6 +61,30 @@ struct AmenoDimensionGraphicsService
         try (value = getUserPropVal node propertyName) catch ()
 
         if value != undefined and (classof value == Point3) then value else undefined
+    ),
+
+    fn getDimensionId node =
+    (
+        if node == undefined or not isValidNode node then return ""
+        if AmenoDimensionCA != undefined and AmenoDimensionCA.hasCA node then
+        (
+            local rec = AmenoDimensionCA.readCA node
+            if rec != undefined and rec.dimensionId != "" then return rec.dimensionId
+        )
+        local idVal = readTextProperty node "Ameno.DimensionId"
+        if idVal == undefined then "" else idVal
+    ),
+
+    fn getDimensionRole node =
+    (
+        if node == undefined or not isValidNode node then return ""
+        if AmenoDimensionCA != undefined and AmenoDimensionCA.hasCA node then
+        (
+            local rec = AmenoDimensionCA.readCA node
+            if rec != undefined and rec.dimensionRole != "" then return rec.dimensionRole
+        )
+        local roleVal = readTextProperty node "Ameno.DimensionRole"
+        if roleVal == undefined then "" else roleVal
     ),
 
     fn ensureSceneReady =
@@ -203,7 +229,7 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
-    fn createController pointA pointB offsetPoint systemLayer role:"test" =
+    fn createController pointA pointB offsetPoint systemLayer role:"test" outputUnit:#meters precision:2 =
     (
         local controller = Point name:(uniqueName "AMENO_DIM_CTRL_") size:5.0
         local dimensionId = "dimension-" + (controller.handle as string)
@@ -211,6 +237,25 @@ struct AmenoDimensionGraphicsService
         try (controller.isHidden = true) catch ()
         try (controller.renderable = false) catch ()
         systemLayer.addNode controller
+
+        if AmenoDimensionCA != undefined do
+        (
+            local rec = AmenoDimensionRecord()
+            rec.schemaVersion = schemaVersion
+            rec.dimensionId = dimensionId
+            rec.dimensionRole = (role as string)
+            rec.pointA = pointA
+            rec.pointB = pointB
+            rec.offsetPoint = offsetPoint
+            rec.outputUnit = (outputUnit as string)
+            rec.precision = precision
+            rec.displayMode = "measured"
+            rec.roundingIncrementMm = 0.0
+            rec.manualValue = ""
+            rec.styleId = "default"
+
+            AmenoDimensionCA.applyCA controller rec
+        )
 
         setTextProperty controller "Ameno.Kind" controllerKind
         setTextProperty controller "Ameno.DimensionId" dimensionId
@@ -323,7 +368,7 @@ struct AmenoDimensionGraphicsService
         (
             undo "Ameno: criar cota" on
             (
-                controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role
+                controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision
                 result = createVisualNodes controller layout measurement.text sceneState.dimensionsLayer
             )
         )
@@ -342,9 +387,16 @@ struct AmenoDimensionGraphicsService
 
         for node in objects where isValidNode node do
         (
-            if (readTextProperty node "Ameno.Kind") == controllerKind do
+            local isCtrl = ((readTextProperty node "Ameno.Kind") == controllerKind)
+            if not isCtrl and AmenoDimensionCA != undefined do
             (
-                if role == undefined or (readTextProperty node "Ameno.DimensionRole") == (role as string) do append controllers node
+                isCtrl = AmenoDimensionCA.hasCA node
+            )
+
+            if isCtrl do
+            (
+                local nodeRole = getDimensionRole node
+                if role == undefined or nodeRole == (role as string) do append controllers node
             )
         )
 
@@ -354,10 +406,11 @@ struct AmenoDimensionGraphicsService
     fn findNodesForDimension dimensionId =
     (
         local matches = #()
+        if dimensionId == undefined or dimensionId == "" then return matches
 
         for node in objects where isValidNode node do
         (
-            if (readTextProperty node "Ameno.DimensionId") == dimensionId do append matches node
+            if (getDimensionId node) == dimensionId do append matches node
         )
 
         matches
@@ -392,14 +445,60 @@ struct AmenoDimensionGraphicsService
         deleteNodes nodes
     ),
 
+    fn inspectDimension controller =
+    (
+        if controller == undefined or not isValidNode controller then return #missing
+
+        local dimensionId = getDimensionId controller
+        if dimensionId == "" then return #invalid
+
+        local nodes = findNodesForDimension dimensionId
+        local hasLines = false
+        local hasLabel = false
+
+        for n in nodes where isValidNode n do
+        (
+            local r = readTextProperty n "Ameno.GraphicRole"
+            if r == "lines" do hasLines = true
+            if r == "label" do hasLabel = true
+        )
+
+        if hasLines and hasLabel then #healthy
+        else if hasLines or hasLabel then #partial
+        else #missing_graphics
+    ),
+
     fn rebuildDimension controller =
     (
         if controller == undefined or not isValidNode controller then throw "O controlador da cota não existe mais."
-        if (readTextProperty controller "Ameno.Kind") != controllerKind then throw "O nó informado não é um controlador Ameno."
 
-        local pointA = readPointProperty controller "Ameno.PointA"
-        local pointB = readPointProperty controller "Ameno.PointB"
-        local offsetPoint = readPointProperty controller "Ameno.OffsetPoint"
+        local dimensionId = getDimensionId controller
+        if dimensionId == "" then throw "O nó informado não é um controlador Ameno válido."
+
+        local record = undefined
+        if AmenoDimensionCA != undefined do record = AmenoDimensionCA.readCA controller
+
+        local pointA = undefined
+        local pointB = undefined
+        local offsetPoint = undefined
+        local outputUnit = #meters
+        local precision = 2
+
+        if record != undefined then
+        (
+            pointA = record.pointA
+            pointB = record.pointB
+            offsetPoint = record.offsetPoint
+            try (outputUnit = (record.outputUnit as name)) catch ()
+            precision = record.precision
+        )
+        else
+        (
+            pointA = readPointProperty controller "Ameno.PointA"
+            pointB = readPointProperty controller "Ameno.PointB"
+            offsetPoint = readPointProperty controller "Ameno.OffsetPoint"
+        )
+
         local sceneState = ensureSceneReady()
 
         if pointA == undefined or pointB == undefined or offsetPoint == undefined then throw "Os dados geométricos da cota estão incompletos."
@@ -408,9 +507,39 @@ struct AmenoDimensionGraphicsService
         local layout = AmenoDimensionMath.alignedLayout pointA pointB offsetPoint
         if not layout.valid then throw ("Não foi possível reconstruir a cota: " + layout.errorMessage)
 
-        local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:#meters precision:2 decimalSeparator:#comma
-        removeVisualNodes (readTextProperty controller "Ameno.DimensionId")
+        local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
+        removeVisualNodes dimensionId
         createVisualNodes controller layout measurement.text sceneState.dimensionsLayer
+    ),
+
+    fn repairDimension controller =
+    (
+        local status = inspectDimension controller
+        if status == #healthy then return true
+        if status == #missing or status == #invalid then return false
+
+        undo "Ameno: reparar cota" on
+        (
+            rebuildDimension controller
+        )
+        true
+    ),
+
+    fn repairAllDimensions =
+    (
+        local controllers = findControllers()
+        local repairedCount = 0
+
+        for controller in controllers where isValidNode controller do
+        (
+            local status = inspectDimension controller
+            if status != #healthy do
+            (
+                if repairDimension controller do repairedCount += 1
+            )
+        )
+
+        repairedCount
     ),
 
     fn createTestDimension =

@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 aprovada visualmente; E2 aprovada em Batch; E3 aprovada no viewport, em render comum sob as condições informadas e na limpeza; E4 aprovada no Max após a correção do terceiro clique; E5 é a próxima fatia.
+**Estado atual:** E1 a E4 aprovadas; E5 implementada e testada em Batch; aguardando gate manual no Max.
 
 ## Estratégia de execução
 
@@ -28,7 +28,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Aprovada em Batch |
 | E3 | Uma cota gráfica de teste é construída na cena | Aprovada no viewport, Arnold/V-Ray com luz e limpeza |
 | E4 | Cota alinhada é criada com três cliques e preview | Aprovada no Max |
-| E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Não iniciada |
+| E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Pronta para teste no Max |
 | E6 | Valor medido, arredondado e manual podem ser revisados | Não iniciada |
 | E7 | Estilo edita fonte, texto, linhas e terminais | Não iniciada |
 | E8 | Âncoras atualizam cotas e diagnóstico encontra problemas | Não iniciada |
@@ -249,25 +249,39 @@ Entregar a primeira cota realmente utilizável.
 
 ## E5 — Persistência e ciclo de vida
 
+**Estado:** implementada e aprovada em testes automatizados no 3ds Max 2026.3 Batch e no pacote instalado via `ApplicationPlugins`. Aguardando validação manual no Max.
+**Implementação:** `Contents/scripts/ameno/core/ameno_dimension_ca.ms`, integrado ao `ameno_bootstrap.ms`, `ameno_dimension_graphics.ms`, `ameno_runtime.ms`, `ameno_main_panel.ms` e documentado na ADR `0008-e5-custom-attributes-persistence.md`.
+**Evidência automatizada:** `test_bootstrap.ms` aprovou no Batch isolado a criação de Custom Attributes versionados (`AmenoDimensionCA`), ciclo completo de salvar cena em `.max`, reset e reabertura com preservação exata dos dados geométricos e de formatação, renomeação livre de nós mantendo integridade e identidade, simulação de exclusão acidental de nós visuais e regeneração via `AmenoApp.repairDimensions()`, e Undo atômico em um único passo. `test_installed_package.ms` aprovou a presença e funcionamento de `AmenoDimensionCA` na instalação do `ApplicationPlugins`.
+**Instalação:** `tools/install-dev.ps1` atualizou `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`; a cópia instalada foi conferida e testada via Batch isolado.
+
 ### Objetivo
 
-Transformar o desenho criado em uma entidade Ameno confiável.
+Transformar o desenho criado em uma entidade Ameno confiável que sobreviva a salvar/abrir, renomeação e exclusão acidental de elementos visuais.
 
 ### Implementação
 
-- Custom Attributes versionados no controlador;
-- ID estável, pontos, offset, unidade, estilo e modo de valor;
-- reconstrução após abrir a cena;
-- comportamento definido para clone, merge e exclusão parcial;
-- arquivo continua abrindo sem o plugin instalado;
-- migração de schema preparada desde a primeira versão persistente.
+- Custom Attributes versionados no controlador técnico (`AmenoDimensionCA`, version: 1, attribID:#(0x414d454e, 0x44494d31));
+- Parâmetros nativos (`schemaVersion`, `dimensionId`, `dimensionRole`, `pointA`, `pointB`, `offsetPoint`, `outputUnit`, `precision`, `displayMode`, `roundingIncrementMm`, `manualValue`, `styleId`);
+- Espelhamento em User Properties para compatibilidade retroativa com cenas das etapas E3/E4;
+- Identificação por `dimensionId`, imune a renomeação de nós ou camadas;
+- Inspeção e reparo não-destrutivo (`inspectDimension`, `repairDimension`, `repairAllDimensions` e botão `Reparar cotas` na interface);
+- Callbacks de ciclo de vida idempotentes (`#filePostOpen`, `#postSceneReset`, `#systemPostNew`) com ID `#ameno_lifecycle` para sincronização ao abrir ou resetar cenas;
+- Preservação da atomocidade do Undo (`Ameno: criar cota`, `Ameno: remover cota`, `Ameno: reparar cota`);
+- Cenas salvas continuam abrindo normalmente sem o plugin instalado, sem avisos de "Missing DLLs".
 
-### Gate
+### Gate no Max
 
-- criar, salvar, fechar e reabrir sem alteração visual ou numérica;
-- renomear a cota sem perder sua identidade;
-- excluir um filho gráfico e reparar pelo painel;
-- Undo/Redo e merge não duplicam IDs indevidamente.
+1. Abrir o 3ds Max 2026 e preparar a cena.
+2. Criar uma cota com três cliques usando **Criar cota**.
+3. Salvar a cena em um arquivo `.max`, fechar o Max ou resetar a cena.
+4. Reabrir a cena salva e abrir o painel Ameno Tools:
+   - Confirmar que o painel reconhece a cota ativa (`1 cota(s) ativa(s)`).
+   - Confirmar que as linhas e o texto permanecem íntegros no viewport.
+5. No Layer Explorer, selecionar e deletar o nó do texto ou da linha (filho gráfico em `AMENO_COTAS`).
+6. No painel Ameno Tools, clicar em **Reparar cotas**:
+   - Confirmar que o elemento visual é restaurado imediatamente sem duplicar o controlador da layer `AMENO_SYSTEM`.
+7. Criar uma nova cota e pressionar `Ctrl+Z`:
+   - Confirmar que a cota inteira é desfeita em um único passo de Undo.
 
 ---
 

@@ -40,6 +40,7 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:450
     groupBox grpDimensions "Ameno Dimensions" pos:[12,268] width:356 height:142
     label lblDimensions "Ameno Dimensions · 0 cota(s) ativa(s)." pos:[26,290] width:320 height:18 align:#left
     button btnCreate "Criar cota" pos:[26,316] width:156 height:24
+    button btnRepair "Reparar cotas" pos:[198,316] width:156 height:24
     button btnCreateTest "Criar cota de teste" pos:[26,346] width:156 height:24
     button btnClearTests "Limpar cotas de teste" pos:[198,346] width:156 height:24
     label lblTestHint "Preview temporário; Esc/botão direito cancela." pos:[26,376] width:320 height:18 align:#left
@@ -87,6 +88,25 @@ rollout AmenoMainPanelRollout "Ameno Tools" width:380 height:450
             catch
             (
                 messageBox ("Não foi possível iniciar a ferramenta de cota:\n" + (getCurrentException() as string)) title:"Ameno Tools"
+            )
+        )
+    )
+
+    on btnRepair pressed do
+    (
+        global AmenoApp
+
+        if AmenoApp != undefined then
+        (
+            try
+            (
+                local repairedCount = AmenoApp.repairDimensions()
+                messageBox ("Cotas reparadas: " + (repairedCount as string)) title:"Ameno Dimensions"
+                AmenoRefreshMainPanel()
+            )
+            catch
+            (
+                messageBox ("Não foi possível reparar as cotas:\n" + (getCurrentException() as string)) title:"Ameno Tools"
             )
         )
     )
