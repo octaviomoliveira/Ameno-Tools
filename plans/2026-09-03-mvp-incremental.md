@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-03  
 **Alvo:** 3ds Max 2026 + Corona  
-**Estado atual:** E1 implementada e aprovada em Batch; aguarda validação visual manual no 3ds Max antes da E2.
+**Estado atual:** E1 aguarda validação visual manual; E2 foi aprovada em Batch por ser independente da cena. A E3 aguarda o gate visual da E1.
 
 ## Estratégia de execução
 
@@ -25,7 +25,7 @@ Não misturar duas etapas quando a primeira ainda não passou pelo seu gate. Cor
 | --- | --- | --- |
 | E0 | Pacote abre, mostra versão e reconhece o Corona | Aprovada |
 | E1 | `Preparar esta cena` cria a infraestrutura Ameno com segurança | Pronta para teste manual |
-| E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Não iniciada |
+| E2 | Núcleo calcula e formata uma cota linear sem criar objetos | Aprovada em Batch |
 | E3 | Uma cota gráfica de teste é construída na cena | Não iniciada |
 | E4 | Cota alinhada é criada com três cliques e preview | Não iniciada |
 | E5 | Cotas sobrevivem a salvar/reabrir, Undo e alterações de cena | Não iniciada |
@@ -106,6 +106,10 @@ Nenhuma linha, texto, mouse tool, callback associativo ou render de cotas.
 
 ## E2 — Matemática, unidades e texto do valor
 
+**Estado:** aprovada em testes automatizados no 3ds Max 2026.3.
+**Implementação:** `Contents/scripts/ameno/core/ameno_dimensions_math.ms`.
+**Evidência automatizada:** layout positivo/negativo/diagonal, pontos coincidentes, conversões de unidade, arredondamento por incremento e formatação de `19,555 m` para `19,60 m` passaram no Batch e no pacote instalado via `ApplicationPlugins`.
+
 ### Objetivo
 
 Ter um núcleo determinístico que transforme três pontos em dados de cota, sem depender da UI ou da cena.
@@ -127,6 +131,10 @@ Ter um núcleo determinístico que transforme três pontos em dados de cota, sem
 - `19,555 m` com incremento de `0,10 m` gera `19,60 m`;
 - trocar unidades de exibição não altera a medida armazenada;
 - nenhum nó é criado na cena.
+
+### Observação de ordem
+
+A E2 foi executada antes da validação visual da E1 por autorização explícita. Isso não amplia a cena nem depende das layers, pois o módulo é puro. A E3 continua aguardando a aprovação visual da E1.
 
 ---
 

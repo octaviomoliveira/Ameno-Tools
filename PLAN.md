@@ -25,6 +25,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Validação manual no 3ds Max concluída: painel `Ameno Tools 0.0.1 · Max 2026` aberto e Corona identificado como `suportado`.
 - E1 implementada e aprovada em testes automatizados no 3ds Max 2026.3: `Preparar esta cena` cria infraestrutura idempotente, protege conflitos de layer e restaura a layer corrente.
 - Cópia de desenvolvimento atualizada em `ApplicationPlugins` e validada em processo separado do 3ds Max Batch.
+- E2 implementada e aprovada em testes automatizados no 3ds Max 2026.3: layout de cota alinhada no plano XY, conversão canônica para milímetros, arredondamento por incremento e formatação determinística.
+- E2 não cria objetos, layers, callbacks ou histórico de Undo; ela recebe pontos e devolve dados prontos para a representação gráfica da E3.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
 - Regras decididas para `AMENO_COTAS`, geometria renderizável, render separado de cotas e preservação do Beauty, LightMix e Render Elements existentes.
@@ -36,11 +38,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 ## Em andamento
 
 - E1 está **pronta para validação visual manual** no 3ds Max, definida em `plans/2026-09-03-mvp-incremental.md`.
-- Nenhuma implementação da E2 começa antes da aprovação do gate manual da E1.
+- A E2 foi concluída por solicitação explícita, pois é um núcleo puro e independente da cena.
+- A E3 permanece bloqueada até o gate visual da E1 ser aprovado.
 
 ## Próximo passo executável
 
-Validar visualmente a **E1 — Preparar a cena** após recarregar o 3ds Max: abrir o Ameno, usar `Preparar esta cena` em uma cena vazia ou cópia segura, confirmar `Cena preparada`, repetir o comando, verificar `AMENO_COTAS` e `AMENO_SYSTEM` no Layer Explorer e salvar/reabrir. O comando não deve alterar renderer, unidades, câmera, objetos do usuário nem a layer corrente.
+Validar visualmente a **E1 — Preparar a cena** após recarregar o 3ds Max: abrir o Ameno, usar `Preparar esta cena` em uma cena vazia ou cópia segura, confirmar `Cena preparada`, repetir o comando, verificar `AMENO_COTAS` e `AMENO_SYSTEM` no Layer Explorer e salvar/reabrir. O comando não deve alterar renderer, unidades, câmera, objetos do usuário nem a layer corrente. Após esse gate, iniciar a E3 com os dados já fornecidos pela E2.
 
 ## Decisões que ainda exigem validação
 
@@ -60,6 +63,7 @@ Validar visualmente a **E1 — Preparar a cena** após recarregar o 3ds Max: abr
 | 2026-09-03 | Centralizar o projeto em `D:\Ameno\_tools` e manter planos atualizados para continuidade via Antigravity. | Concluído | Repositório Git íntegro em `D:\Ameno\_tools`; origem removida após confirmação de vazio |
 | 2026-09-03 | Confirmar o pacote aberto no 3ds Max e dividir o funcionamento do plugin em etapas pequenas. | Concluído no planejamento; E1 é a próxima implementação | `plans/2026-09-03-mvp-incremental.md` |
 | 2026-09-03 | Seguir para E1 e registrar cada etapa em Markdown e GitHub. | E1 implementada, testada em Batch e pronta para validação visual; commit local `92bddd1`; GitHub bloqueado porque nenhum remoto está configurado | `Contents/scripts/ameno/core/ameno_scene_setup.ms`, `.test-output/*e1*` |
+| 2026-09-03 | Conectar `github.com/octaviomoliveira/Ameno-Tools` e seguir para E2. | `origin/main` publicado; E2 implementada e aprovada em Batch e no pacote instalado; commit/push desta etapa pendentes | `Contents/scripts/ameno/core/ameno_dimensions_math.ms`, `.test-output/*e2*` |
 
 ## Como retomar sem contexto
 

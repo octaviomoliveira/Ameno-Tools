@@ -4,7 +4,7 @@ Suíte modular de ferramentas para 3ds Max. O primeiro módulo, **Ameno Dimensio
 
 ## Estado
 
-Fundação técnica `0.0.1` executável no 3ds Max 2026. O pacote carrega, registra a ação `Ameno Tools`, abre o painel e diagnostica o renderer. A E1 também está implementada: `Preparar esta cena` cria a infraestrutura de layers, registro e estilo padrão com segurança. A ferramenta de criação de cotas ainda está em desenvolvimento.
+Fundação técnica `0.0.1` executável no 3ds Max 2026. O pacote carrega, registra a ação `Ameno Tools`, abre o painel e diagnostica o renderer. A E1 implementa `Preparar esta cena`; a E2 implementa o núcleo puro de geometria, unidades, arredondamento e formatação. A ferramenta gráfica de criação de cotas ainda está em desenvolvimento.
 
 Decisões já tomadas:
 
