@@ -14,6 +14,14 @@ global AmenoDimensionMath
 global AmenoSceneSetup
 global AmenoLog
 global AmenoRefreshMainPanel
+global AmenoDimensionAnchorHit
+
+struct AmenoDimensionAnchorHit
+(
+    node = undefined,
+    vertexId = -1,
+    vertexWorldPoint = undefined
+)
 
 struct AmenoDimensionToolService
 (
@@ -31,10 +39,78 @@ struct AmenoDimensionToolService
     activeMode = #aligned, -- E10.1: #aligned | #horizontal | #vertical
     nodeA = undefined,
     nodeB = undefined,
+    anchorVertexIdA = -1,
+    anchorVertexIdB = -1,
+    lastAnchorSummary = "",
 
-    fn detectHitNode pointValue screenPoint:undefined =
+    fn detectHitNode pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
     (
         local candidateNode = undefined
+        local anchorPoint = if snapHit and snapWorldPoint != undefined then snapWorldPoint else pointValue
+
+        -- Preferencia absoluta para o resultado real do sistema de Snap. O Max
+        -- informa diretamente o no e o ponto mundial sob o marcador; isso evita
+        -- inferir a ancora por raycast quando o clique ja foi resolvido pelo Snap.
+        if snapHit and snapNode != undefined and isValidNode snapNode and anchorPoint != undefined do
+        (
+            local snapKind = ::AmenoDimensionGraphics.readTextProperty snapNode "Ameno.Kind"
+            if (snapKind == undefined or snapKind == "") and (findString snapNode.name "AMENO_" == undefined) do
+            (
+                local snapTolerance = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
+                local snappedVertex = undefined
+                if ::AmenoDimensionCA != undefined do
+                    snappedVertex = ::AmenoDimensionCA.findNearestVertex snapNode anchorPoint maxDistance:snapTolerance
+
+                if snappedVertex != undefined then
+                    return (AmenoDimensionAnchorHit node:snapNode vertexId:snappedVertex.vertexId vertexWorldPoint:snappedVertex.worldPoint)
+                else
+                    return (AmenoDimensionAnchorHit node:snapNode)
+            )
+        )
+
+        -- O ponto retornado pelo Vertex Snap e mais confiavel que o primeiro
+        -- ray hit: em planta, o raio pode atravessar outra face antes do vertice.
+        -- Procuramos primeiro o vertice avaliado mais proximo em todas as
+        -- geometrias elegiveis cujo bounding box contem o ponto clicado.
+        if anchorPoint != undefined and ::AmenoDimensionCA != undefined do
+        (
+            local vertexTolerance = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
+            local closestVertexNode = undefined
+            local closestVertexHit = undefined
+            local closestVertexDistance = 1e30
+
+            for obj in geometry where isValidNode obj and not obj.isHidden do
+            (
+                local k = ::AmenoDimensionGraphics.readTextProperty obj "Ameno.Kind"
+                if (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
+                (
+                    local insideCandidateBounds = false
+                    try
+                    (
+                        local bbMin = obj.min
+                        local bbMax = obj.max
+                        insideCandidateBounds = anchorPoint.x >= (bbMin.x - vertexTolerance) and anchorPoint.x <= (bbMax.x + vertexTolerance) and \
+                                                anchorPoint.y >= (bbMin.y - vertexTolerance) and anchorPoint.y <= (bbMax.y + vertexTolerance) and \
+                                                anchorPoint.z >= (bbMin.z - vertexTolerance) and anchorPoint.z <= (bbMax.z + vertexTolerance)
+                    )
+                    catch ()
+
+                    if insideCandidateBounds do
+                    (
+                        local vertexHit = ::AmenoDimensionCA.findNearestVertex obj anchorPoint maxDistance:vertexTolerance
+                        if vertexHit != undefined and vertexHit.distance < closestVertexDistance do
+                        (
+                            closestVertexNode = obj
+                            closestVertexHit = vertexHit
+                            closestVertexDistance = vertexHit.distance
+                        )
+                    )
+                )
+            )
+
+            if closestVertexNode != undefined and closestVertexHit != undefined then
+                return (AmenoDimensionAnchorHit node:closestVertexNode vertexId:closestVertexHit.vertexId vertexWorldPoint:closestVertexHit.worldPoint)
+        )
 
         -- 1. Tentativa via raycasting na cena (usando viewport-relative screenPoint)
         try
@@ -67,7 +143,7 @@ struct AmenoDimensionToolService
         catch ()
 
         -- 2. Fallback via proximidade de Bounding Box em unidades de cena
-        if candidateNode == undefined and pointValue != undefined do
+        if candidateNode == undefined and anchorPoint != undefined do
         (
             try
             (
@@ -82,12 +158,12 @@ struct AmenoDimensionToolService
                         local bbMin = obj.min
                         local bbMax = obj.max
 
-                        if pointValue.x >= (bbMin.x - tol) and pointValue.x <= (bbMax.x + tol) and \
-                           pointValue.y >= (bbMin.y - tol) and pointValue.y <= (bbMax.y + tol) and \
-                           pointValue.z >= (bbMin.z - tol) and pointValue.z <= (bbMax.z + tol) do
+                        if anchorPoint.x >= (bbMin.x - tol) and anchorPoint.x <= (bbMax.x + tol) and \
+                           anchorPoint.y >= (bbMin.y - tol) and anchorPoint.y <= (bbMax.y + tol) and \
+                           anchorPoint.z >= (bbMin.z - tol) and anchorPoint.z <= (bbMax.z + tol) do
                         (
                             local objCenter = (bbMin + bbMax) * 0.5
-                            local d = length (objCenter - pointValue)
+                            local d = length (objCenter - anchorPoint)
                             if d < closestDist do
                             (
                                 closestDist = d
@@ -100,13 +176,37 @@ struct AmenoDimensionToolService
             catch ()
         )
 
-        candidateNode
+        local result = AmenoDimensionAnchorHit node:candidateNode
+        if candidateNode != undefined and ::AmenoDimensionCA != undefined do
+        (
+            -- O snap do Max entrega o ponto exato; a tolerância cobre pequenas
+            -- diferenças numéricas sem capturar um vértice distante por acidente.
+            local vertexTolerance = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
+            local vertexHit = ::AmenoDimensionCA.findNearestVertex candidateNode anchorPoint maxDistance:vertexTolerance
+            if vertexHit != undefined do
+            (
+                result.vertexId = vertexHit.vertexId
+                result.vertexWorldPoint = vertexHit.worldPoint
+            )
+        )
+
+        result
     ),
 
     fn flattenPoint pointValue =
     (
         if pointValue == undefined then return undefined
         [pointValue.x, pointValue.y, 0.0]
+    ),
+
+    fn anchorSummaryPart label nodeValue vertexId =
+    (
+        if vertexId > 0 then
+            (label + "=v" + (vertexId as string))
+        else if nodeValue != undefined and isValidNode nodeValue then
+            (label + "=obj")
+        else
+            (label + "=mundo")
     ),
 
     fn panelStatus statusText =
@@ -233,19 +333,23 @@ struct AmenoDimensionToolService
         offsetPoint = undefined
         nodeA = undefined
         nodeB = undefined
+        anchorVertexIdA = -1
+        anchorVertexIdB = -1
         preview = undefined
         lastCommittedRecord = undefined
         lastError = ""
+        lastAnchorSummary = ""
         active = true
         setStage #pointA
         true
     ),
 
-    fn handlePoint clickNumber pointValue screenPoint:undefined =
+    fn handlePoint clickNumber pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
     (
         if not active then return #stop
 
-        local candidate = flattenPoint pointValue
+        local effectivePoint = if snapHit and snapWorldPoint != undefined then snapWorldPoint else pointValue
+        local candidate = flattenPoint effectivePoint
         if candidate == undefined then return undefined
 
         case stage of
@@ -253,7 +357,10 @@ struct AmenoDimensionToolService
             #pointA:
             (
                 pointA = candidate
-                nodeA = detectHitNode pointValue screenPoint:screenPoint
+                local hitA = detectHitNode effectivePoint screenPoint:screenPoint snapNode:snapNode snapWorldPoint:snapWorldPoint snapHit:snapHit
+                nodeA = hitA.node
+                anchorVertexIdA = hitA.vertexId
+                if hitA.vertexWorldPoint != undefined do pointA = flattenPoint hitA.vertexWorldPoint
                 setStage #pointB
                 undefined
             )
@@ -268,7 +375,10 @@ struct AmenoDimensionToolService
                 )
 
                 pointB = candidate
-                nodeB = detectHitNode pointValue screenPoint:screenPoint
+                local hitB = detectHitNode effectivePoint screenPoint:screenPoint snapNode:snapNode snapWorldPoint:snapWorldPoint snapHit:snapHit
+                nodeB = hitB.node
+                anchorVertexIdB = hitB.vertexId
+                if hitB.vertexWorldPoint != undefined do pointB = flattenPoint hitB.vertexWorldPoint
                 offsetPoint = defaultOffsetPoint pointA pointB
                 updatePreview pointA pointB offsetPoint
                 setStage #offset
@@ -284,11 +394,15 @@ struct AmenoDimensionToolService
                 local created = undefined
                 try
                 (
-                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId nodeA:nodeA nodeB:nodeB dimensionMode:activeMode
+                    created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId \
+                        nodeA:nodeA anchorVertexIdA:anchorVertexIdA nodeB:nodeB anchorVertexIdB:anchorVertexIdB dimensionMode:activeMode
                     lastCommittedRecord = created
+                    lastAnchorSummary = (anchorSummaryPart "A" nodeA anchorVertexIdA) + " · " + (anchorSummaryPart "B" nodeB anchorVertexIdB)
                     removePreview()
                     nodeA = undefined
                     nodeB = undefined
+                    anchorVertexIdA = -1
+                    anchorVertexIdB = -1
                     -- Notifica o serviço de âncoras para que a nova cota entre no índice
                     -- reativo imediatamente. Sem isso, o indexTable ficaria desatualizado
                     -- até o próximo reinício, e o NodeEventCallback ignoraria movimentos
@@ -346,6 +460,8 @@ struct AmenoDimensionToolService
         offsetPoint = undefined
         nodeA = undefined
         nodeB = undefined
+        anchorVertexIdA = -1
+        anchorVertexIdB = -1
         active = false
         stage = #idle
         panelStatus "E4: cota cancelada."
@@ -372,7 +488,10 @@ struct AmenoDimensionToolService
         try (popPrompt()) catch ()
         active = false
         stage = #idle
-        panelStatus "E4: ferramenta pronta."
+        if lastCommittedRecord != undefined and lastAnchorSummary != "" then
+            panelStatus ("Cota criada · " + lastAnchorSummary)
+        else
+            panelStatus "E4: ferramenta pronta."
         true
     ),
 
@@ -413,7 +532,27 @@ tool AmenoDimensionMouseTool prompt:"Ameno Dimensions: clique A, B e o afastamen
 
     on mousePoint clickNumber do
     (
-        if AmenoDimensionTool != undefined then AmenoDimensionTool.handlePoint clickNumber worldPoint screenPoint:viewPoint else #abort
+        local snapped = false
+        local snappedNode = undefined
+        local snappedWorldPoint = undefined
+        try
+        (
+            -- snapMode.hit ja retorna undefined quando Snaps nao esta ativo.
+            -- Nao depender de snapMode.active permite ler o Snap imposto pelo
+            -- proprio MouseTool mesmo se o toggle global da toolbar estiver off.
+            snapped = (snapMode.hit == true)
+            if snapped do
+            (
+                snappedNode = snapMode.node
+                snappedWorldPoint = snapMode.worldHitpoint
+            )
+        )
+        catch ()
+
+        if AmenoDimensionTool != undefined then
+            AmenoDimensionTool.handlePoint clickNumber worldPoint screenPoint:viewPoint snapNode:snappedNode snapWorldPoint:snappedWorldPoint snapHit:snapped
+        else
+            #abort
     )
 
     on mouseMove clickNumber do

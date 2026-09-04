@@ -17,6 +17,8 @@ global AmenoDimensionMath
 global AmenoStyleService
 global AmenoRefreshMainPanel
 global AmenoRegisterTransformWatcher
+global AmenoRegisterGeometryWatcher
+global AmenoGeometryWatcherLastError
 
 -- Função global para registrar watcher de transform em nós âncora.
 -- Usa execute() com handle embutido na string para evitar closure e race condition.
@@ -42,6 +44,38 @@ fn AmenoRegisterTransformWatcher theNode =
     try (execute watchScript) catch ()
 )
 
+-- O NodeEventCallback permanece como rede global, mas algumas stacks de Edit Poly
+-- nao entregam o evento de forma consistente durante a edicao interativa. Este
+-- change handler fica ligado diretamente ao no ancorado e usa a mesma dirty queue.
+fn AmenoRegisterGeometryWatcher theNode =
+(
+    AmenoGeometryWatcherLastError = ""
+    local h = getHandleByAnim theNode
+    local hStr = h as string
+    local cbBody = \
+        "if ::AmenoAnchorService != undefined and " + \
+        "::AmenoAnchorService.indexTable != undefined and " + \
+        "(hasDictValue ::AmenoAnchorService.indexTable \"" + hStr + "\") do (" + \
+        "local _cl = getDictValue ::AmenoAnchorService.indexTable \"" + hStr + "\";" + \
+        "if _cl != undefined do (" + \
+        "for _c in _cl where isValidNode _c do ::AmenoAnchorService.markDirty _c;" + \
+        "if ::AmenoAnchorService.dirtyQueue.count > 0 do ::AmenoAnchorService.flushQueue()))"
+    local watchScript = \
+        "when geometry (getAnimByHandle " + hStr + ") changes id:#ameno_geometry_watchers do (" + \
+        cbBody + ")"
+    local registered = false
+    try
+    (
+        execute watchScript
+        registered = true
+    )
+    catch
+    (
+        AmenoGeometryWatcherLastError = getCurrentException() as string
+    )
+    registered
+)
+
 
 struct AmenoAnchorServiceDefinition
 (
@@ -50,6 +84,7 @@ struct AmenoAnchorServiceDefinition
     isCallbackActive = false,
     isSyncing = false,
     indexTable = undefined,
+    geometryWatcherCount = 0,
 
     fn rebuildIndex =
     (
@@ -58,6 +93,8 @@ struct AmenoAnchorServiceDefinition
 
         -- Remove watchers anteriores antes de recriar o índice
         try (deleteAllChangeHandlers id:#ameno_watchers) catch ()
+        try (deleteAllChangeHandlers id:#ameno_geometry_watchers) catch ()
+        geometryWatcherCount = 0
 
         local controllers = ::AmenoDimensionGraphics.findControllers()
         local watchedHandles = #()
@@ -86,6 +123,8 @@ struct AmenoAnchorServiceDefinition
                         append watchedHandles hA
                         if ::AmenoRegisterTransformWatcher != undefined do
                             try (::AmenoRegisterTransformWatcher rec.nodeA) catch ()
+                        if ::AmenoRegisterGeometryWatcher != undefined do
+                            try (if ::AmenoRegisterGeometryWatcher rec.nodeA do geometryWatcherCount += 1) catch ()
                     )
                 )
 
@@ -108,6 +147,8 @@ struct AmenoAnchorServiceDefinition
                         append watchedHandles hB
                         if ::AmenoRegisterTransformWatcher != undefined do
                             try (::AmenoRegisterTransformWatcher rec.nodeB) catch ()
+                        if ::AmenoRegisterGeometryWatcher != undefined do
+                            try (if ::AmenoRegisterGeometryWatcher rec.nodeB do geometryWatcherCount += 1) catch ()
                     )
                 )
             )
@@ -145,7 +186,9 @@ struct AmenoAnchorServiceDefinition
             return (::AmenoDimensionGraphics.rebuildDimension controller) != undefined
         )
 
-        local layout = ::AmenoDimensionMath.alignedLayout rec.pointA rec.pointB rec.offsetPoint
+        local mode = #aligned
+        try (mode = rec.dimensionMode as name) catch ()
+        local layout = ::AmenoDimensionMath.layoutForMode rec.pointA rec.pointB rec.offsetPoint mode:mode
         if layout == undefined or not layout.valid then
         (
             return (::AmenoDimensionGraphics.rebuildDimension controller) != undefined
@@ -403,12 +446,21 @@ struct AmenoAnchorServiceDefinition
                 (
                     rec.nodeA = targetNode
                     rec.localPointA = targetWorldPoint * (inverse targetNode.transform)
+                    rec.anchorVertexIdA = -1
+                    rec.anchorEdgeIdA = -1
+                    rec.anchorEdgeMidA = false
+                    local toleranceA = ::AmenoDimensionGraphics.toSceneUnits 10.0
+                    local vertexHitA = ::AmenoDimensionCA.findNearestVertex targetNode targetWorldPoint maxDistance:toleranceA
+                    if vertexHitA != undefined do rec.anchorVertexIdA = vertexHitA.vertexId
                     rec.pointA = targetWorldPoint
                     rec.anchorType = if (rec.anchorType == "nodeB" or rec.anchorType == "both") then "both" else "nodeA"
                 )
                 else
                 (
                     rec.nodeA = undefined
+                    rec.anchorVertexIdA = -1
+                    rec.anchorEdgeIdA = -1
+                    rec.anchorEdgeMidA = false
                     rec.pointA = targetWorldPoint
                     rec.anchorType = if (rec.anchorType == "nodeB" or rec.anchorType == "both") then "nodeB" else "world"
                 )
@@ -419,12 +471,21 @@ struct AmenoAnchorServiceDefinition
                 (
                     rec.nodeB = targetNode
                     rec.localPointB = targetWorldPoint * (inverse targetNode.transform)
+                    rec.anchorVertexIdB = -1
+                    rec.anchorEdgeIdB = -1
+                    rec.anchorEdgeMidB = false
+                    local toleranceB = ::AmenoDimensionGraphics.toSceneUnits 10.0
+                    local vertexHitB = ::AmenoDimensionCA.findNearestVertex targetNode targetWorldPoint maxDistance:toleranceB
+                    if vertexHitB != undefined do rec.anchorVertexIdB = vertexHitB.vertexId
                     rec.pointB = targetWorldPoint
                     rec.anchorType = if (rec.anchorType == "nodeA" or rec.anchorType == "both") then "both" else "nodeB"
                 )
                 else
                 (
                     rec.nodeB = undefined
+                    rec.anchorVertexIdB = -1
+                    rec.anchorEdgeIdB = -1
+                    rec.anchorEdgeMidB = false
                     rec.pointB = targetWorldPoint
                     rec.anchorType = if (rec.anchorType == "nodeA" or rec.anchorType == "both") then "nodeA" else "world"
                 )
@@ -489,15 +550,27 @@ struct AmenoAnchorServiceDefinition
                 if rec != undefined and rec.isOrphan do
                 (
                     -- Converte referências perdidas em coordenadas mundiais estáticas
-                    if rec.nodeA == undefined or not (isValidNode rec.nodeA) do
+                    local invalidVertexA = false
+                    if rec.anchorVertexIdA != -1 do
+                        invalidVertexA = (rec.anchorVertexIdA < 1 or (::AmenoDimensionCA.resolveVertexWorld rec.nodeA rec.anchorVertexIdA) == undefined)
+                    if rec.nodeA == undefined or not (isValidNode rec.nodeA) or invalidVertexA do
                     (
                         rec.nodeA = undefined
                         rec.localPointA = [0, 0, 0]
+                        rec.anchorVertexIdA = -1
+                        rec.anchorEdgeIdA = -1
+                        rec.anchorEdgeMidA = false
                     )
-                    if rec.nodeB == undefined or not (isValidNode rec.nodeB) do
+                    local invalidVertexB = false
+                    if rec.anchorVertexIdB != -1 do
+                        invalidVertexB = (rec.anchorVertexIdB < 1 or (::AmenoDimensionCA.resolveVertexWorld rec.nodeB rec.anchorVertexIdB) == undefined)
+                    if rec.nodeB == undefined or not (isValidNode rec.nodeB) or invalidVertexB do
                     (
                         rec.nodeB = undefined
                         rec.localPointB = [0, 0, 0]
+                        rec.anchorVertexIdB = -1
+                        rec.anchorEdgeIdB = -1
+                        rec.anchorEdgeMidB = false
                     )
 
                     if rec.nodeA != undefined then rec.anchorType = "nodeA"
@@ -528,12 +601,14 @@ struct AmenoAnchorServiceDefinition
         callbacks.removeScripts id:#ameno_anchors
         -- Remove os watchers de transform registrados por rebuildIndex
         try (deleteAllChangeHandlers id:#ameno_watchers) catch ()
+        try (deleteAllChangeHandlers id:#ameno_geometry_watchers) catch ()
         if anchorCallback != undefined do
         (
             try (anchorCallback.enabled = false) catch ()
             anchorCallback = undefined
         )
         isCallbackActive = false
+        geometryWatcherCount = 0
         dirtyQueue = #()
         isSyncing = false
         if indexTable != undefined do
@@ -555,11 +630,14 @@ struct AmenoAnchorServiceDefinition
 
         try
         (
+            -- Um único callback retido atende eventos estruturais e mudanças
+            -- de geometria; criar outro watcher global duplicaria atualizações.
             anchorCallback = NodeEventCallback \
                 controllerOtherEvent:(fn onCtrl ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesChanged ev nd) \
                 controllerStructured:(fn onCtrl ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesChanged ev nd) \
                 modelStructured:(fn onStruct ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesChanged ev nd) \
                 geometryChanged:(fn onGeom ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesChanged ev nd) \
+                topologyChanged:(fn onTopo ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesChanged ev nd) \
                 deleted:(fn onDel ev nd = if ::AmenoAnchorService != undefined do ::AmenoAnchorService.handleNodesDeleted ev nd) \
                 delay:50 mouseUp:false
             isCallbackActive = true

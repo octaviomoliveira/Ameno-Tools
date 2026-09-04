@@ -511,6 +511,7 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 - **E10.4 — Fixtures, Diagnóstico e Guia de Uso:** `ameno_diagnostic_service.ms` (`AmenoDiagnosticServiceDefinition` com varredura completa de saúde, modos, âncoras e órfãs), `tests/fixtures/create_fixture_architecture_plan.ms`, `tests/fixtures/create_fixture_scale.ms`, `docs/user-guide.md` (manual completo em português). ADR 0017, `tests/maxscript/test_e10_4_diagnostics.ms` aprovado (19 testes).
 - **E10.5 — Benchmarks de Escala (1 a 1000 Cotas):** `tests/maxscript/test_e10_5_scale.ms` executou testes de estresse com 1, 10, 100, 500 e 1000 cotas geradas parametricamente (3.000 nós na cena) sem falhas ou vazamentos. ADR 0018 aprovado (20 testes).
 - **E10.6 — Pacote Alpha Distribuível:** `tools/package-alpha.ps1` validou a estrutura e empacotou `dist/AmenoTools-0.0.1-alpha.zip` (57 KB, SHA-256 verificado), acompanhado de `docs/alpha-release-notes.md`.
+- **E10.7 — Âncoras por Vértice:** implementação em andamento do schema CA v5, captura de vertex ID e atualização de Editable Poly/Editable Mesh. O número substitui a sugestão E10.5 do ADR 0015 porque E10.5 e E10.6 já foram publicados. Plano: `plans/2026-09-04-e10-7-subobject-anchors.md`.
 
 ### Gate do MVP interno (Pendente de validação interativa pelo usuário)
 
@@ -534,4 +535,4 @@ Substituir o rollout funcional criado na E7 por um editor visual coerente com o 
 
 ## Próxima ação
 
-Aguardar validação interativa das funcionalidades da **E10** pelo usuário no 3ds Max 2026 com o pacote instalado (`install-dev.ps1`) ou o arquivo gerado `dist/AmenoTools-0.0.1-alpha.zip`.
+Executar os gates automatizado e interativo da **E10.7**, depois atualizar a branch visual da E11 com a `main` estabilizada.

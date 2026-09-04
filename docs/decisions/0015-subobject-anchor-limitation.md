@@ -1,7 +1,7 @@
 ﻿# 0015 — Limitação: Âncoras não rastreiam edições de sub-objeto (EditPoly/EditMesh)
 
 **Data:** 2026-09-04  
-**Status:** Conhecido · Pendente de solução  
+**Status:** E10.7.2 corrigida e reinstalada · gate diagnóstico pendente
 **Contexto:** Detectado durante gate manual da E10.1
 
 ---
@@ -110,17 +110,21 @@ modifica a geometria do no anchorado.
 | `ameno_dimension_ca.ms` | `resolvePoints` com ramificacao por tipo de ancora |
 | `ameno_anchor_service.ms` | `rebuildIndex` registra `NodeEventCallback #geometryChanged` |
 | `ameno_anchor_service.ms` | `flushQueue` ja existente (sem mudanca) |
-| `tests/maxscript/test_e10_5_subobject_anchors.ms` | Testes automatizados |
+| `tests/maxscript/test_e10_7_subobject_anchors.ms` | Testes automatizados |
 
 **Schema e retrocompat:** campos `anchorVertexId` com default `-1` — cotas existentes
-continuam usando `localPoint` (comportamento atual). Nenhuma migrar automatica necessaria.
+continuam usando `localPoint` (comportamento atual). Nenhuma migração destrutiva é necessária.
+Os novos parâmetros são anexados ao final do ParameterBlock v5, preservando a ordem e
+os ParamIDs de todos os campos existentes no schema v4.
 
 ---
 
 ## Prioridade sugerida
 
-Implementar como **E10.5** (apos E10.2 ~ E10.4) ou como **E11** caso as etapas
-intermediarias sejam mais urgentes. A decisao de prioridade fica com o usuario.
+Implementar como **E10.7**. A sugestao original E10.5 foi renumerada porque a `main`
+publicada passou a usar E10.5 para benchmarks e E10.6 para empacotamento alpha. O
+escopo tecnico permanece o mesmo e o plano incremental esta em
+`plans/2026-09-04-e10-7-subobject-anchors.md`.
 
 ---
 
@@ -129,4 +133,33 @@ intermediarias sejam mais urgentes. A decisao de prioridade fica com o usuario.
 - `ameno_anchor_service.ms` — `rebuildIndex`, `AmenoRegisterTransformWatcher`
 - `ameno_dimension_ca.ms` — `resolvePoints`, `AmenoDimensionRecord`
 - `ameno_dimension_tool.ms` — `detectHitNode`
-- ADR 0008 (E8 — Sistema de Ancoras)
+- ADR 0011 (E8 — Sistema de Ancoras)
+
+---
+
+## Adendo E10.7.1 — resultado do primeiro gate manual
+
+O primeiro teste no 3ds Max mostrou que mover o vértice ainda não atualizava a cota.
+A implementação inicial consultava primeiro o `baseObject`, o que não representa a
+geometria produzida por Edit Poly/Edit Mesh acima dele na modifier stack. Além disso,
+a captura do nó dependia do primeiro objeto interceptado pelo raycast.
+
+A correção passa a:
+
+- resolver e localizar IDs com `snapshotAsMesh`, que avalia o topo da modifier stack;
+- buscar o vértice globalmente pelo ponto exato devolvido pelo Vertex Snap;
+- manter um change handler `when geometry` diretamente em cada nó ancorado, além do
+  `NodeEventCallback` global;
+- ouvir também `topologyChanged` para falhar com segurança quando IDs forem removidos.
+
+Cotas criadas antes da captura de vertex ID continuam retrocompatíveis por `localPoint`.
+Para fazê-las rastrear subobjetos, é necessário reancorar A/B ou criar uma nova cota.
+
+### Adendo E10.7.2 — eliminar inferência silenciosa
+
+O segundo gate também falhou e a interface não informava se o ID havia sido persistido.
+A API do Max já fornece o resultado exato do Snap em `snapMode.node` e
+`snapMode.worldHitpoint`; esses dados passam a ter precedência sobre qualquer inferência
+por raycast ou bounding box. O painel passa a exibir os IDs capturados para separar
+objetivamente falha de captura e falha de atualização. A reancoragem A/B também foi
+corrigida para extrair `.node` do record `AmenoDimensionAnchorHit`.

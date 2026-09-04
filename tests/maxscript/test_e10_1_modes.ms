@@ -144,19 +144,19 @@ expect "vertical zeroProjection errorCode"  lvZero.errorCode  #zeroProjection
 expect "vertical zeroProjection valid=false" lvZero.valid false
 
 -- ----------------------------------------------------------------
--- BLOCO 5: CA v4 round-trip dimensionMode
+-- BLOCO 5: CA atual preserva dimensionMode
 -- ----------------------------------------------------------------
-format "\n=== B5: CA v4 round-trip ===\n"
+format "\n=== B5: CA schema atual round-trip ===\n"
 
 if AmenoDimensionCA != undefined then
 (
     -- Verificar que AmenoDimensionRecord tem o campo
     local rec = AmenoDimensionRecord()
     expect "record.dimensionMode default"    rec.dimensionMode  "aligned"
-    expect "record.schemaVersion default=4"  rec.schemaVersion  4
+    expect "record.schemaVersion default=5"  rec.schemaVersion  5
 
-    -- Verificar que a service tem schemaVersion 4
-    expect "CAService.schemaVersion = 4"  AmenoDimensionCA.schemaVersion  4
+    -- Verificar que a service tem schemaVersion 5
+    expect "CAService.schemaVersion = 5"  AmenoDimensionCA.schemaVersion  5
 )
 else
 (
