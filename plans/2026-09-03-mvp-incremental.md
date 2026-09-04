@@ -511,10 +511,11 @@ Gerar o overlay para Photoshop sem tocar no Beauty, LightMix ou Render Elements 
 - **E10.4 — Fixtures, Diagnóstico e Guia de Uso:** `ameno_diagnostic_service.ms` (`AmenoDiagnosticServiceDefinition` com varredura completa de saúde, modos, âncoras e órfãs), `tests/fixtures/create_fixture_architecture_plan.ms`, `tests/fixtures/create_fixture_scale.ms`, `docs/user-guide.md` (manual completo em português). ADR 0017, `tests/maxscript/test_e10_4_diagnostics.ms` aprovado (19 testes).
 - **E10.5 — Benchmarks de Escala (1 a 1000 Cotas):** `tests/maxscript/test_e10_5_scale.ms` executou testes de estresse com 1, 10, 100, 500 e 1000 cotas geradas parametricamente (3.000 nós na cena) sem falhas ou vazamentos. ADR 0018 aprovado (20 testes).
 - **E10.6 — Pacote Alpha Distribuível:** `tools/package-alpha.ps1` validou a estrutura e empacotou `dist/AmenoTools-0.0.1-alpha.zip` (57 KB, SHA-256 verificado), acompanhado de `docs/alpha-release-notes.md`.
-- **E10.7 — Âncoras por Vértice:** implementação em andamento do schema CA v5, captura de vertex ID e atualização de Editable Poly/Editable Mesh. O número substitui a sugestão E10.5 do ADR 0015 porque E10.5 e E10.6 já foram publicados. Plano: `plans/2026-09-04-e10-7-subobject-anchors.md`.
+- **E10.7 — Âncoras por Vértice:** concluída e aprovada manualmente no 3ds Max 2026 em 2026-09-04. O schema CA v5, a captura explícita por Vertex Snap e os watchers de geometria fizeram a cota acompanhar a edição de vértices em Editable Poly/Editable Mesh. O número substitui a sugestão E10.5 do ADR 0015 porque E10.5 e E10.6 já foram publicados. Plano: `plans/2026-09-04-e10-7-subobject-anchors.md`.
 
 ### Gate do MVP interno (Pendente de validação interativa pelo usuário)
 
+- [x] Criar cota com Vertex Snap e confirmar atualização após mover o vértice.
 - [ ] Criar cotas nos modos Alinhada, Horizontal e Vertical em uma planta real;
 - [ ] Seleção múltipla: alterar unidade (m/cm/mm) e precisão em lote;
 - [ ] Bake de âncoras: fixar cotas e mover objetos;
@@ -535,4 +536,4 @@ Substituir o rollout funcional criado na E7 por um editor visual coerente com o 
 
 ## Próxima ação
 
-Executar os gates automatizado e interativo da **E10.7**, depois atualizar a branch visual da E11 com a `main` estabilizada.
+Concluir os gates interativos acumulados restantes da **E10** e, em seguida, atualizar a branch visual da E11 com a `main` estabilizada. A regressão Batch da E10.7 permanece no backlog até o executor isolado voltar a iniciar o Max de forma confiável.

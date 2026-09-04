@@ -1,7 +1,7 @@
 ﻿# 0015 — Limitação: Âncoras não rastreiam edições de sub-objeto (EditPoly/EditMesh)
 
 **Data:** 2026-09-04  
-**Status:** E10.7.2 corrigida e reinstalada · gate diagnóstico pendente
+**Status:** implementado e aprovado manualmente como E10.7.2
 **Contexto:** Detectado durante gate manual da E10.1
 
 ---
@@ -163,3 +163,11 @@ A API do Max já fornece o resultado exato do Snap em `snapMode.node` e
 por raycast ou bounding box. O painel passa a exibir os IDs capturados para separar
 objetivamente falha de captura e falha de atualização. A reancoragem A/B também foi
 corrigida para extrair `.node` do record `AmenoDimensionAnchorHit`.
+
+### Resultado do gate final
+
+Em 2026-09-04, o fluxo completo foi aprovado no 3ds Max 2026: uma cota criada com
+Vertex Snap registrou as extremidades por ID e acompanhou corretamente o deslocamento
+dos vértices em edição de subobjeto. A validação manual encerra a limitação funcional
+descrita neste ADR para Editable Poly e Editable Mesh; operações que renumerem a
+topologia continuam sujeitas à falha segura já documentada.

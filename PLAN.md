@@ -39,6 +39,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E8.1 implementada e aprovada manualmente no 3ds Max 2026.3 em 2026-09-04: reatividade contínua e em tempo real a movimentos Select-and-Move via watchers nativos `when transform (getAnimByHandle h) changes` compilados em runtime por `execute()` para cada nó âncora; índice reverso $O(1)$ por `Dictionary #string`; histórico de Undo do usuário 100% limpo com `with undo off`; persistência atômica de estilos via Custom Attribute `AmenoStyleRegistryCA` no helper `AMENO_STYLE_REGISTRY` (suportando `max undo` e `max redo`); escala física real em milímetros (`toSceneUnits`) em todas as dimensões de estilo; suporte a `extensionGap` na spline; hierarquia de prioridade visual no viewport (1º Órfã vermelha `230 70 70` > 2º Manual âmbar `245 166 35` > 3º Normal); atualização rápida in-place (`updateDimensionFast`); interface compacta (altura <= 640 px) com `subRollout` nativo; e reancoragem interativa com `pickPoint snap:#3D`.
 - E9 implementada e aprovada em testes automatizados no 3ds Max 2026.3 com Corona 13: painel `Render Separado de Cotas`, escopos Todas/Selecionadas, PNG transparente com nome automático e proteção contra sobrescrita, herança da viewport/câmera ativa, frame, resolução, pixel aspect e Crop/Region, material `CoronaLightMtl` visível diretamente e no alpha com emissão desligada, isolamento temporário dos nós e restauração transacional após sucesso, exceção e cancelamento. Um render Corona real confirmou cotas opacas sobre fundo transparente, sem a geometria comum da cena.
 - E9 implementada e aprovada interativamente no 3ds Max 2026.3 com Corona 13 em 2026-09-04: rollout `Render Separado de Cotas` no painel, PNG com fundo transparente e somente linhas/textos de cotas, nome automático e proteção contra sobrescrita (`_001`), herança de câmera/frame/resolução/pixel aspect/Crop do Render Setup, restauração transacional da cena confirmada ("A cena foi restaurada."); bugs corrigidos durante o gate: `renderOutputFilename`/`renderSaveFile` obrigatórios para Corona gravar o PNG (`outputfile` ignorado), critérios de parada do Corona agora forçados para 1 % de noise e 20 passes máximos no passe de overlay.
+- E10.7.2 implementada e aprovada manualmente no 3ds Max 2026 em 2026-09-04: Vertex Snap registra `A=vN / B=vN`, as extremidades resolvem a malha avaliada e a cota acompanha o deslocamento dos vértices em edição de subobjeto. O usuário confirmou o gate final como "sucesso absoluto".
 - Pacote instalado com E1 a E9 validado em Batch isolado e aprovado em sessão interativa no 3ds Max 2026.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
@@ -50,8 +51,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **E10.7.2 — Âncoras por vértice:** dois gates manuais falharam. A nova correção elimina a inferência silenciosa: lê `snapMode.node/worldHitpoint`, corrige reancoragem A/B e mostra `A=vN / B=vN` no painel. Pacote reinstalado; gate diagnóstico pendente. O Batch continua bloqueado pelo executor.
-- Validação interativa das funcionalidades acumuladas da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico, pacote alpha e edição de vértices).
+- Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
 
 ## Planejado após a E10
 
@@ -61,7 +61,6 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 1. Abrir o 3ds Max e executar o **gate manual interativo da E10 no 3ds Max 2026** com a versão de desenvolvimento já instalada:
    - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
-   - Criar uma cota com Vertex Snap em Editable Poly e mover o vértice;
    - Validar seleção múltipla e alteração em lote de unidades/precisão e Bake de âncoras;
    - Validar render de overlay no Corona ou V-Ray CPU;
    - Emitir Relatório de Diagnóstico no painel.
@@ -114,6 +113,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-04 | Fechar o Max e concluir a validação/instalação da E10.7. | Pacote estrutural aprovado e versão de desenvolvimento instalada. O teste E10.7 e a regressão E10.1 não chegaram a executar: o lançador Batch demorou mais de seis minutos para criar o processo filho e não produziu logs nem resultado. Gate interativo pendente; gate automático registrado como bloqueio do executor, não como falha do E10.7. | `tools/validate-package.ps1`, `tools/install-dev.ps1`, `plans/2026-09-04-e10-7-subobject-anchors.md` |
 | 2026-09-04 | Corrigir a E10.7 após o gate manual continuar sem acompanhar o vértice. | Falha reproduzida visualmente pelo usuário. Identificadas lacunas na leitura de `baseObject` e na captura dependente do primeiro ray hit. E10.7.1 implementa malha avaliada por `snapshotAsMesh`, busca global pelo ponto de snap, watcher direto de geometria e teste com modifier stack; pacote reinstalado e reteste pendente. | `ameno_dimension_ca.ms`, `ameno_dimension_tool.ms`, `ameno_anchor_service.ms`, `test_e10_7_subobject_anchors.ms`, `tools/install-dev.ps1` |
 | 2026-09-04 | Avaliar viabilidade após a E10.7.1 ainda falhar no Max. | Viável pela API oficial: o Max expõe nó e ponto mundial do Snap e eventos de geometria. E10.7.2 usa esses dados diretamente, corrige reancoragem que passava o record como nó, força coordenadas mundiais e adiciona feedback `A=vN / B=vN`; pacote reinstalado e novo gate pendente. | `snapMode.node`, `snapMode.worldHitpoint`, `ameno_dimension_tool.ms`, `ameno_main_panel.ms`, `docs/decisions/0015-subobject-anchor-limitation.md`, `tools/install-dev.ps1` |
+| 2026-09-04 | Confirmar o resultado final da E10.7.2 em edição de subobjeto. | Concluída e aprovada manualmente: Vertex Snap persistiu os IDs e a cota acompanhou o deslocamento dos vértices; o usuário confirmou "sucesso absoluto". | confirmação textual e vídeo `WhatsApp Video 2026-09-04 at 18.52.27.mp4`; commit funcional `32a00a7` |
 
 ## Como retomar sem contexto
 

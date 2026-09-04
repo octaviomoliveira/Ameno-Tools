@@ -1,7 +1,7 @@
 # E10.7 — Âncoras por vértice em Editable Poly e Editable Mesh
 
 **Data:** 2026-09-04
-**Estado:** E10.7.2 implementada e reinstalada após duas falhas manuais; gate diagnóstico pendente
+**Estado:** concluída e aprovada manualmente no 3ds Max 2026 em 2026-09-04
 **Origem:** ADR 0015
 
 ## Por que E10.7
@@ -82,7 +82,7 @@ para outro vértice silenciosamente.
 - [!] executar regressão E10.1, E10.2, E10.4 e bootstrap — a regressão E10.1
   reproduziu o mesmo bloqueio antes de executar o script;
 - [x] instalar o pacote de desenvolvimento;
-- [ ] validar manualmente criação com snap e edição Vertex no Max.
+- [x] validar manualmente criação com snap e edição Vertex no Max.
 
 ### E10.7-f — Correção após o primeiro gate manual
 
@@ -96,7 +96,7 @@ para outro vértice silenciosamente.
 - [x] incluir `topologyChanged` no callback global;
 - [x] ampliar o teste para captura pela ferramenta e geometria avaliada com modificador;
 - [x] reinstalar o pacote de desenvolvimento;
-- [ ] repetir o gate manual com uma cota nova ou reancorada.
+- [x] repetir o gate manual com uma cota nova ou reancorada.
 
 **Gate:** o ID deve ser capturado mesmo quando o raio encontra outra face, e o ponto deve
 acompanhar o vértice resultante de Editable Poly/Edit Mesh no topo da modifier stack.
@@ -114,7 +114,7 @@ acompanhar o vértice resultante de Editable Poly/Edit Mesh no topo da modifier 
 - [x] mostrar no status `A=vN / B=vN`, `obj` ou `mundo`;
 - [x] cobrir precedência do Snap e presença do watcher no teste automatizado;
 - [x] reinstalar o pacote de desenvolvimento;
-- [ ] confirmar primeiro a captura `A=vN / B=vN` antes de mover a malha.
+- [x] confirmar primeiro a captura `A=vN / B=vN` antes de mover a malha.
 
 **Gate diagnóstico:** só testar o movimento quando o painel comprovar que as duas pontas
 receberam IDs. Se o status não mostrar `vN`, a falha está na captura; se mostrar e a cota
@@ -143,6 +143,9 @@ não acompanhar, a falha está no watcher/resolvedor.
 - o segundo gate manual também falhou. Como ainda não havia feedback do ID salvo, não era
   possível separar falha de captura de falha de atualização. A E10.7.2 passa a usar o
   resultado explícito do sistema de Snap e expõe o vínculo no status do painel.
+- o gate final da E10.7.2 foi aprovado no 3ds Max 2026 em 2026-09-04: a captura por
+  Vertex Snap persistiu os IDs das extremidades e a cota acompanhou corretamente o
+  deslocamento dos vértices. O usuário confirmou o resultado como "sucesso absoluto".
 
 ## Limites conhecidos
 
@@ -153,9 +156,10 @@ não acompanhar, a falha está no watcher/resolvedor.
 - o gate automático do callback depende do message loop do Max; o teste determinístico
   chama o mesmo handler com o handle do nó e o gate manual confirma o evento real.
 
-## Próximo gate
+## Encerramento
 
-Reiniciar o 3ds Max 2026. Criar uma cota nova com apenas Vertex Snap ativo e
-confirmar no painel `A=vN / B=vN`. Somente então mover o vértice. Se aparecer `obj` ou
-`mundo`, registrar exatamente esse status; isso identifica a camada que ainda
-falhou sem depender apenas da imagem. O gate Batch será retomado após estabilizar o executor.
+O gate funcional e diagnóstico da E10.7.2 está encerrado. A prova real confirmou a
+cadeia completa `Snap -> ID de vértice -> watcher de geometria -> resolvePoints ->
+reconstrução da cota`. O teste Batch e a regressão explícita de uma instância CA v4
+permanecem no backlog técnico até o executor isolado voltar a iniciar o Max de forma
+confiável; isso não invalida a aprovação interativa da funcionalidade.
