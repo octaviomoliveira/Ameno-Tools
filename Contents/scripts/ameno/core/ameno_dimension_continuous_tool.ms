@@ -123,7 +123,7 @@ struct AmenoDimensionContinuousToolService
         [pointValue.x, pointValue.y, 0.0]
     ),
 
-    fn diagnosticTrace eventName fields:#() throttleKey:undefined =
+    fn diagnosticTrace eventName fields throttleKey:undefined =
     (
         if ::AmenoContinuousDiagnostics == undefined then return false
         try (::AmenoContinuousDiagnostics.trace eventName fields:fields throttleKey:throttleKey) catch false

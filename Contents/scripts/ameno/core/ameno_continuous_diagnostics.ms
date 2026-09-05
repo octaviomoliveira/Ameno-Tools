@@ -52,8 +52,9 @@ struct AmenoContinuousDiagnosticsService
     (
         if logPath != "" then return logPath
 
-        local basePath = getEnvVariable "LOCALAPPDATA"
-        if basePath == undefined or basePath == "" do basePath = getEnvVariable "TEMP"
+        local environmentClass = dotNetClass "System.Environment"
+        local basePath = environmentClass.GetEnvironmentVariable "LOCALAPPDATA"
+        if basePath == undefined or basePath == "" do basePath = environmentClass.GetEnvironmentVariable "TEMP"
         if basePath == undefined or basePath == "" then return ""
 
         local diagnosticsPath = pathConfig.normalizePath (pathConfig.appendPath basePath @"AmenoTools\Diagnostics")
@@ -97,7 +98,7 @@ struct AmenoContinuousDiagnosticsService
         logPath = ""
         lastThrottleKey = ""
         if revision != undefined do revisionLabel = revision as string
-        local started = trace #sessionStart #(
+        local started = trace #sessionStart fields:#(
             "revision=" + revisionLabel,
             "maxVersion=" + ((maxVersion())[1] as string),
             "scene=" + (maxFilePath + maxFileName)
@@ -108,7 +109,7 @@ struct AmenoContinuousDiagnosticsService
 
     fn stop =
     (
-        if enabled do trace #sessionStop #("revision=" + revisionLabel)
+        if enabled do trace #sessionStop fields:#("revision=" + revisionLabel)
         enabled = false
         lastThrottleKey = ""
         format "[Ameno][E12-R0] Diagnóstico encerrado: %\n" logPath
