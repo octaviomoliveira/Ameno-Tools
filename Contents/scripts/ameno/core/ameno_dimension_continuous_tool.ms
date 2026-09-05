@@ -59,10 +59,11 @@ struct AmenoDimensionContinuousToolService
     lastSessionIds  = #(),
 
     -- HUD WPF ────────────────────────────────────────────────────────────────
-    hudWindow    = undefined,
-    hudLabel     = undefined,
-    hudBtnUndo   = undefined,
-    hudBtnCancel = undefined,
+    hudWindow     = undefined,
+    hudLabel      = undefined,
+    hudBtnConfirm = undefined,
+    hudBtnUndo    = undefined,
+    hudBtnCancel  = undefined,
 
     -- ── Geométrica ───────────────────────────────────────────────────────────
 
@@ -249,16 +250,16 @@ struct AmenoDimensionContinuousToolService
         "<Window xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' \
                  xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml' \
                  Title='Cotação Contínua' \
-                 Width='240' Height='105' \
+                 Width='250' Height='130' \
                  ResizeMode='NoResize' \
                  WindowStyle='ToolWindow' \
                  Topmost='True' \
                  ShowInTaskbar='False'> \
           <Window.Resources> \
             <Style TargetType='Button'> \
-              <Setter Property='Margin' Value='4,0,4,0'/> \
-              <Setter Property='Padding' Value='6,4'/> \
-              <Setter Property='FontSize' Value='12'/> \
+              <Setter Property='Margin' Value='3,0,3,0'/> \
+              <Setter Property='Padding' Value='5,3'/> \
+              <Setter Property='FontSize' Value='11'/> \
             </Style> \
           </Window.Resources> \
           <Grid Margin='8'> \
@@ -266,13 +267,16 @@ struct AmenoDimensionContinuousToolService
               <RowDefinition Height='Auto'/> \
               <RowDefinition Height='Auto'/> \
               <RowDefinition Height='Auto'/> \
+              <RowDefinition Height='Auto'/> \
             </Grid.RowDefinitions> \
-            <Label x:Name='lblStatus' Grid.Row='0' Content='Pontos: 0 · Segs: 0' \
-                   FontSize='12' Padding='0,0,0,4'/> \
+            <Label x:Name='lblStatus' Grid.Row='0' Content='Pontos: 0' \
+                   FontSize='12' Padding='0,0,0,2'/> \
             <Label x:Name='lblTotal' Grid.Row='1' Content='Total: —' \
-                   FontSize='11' Foreground='Gray' Padding='0,0,0,6'/> \
-            <StackPanel Grid.Row='2' Orientation='Horizontal' HorizontalAlignment='Center'> \
-              <Button x:Name='btnUndo' Content='↩ Desfazer ponto' IsEnabled='False'/> \
+                   FontSize='11' Foreground='Gray' Padding='0,0,0,4'/> \
+            <Button x:Name='btnConfirm' Grid.Row='2' Content='✓ Finalizar coleta de pontos' \
+                    IsEnabled='False' Margin='0,0,0,4' FontWeight='Bold'/> \
+            <StackPanel Grid.Row='3' Orientation='Horizontal' HorizontalAlignment='Center'> \
+              <Button x:Name='btnUndo' Content='↩ Desfazer' IsEnabled='False'/> \
               <Button x:Name='btnCancel' Content='✕ Cancelar'/> \
             </StackPanel> \
           </Grid> \
@@ -285,38 +289,40 @@ struct AmenoDimensionContinuousToolService
         if hudWindow != undefined do
         (
             try (hudWindow.Close()) catch ()
-            hudWindow    = undefined
-            hudLabel     = undefined
-            hudBtnUndo   = undefined
-            hudBtnCancel = undefined
+            hudWindow     = undefined
+            hudLabel      = undefined
+            hudBtnConfirm = undefined
+            hudBtnUndo    = undefined
+            hudBtnCancel  = undefined
         )
 
         try
         (
-            local xamlStr  = buildHudXaml()
+            local xamlStr    = buildHudXaml()
             local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
             local win = xamlReader.Parse xamlStr
 
-            hudWindow    = win
-            hudLabel     = win.FindName "lblStatus"
-            local lblTot = win.FindName "lblTotal"
-            hudBtnUndo   = win.FindName "btnUndo"
-            hudBtnCancel = win.FindName "btnCancel"
+            hudWindow     = win
+            hudLabel      = win.FindName "lblStatus"
+            hudBtnConfirm = win.FindName "btnConfirm"
+            hudBtnUndo    = win.FindName "btnUndo"
+            hudBtnCancel  = win.FindName "btnCancel"
 
             -- Posiciona no canto superior direito da tela
             local screenW = dotNetClass "System.Windows.SystemParameters"
             try
             (
-                win.Left = screenW.PrimaryScreenWidth - 260.0
+                win.Left = screenW.PrimaryScreenWidth - 270.0
                 win.Top  = 60.0
             )
             catch ()
 
             -- Handlers de botão
-            dotNet.addEventHandler hudBtnUndo "Click" AmenoDimensionContinuousHudUndoHandler
-            dotNet.addEventHandler hudBtnCancel "Click" AmenoDimensionContinuousHudCancelHandler
+            dotNet.addEventHandler hudBtnConfirm "Click" AmenoDimensionContinuousHudConfirmHandler
+            dotNet.addEventHandler hudBtnUndo    "Click" AmenoDimensionContinuousHudUndoHandler
+            dotNet.addEventHandler hudBtnCancel  "Click" AmenoDimensionContinuousHudCancelHandler
 
-            -- Impede que fechar a janela quebre o tool (apenas esconde)
+            -- Impede que fechar a janela quebre o tool
             dotNet.addEventHandler win "Closing" AmenoDimensionContinuousHudClosingHandler
 
             win.Show()
@@ -338,21 +344,43 @@ struct AmenoDimensionContinuousToolService
             local n    = points.count
             local segs = if n > 1 then (n - 1) else 0
 
+            -- Rótulo principal
             if hudLabel != undefined do
-                hudLabel.Content = ("Pontos: " + n as string + "  ·  Segmentos: " + segs as string)
+            (
+                local statusStr = "Pontos: " + (n as string)
+                if segs > 0 do statusStr += "  ·  " + (formatTotal())
+                hudLabel.Content = statusStr
+            )
 
-            -- Atualiza total
+            -- Linha de instrução / total
             local lblTot = hudWindow.FindName "lblTotal"
             if lblTot != undefined do
-                lblTot.Content = if segs > 0 then ("Total: " + (formatTotal())) else "Total: —"
+            (
+                local instrStr = ""
+                if stage == #offset then
+                    instrStr = "Clique o afastamento das cotas"
+                else if segs > 0 then
+                    instrStr = "Acumulado: " + (formatTotal())
+                else
+                    instrStr = "Clique pontos · duplo-clique ou botao"
+                lblTot.Content = instrStr
+            )
 
-            -- Habilita/desabilita undo
-            if hudBtnUndo != undefined do
-                hudBtnUndo.IsEnabled = (n >= 2)
+            -- Botão Finalizar
+            if hudBtnConfirm != undefined do
+            (
+                hudBtnConfirm.IsEnabled = (n >= 2 and stage == #collectingPoints)
+                local confirmLabel = ""
+                if stage == #offset then
+                    confirmLabel = "Confirmado — clique o afastamento"
+                else
+                    confirmLabel = "Finalizar coleta de pontos"
+                hudBtnConfirm.Content = confirmLabel
+            )
 
-            -- Muda rótulo do undo conforme stage
+            -- Botão Undo
             if hudBtnUndo != undefined do
-                hudBtnUndo.Content = if stage == #collectingPoints then "↩ Desfazer ponto" else "↩ Desfazer ponto"
+                hudBtnUndo.IsEnabled = (n >= 1 and stage == #collectingPoints)
         )
         catch ()
 
@@ -366,16 +394,18 @@ struct AmenoDimensionContinuousToolService
             try
             (
                 -- Remove handlers antes de fechar para evitar callbacks pós-destruição
-                dotNet.removeAllEventHandlers hudBtnUndo
-                dotNet.removeAllEventHandlers hudBtnCancel
+                if hudBtnConfirm != undefined do dotNet.removeAllEventHandlers hudBtnConfirm
+                if hudBtnUndo    != undefined do dotNet.removeAllEventHandlers hudBtnUndo
+                if hudBtnCancel  != undefined do dotNet.removeAllEventHandlers hudBtnCancel
                 dotNet.removeAllEventHandlers hudWindow
                 hudWindow.Close()
             )
             catch ()
-            hudWindow    = undefined
-            hudLabel     = undefined
-            hudBtnUndo   = undefined
-            hudBtnCancel = undefined
+            hudWindow     = undefined
+            hudLabel      = undefined
+            hudBtnConfirm = undefined
+            hudBtnUndo    = undefined
+            hudBtnCancel  = undefined
         )
     ),
 
@@ -602,13 +632,6 @@ struct AmenoDimensionContinuousToolService
         (
             #collectingPoints:
             (
-                -- Duplo-clique: confirma pontos sem adicionar o ponto duplicado
-                if clickNumber >= 2 then
-                (
-                    confirmPoints()
-                    return undefined
-                )
-
                 -- Verifica duplicata com ponto imediatamente anterior
                 if points.count > 0 and (length (candidate - points[points.count])) <= 0.00001 then
                 (
@@ -634,8 +657,19 @@ struct AmenoDimensionContinuousToolService
             (
                 if points.count < 2 then return undefined
 
-                local offsetPoint = candidate
+                local rawOffset = candidate
                 removeAllPreviews()
+
+                -- Calcula distância perpendicular consistente a partir da direção global P1→Pn
+                -- para que TODAS as cotas fiquem no mesmo nível visual.
+                local p1    = points[1]
+                local pN    = points[points.count]
+                local gDirV = [pN.x - p1.x, pN.y - p1.y, 0.0]
+                local gLen  = length gDirV
+                local gPerp = if gLen > 0.00001 then \
+                    (normalize (cross [0,0,1] (normalize gDirV))) else [0,1,0]
+                -- Distância escalar: positiva = lado esquerdo da direção global
+                local offsetDist = dot (rawOffset - p1) gPerp
 
                 local createdCount = 0
                 for i = 1 to (points.count - 1) do
@@ -647,9 +681,17 @@ struct AmenoDimensionContinuousToolService
                     local vA = anchorVertexIds[i]
                     local vB = anchorVertexIds[i + 1]
 
+                    -- Offset para este segmento: perpendicular própria × distância escalar global
+                    local segDirV = [pB.x - pA.x, pB.y - pA.y, 0.0]
+                    local segLen  = length segDirV
+                    local segPerp = if segLen > 0.00001 then \
+                        (normalize (cross [0,0,1] (normalize segDirV))) else gPerp
+                    local segMid        = (pA + pB) / 2.0
+                    local segOffsetPt   = segMid + (segPerp * offsetDist)
+
                     try
                     (
-                        local created = AmenoDimensionGraphics.createDimension pA pB offsetPoint \
+                        local created = AmenoDimensionGraphics.createDimension pA pB segOffsetPt \
                             role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision \
                             styleId:activeStyleId nodeA:nA anchorVertexIdA:vA nodeB:nB anchorVertexIdB:vB \
                             dimensionMode:activeMode
@@ -754,6 +796,12 @@ AmenoDimensionContinuousTool = AmenoDimensionContinuousToolService()
 
 -- ── Callbacks globais do HUD (fora da struct para compatibilidade dotNet) ─────
 
+fn AmenoDimensionContinuousHudConfirmHandler sender args =
+(
+    if ::AmenoDimensionContinuousTool != undefined do
+        ::AmenoDimensionContinuousTool.confirmPoints()
+)
+
 fn AmenoDimensionContinuousHudUndoHandler sender args =
 (
     if ::AmenoDimensionContinuousTool != undefined do
@@ -784,8 +832,12 @@ fn AmenoDimensionContinuousHudClosingHandler sender args =
 
 tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique pontos · duplo-clique confirma · Esc cancela"
 (
+    -- Detecção de duplo-clique por tempo (clickNumber é sequencial, não indica duplo-clique)
+    local lastClickMs = 0
+
     on start do
     (
+        lastClickMs = 0
         if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.onStart()
     )
 
@@ -802,23 +854,38 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique pont
         )
         else
         (
-            local snapped           = false
-            local snappedNode       = undefined
-            local snappedWorldPoint = undefined
-            try
-            (
-                snapped = (snapMode.hit == true)
-                if snapped do
-                (
-                    snappedNode       = snapMode.node
-                    snappedWorldPoint = snapMode.worldHitpoint
-                )
-            )
-            catch ()
+            -- Verifica duplo-clique por intervalo de tempo
+            local now = timeStamp()
+            local dt  = now - lastClickMs
+            lastClickMs = now
 
-            AmenoDimensionContinuousTool.handlePoint clickNumber worldPoint \
-                screenPoint:viewPoint snapNode:snappedNode \
-                snapWorldPoint:snappedWorldPoint snapHit:snapped
+            -- Duplo-clique: intervalo < 400ms e já tem pelo menos 1 ponto
+            if dt < 400 and AmenoDimensionContinuousTool.stage == #collectingPoints \
+                        and AmenoDimensionContinuousTool.points.count >= 1 then
+            (
+                AmenoDimensionContinuousTool.confirmPoints()
+            )
+            else
+            (
+                -- Clique simples: acumula ponto
+                local snapped           = false
+                local snappedNode       = undefined
+                local snappedWorldPoint = undefined
+                try
+                (
+                    snapped = (snapMode.hit == true)
+                    if snapped do
+                    (
+                        snappedNode       = snapMode.node
+                        snappedWorldPoint = snapMode.worldHitpoint
+                    )
+                )
+                catch ()
+
+                AmenoDimensionContinuousTool.handlePoint clickNumber worldPoint \
+                    screenPoint:viewPoint snapNode:snappedNode \
+                    snapWorldPoint:snappedWorldPoint snapHit:snapped
+            )
         )
     )
 
