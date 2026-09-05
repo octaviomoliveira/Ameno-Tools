@@ -36,6 +36,27 @@ global AmenoDimensionChainMath
 global AmenoContinuousClickClassification
 global AmenoContinuousDiagnostics
 global AmenoContinuousInputResolver
+global AmenoContinuousViewportDraw
+
+try (unRegisterRedrawViewsCallback AmenoContinuousViewportDraw) catch ()
+fn AmenoContinuousViewportDraw =
+(
+    if ::AmenoDimensionContinuousTool == undefined or not ::AmenoDimensionContinuousTool.active then return false
+    try
+    (
+        gw.setTransform (matrix3 1)
+        for pointValue in ::AmenoDimensionContinuousTool.points where pointValue != undefined do
+            gw.marker pointValue #smallDiamond color:(color 245 245 245)
+        if ::AmenoDimensionContinuousTool.hoverVisible and ::AmenoDimensionContinuousTool.hoverPoint != undefined do
+        (
+            local candidateColor = ::AmenoDimensionContinuousTool.hoverColor
+            gw.marker ::AmenoDimensionContinuousTool.hoverPoint #diamond color:candidateColor
+        )
+        gw.enlargeUpdateRect #whole
+    )
+    catch ()
+    true
+)
 
 struct AmenoContinuousClickClassification
 (
@@ -120,6 +141,13 @@ struct AmenoDimensionContinuousToolService
     -- Preview do segmento ativo (último ponto → cursor)
     activePreview   = undefined,
 
+    -- Overlay transitório de referências/candidato; não cria nó e não participa do Snap.
+    hoverVisible = false,
+    hoverPoint = undefined,
+    hoverColor = (color 80 220 120),
+    hoverClassification = undefined,
+    viewportCallbackRegistered = false,
+
     -- IDs das cotas criadas nesta sessão
     lastSessionIds  = #(),
 
@@ -188,6 +216,40 @@ struct AmenoDimensionContinuousToolService
         sessionOutputUnit = previewOutputUnit
         sessionPrecision = previewPrecision
         true
+    ),
+
+    fn registerViewportOverlay =
+    (
+        if viewportCallbackRegistered then return true
+        try
+        (
+            unRegisterRedrawViewsCallback ::AmenoContinuousViewportDraw
+            registerRedrawViewsCallback ::AmenoContinuousViewportDraw
+            viewportCallbackRegistered = true
+        )
+        catch (viewportCallbackRegistered = false)
+        viewportCallbackRegistered
+    ),
+
+    fn unregisterViewportOverlay =
+    (
+        try (unRegisterRedrawViewsCallback ::AmenoContinuousViewportDraw) catch ()
+        viewportCallbackRegistered = false
+        hoverVisible = false
+        hoverPoint = undefined
+        hoverClassification = undefined
+        try (redrawViews()) catch ()
+        true
+    ),
+
+    fn setHoverClassification classification =
+    (
+        hoverClassification = classification
+        hoverVisible = classification != undefined and classification.kind == #reference and classification.worldPoint != undefined
+        hoverPoint = if hoverVisible then classification.worldPoint else undefined
+        hoverColor = if hoverVisible then (color 80 220 120) else (color 230 170 60)
+        try (redrawViews()) catch ()
+        hoverVisible
     ),
 
     fn isEligibleReferenceNode nodeValue =
@@ -514,11 +576,20 @@ struct AmenoDimensionContinuousToolService
                 while segmentPreviews.count < segmentIndex do append segmentPreviews undefined
 
                 if segmentPreviews[segmentIndex] == undefined then
-                    segmentPreviews[segmentIndex] = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue chainLayout.offsetPoint \
+                (
+                    local createdPreview = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue chainLayout.offsetPoint \
                         outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) mode:(effectiveMode())
+                    if createdPreview == undefined then throw "preview creation returned undefined"
+                    segmentPreviews[segmentIndex] = createdPreview
+                )
                 else
-                    segmentPreviews[segmentIndex] = AmenoDimensionGraphics.updatePreviewDimension segmentPreviews[segmentIndex] \
+                (
+                    local previousPreview = segmentPreviews[segmentIndex]
+                    local updatedPreview = AmenoDimensionGraphics.updatePreviewDimension previousPreview \
                         pointAValue pointBValue chainLayout.offsetPoint outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) mode:(effectiveMode())
+                    if updatedPreview == undefined then throw "preview update returned undefined"
+                    segmentPreviews[segmentIndex] = updatedPreview
+                )
             )
             lastChainLayout = chainLayout
             true
@@ -531,6 +602,15 @@ struct AmenoDimensionContinuousToolService
         )
     ),
 
+    fn removeLastDraftReference =
+    (
+        if points.count == 0 then return false
+        deleteItem points points.count
+        if anchorNodes.count > 0 do deleteItem anchorNodes anchorNodes.count
+        if anchorVertexIds.count > 0 do deleteItem anchorVertexIds anchorVertexIds.count
+        true
+    ),
+
     -- ── Undo de ponto (chamado pelo HUD) ──────────────────────────────────────
 
     fn undoLastPoint =
@@ -539,20 +619,7 @@ struct AmenoDimensionContinuousToolService
 
         removeAllPreviews()
 
-        -- Remove último ponto e âncoras
-        local n = points.count - 1
-        local newPoints  = #()
-        local newNodes   = #()
-        local newVertIds = #()
-        for i = 1 to n do
-        (
-            append newPoints  points[i]
-            append newNodes   anchorNodes[i]
-            append newVertIds anchorVertexIds[i]
-        )
-        points          = newPoints
-        anchorNodes     = newNodes
-        anchorVertexIds = newVertIds
+        removeLastDraftReference()
 
         setStage #collecting
         if points.count >= 2 and lastCursorPoint != undefined do refreshChainPreview lastCursorPoint
@@ -611,6 +678,7 @@ struct AmenoDimensionContinuousToolService
             inputSessionId = (timeStamp()) as string
             snapshotSessionConfiguration()
             active          = true
+            registerViewportOverlay()
             setStage #collecting
             -- O HUD não abre automaticamente no R1; status/prompt conduzem a sessão.
             diagnosticTrace #beginReady #("stage=" + (stage as string), "mode=" + ((effectiveMode()) as string))
@@ -637,6 +705,7 @@ struct AmenoDimensionContinuousToolService
 
         -- Desativar antes de fechar o HUD impede que o callback close reentre em cancel().
         active = false
+        unregisterViewportOverlay()
         removeAllPreviews()
         if clearDraft do
         (
@@ -827,26 +896,73 @@ struct AmenoDimensionContinuousToolService
         false
     ),
 
+    fn stationForPoint pointValue =
+    (
+        if pointValue == undefined then return undefined
+        case (effectiveMode()) of
+        (
+            #horizontal: pointValue.x
+            #vertical: pointValue.y
+            default: undefined
+        )
+    ),
+
+    fn hasConflictingStation pointValue tolerance:0.00001 =
+    (
+        local candidateStation = stationForPoint pointValue
+        if candidateStation == undefined then return true
+        for existingPoint in points do
+        (
+            local existingStation = stationForPoint existingPoint
+            if existingStation != undefined and (abs (candidateStation - existingStation)) <= tolerance do return true
+        )
+        false
+    ),
+
+    fn appendDraftReference clickInfo =
+    (
+        if clickInfo == undefined or clickInfo.worldPoint == undefined or clickInfo.vertexId < 1 or \
+            clickInfo.node == undefined or not isValidNode clickInfo.node then return #ambiguous
+        if isDuplicateReference clickInfo then return #duplicateReference
+        if hasConflictingStation clickInfo.worldPoint then return #duplicateStation
+
+        append points clickInfo.worldPoint
+        append anchorNodes clickInfo.node
+        append anchorVertexIds clickInfo.vertexId
+        if points.count != anchorNodes.count or points.count != anchorVertexIds.count then
+        (
+            if points.count > 0 do deleteItem points points.count
+            if anchorNodes.count > 0 do deleteItem anchorNodes anchorNodes.count
+            if anchorVertexIds.count > 0 do deleteItem anchorVertexIds anchorVertexIds.count
+            return #ambiguous
+        )
+        #referenceAdded
+    ),
+
     fn handleClassifiedClick clickInfo commitNow:false =
     (
         if not active then return #inactive
         if stage != #collecting then return #ignored
         if clickInfo == undefined then return #ambiguous
+        setHoverClassification undefined
 
         case clickInfo.kind of
         (
             #reference:
             (
-                if clickInfo.worldPoint == undefined or clickInfo.vertexId < 1 or \
-                    clickInfo.node == undefined or not isValidNode clickInfo.node then return #ambiguous
-                if isDuplicateReference clickInfo then
+                local appendOutcome = appendDraftReference clickInfo
+                if appendOutcome == #duplicateReference then
                 (
                     displayTempPrompt "Ameno Cota Contínua: esta referência já foi escolhida." 1400
                     return #duplicateReference
                 )
-                append points clickInfo.worldPoint
-                append anchorNodes clickInfo.node
-                append anchorVertexIds clickInfo.vertexId
+                if appendOutcome == #duplicateStation then
+                (
+                    displayTempPrompt "Ameno Cota Contínua: escolha um vértice em outra estação da cadeia." 1700
+                    panelStatus "E12: referência rejeitada — estação repetida."
+                    return #duplicateStation
+                )
+                if appendOutcome != #referenceAdded then return appendOutcome
                 setStage #collecting
                 updateHUD()
                 #referenceAdded
@@ -922,13 +1038,39 @@ struct AmenoDimensionContinuousToolService
         mouseReturnForOutcome outcome
     ),
 
-    fn handleMove clickNumber pointValue =
+    fn handleHoverSample sample =
     (
         if not active then return undefined
+        if sample == undefined then
+        (
+            setHoverClassification undefined
+            return undefined
+        )
+
+        local classification = classifyInputSample sample
+        setHoverClassification classification
+        if sample.planeStatus != #ok or sample.planePoint == undefined then return classification
+
+        lastCursorPoint = sample.planePoint
+        if stage == #collecting and points.count >= 2 do refreshChainPreview sample.planePoint
+        classification
+    ),
+
+    fn handleMove clickNumber pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false snapStatus:#ok =
+    (
+        if not active then return undefined
+
+        if screenPoint != undefined and ::AmenoContinuousInputResolver != undefined then
+        (
+            local sample = ::AmenoContinuousInputResolver.acquireSample #mouseMove clickNumber screenPoint pointValue \
+                snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint snapStatus:snapStatus sessionId:inputSessionId
+            return handleHoverSample sample
+        )
 
         local candidate = flattenPoint pointValue
         if candidate == undefined then return undefined
 
+        setHoverClassification undefined
         lastCursorPoint = candidate
         diagnosticTrace #handleMove #(
             "clickNumber=" + (clickNumber as string),
@@ -1026,6 +1168,20 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
 
     on freeMove do
     (
+        local moveSnapHit = false
+        local moveSnapNode = undefined
+        local moveSnapPoint = undefined
+        local moveSnapStatus = #ok
+        try
+        (
+            moveSnapHit = (snapMode.hit == true)
+            if moveSnapHit do
+            (
+                moveSnapNode = snapMode.node
+                moveSnapPoint = snapMode.worldHitpoint
+            )
+        )
+        catch (moveSnapStatus = #error)
         if AmenoDimensionContinuousTool != undefined do
             AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEvent #(
                 "type=freeMove",
@@ -1033,7 +1189,9 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
                 "references=" + (AmenoDimensionContinuousTool.points.count as string),
                 "worldPoint=" + (worldPoint as string)
             ) throttleKey:("native-freeMove:" + (AmenoDimensionContinuousTool.stage as string) + ":" + (AmenoDimensionContinuousTool.points.count as string))
-        if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.handleMove 1 worldPoint
+        if AmenoDimensionContinuousTool != undefined do
+            AmenoDimensionContinuousTool.handleMove 1 worldPoint screenPoint:viewPoint snapNode:moveSnapNode \
+                snapWorldPoint:moveSnapPoint snapHit:moveSnapHit snapStatus:moveSnapStatus
     )
 
     on mousePoint clickNumber do
@@ -1089,6 +1247,20 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
 
     on mouseMove clickNumber do
     (
+        local moveSnapHit = false
+        local moveSnapNode = undefined
+        local moveSnapPoint = undefined
+        local moveSnapStatus = #ok
+        try
+        (
+            moveSnapHit = (snapMode.hit == true)
+            if moveSnapHit do
+            (
+                moveSnapNode = snapMode.node
+                moveSnapPoint = snapMode.worldHitpoint
+            )
+        )
+        catch (moveSnapStatus = #error)
         if AmenoDimensionContinuousTool != undefined do
             AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEvent #(
                 "type=mouseMove",
@@ -1097,7 +1269,9 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
                 "references=" + (AmenoDimensionContinuousTool.points.count as string),
                 "worldPoint=" + (worldPoint as string)
             ) throttleKey:("native-mouseMove:" + (clickNumber as string) + ":" + (AmenoDimensionContinuousTool.stage as string) + ":" + (AmenoDimensionContinuousTool.points.count as string))
-        if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.handleMove clickNumber worldPoint
+        if AmenoDimensionContinuousTool != undefined do
+            AmenoDimensionContinuousTool.handleMove clickNumber worldPoint screenPoint:viewPoint snapNode:moveSnapNode \
+                snapWorldPoint:moveSnapPoint snapHit:moveSnapHit snapStatus:moveSnapStatus
     )
 
     on mouseAbort clickNumber do

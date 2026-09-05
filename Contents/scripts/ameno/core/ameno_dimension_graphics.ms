@@ -750,6 +750,17 @@ struct AmenoDimensionGraphicsService
         AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode markerNode:markerNode layout:layout displayText:labelText audit:audit style:resolvedStyle
     ),
 
+    fn configurePreviewNode nodeValue =
+    (
+        if nodeValue == undefined or not isValidNode nodeValue then return false
+        try (nodeValue.renderable = false) catch ()
+        try (if isProperty nodeValue #render_renderable do nodeValue.render_renderable = false) catch ()
+        try (if isProperty nodeValue #render_displayRenderMesh do nodeValue.render_displayRenderMesh = false) catch ()
+        try (nodeValue.showFrozenInGray = false) catch ()
+        try (nodeValue.isFrozen = true) catch ()
+        true
+    ),
+
     fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned =
     (
         local sceneState = ensureSceneReady()
@@ -779,6 +790,8 @@ struct AmenoDimensionGraphicsService
             setTextProperty textNode "Ameno.Kind" "dimensionPreview"
             setTextProperty lineNode "Ameno.Preview" "1"
             setTextProperty textNode "Ameno.Preview" "1"
+            configurePreviewNode lineNode
+            configurePreviewNode textNode
 
             result = AmenoGraphicDimensionRecord dimensionId:dimensionId lineNode:lineNode textNode:textNode layout:layout displayText:measurement.text style:resolvedStyle
         )
@@ -801,6 +814,8 @@ struct AmenoDimensionGraphicsService
         (
             updateLineSplinePoints preview.lineNode layout style:resolvedStyle
             updateTextNode preview.textNode measurement.text layout style:resolvedStyle
+            configurePreviewNode preview.lineNode
+            configurePreviewNode preview.textNode
         )
 
         preview.layout = layout
