@@ -56,11 +56,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0 e R1 estão concluídos. A R2 está implementada, aprovada em Batch e instalada; falta apenas o gate de mouse real do vértice compartilhado Horizontal→Vertical antes de seguir para R3.
+- **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0, R1 e R2 estão concluídos. O usuário aprovou no mouse real o vértice compartilhado Horizontal→Vertical; próximo incremento é R3 (draft e preview).
 
 - Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. O C1 equivalente foi encerrado pelo R0; ciclo de vida pelo R1; e a causa do vértice ignorado foi tratada na R2 removendo o bloqueio causado pelo snap em gráfico Ameno e resolvendo o vértice geométrico pelo pixel.
 
-- **Instalação ativa da branch E12:** commit R2 `e53b553`, com 26/26 arquivos conferidos por SHA-256 e pacote instalado aprovado em Batch. Próximo gate: reprodução manual do mesmo vértice superior direito usado pela cota horizontal; handoff em `plans/2026-09-05-e12-r2-handoff.md`.
+- **Instalação ativa da branch E12:** commit R2 `e53b553`, com 26/26 arquivos conferidos por SHA-256, Batch e mouse real aprovados. Próximo gate: R3; handoff em `plans/2026-09-05-e12-r2-handoff.md`.
 
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
 - Gate manual do **Editor Visual E11** no 3ds Max 2026 com a versão unificada instalada.
@@ -71,7 +71,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-**Para retomar a E12:** abrir o 3ds Max com o commit R2 instalado e repetir o caso da imagem: criar a cadeia horizontal e depois uma vertical iniciada no mesmo vértice superior direito da geometria. Se o ponto for incluído, aprovar R2 e iniciar R3; não fazer merge na `main`.
+**Para retomar a E12:** implementar R3 na branch `feature/e12-input-recovery`: centralizar mutação do draft, validar estação antes do append e garantir preview/hover não renderizável nem selecionável como referência. Não fazer merge na `main`.
 
 1. Abrir o 3ds Max e executar o **gate manual interativo da E10 no 3ds Max 2026** com a versão de desenvolvimento já instalada:
    - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
