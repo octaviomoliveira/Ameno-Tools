@@ -236,7 +236,7 @@ Atualizar PLAN e checklist abaixo antes de encerrar. Relatar: causa comprovada; 
 
 - [x] Auditoria estática e plano detalhado produzidos.
 - [x] R0 diagnóstico real identificado. Batch e pacote aprovados; commit `e1bc114` instalado com hashes idênticos; trace real comprovou `commitSuccess` mantendo `stage=collecting | active=true` e Alinhado aceito na captura antes de ser recusado no commit. Evidência: `docs/e12-r0-diagnostics.md`.
-- [ ] R1 lifecycle e modos.
+- [ ] R1 lifecycle e modos — commit `8581175` instalado e Batch aprovado; gate de mouse real e publicação remota pendentes. Handoff: `plans/2026-09-05-e12-r1-handoff.md`.
 - [ ] R2 picking/eventos/offset, gate real.
 - [ ] R3 draft e preview/hover.
 - [ ] R4 transação robusta.
