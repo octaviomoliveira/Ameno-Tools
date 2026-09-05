@@ -1,6 +1,6 @@
 # E12 — Cotagem contínua: plano executável de recuperação
 
-Data: 2026-09-05. Estado: **E12-A/B concluídas; E12-C implementada e aprovada em Batch, aguardando gate manual**.
+Data: 2026-09-05. Estado: **E12-A/B concluídas; E12-C implementada, aprovada em Batch e instalada, aguardando gate manual**.
 Base inspecionada: `db88f1b`, branch `feature/e12-continuous-dimension`.
 Worktree: `D:\Ameno\_worktrees\e12-continuous`.
 Remoto: https://github.com/octaviomoliveira/Ameno-Tools
@@ -175,7 +175,7 @@ Validar pacote desta worktree, fechar Max com autorização do usuário, fazer b
 - [x] Planejamento e diagnóstico estático documentados.
 - [x] E12-A: interação/classificador aprovados em Batch (21/21 novos + 43/43 legados); gate manual fica para E12-C, pois layout/commit ainda não existem.
 - [x] E12-B: matemática H/V aprovada em Batch (29/29), pura e sem criar nós.
-- [ ] E12-C: preview/commit H/V implementados e aprovados em Batch (43/43); gate manual pendente.
+- [ ] E12-C: preview/commit H/V implementados, aprovados em Batch (43/43) e instalados no commit `ba55d95`; gate manual pendente.
 - [ ] E12-D: alinhado oblíquo aprovado.
 - [ ] E12-E: persistência e integração aprovadas.
 - [ ] E12-F: regressões, pacote, instalação e gate final aprovados.

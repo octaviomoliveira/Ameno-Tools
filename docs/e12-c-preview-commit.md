@@ -2,7 +2,7 @@
 
 Data: 2026-09-05. Branch: `feature/e12-continuous-dimension`.
 
-Estado: **implementação e gates automatizados concluídos; gate manual no 3ds Max pendente**.
+Estado: **implementação, gates automatizados e instalação concluídos; gate manual no 3ds Max pendente**.
 
 ## Entrega
 
@@ -23,13 +23,22 @@ Ainda fora desta entrega: modo Alinhado oblíquo (E12-D), registro persistente d
 - `test_e12_chain_input.ms`: aprovado pelo runner com marcador `[AMENO_TEST][PASS]`.
 - `test_e12_continuous.ms`: aprovado pelo runner com marcador `[AMENO_TEST][PASS]`.
 - `test_bootstrap.ms`: aprovado; bootstrap e funcionalidades acumuladas do pacote permaneceram carregáveis.
+- `test_installed_package.ms`: aprovado com `[AMENO_INSTALLED_TEST][PASS]` após instalar a cópia de `ApplicationPlugins`.
 - `git diff --check`: sem erros; apenas avisos esperados de conversão LF/CRLF no Windows.
 
 Os testes foram executados em cena descartável pelo `3dsmaxbatch.exe` 2026.3. Nenhum teste foi executado na cena interativa do usuário.
 
+## Instalação para o gate manual
+
+- Commit instalado: `ba55d95`.
+- Origem: `D:\Ameno\_worktrees\e12-continuous`.
+- Destino: `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`.
+- 24 arquivos conferidos por SHA-256 entre origem e destino.
+- Pacote anterior preservado em `AmenoTools.backup-before-E12C-20260905-013001` no mesmo diretório `ApplicationPlugins`.
+
 ## Gate manual necessário
 
-Depois de instalar exatamente esta branch com o 3ds Max fechado:
+Com esta branch instalada e o 3ds Max fechado durante a cópia:
 
 1. Ativar Cota contínua em modo Horizontal.
 2. Clicar em três ou mais vértices desalinhados em Y.
