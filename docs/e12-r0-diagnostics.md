@@ -40,3 +40,20 @@ Movimentos repetidos são limitados por estado/candidato; cliques e transições
 O teste automatizado `tests/maxscript/test_e12_r0_diagnostics.ms` comprova apenas que o serviço inicia/desliga, grava marcadores, limita repetição e não altera um outcome injetado. Ele não substitui o clique real.
 
 R0 só termina quando o log de uma reprodução real demonstrar uma destas fronteiras: clique vazio não classificado como vazio; commit não solicitado; commit falhando; commit concluído sem o MouseTool encerrar; ou outra causa observada. Até lá, R1–R6 permanecem bloqueados.
+
+## Resultado do gate — 2026-09-05
+
+R0 foi concluído com o build diagnóstico do commit `e1bc1142306b86f45a724cc42bf54fa41104c2e2`, instalado manualmente após backup em `D:\Ameno\_backups\AmenoTools-before-e1bc114-20260905-134400`. A comparação da origem com `ApplicationPlugins` encontrou 25 arquivos em cada lado, sem ausentes, extras ou diferenças SHA-256.
+
+O trace interativo bruto está em `%LOCALAPPDATA%\AmenoTools\Diagnostics\e12-r0-20260905-165149-560.log`, SHA-256 `598CFF70DBE9B695CE2A360FB71D5C1D1D02CAF4D1DE22EEDC0144126B75D2AA`.
+
+### Causas comprovadas
+
+1. **Sucesso não encerra o MouseTool.** No modo Horizontal, o clique vazio foi classificado como `empty` (`seq=2290`), o pedido foi aceito (`seq=2292`), quatro segmentos foram criados (`seq=2295`–`2302`) e houve `commitSuccess` (`seq=2303`). Entretanto, o próprio evento terminou como `chainCommitted` ainda em `stage=collecting | active=true` (`seq=2304`–`2305`). Os cliques vazios seguintes foram processados como uma nova coleta sem referências e retornaram `needsMoreReferences` (`seq=2426`–`2440`). O `stop` só apareceu posteriormente (`seq=2655`). Portanto, a saída após sucesso é uma falha de lifecycle/retorno na borda do MouseTool, não de classificação ou criação.
+2. **Alinhado entra na captura apesar de não ser suportado pelo commit E12-C.** O modo iniciou como `aligned`, coletou referências e reconheceu o vazio. O pedido foi aceito (`seq=1223`–`1225`), mas `commitChain` retornou `commitRejected | reason=unsupported-mode` (`seq=1226`), mantendo a ferramenta ativa com `commitFailed` (`seq=1227`–`1228`). O modo deve ser bloqueado antes de capturar o mouse no gate R1; isso não autoriza implementar a matemática/integração Alinhada.
+
+O relato de que um vértice já usado em uma cadeia Horizontal não pôde ser reutilizado ao iniciar uma Vertical não aparece como sessão `vertical` neste trace. Ele permanece como sintoma a reproduzir no gate de picking, sem diagnóstico atribuído.
+
+### Validação automatizada
+
+Passaram serialmente, com marcador final conferido: `test_e12_r0_diagnostics.ms`, `test_e12_chain_input.ms`, `test_e12_chain_math.ms`, `test_e12_chain_commit.ms`, `test_e12_continuous.ms` e `test_bootstrap.ms`. `tools/validate-package.ps1` também aprovou o pacote. Os três primeiros runs do teste R0 expuseram problemas de bootstrap restritos ao probe; as correções de assinatura e leitura de ambiente foram incluídas em `e1bc114` antes da instalação.

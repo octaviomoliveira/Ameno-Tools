@@ -20,6 +20,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Concluído
 
+- E12-R0 concluído em 2026-09-05 no commit instalado `e1bc114`: seis suítes MAXScript e a validação estrutural passaram; 25/25 arquivos instalados corresponderam por SHA-256; trace real comprovou que o commit Horizontal cria a cadeia mas mantém o MouseTool em `stage=collecting | active=true`, e que Alinhado entra na captura antes de ser recusado como `unsupported-mode`. A reutilização Horizontal→Vertical permanece apenas como relato, pois não houve sessão Vertical no trace. Evidência: `docs/e12-r0-diagnostics.md`.
+
 - Planejamento de recuperação da E12 concluído em 2026-09-05, baseado na inspeção de `db88f1b`: interação estilo Revit, linha comum, reutilização do núcleo e gates E12-A a F. Somente documentação; implementação, testes e instalação desta recuperação ainda pendentes. Plano: `plans/2026-09-05-e12-continuous-revit-implementation.md`.
 
 - Repositório Git local criado e fundação `0.0.1` do pacote `ApplicationPlugins` estruturada.
@@ -54,13 +56,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Roteiro prioritário para execução por outro agente:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6), auditado contra o código de `0859164`; prompt em `plans/2026-09-05-e12-agent-prompt.md`. Começar somente por R0, reproduzindo a instalação ba55d95. Auditoria encontrou também estações coincidentes aceitas, perda de Z do draft, possibilidade de resíduos em factories e textos de interface incompatíveis. Planejamento apenas; nenhuma implementação nova.
-- **R0 em andamento na branch `feature/e12-input-recovery`:** worktree isolada criada, `d8ce420` revertido de forma escopada para recuperar o comportamento `ba55d95` e probe opt-in preparado nas fronteiras reais do MouseTool/commit. O probe fica desligado por padrão. Batch, instalação diagnóstica e trace interativo permanecem pendentes; durante a preparação o 3ds Max estava aberto, por isso nenhum Batch foi arriscado. Não avançar a R1 antes do gate. Guia: `docs/e12-r0-diagnostics.md`.
-- **Handoff do R0:** estado exato, validações pendentes, comandos seguros e critério de saída registrados em `plans/2026-09-05-e12-r0-handoff.md`. O próximo agente deve continuar na mesma branch a partir de `c076ca3`, executar o Batch antes de instalar e não avançar para R1 sem trace interativo conclusivo.
+- **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6), auditado contra o código de `0859164`; prompt em `plans/2026-09-05-e12-agent-prompt.md`. R0 está concluído; seguir um gate por vez a partir de R1. A auditoria também encontrou estações coincidentes aceitas, perda de Z do draft, possibilidade de resíduos em factories e textos de interface incompatíveis.
+- **Próximo incremento E12-R1:** corrigir somente lifecycle e validação de modo a partir da evidência do R0. Sucesso deve encerrar o MouseTool pela borda de retorno; Esc/direito não confirmam; Alinhado deve ser recusado antes da captura. Não misturar ainda a investigação de reutilização Horizontal→Vertical, que permanece para o gate de picking.
 
-- Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. Próxima ação é C1 (rastrear evento real até commit na instalação ba55d95); hipóteses de snap inelegível, modo Alinhado recusado e coleta reiniciada devem ser discriminadas antes da correção. Nenhum código alterado nesta pesquisa.
+- Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. O C1 equivalente foi encerrado pelo R0: coleta reiniciada e recusa tardia do modo Alinhado foram comprovadas no trace. Snap inelegível e reutilização Horizontal→Vertical continuam pendentes de reprodução específica.
 
-- **Prioridade na branch E12:** o pacote instalado foi restaurado ao commit validado `ba55d95` após a tentativa posterior `d8ce420` não resolver o fluxo interativo. Os 24 arquivos instalados foram conferidos e o smoke da cópia em `ApplicationPlugins` passou. Próximo gate: reproduzir e diagnosticar no `ba55d95` os problemas de picking, encerramento, HUD e marcador de snap relatados pelo usuário.
+- **Instalação ativa da branch E12:** commit diagnóstico `e1bc114`, comportamento funcional baseado em `ba55d95`, com 25/25 arquivos conferidos. Próximo gate: R1; o caso de reutilização Horizontal→Vertical segue registrado para o gate de picking.
 
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
 - Gate manual do **Editor Visual E11** no 3ds Max 2026 com a versão unificada instalada.
@@ -71,7 +72,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-**Para retomar a E12:** testar o pacote instalado do commit `ba55d95` e registrar separadamente cada falha interativa: reutilização de referências, clique vazio, cancelamento, HUD e marcador de snap. A branch aponta para `d8ce420`, mas essa tentativa não é a instalação ativa. Não iniciar E12-D nem fazer merge antes de estabilizar esse fluxo.
+**Para retomar a E12:** iniciar o R1 na branch `feature/e12-input-recovery` a partir da documentação que encerrou o R0. Implementar o menor patch de lifecycle/modo comprovado pelo trace: `chainCommitted` retorna `#stop`, cleanup preserva as cotas e Alinhado é bloqueado antes da captura. Não iniciar E12-D, não diagnosticar a reutilização Vertical sem novo trace e não fazer merge na main.
 
 1. Abrir o 3ds Max e executar o **gate manual interativo da E10 no 3ds Max 2026** com a versão de desenvolvimento já instalada:
    - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
@@ -93,6 +94,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 | Data | Pedido / decisão | Situação | Evidência |
 | --- | --- | --- | --- |
+| 2026-09-05 | Concluir o gate interativo E12-R0 e analisar o trace real. | R0 concluído: Horizontal criou quatro segmentos, mas `commitSuccess` deixou o MouseTool ativo/coletando; Alinhado foi aceito na captura e recusado no commit. Batch, instalação por hash e trace foram comprovados. Reutilização Horizontal→Vertical segue sem causa comprovada. | commit instalado `e1bc114`; `docs/e12-r0-diagnostics.md`; trace `e12-r0-20260905-165149-560.log` |
 | 2026-09-05 | Auditar minuciosamente o código e detalhar etapas para execução por agente mais leve. | Runbook R0–R6 com contratos de entrada/estado, mapa de falhas, testes negativos, gates reais e prompt de execução. Sem código alterado ou instalação. | `plans/2026-09-05-e12-executor-runbook.md`, `plans/2026-09-05-e12-agent-prompt.md` |
 | 2026-09-05 | Iniciar R0 em worktree própria e preparar observabilidade da interação real. | Código voltou ao comportamento `ba55d95`; probe opt-in instrumenta MouseTool, classificação, commit e cleanup sem correção funcional. Batch/instalação/trace real pendentes porque o Max está aberto. | branch `feature/e12-input-recovery`; `ameno_continuous_diagnostics.ms`; `docs/e12-r0-diagnostics.md`; `test_e12_r0_diagnostics.ms` |
 | 2026-09-05 | Preparar a transferência do R0 para outro agente. | Relatório registra commits, arquivos, instalação ainda funcional, testes e trace pendentes, comandos e proibições. Nenhuma correção R1–R6 executada. | `plans/2026-09-05-e12-r0-handoff.md` |
