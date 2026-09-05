@@ -32,6 +32,48 @@ global AmenoRefreshMainPanel
 global AmenoDimensionAnchorHit
 global AmenoAnchorService
 
+-- ── HUD Rollout: painel nativo do 3ds Max (funciona durante startTool) ───────
+
+rollout AmenoContinuousHUDRlt "Cotação Contínua" width:270
+(
+    label   lblStatus "Pontos: 0" align:#left
+    label   lblInstr  "Clique os pontos a cotar" align:#left
+    button  btnConfirm "Finalizar coleta de pontos" width:254 enabled:false
+    button  btnUndo   "Desfazer" width:125 across:2 enabled:false
+    button  btnCancel "Cancelar" width:125
+
+    on btnConfirm pressed do
+    (
+        if ::AmenoDimensionContinuousTool != undefined do
+            ::AmenoDimensionContinuousTool.confirmPoints()
+    )
+
+    on btnUndo pressed do
+    (
+        if ::AmenoDimensionContinuousTool != undefined do
+            ::AmenoDimensionContinuousTool.undoLastPoint()
+    )
+
+    on btnCancel pressed do
+    (
+        if ::AmenoDimensionContinuousTool != undefined do
+        (
+            ::AmenoDimensionContinuousTool.cancel()
+            try (stopTool ::AmenoDimensionContinuousMouseTool) catch ()
+        )
+    )
+
+    -- Fechar o X cancela a sessão
+    on AmenoContinuousHUDRlt close do
+    (
+        if ::AmenoDimensionContinuousTool != undefined and ::AmenoDimensionContinuousTool.active do
+        (
+            ::AmenoDimensionContinuousTool.cancel()
+            try (stopTool ::AmenoDimensionContinuousMouseTool) catch ()
+        )
+    )
+)
+
 -- ── Helpers ──────────────────────────────────────────────────────────────────
 
 struct AmenoDimensionContinuousToolService
@@ -58,12 +100,8 @@ struct AmenoDimensionContinuousToolService
     -- IDs das cotas criadas nesta sessão
     lastSessionIds  = #(),
 
-    -- HUD WPF ────────────────────────────────────────────────────────────────
-    hudWindow     = undefined,
-    hudLabel      = undefined,
-    hudBtnConfirm = undefined,
-    hudBtnUndo    = undefined,
-    hudBtnCancel  = undefined,
+    -- HUD (rollout nativo MaxScript — funciona durante startTool)
+    hudOpen = false,
 
     -- ── Geométrica ───────────────────────────────────────────────────────────
 
@@ -243,171 +281,68 @@ struct AmenoDimensionContinuousToolService
         )
     ),
 
-    -- ── HUD WPF ───────────────────────────────────────────────────────────────
-
-    fn buildHudXaml =
-    (
-        "<Window xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' \
-                 xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml' \
-                 Title='Cotação Contínua' \
-                 Width='250' Height='130' \
-                 ResizeMode='NoResize' \
-                 WindowStyle='ToolWindow' \
-                 Topmost='True' \
-                 ShowInTaskbar='False'> \
-          <Window.Resources> \
-            <Style TargetType='Button'> \
-              <Setter Property='Margin' Value='3,0,3,0'/> \
-              <Setter Property='Padding' Value='5,3'/> \
-              <Setter Property='FontSize' Value='11'/> \
-            </Style> \
-          </Window.Resources> \
-          <Grid Margin='8'> \
-            <Grid.RowDefinitions> \
-              <RowDefinition Height='Auto'/> \
-              <RowDefinition Height='Auto'/> \
-              <RowDefinition Height='Auto'/> \
-              <RowDefinition Height='Auto'/> \
-            </Grid.RowDefinitions> \
-            <Label x:Name='lblStatus' Grid.Row='0' Content='Pontos: 0' \
-                   FontSize='12' Padding='0,0,0,2'/> \
-            <Label x:Name='lblTotal' Grid.Row='1' Content='Total: —' \
-                   FontSize='11' Foreground='Gray' Padding='0,0,0,4'/> \
-            <Button x:Name='btnConfirm' Grid.Row='2' Content='✓ Finalizar coleta de pontos' \
-                    IsEnabled='False' Margin='0,0,0,4' FontWeight='Bold'/> \
-            <StackPanel Grid.Row='3' Orientation='Horizontal' HorizontalAlignment='Center'> \
-              <Button x:Name='btnUndo' Content='↩ Desfazer' IsEnabled='False'/> \
-              <Button x:Name='btnCancel' Content='✕ Cancelar'/> \
-            </StackPanel> \
-          </Grid> \
-        </Window>"
-    ),
+    -- ── HUD Rollout nativo (funciona em modo de ferramenta) ──────────────────
 
     fn openHUD =
     (
-        -- Fecha janela anterior se existir
-        if hudWindow != undefined do
-        (
-            try (hudWindow.Close()) catch ()
-            hudWindow     = undefined
-            hudLabel      = undefined
-            hudBtnConfirm = undefined
-            hudBtnUndo    = undefined
-            hudBtnCancel  = undefined
-        )
+        -- Fecha dialog anterior se existir
+        try (destroyDialog ::AmenoContinuousHUDRlt) catch ()
+        hudOpen = false
 
         try
         (
-            local xamlStr    = buildHudXaml()
-            local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
-            local win = xamlReader.Parse xamlStr
-
-            hudWindow     = win
-            hudLabel      = win.FindName "lblStatus"
-            hudBtnConfirm = win.FindName "btnConfirm"
-            hudBtnUndo    = win.FindName "btnUndo"
-            hudBtnCancel  = win.FindName "btnCancel"
-
-            -- Posiciona no canto superior direito da tela
-            local screenW = dotNetClass "System.Windows.SystemParameters"
-            try
-            (
-                win.Left = screenW.PrimaryScreenWidth - 270.0
-                win.Top  = 60.0
-            )
-            catch ()
-
-            -- Handlers de botão
-            dotNet.addEventHandler hudBtnConfirm "Click" AmenoDimensionContinuousHudConfirmHandler
-            dotNet.addEventHandler hudBtnUndo    "Click" AmenoDimensionContinuousHudUndoHandler
-            dotNet.addEventHandler hudBtnCancel  "Click" AmenoDimensionContinuousHudCancelHandler
-
-            -- Impede que fechar a janela quebre o tool
-            dotNet.addEventHandler win "Closing" AmenoDimensionContinuousHudClosingHandler
-
-            win.Show()
+            local sw = sysinfo.desktopSize
+            local px = sw.x - 275
+            local py = 50
+            createDialog ::AmenoContinuousHUDRlt pos:[px, py] style:#(#style_border, #style_sysmenu, #style_titlebar)
+            hudOpen = true
         )
         catch
         (
             lastError = getCurrentException() as string
             format "[E12] Falha ao abrir HUD: %\n" lastError
-            hudWindow = undefined
         )
     ),
 
     fn updateHUD =
     (
-        if hudWindow == undefined then return false
-
+        if not hudOpen then return false
         try
         (
             local n    = points.count
             local segs = if n > 1 then (n - 1) else 0
 
-            -- Rótulo principal
-            if hudLabel != undefined do
-            (
-                local statusStr = "Pontos: " + (n as string)
-                if segs > 0 do statusStr += "  ·  " + (formatTotal())
-                hudLabel.Content = statusStr
-            )
+            -- Status
+            local statusStr = "Pontos: " + (n as string)
+            if segs > 0 do statusStr += "  +  total: " + (formatTotal())
+            ::AmenoContinuousHUDRlt.lblStatus.text = statusStr
 
-            -- Linha de instrução / total
-            local lblTot = hudWindow.FindName "lblTotal"
-            if lblTot != undefined do
-            (
-                local instrStr = ""
-                if stage == #offset then
-                    instrStr = "Clique o afastamento das cotas"
-                else if segs > 0 then
-                    instrStr = "Acumulado: " + (formatTotal())
-                else
-                    instrStr = "Clique pontos · duplo-clique ou botao"
-                lblTot.Content = instrStr
-            )
+            -- Instrução
+            local instrStr = ""
+            if stage == #offset then
+                instrStr = ">> Clique o afastamento das cotas <<"
+            else if segs > 0 then
+                instrStr = "Duplo-clique ou Finalizar para confirmar"
+            else
+                instrStr = "Continue clicando os pontos"
+            ::AmenoContinuousHUDRlt.lblInstr.text = instrStr
 
             -- Botão Finalizar
-            if hudBtnConfirm != undefined do
-            (
-                hudBtnConfirm.IsEnabled = (n >= 2 and stage == #collectingPoints)
-                local confirmLabel = ""
-                if stage == #offset then
-                    confirmLabel = "Confirmado — clique o afastamento"
-                else
-                    confirmLabel = "Finalizar coleta de pontos"
-                hudBtnConfirm.Content = confirmLabel
-            )
+            ::AmenoContinuousHUDRlt.btnConfirm.enabled = (n >= 2 and stage == #collectingPoints)
 
             -- Botão Undo
-            if hudBtnUndo != undefined do
-                hudBtnUndo.IsEnabled = (n >= 1 and stage == #collectingPoints)
+            ::AmenoContinuousHUDRlt.btnUndo.enabled = (n >= 1 and stage == #collectingPoints)
         )
         catch ()
-
         true
     ),
 
     fn closeHUD =
     (
-        if hudWindow != undefined do
-        (
-            try
-            (
-                -- Remove handlers antes de fechar para evitar callbacks pós-destruição
-                if hudBtnConfirm != undefined do dotNet.removeAllEventHandlers hudBtnConfirm
-                if hudBtnUndo    != undefined do dotNet.removeAllEventHandlers hudBtnUndo
-                if hudBtnCancel  != undefined do dotNet.removeAllEventHandlers hudBtnCancel
-                dotNet.removeAllEventHandlers hudWindow
-                hudWindow.Close()
-            )
-            catch ()
-            hudWindow     = undefined
-            hudLabel      = undefined
-            hudBtnConfirm = undefined
-            hudBtnUndo    = undefined
-            hudBtnCancel  = undefined
-        )
+        try (destroyDialog ::AmenoContinuousHUDRlt) catch ()
+        hudOpen = false
     ),
+
 
     -- ── Gestão de previews ────────────────────────────────────────────────────
 
@@ -793,40 +728,6 @@ struct AmenoDimensionContinuousToolService
 )
 
 AmenoDimensionContinuousTool = AmenoDimensionContinuousToolService()
-
--- ── Callbacks globais do HUD (fora da struct para compatibilidade dotNet) ─────
-
-fn AmenoDimensionContinuousHudConfirmHandler sender args =
-(
-    if ::AmenoDimensionContinuousTool != undefined do
-        ::AmenoDimensionContinuousTool.confirmPoints()
-)
-
-fn AmenoDimensionContinuousHudUndoHandler sender args =
-(
-    if ::AmenoDimensionContinuousTool != undefined do
-        ::AmenoDimensionContinuousTool.undoLastPoint()
-)
-
-fn AmenoDimensionContinuousHudCancelHandler sender args =
-(
-    if ::AmenoDimensionContinuousTool != undefined do
-    (
-        ::AmenoDimensionContinuousTool.cancel()
-        -- Força encerramento do tool ativo
-        try (stopTool AmenoDimensionContinuousMouseTool) catch ()
-    )
-)
-
-fn AmenoDimensionContinuousHudClosingHandler sender args =
-(
-    -- Se o HUD for fechado pelo usuário (X), cancela a sessão
-    if ::AmenoDimensionContinuousTool != undefined and ::AmenoDimensionContinuousTool.active do
-    (
-        ::AmenoDimensionContinuousTool.cancel()
-        try (stopTool AmenoDimensionContinuousMouseTool) catch ()
-    )
-)
 
 -- ── Mouse Tool block ──────────────────────────────────────────────────────────
 

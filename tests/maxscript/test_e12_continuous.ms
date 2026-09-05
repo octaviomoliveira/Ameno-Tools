@@ -68,10 +68,7 @@
         AmenoDimensionContinuousTool.activePreview   = undefined
         AmenoDimensionContinuousTool.lastSessionIds  = #()
         AmenoDimensionContinuousTool.lastError       = ""
-        AmenoDimensionContinuousTool.hudWindow       = undefined
-        AmenoDimensionContinuousTool.hudLabel        = undefined
-        AmenoDimensionContinuousTool.hudBtnUndo      = undefined
-        AmenoDimensionContinuousTool.hudBtnCancel    = undefined
+        AmenoDimensionContinuousTool.hudOpen         = false
     )
 
     fn e12_begin =
