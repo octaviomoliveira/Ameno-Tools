@@ -21,6 +21,7 @@ global AmenoStyleDraft
 global AmenoStyleServiceDefinition
 global AmenoStyleService
 global AmenoAnchorService
+global AmenoDimensionTerminalMesh
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
@@ -89,6 +90,7 @@ struct AmenoBootstrapService
             @"core\ameno_scene_setup.ms",
             @"core\ameno_dimensions_math.ms",
             @"core\ameno_dimension_ca.ms",
+            @"core\ameno_dimension_terminal_mesh.ms",
             @"core\ameno_dimension_graphics.ms",
             @"core\ameno_anchor_service.ms",
             @"core\ameno_style_service.ms",
