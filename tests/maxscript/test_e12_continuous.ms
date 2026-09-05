@@ -68,6 +68,12 @@
         AmenoDimensionContinuousTool.activePreview   = undefined
         AmenoDimensionContinuousTool.lastSessionIds  = #()
         AmenoDimensionContinuousTool.lastError       = ""
+        AmenoDimensionContinuousTool.lastResult      = #idle
+        AmenoDimensionContinuousTool.sessionMode     = undefined
+        AmenoDimensionContinuousTool.sessionStyleId  = undefined
+        AmenoDimensionContinuousTool.sessionOutputUnit = undefined
+        AmenoDimensionContinuousTool.sessionPrecision = undefined
+        AmenoDimensionContinuousTool.cleanupInProgress = false
         AmenoDimensionContinuousTool.hudOpen         = false
     )
 

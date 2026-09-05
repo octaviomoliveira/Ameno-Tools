@@ -2,7 +2,7 @@
     E12 — Ferramenta de cotação contínua estilo Revit.
 
     Fluxo de interação:
-      1. Painel principal abre o HUD nativo (pequeno, flutuante) e ativa o MouseTool.
+      1. Painel principal valida o modo e ativa o MouseTool.
       2. Usuário clica N referências de vértice (≥ 2).
       3. O primeiro clique realmente vazio solicita o commit do conjunto.
       4. Layout e commit da cadeia são implementados nos gates E12-B/C.
@@ -17,7 +17,7 @@
       - Botão "↩ Desfazer ponto"  : remove o último ponto acumulado
       - Botão "✕ Cancelar"        : fecha o HUD e cancela a sessão
 
-    Compatível com os modos herdados #aligned / #horizontal / #vertical.
+    Nesta etapa, a ferramenta contínua aceita somente #horizontal / #vertical.
 */
 
 global AmenoDimensionContinuousTool
@@ -94,6 +94,12 @@ struct AmenoDimensionContinuousToolService
     activeMode         = #aligned,
     previewOutputUnit  = #meters,
     previewPrecision   = 2,
+    sessionStyleId     = undefined,
+    sessionMode        = undefined,
+    sessionOutputUnit  = undefined,
+    sessionPrecision   = undefined,
+    lastResult         = #idle,
+    cleanupInProgress  = false,
     lastError          = "",
     lastCursorPoint    = undefined,
     lastChainLayout    = undefined,
@@ -139,6 +145,44 @@ struct AmenoDimensionContinuousToolService
     (
         if ::AmenoContinuousDiagnostics == undefined then return "<diagnostics-unavailable>"
         try (::AmenoContinuousDiagnostics.pointText pointValue) catch "<diagnostics-error>"
+    ),
+
+    fn effectiveMode =
+    (
+        if sessionMode == undefined then activeMode else sessionMode
+    ),
+
+    fn effectiveStyleId =
+    (
+        if sessionStyleId == undefined then activeStyleId else sessionStyleId
+    ),
+
+    fn effectiveOutputUnit =
+    (
+        if sessionOutputUnit == undefined then previewOutputUnit else sessionOutputUnit
+    ),
+
+    fn effectivePrecision =
+    (
+        if sessionPrecision == undefined then previewPrecision else sessionPrecision
+    ),
+
+    fn clearSessionConfiguration =
+    (
+        sessionStyleId = undefined
+        sessionMode = undefined
+        sessionOutputUnit = undefined
+        sessionPrecision = undefined
+        true
+    ),
+
+    fn snapshotSessionConfiguration =
+    (
+        sessionStyleId = activeStyleId
+        sessionMode = activeMode
+        sessionOutputUnit = previewOutputUnit
+        sessionPrecision = previewPrecision
+        true
     ),
 
     fn isEligibleReferenceNode nodeValue =
@@ -239,7 +283,7 @@ struct AmenoDimensionContinuousToolService
         try (detectedVertexText = detectedHit.vertexId as string) catch ()
         diagnosticTrace #classification #(
             "stage=" + (stage as string),
-            "mode=" + (activeMode as string),
+            "mode=" + ((effectiveMode()) as string),
             "snapHit=" + (snapHit as string),
             "snapNode=" + (diagnosticNodeText snapNode),
             "detectedNode=" + detectedNodeText,
@@ -289,7 +333,7 @@ struct AmenoDimensionContinuousToolService
             case stage of
             (
                 #collecting:       ("E12: coletando referências (" + points.count as string + " definida(s)).")
-                #committing:       "E12: cadeia pronta para o layout/commit do próximo gate."
+                #committing:       "E12: preparando posicionamento da cadeia."
                 default:           "E12: ferramenta pronta."
             )
         panelStatus statusText
@@ -306,7 +350,7 @@ struct AmenoDimensionContinuousToolService
         (
             try
             (
-                local layout = AmenoDimensionMath.layoutForMode points[i] points[i + 1] (points[i] + [0, 100, 0]) mode:activeMode
+                local layout = AmenoDimensionMath.layoutForMode points[i] points[i + 1] (points[i] + [0, 100, 0]) mode:(effectiveMode())
                 if layout.valid do total += layout.measuredMillimeters
             )
             catch ()
@@ -319,7 +363,7 @@ struct AmenoDimensionContinuousToolService
         local totalMm = calcTotalMillimeters()
         try
         (
-            local fmt = AmenoUnitService.formatMillimeters totalMm outputUnit:previewOutputUnit precision:previewPrecision decimalSeparator:#comma
+            local fmt = AmenoUnitService.formatMillimeters totalMm outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) decimalSeparator:#comma
             fmt.text
         )
         catch
@@ -420,8 +464,9 @@ struct AmenoDimensionContinuousToolService
 
     fn calculateChainLayout offsetPoint =
     (
-        if activeMode != #horizontal and activeMode != #vertical then return undefined
-        AmenoDimensionChainMath.layout points offsetPoint mode:activeMode
+        local modeValue = effectiveMode()
+        if modeValue != #horizontal and modeValue != #vertical then return undefined
+        AmenoDimensionChainMath.layout points offsetPoint mode:modeValue
     ),
 
     fn refreshChainPreview offsetPoint =
@@ -458,10 +503,10 @@ struct AmenoDimensionContinuousToolService
 
                 if segmentPreviews[segmentIndex] == undefined then
                     segmentPreviews[segmentIndex] = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue chainLayout.offsetPoint \
-                        outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
+                        outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) mode:(effectiveMode())
                 else
                     segmentPreviews[segmentIndex] = AmenoDimensionGraphics.updatePreviewDimension segmentPreviews[segmentIndex] \
-                        pointAValue pointBValue chainLayout.offsetPoint outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
+                        pointAValue pointBValue chainLayout.offsetPoint outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) mode:(effectiveMode())
             )
             lastChainLayout = chainLayout
             true
@@ -514,48 +559,94 @@ struct AmenoDimensionContinuousToolService
             return false
         )
 
-        local sceneState = AmenoSceneSetup.inspect()
-        if sceneState.status != #ready do sceneState = AmenoSceneSetup.prepare()
-
-        if sceneState.status != #ready then
+        if activeMode != #horizontal and activeMode != #vertical then
         (
-            diagnosticTrace #beginRejected #("reason=scene-not-ready", "detail=" + sceneState.detail)
-            displayTempPrompt ("Ameno Cota Contínua: prepare a cena antes de cotar. " + sceneState.detail) 2200
+            lastError = "A cotação contínua aceita somente os modos Horizontal e Vertical nesta versão."
+            lastResult = #rejected
+            diagnosticTrace #beginRejected #("reason=unsupported-mode", "mode=" + (activeMode as string), "error=" + lastError)
+            panelStatus ("E12: " + lastError)
+            displayTempPrompt ("Ameno Cota Contínua: " + lastError) 2200
             return false
         )
 
+        try
+        (
+            local sceneState = AmenoSceneSetup.inspect()
+            if sceneState.status != #ready do sceneState = AmenoSceneSetup.prepare()
+
+            if sceneState.status != #ready then
+            (
+                lastError = "Prepare a cena antes de cotar. " + sceneState.detail
+                lastResult = #rejected
+                diagnosticTrace #beginRejected #("reason=scene-not-ready", "detail=" + sceneState.detail)
+                displayTempPrompt ("Ameno Cota Contínua: " + lastError) 2200
+                return false
+            )
+
+            removeAllPreviews()
+            points          = #()
+            anchorNodes     = #()
+            anchorVertexIds = #()
+            segmentPreviews = #()
+            activePreview   = undefined
+            lastSessionIds  = #()
+            lastError       = ""
+            lastCursorPoint = undefined
+            lastChainLayout = undefined
+            lastCommittedLayout = undefined
+            lastResult      = #collecting
+            cleanupInProgress = false
+            snapshotSessionConfiguration()
+            active          = true
+            setStage #collecting
+            -- O HUD não abre automaticamente no R1; status/prompt conduzem a sessão.
+            diagnosticTrace #beginReady #("stage=" + (stage as string), "mode=" + ((effectiveMode()) as string))
+            true
+        )
+        catch
+        (
+            lastError = getCurrentException() as string
+            lastResult = #failed
+            active = false
+            stage = #idle
+            removeAllPreviews()
+            closeHUD()
+            clearSessionConfiguration()
+            diagnosticTrace #beginRejected #("reason=exception", "error=" + lastError)
+            false
+        )
+    ),
+
+    fn cleanupSession clearDraft:true =
+    (
+        if cleanupInProgress then return true
+        cleanupInProgress = true
+
+        -- Desativar antes de fechar o HUD impede que o callback close reentre em cancel().
+        active = false
         removeAllPreviews()
-        points          = #()
-        anchorNodes     = #()
-        anchorVertexIds = #()
-        segmentPreviews = #()
-        activePreview   = undefined
-        lastSessionIds  = #()
-        lastError       = ""
-        lastCursorPoint = undefined
-        lastChainLayout = undefined
-        lastCommittedLayout = undefined
-        active          = true
-        setStage #collecting
-        openHUD()
-        updateHUD()
-        diagnosticTrace #beginReady #("stage=" + (stage as string), "mode=" + (activeMode as string))
+        if clearDraft do
+        (
+            points = #()
+            anchorNodes = #()
+            anchorVertexIds = #()
+            segmentPreviews = #()
+            lastCursorPoint = undefined
+            lastChainLayout = undefined
+        )
+        closeHUD()
+        try (popPrompt()) catch ()
+        stage = #idle
+        clearSessionConfiguration()
+        cleanupInProgress = false
         true
     ),
 
     fn cancel =
     (
         diagnosticTrace #cancelBegin #("stage=" + (stage as string), "references=" + (points.count as string))
-        removeAllPreviews()
-        points          = #()
-        anchorNodes     = #()
-        anchorVertexIds = #()
-        segmentPreviews = #()
-        lastCursorPoint = undefined
-        lastChainLayout = undefined
-        active          = false
-        stage           = #idle
-        closeHUD()
+        lastResult = #cancelled
+        cleanupSession clearDraft:true
         panelStatus "E12: sessão cancelada."
         diagnosticTrace #cancelEnd #("stage=" + (stage as string), "active=" + (active as string))
         true
@@ -565,7 +656,7 @@ struct AmenoDimensionContinuousToolService
 
     fn requestCommit =
     (
-        diagnosticTrace #commitRequested #("stage=" + (stage as string), "references=" + (points.count as string), "mode=" + (activeMode as string))
+        diagnosticTrace #commitRequested #("stage=" + (stage as string), "references=" + (points.count as string), "mode=" + ((effectiveMode()) as string))
         if stage != #collecting then
         (
             diagnosticTrace #commitRequestRejected #("reason=invalid-stage", "stage=" + (stage as string))
@@ -600,7 +691,7 @@ struct AmenoDimensionContinuousToolService
     (
         diagnosticTrace #commitBegin #(
             "stage=" + (stage as string),
-            "mode=" + (activeMode as string),
+            "mode=" + ((effectiveMode()) as string),
             "references=" + (points.count as string),
             "offset=" + (diagnosticPointText offsetPoint)
         )
@@ -609,10 +700,12 @@ struct AmenoDimensionContinuousToolService
             diagnosticTrace #commitRejected #("reason=invalid-stage", "stage=" + (stage as string))
             return false
         )
-        if activeMode != #horizontal and activeMode != #vertical then
+        local modeValue = effectiveMode()
+        if modeValue != #horizontal and modeValue != #vertical then
         (
             lastError = "E12-C suporta somente Horizontal e Vertical."
-            diagnosticTrace #commitRejected #("reason=unsupported-mode", "mode=" + (activeMode as string), "error=" + lastError)
+            lastResult = #failed
+            diagnosticTrace #commitRejected #("reason=unsupported-mode", "mode=" + (modeValue as string), "error=" + lastError)
             setStage #collecting
             return false
         )
@@ -621,6 +714,7 @@ struct AmenoDimensionContinuousToolService
         if chainLayout == undefined or not chainLayout.valid then
         (
             lastError = if chainLayout == undefined then "Layout de cadeia indisponível." else chainLayout.errorMessage
+            lastResult = #failed
             local layoutCodeText = "<undefined>"
             try (layoutCodeText = chainLayout.errorCode as string) catch ()
             diagnosticTrace #commitRejected #("reason=invalid-layout", "layoutCode=" + layoutCodeText, "error=" + lastError)
@@ -648,10 +742,10 @@ struct AmenoDimensionContinuousToolService
                     local sourceA = segmentLayout.sourceIndexA
                     local sourceB = segmentLayout.sourceIndexB
                     local created = AmenoDimensionGraphics.createDimension points[sourceA] points[sourceB] chainLayout.offsetPoint \
-                        role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId \
+                        role:"interactive" outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) \
                         nodeA:anchorNodes[sourceA] anchorVertexIdA:anchorVertexIds[sourceA] \
                         nodeB:anchorNodes[sourceB] anchorVertexIdB:anchorVertexIds[sourceB] \
-                        dimensionMode:activeMode useUndo:false
+                        dimensionMode:modeValue useUndo:false
                     if created == undefined do throw ("Segmento " + (segmentIndex as string) + " não foi criado.")
                     append createdIds created.dimensionId
                     diagnosticTrace #segmentCreateEnd #("segment=" + (segmentIndex as string), "dimensionId=" + created.dimensionId)
@@ -662,6 +756,7 @@ struct AmenoDimensionContinuousToolService
         catch
         (
             lastError = getCurrentException() as string
+            lastResult = #failed
             diagnosticTrace #commitException #("error=" + lastError, "createdIds=" + (createdIds.count as string))
             rollbackCreatedDimensions createdIds
             setStage #collecting
@@ -672,6 +767,7 @@ struct AmenoDimensionContinuousToolService
 
         if not completed then
         (
+            lastResult = #failed
             diagnosticTrace #commitIncomplete #("createdIds=" + (createdIds.count as string), "segments=" + (chainLayout.segments.count as string))
             rollbackCreatedDimensions createdIds
             setStage #collecting
@@ -686,12 +782,17 @@ struct AmenoDimensionContinuousToolService
         anchorVertexIds = #()
         lastCursorPoint = undefined
         lastChainLayout = undefined
-        setStage #collecting
-        updateHUD()
+        lastResult = #committed
+        setStage #finished
         if ::AmenoAnchorService != undefined do try (::AmenoAnchorService.rebuildIndex()) catch ()
         panelStatus ("E12-C: " + (createdIds.count as string) + " cota(s) criada(s).")
         diagnosticTrace #commitSuccess #("createdIds=" + (createdIds.count as string), "stage=" + (stage as string), "active=" + (active as string))
         true
+    ),
+
+    fn mouseReturnForOutcome outcome =
+    (
+        if outcome == #chainCommitted then #stop else outcome
     ),
 
     fn confirmPoints =
@@ -805,7 +906,7 @@ struct AmenoDimensionContinuousToolService
             "references=" + (points.count as string),
             "lastError=" + lastError
         )
-        outcome
+        mouseReturnForOutcome outcome
     ),
 
     fn handleMove clickNumber pointValue =
@@ -847,12 +948,12 @@ struct AmenoDimensionContinuousToolService
     fn onStop =
     (
         diagnosticTrace #toolStopBegin #("stage=" + (stage as string), "active=" + (active as string), "references=" + (points.count as string), "lastIds=" + (lastSessionIds.count as string))
-        removeAllPreviews()
-        closeHUD()
-        try (popPrompt()) catch ()
-        active = false
-        stage  = #idle
-        panelStatus "E12: ferramenta pronta."
+        local committed = (lastResult == #committed)
+        cleanupSession clearDraft:true
+        if committed then
+            panelStatus ("E12-C: " + (lastSessionIds.count as string) + " cota(s) criada(s).")
+        else if lastResult != #cancelled then
+            panelStatus "E12: ferramenta pronta."
         diagnosticTrace #toolStopEnd #("stage=" + (stage as string), "active=" + (active as string), "lastIds=" + (lastSessionIds.count as string))
         true
     ),
@@ -862,7 +963,14 @@ struct AmenoDimensionContinuousToolService
     fn start =
     (
         diagnosticTrace #startRequested #("mode=" + (activeMode as string))
-        if not begin() then
+        local began = false
+        try (began = begin()) catch
+        (
+            lastError = getCurrentException() as string
+            lastResult = #failed
+            cleanupSession clearDraft:true
+        )
+        if not began then
         (
             diagnosticTrace #startRejected #("lastError=" + lastError)
             return undefined
@@ -878,9 +986,11 @@ struct AmenoDimensionContinuousToolService
         catch
         (
             lastError = getCurrentException() as string
+            lastResult = #failed
             diagnosticTrace #startException #("error=" + lastError)
             displayTempPrompt ("Ameno Cota Contínua: ferramenta interrompida — " + lastError) 2200
-            cancel()
+            cleanupSession clearDraft:true
+            panelStatus ("E12: ferramenta interrompida — " + lastError)
         )
 
         if toolResult == #abort do removeAllPreviews()

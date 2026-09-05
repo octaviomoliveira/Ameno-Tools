@@ -223,7 +223,7 @@ rollout AmenoDimRollout "Criação de Cotas" width:344
     button btnCreateTest       "Criar cota de teste"         pos:[14, 126] width:150 height:24
     button btnClearTests       "Limpar de teste"             pos:[180, 126] width:150 height:24
     button btnStyleEditor      "Editor de Estilos..."        pos:[14, 156] width:316 height:24
-    label  lblTestHint         "Preview em tempo real · duplo-clique confirma · Esc cancela." pos:[14, 186] width:316 height:18 align:#left
+    label  lblTestHint         "Contínua H/V · clique vazio confirma · Esc cancela." pos:[14, 186] width:316 height:18 align:#left
 
     on rdoMode changed state do
     (
@@ -276,6 +276,12 @@ rollout AmenoDimRollout "Criação de Cotas" width:344
                 if rdoMode.state == 2 do modeSync = #horizontal
                 if rdoMode.state == 3 do modeSync = #vertical
                 AmenoDimensionContinuousTool.activeMode = modeSync
+
+                if modeSync == #aligned then
+                (
+                    messageBox "A cotação contínua aceita somente Horizontal e Vertical nesta versão. O modo Alinhado continua disponível para a cota simples." title:"Ameno Tools"
+                    return ()
+                )
 
                 -- Sincroniza estilo, unidade e precisão com AmenoApp
                 if AmenoApp != undefined do

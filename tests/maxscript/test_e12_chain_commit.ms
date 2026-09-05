@@ -55,6 +55,12 @@
         AmenoDimensionContinuousTool.lastChainLayout = undefined
         AmenoDimensionContinuousTool.lastCommittedLayout = undefined
         AmenoDimensionContinuousTool.lastError = ""
+        AmenoDimensionContinuousTool.lastResult = #idle
+        AmenoDimensionContinuousTool.sessionMode = undefined
+        AmenoDimensionContinuousTool.sessionStyleId = undefined
+        AmenoDimensionContinuousTool.sessionOutputUnit = undefined
+        AmenoDimensionContinuousTool.sessionPrecision = undefined
+        AmenoDimensionContinuousTool.cleanupInProgress = false
         AmenoDimensionContinuousTool.hudOpen = false
     )
 
@@ -103,7 +109,8 @@
     e12cEq "first empty commits chain" (AmenoDimensionContinuousTool.handleClassifiedClick emptyClick commitNow:true) #chainCommitted
     e12cEq "two permanent dimensions" (AmenoDimensionGraphics.findControllers role:"interactive").count (controllerCountBefore + 2)
     e12cEq "draft reset after success" AmenoDimensionContinuousTool.points.count 0
-    e12cEq "tool remains collecting" AmenoDimensionContinuousTool.stage #collecting
+    e12cEq "successful commit reaches finished" AmenoDimensionContinuousTool.stage #finished
+    e12cEq "successful commit records result" AmenoDimensionContinuousTool.lastResult #committed
     e12cEq "session stores two ids" AmenoDimensionContinuousTool.lastSessionIds.count 2
     e12cEq "preview removed after success" AmenoDimensionContinuousTool.segmentPreviews.count 0
 

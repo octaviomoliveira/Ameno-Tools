@@ -4,6 +4,8 @@ global AmenoSceneSetup
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
+global AmenoDimensionContinuousTool
+global AmenoDimensionContinuousMouseTool
 global AmenoLog
 global AmenoVersion
 global AmenoShowMainPanel
@@ -434,6 +436,8 @@ struct AmenoRuntime
         if ::AmenoAnchorService != undefined do ::AmenoAnchorService.shutdown()
         try (stopTool AmenoDimensionMouseTool) catch ()
         try (if AmenoDimensionTool != undefined do AmenoDimensionTool.cancel()) catch ()
+        try (stopTool AmenoDimensionContinuousMouseTool) catch ()
+        try (if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.cancel()) catch ()
         try (destroyDialog AmenoMainPanelRollout) catch ()
         try (destroyDialog AmenoStyleEditorRollout) catch ()
         try (if ::AmenoStyleEditorWPF != undefined do ::AmenoStyleEditorWPF.close()) catch ()
