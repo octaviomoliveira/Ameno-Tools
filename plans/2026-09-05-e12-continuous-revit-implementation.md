@@ -173,7 +173,7 @@ Validar pacote desta worktree, fechar Max com autorização do usuário, fazer b
 ## 10. Checklist de continuidade
 
 - [x] Planejamento e diagnóstico estático documentados.
-- [ ] E12-A: interação, classificador e contratos aprovados.
+- [x] E12-A: interação/classificador aprovados em Batch (21/21 novos + 43/43 legados); gate manual fica para E12-C, pois layout/commit ainda não existem.
 - [ ] E12-B: matemática H/V aprovada.
 - [ ] E12-C: preview/commit H/V e gate manual aprovados.
 - [ ] E12-D: alinhado oblíquo aprovado.

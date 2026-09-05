@@ -26,6 +26,7 @@ global AmenoDimensionTool
 global AmenoDimensionMouseTool
 global AmenoDimensionContinuousTool
 global AmenoDimensionContinuousMouseTool
+global AmenoContinuousClickClassification
 global AmenoCoronaRendererAdapter
 global AmenoVRayRendererAdapter
 global AmenoAdapterRenderResult

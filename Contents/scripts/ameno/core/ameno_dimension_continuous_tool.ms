@@ -1,18 +1,18 @@
 /*
-    E12 — Ferramenta de cotação contínua estilo Revit (Híbrida).
+    E12 — Ferramenta de cotação contínua estilo Revit.
 
     Fluxo de interação:
-      1. Painel principal abre o HUD WPF (pequeno, flutuante) e ativa o MouseTool.
-      2. Usuário clica N pontos sequenciais (≥ 2).
-      3. Duplo-clique → confirma os pontos e vai para #offset.
-      4. Clique de offset → cria N-1 cotas paralelas → encerra.
+      1. Painel principal abre o HUD nativo (pequeno, flutuante) e ativa o MouseTool.
+      2. Usuário clica N referências de vértice (≥ 2).
+      3. O primeiro clique realmente vazio solicita o commit do conjunto.
+      4. Layout e commit da cadeia são implementados nos gates E12-B/C.
 
     Gestos:
-      - Clique esquerdo (simples)  : adiciona ponto
-      - Duplo-clique esquerdo      : confirma pontos (vai para #offset)
-      - Esc / botão direito        : cancela toda a sessão
+      - Clique em vértice           : adiciona referência
+      - Clique vazio                : solicita posicionamento/commit
+      - Esc / botão direito         : cancela toda a sessão
 
-    HUD WPF (240 × 80 px):
+    HUD nativo:
       - Label com contagem de pontos e comprimento total acumulado
       - Botão "↩ Desfazer ponto"  : remove o último ponto acumulado
       - Botão "✕ Cancelar"        : fecha o HUD e cancela a sessão
@@ -31,22 +31,29 @@ global AmenoApp
 global AmenoRefreshMainPanel
 global AmenoDimensionAnchorHit
 global AmenoAnchorService
+global AmenoDimensionCA
+global AmenoContinuousClickClassification
+
+struct AmenoContinuousClickClassification
+(
+    kind       = #ambiguous,
+    node       = undefined,
+    vertexId   = -1,
+    worldPoint = undefined,
+    detail     = ""
+)
 
 -- ── HUD Rollout: painel nativo do 3ds Max (funciona durante startTool) ───────
 
 rollout AmenoContinuousHUDRlt "Cotação Contínua" width:270
 (
     label   lblStatus "Pontos: 0" align:#left
-    label   lblInstr  "Btn-dir ou duplo-clique para confirmar" align:#left
-    button  btnConfirm "Finalizar coleta de pontos" width:254 enabled:false
+    label   lblInstr  "Clique em vértices; clique vazio posiciona" align:#left
+    button  btnConfirm "Posicione clicando no vazio" width:254 enabled:false
     button  btnUndo   "Desfazer" width:125 across:2 enabled:false
     button  btnCancel "Cancelar" width:125
 
-    on btnConfirm pressed do
-    (
-        if ::AmenoDimensionContinuousTool != undefined do
-            ::AmenoDimensionContinuousTool.confirmPoints()
-    )
+    on btnConfirm pressed do ()
 
     on btnUndo pressed do
     (
@@ -111,80 +118,54 @@ struct AmenoDimensionContinuousToolService
         [pointValue.x, pointValue.y, 0.0]
     ),
 
+    fn isEligibleReferenceNode nodeValue =
+    (
+        if nodeValue == undefined or not isValidNode nodeValue then return false
+
+        local hiddenState = false
+        local frozenState = false
+        try (hiddenState = nodeValue.isHidden) catch ()
+        try (frozenState = nodeValue.isFrozen) catch ()
+        if hiddenState or frozenState then return false
+
+        local kindValue = undefined
+        try (kindValue = ::AmenoDimensionGraphics.readTextProperty nodeValue "Ameno.Kind") catch ()
+        (kindValue == undefined or kindValue == "") and (findString nodeValue.name "AMENO_" == undefined)
+    ),
+
     -- Detecta âncora (cópia fiel do AmenoDimensionToolService)
     fn detectHitNode pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
     (
         local anchorPoint = if snapHit and snapWorldPoint != undefined then snapWorldPoint else pointValue
 
-        if snapHit and snapNode != undefined and isValidNode snapNode and anchorPoint != undefined do
-        (
-            local snapKind = ::AmenoDimensionGraphics.readTextProperty snapNode "Ameno.Kind"
-            if (snapKind == undefined or snapKind == "") and (findString snapNode.name "AMENO_" == undefined) do
-            (
-                local tol = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
-                local sv = undefined
-                if ::AmenoDimensionCA != undefined do sv = ::AmenoDimensionCA.findNearestVertex snapNode anchorPoint maxDistance:tol
-                if sv != undefined then
-                    return (AmenoDimensionAnchorHit node:snapNode vertexId:sv.vertexId vertexWorldPoint:sv.worldPoint)
-                else
-                    return (AmenoDimensionAnchorHit node:snapNode)
-            )
-        )
+        -- Grid/helper/Ameno snap nunca deve cair no raycast e virar referência por acidente.
+        if snapHit and not (isEligibleReferenceNode snapNode) then
+            return (AmenoDimensionAnchorHit node:undefined)
 
-        if anchorPoint != undefined and ::AmenoDimensionCA != undefined do
+        if snapHit and isEligibleReferenceNode snapNode and anchorPoint != undefined do
         (
             local tol = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
-            local bestNode = undefined
-            local bestHit  = undefined
-            local bestDist = 1e30
-
-            for obj in geometry where isValidNode obj and not obj.isHidden do
-            (
-                local k = ::AmenoDimensionGraphics.readTextProperty obj "Ameno.Kind"
-                if (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
-                (
-                    local inside = false
-                    try
-                    (
-                        local bbMin = obj.min
-                        local bbMax = obj.max
-                        inside = anchorPoint.x >= (bbMin.x - tol) and anchorPoint.x <= (bbMax.x + tol) and \
-                                 anchorPoint.y >= (bbMin.y - tol) and anchorPoint.y <= (bbMax.y + tol) and \
-                                 anchorPoint.z >= (bbMin.z - tol) and anchorPoint.z <= (bbMax.z + tol)
-                    )
-                    catch ()
-
-                    if inside do
-                    (
-                        local vh = ::AmenoDimensionCA.findNearestVertex obj anchorPoint maxDistance:tol
-                        if vh != undefined and vh.distance < bestDist do
-                        (
-                            bestNode = obj
-                            bestHit  = vh
-                            bestDist = vh.distance
-                        )
-                    )
-                )
-            )
-            if bestNode != undefined and bestHit != undefined then
-                return (AmenoDimensionAnchorHit node:bestNode vertexId:bestHit.vertexId vertexWorldPoint:bestHit.worldPoint)
+            local sv = undefined
+            if ::AmenoDimensionCA != undefined do sv = ::AmenoDimensionCA.findNearestVertex snapNode anchorPoint maxDistance:tol
+            if sv != undefined then
+                return (AmenoDimensionAnchorHit node:snapNode vertexId:sv.vertexId vertexWorldPoint:sv.worldPoint)
+            else
+                return (AmenoDimensionAnchorHit node:snapNode)
         )
 
         local candidateNode = undefined
+        local candidatePoint = anchorPoint
         try
         (
             local r = if screenPoint != undefined then (mapScreenToWorldRay screenPoint) else (mapScreenToWorldRay mouse.pos)
             if r != undefined then
             (
                 local hits = intersectRayScene r
-                for h in hits where isValidNode h[1] do
+                for h in hits where isEligibleReferenceNode h[1] do
                 (
-                    local k = ::AmenoDimensionGraphics.readTextProperty h[1] "Ameno.Kind"
-                    if (k == undefined or k == "") and (findString h[1].name "AMENO_" == undefined) do
-                    (
-                        candidateNode = h[1]
-                        exit
-                    )
+                    candidateNode = h[1]
+                    try (candidatePoint = h[2].pos) catch ()
+                    exit
                 )
             )
         )
@@ -194,7 +175,7 @@ struct AmenoDimensionContinuousToolService
         if candidateNode != undefined and ::AmenoDimensionCA != undefined do
         (
             local tol = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
-            local vh = ::AmenoDimensionCA.findNearestVertex candidateNode anchorPoint maxDistance:tol
+            local vh = ::AmenoDimensionCA.findNearestVertex candidateNode candidatePoint maxDistance:tol
             if vh != undefined do
             (
                 result.vertexId = vh.vertexId
@@ -202,6 +183,31 @@ struct AmenoDimensionContinuousToolService
             )
         )
         result
+    ),
+
+    fn classifyDetectedHit detectedHit snapHit:false snapNode:undefined snapWorldPoint:undefined =
+    (
+        if detectedHit != undefined and isEligibleReferenceNode detectedHit.node then
+        (
+            if detectedHit.vertexId >= 0 and detectedHit.vertexWorldPoint != undefined then
+                AmenoContinuousClickClassification kind:#reference node:detectedHit.node \
+                    vertexId:detectedHit.vertexId worldPoint:detectedHit.vertexWorldPoint detail:"vertex"
+            else
+                AmenoContinuousClickClassification kind:#geometryWithoutReference node:detectedHit.node \
+                    detail:"geometry without a vertex inside tolerance"
+        )
+        else if snapHit then
+            AmenoContinuousClickClassification kind:#ambiguous node:snapNode worldPoint:snapWorldPoint \
+                detail:"snap without an eligible vertex reference"
+        else
+            AmenoContinuousClickClassification kind:#empty detail:"no eligible geometry under cursor"
+    ),
+
+    fn classifyClick pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
+    (
+        local detectedHit = detectHitNode pointValue screenPoint:screenPoint snapNode:snapNode \
+            snapWorldPoint:snapWorldPoint snapHit:snapHit
+        classifyDetectedHit detectedHit snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint
     ),
 
     -- ── Status / Prompt ───────────────────────────────────────────────────────
@@ -217,13 +223,13 @@ struct AmenoDimensionContinuousToolService
         local n = points.count
         case stage of
         (
-            #collectingPoints:
+            #collecting:
                 if n == 0 then
                     "Ameno Cota Contínua: clique o 1º ponto  (Esc cancela)"
                 else
-                    ("Ameno Cota Contínua: " + n as string + " ponto(s) · duplo-clique confirma  (Esc cancela)")
-            #offset:
-                ("Ameno Cota Contínua: " + n as string + " pontos · clique o afastamento  (Esc cancela)")
+                    ("Ameno Cota Contínua: " + n as string + " referência(s) · clique vazio posiciona")
+            #committing:
+                "Ameno Cota Contínua: preparando a cadeia"
             default:
                 "Ameno Cota Contínua: pronto"
         )
@@ -241,8 +247,8 @@ struct AmenoDimensionContinuousToolService
         local statusText =
             case stage of
             (
-                #collectingPoints: ("E12: coletando pontos (" + points.count as string + " definido(s)) · duplo-clique confirma.")
-                #offset:           ("E12: " + points.count as string + " pontos · clique o afastamento.")
+                #collecting:       ("E12: coletando referências (" + points.count as string + " definida(s)).")
+                #committing:       "E12: cadeia pronta para o layout/commit do próximo gate."
                 default:           "E12: ferramenta pronta."
             )
         panelStatus statusText
@@ -319,19 +325,19 @@ struct AmenoDimensionContinuousToolService
 
             -- Instrução
             local instrStr = ""
-            if stage == #offset then
-                instrStr = ">> Clique o afastamento das cotas <<"
+            if stage == #committing then
+                instrStr = "Preparando posicionamento da cadeia"
             else if segs > 0 then
-                instrStr = "Duplo-clique ou Finalizar para confirmar"
+                instrStr = "Clique em outro vértice ou no vazio para posicionar"
             else
                 instrStr = "Continue clicando os pontos"
             ::AmenoContinuousHUDRlt.lblInstr.text = instrStr
 
             -- Botão Finalizar
-            ::AmenoContinuousHUDRlt.btnConfirm.enabled = (n >= 2 and stage == #collectingPoints)
+            ::AmenoContinuousHUDRlt.btnConfirm.enabled = false
 
             -- Botão Undo
-            ::AmenoContinuousHUDRlt.btnUndo.enabled = (n >= 1 and stage == #collectingPoints)
+            ::AmenoContinuousHUDRlt.btnUndo.enabled = (n >= 1 and stage == #collecting)
         )
         catch ()
         true
@@ -488,7 +494,7 @@ struct AmenoDimensionContinuousToolService
         anchorNodes     = newNodes
         anchorVertexIds = newVertIds
 
-        setStage #collectingPoints
+        setStage #collecting
         updateHUD()
         true
     ),
@@ -517,7 +523,7 @@ struct AmenoDimensionContinuousToolService
         lastSessionIds  = #()
         lastError       = ""
         active          = true
-        setStage #collectingPoints
+        setStage #collecting
         openHUD()
         updateHUD()
         true
@@ -537,20 +543,84 @@ struct AmenoDimensionContinuousToolService
         true
     ),
 
-    -- ── Confirmar pontos → ir para #offset ────────────────────────────────────
+    -- ── Solicitação de commit; layout/criação pertencem aos gates E12-B/C ────
 
-    fn confirmPoints =
+    fn requestCommit =
     (
-        if stage != #collectingPoints then return false
+        if stage != #collecting then return false
         if points.count < 2 then
         (
             displayTempPrompt "Ameno Cota Contínua: defina ao menos 2 pontos antes de confirmar." 1600
             return false
         )
-        removeActivePreview()
-        setStage #offset
+        setStage #committing
         updateHUD()
         true
+    ),
+
+    fn confirmPoints =
+    (
+        displayTempPrompt "Ameno Cota Contínua: posicione com o primeiro clique vazio." 1400
+        false
+    ),
+
+    fn isDuplicateReference clickInfo tolerance:0.00001 =
+    (
+        if clickInfo == undefined or clickInfo.kind != #reference then return false
+        for i = 1 to points.count do
+        (
+            local sameIdentity = false
+            if clickInfo.node != undefined and i <= anchorNodes.count and anchorNodes[i] == clickInfo.node and \
+                i <= anchorVertexIds.count and anchorVertexIds[i] == clickInfo.vertexId do sameIdentity = true
+            if sameIdentity or (length ((flattenPoint clickInfo.worldPoint) - points[i])) <= tolerance do return true
+        )
+        false
+    ),
+
+    fn handleClassifiedClick clickInfo =
+    (
+        if not active then return #inactive
+        if stage != #collecting then return #ignored
+        if clickInfo == undefined then return #ambiguous
+
+        case clickInfo.kind of
+        (
+            #reference:
+            (
+                if clickInfo.worldPoint == undefined or clickInfo.vertexId < 0 or \
+                    clickInfo.node == undefined or not isValidNode clickInfo.node then return #ambiguous
+                if isDuplicateReference clickInfo then
+                (
+                    displayTempPrompt "Ameno Cota Contínua: esta referência já foi escolhida." 1400
+                    return #duplicateReference
+                )
+                append points (flattenPoint clickInfo.worldPoint)
+                append anchorNodes clickInfo.node
+                append anchorVertexIds clickInfo.vertexId
+                setStage #collecting
+                updateHUD()
+                #referenceAdded
+            )
+            #geometryWithoutReference:
+            (
+                displayTempPrompt "Ameno Cota Contínua: clique em um vértice válido." 1400
+                #geometryWithoutReference
+            )
+            #empty:
+            (
+                if points.count < 2 then
+                (
+                    displayTempPrompt "Ameno Cota Contínua: escolha ao menos 2 vértices." 1400
+                    #needsMoreReferences
+                )
+                else if requestCommit() then #commitRequested else #ignored
+            )
+            default:
+            (
+                displayTempPrompt "Ameno Cota Contínua: clique ambíguo; nenhuma ação executada." 1400
+                #ambiguous
+            )
+        )
     ),
 
     -- ── Handlers de mouse ─────────────────────────────────────────────────────
@@ -560,107 +630,10 @@ struct AmenoDimensionContinuousToolService
         if not active then return #stop
 
         local effectivePoint = if snapHit and snapWorldPoint != undefined then snapWorldPoint else pointValue
-        local candidate = flattenPoint effectivePoint
-        if candidate == undefined then return undefined
-
-        case stage of
-        (
-            #collectingPoints:
-            (
-                -- Se não há snap (clique no vazio): confirmar se já tem pontos, senão ignorar
-                if not snapHit and snapWorldPoint == undefined then
-                (
-                    if points.count >= 2 then confirmPoints()
-                    return undefined
-                )
-
-                -- Verifica duplicata com ponto imediatamente anterior
-                if points.count > 0 and (length (candidate - points[points.count])) <= 0.00001 then
-                (
-                    displayTempPrompt "Ameno Cota Contínua: escolha um ponto diferente do anterior." 1400
-                    return undefined
-                )
-
-                -- Detecta âncora
-                local hit = detectHitNode effectivePoint screenPoint:screenPoint snapNode:snapNode \
-                    snapWorldPoint:snapWorldPoint snapHit:snapHit
-                local finalPoint = if hit.vertexWorldPoint != undefined then (flattenPoint hit.vertexWorldPoint) else candidate
-
-                append points          finalPoint
-                append anchorNodes     hit.node
-                append anchorVertexIds hit.vertexId
-
-                -- NÃO mostramos preview de segmento aqui: evita os ângulos confusos durante coleta.
-                -- Previews de todos os segmentos aparecem apenas na fase #offset (ao mover o cursor).
-                setStage #collectingPoints
-                updateHUD()
-                undefined
-            )
-            #offset:
-            (
-                if points.count < 2 then return undefined
-
-                local rawOffset = candidate
-                removeAllPreviews()
-
-                -- Calcula distância perpendicular consistente a partir da direção global P1→Pn
-                -- para que TODAS as cotas fiquem no mesmo nível visual.
-                local p1    = points[1]
-                local pN    = points[points.count]
-                local gDirV = [pN.x - p1.x, pN.y - p1.y, 0.0]
-                local gLen  = length gDirV
-                local gPerp = if gLen > 0.00001 then \
-                    (normalize (cross [0,0,1] (normalize gDirV))) else [0,1,0]
-                -- Distância escalar: positiva = lado esquerdo da direção global
-                local offsetDist = dot (rawOffset - p1) gPerp
-
-                local createdCount = 0
-                for i = 1 to (points.count - 1) do
-                (
-                    local pA = points[i]
-                    local pB = points[i + 1]
-                    local nA = anchorNodes[i]
-                    local nB = anchorNodes[i + 1]
-                    local vA = anchorVertexIds[i]
-                    local vB = anchorVertexIds[i + 1]
-
-                    -- Offset para este segmento: perpendicular própria × distância escalar global
-                    local segDirV = [pB.x - pA.x, pB.y - pA.y, 0.0]
-                    local segLen  = length segDirV
-                    local segPerp = if segLen > 0.00001 then \
-                        (normalize (cross [0,0,1] (normalize segDirV))) else gPerp
-                    local segMid        = (pA + pB) / 2.0
-                    local segOffsetPt   = segMid + (segPerp * offsetDist)
-
-                    try
-                    (
-                        local created = AmenoDimensionGraphics.createDimension pA pB segOffsetPt \
-                            role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision \
-                            styleId:activeStyleId nodeA:nA anchorVertexIdA:vA nodeB:nB anchorVertexIdB:vB \
-                            dimensionMode:activeMode
-
-                        if created != undefined do
-                        (
-                            append lastSessionIds created.dimensionId
-                            createdCount += 1
-                        )
-                    )
-                    catch
-                    (
-                        lastError = getCurrentException() as string
-                        format "[E12] Erro ao criar cota %/%: %\n" i (points.count - 1) lastError
-                    )
-                )
-
-                if ::AmenoAnchorService != undefined do
-                    try (::AmenoAnchorService.rebuildIndex()) catch ()
-
-                closeHUD()
-                panelStatus ("E12: " + createdCount as string + " cota(s) criada(s).")
-                #stop
-            )
-            default: undefined
-        )
+        if flattenPoint effectivePoint == undefined then return #ambiguous
+        local clickInfo = classifyClick effectivePoint screenPoint:screenPoint snapNode:snapNode \
+            snapWorldPoint:snapWorldPoint snapHit:snapHit
+        handleClassifiedClick clickInfo
     ),
 
     fn handleMove clickNumber pointValue =
@@ -670,17 +643,8 @@ struct AmenoDimensionContinuousToolService
         local candidate = flattenPoint pointValue
         if candidate == undefined then return undefined
 
-        case stage of
-        (
-            #collectingPoints:
-                if points.count >= 1 do refreshActivePreview candidate
-            #offset:
-            (
-                removeActivePreview()
-                if points.count >= 2 do refreshAllPreviewsWithOffset candidate
-            )
-            default: undefined
-        )
+        -- O preview compartilhado será conectado ao calculador único na E12-C.
+        undefined
     ),
 
     -- ── onStart / onAbort / onStop ────────────────────────────────────────────
@@ -694,17 +658,8 @@ struct AmenoDimensionContinuousToolService
 
     fn onAbort clickNumber =
     (
-        -- Clique direito: confirmar se >= 2 pontos (como Revit/AutoCAD)
-        -- Se não tem pontos suficientes, cancela
-        if stage == #collectingPoints and points.count >= 2 then
-        (
-            confirmPoints()
-        )
-        else
-        (
-            cancel()
-            displayTempPrompt "Ameno Cota Contínua: sessão cancelada." 1000
-        )
+        cancel()
+        displayTempPrompt "Ameno Cota Contínua: sessão cancelada." 1000
         undefined
     ),
 
@@ -729,7 +684,7 @@ struct AmenoDimensionContinuousToolService
         try
         (
             toolResult = startTool AmenoDimensionContinuousMouseTool \
-                prompt:"Ameno Cota Contínua: clique pontos · duplo-clique confirma · Esc cancela" snap:#3D
+                prompt:"Ameno Cota Contínua: clique vértices · clique vazio posiciona · Esc cancela" snap:#3D
         )
         catch
         (
@@ -747,14 +702,10 @@ AmenoDimensionContinuousTool = AmenoDimensionContinuousToolService()
 
 -- ── Mouse Tool block ──────────────────────────────────────────────────────────
 
-tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique pontos · btn-dir ou duplo-clique confirma · Esc cancela"
+tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vértices · clique vazio posiciona · Esc cancela"
 (
-    -- Detecção de duplo-clique por tempo (clickNumber é sequencial, não indica duplo-clique)
-    local lastClickMs = 0
-
     on start do
     (
-        lastClickMs = 0
         if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.onStart()
     )
 
@@ -771,38 +722,24 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique pont
         )
         else
         (
-            -- Verifica duplo-clique por intervalo de tempo
-            local now = timeStamp()
-            local dt  = now - lastClickMs
-            lastClickMs = now
-
-            -- Duplo-clique: intervalo < 400ms e já tem pelo menos 1 ponto
-            if dt < 400 and AmenoDimensionContinuousTool.stage == #collectingPoints \
-                        and AmenoDimensionContinuousTool.points.count >= 1 then
+            -- Não há heurística de duplo-clique: cada evento é classificado pelo alvo.
+            local snapped           = false
+            local snappedNode       = undefined
+            local snappedWorldPoint = undefined
+            try
             (
-                AmenoDimensionContinuousTool.confirmPoints()
-            )
-            else
-            (
-                -- Clique simples: acumula ponto
-                local snapped           = false
-                local snappedNode       = undefined
-                local snappedWorldPoint = undefined
-                try
+                snapped = (snapMode.hit == true)
+                if snapped do
                 (
-                    snapped = (snapMode.hit == true)
-                    if snapped do
-                    (
-                        snappedNode       = snapMode.node
-                        snappedWorldPoint = snapMode.worldHitpoint
-                    )
+                    snappedNode       = snapMode.node
+                    snappedWorldPoint = snapMode.worldHitpoint
                 )
-                catch ()
-
-                AmenoDimensionContinuousTool.handlePoint clickNumber worldPoint \
-                    screenPoint:viewPoint snapNode:snappedNode \
-                    snapWorldPoint:snappedWorldPoint snapHit:snapped
             )
+            catch ()
+
+            AmenoDimensionContinuousTool.handlePoint clickNumber worldPoint \
+                screenPoint:viewPoint snapNode:snappedNode \
+                snapWorldPoint:snappedWorldPoint snapHit:snapped
         )
     )
 

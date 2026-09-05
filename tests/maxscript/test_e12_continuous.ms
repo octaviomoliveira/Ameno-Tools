@@ -75,7 +75,7 @@
     (
         e12_resetTool()
         AmenoDimensionContinuousTool.active = true
-        AmenoDimensionContinuousTool.stage  = #collectingPoints
+        AmenoDimensionContinuousTool.stage  = #collecting
     )
 
     fn e12_addPoint x y =
@@ -110,7 +110,7 @@
     e12_eq "T2.4 ponto[1].x = 0"         AmenoDimensionContinuousTool.points[1].x 0.0
     e12_eq "T2.5 ponto[2].x = 1000"      AmenoDimensionContinuousTool.points[2].x 1000.0
     e12_eq "T2.6 ponto[4].y = 1500"      AmenoDimensionContinuousTool.points[4].y 1500.0
-    e12_eq "T2.7 stage=#collectingPoints" AmenoDimensionContinuousTool.stage #collectingPoints
+    e12_eq "T2.7 stage=#collecting" AmenoDimensionContinuousTool.stage #collecting
 
     -- ── Teste 3: Undo de ponto ────────────────────────────────────────────────
 
@@ -139,26 +139,26 @@
     local ok4 = AmenoDimensionContinuousTool.undoLastPoint()
     e12_no "T3.10 undo com 0 pontos = false"  ok4
 
-    -- ── Teste 4: confirmPoints ────────────────────────────────────────────────
+    -- ── Teste 4: solicitação de commit ───────────────────────────────────────
 
-    format "\n=== E12.4 confirmPoints ===\n"
+    format "\n=== E12.4 requestCommit ===\n"
     e12_begin()
 
-    local r1 = AmenoDimensionContinuousTool.confirmPoints()
-    e12_no "T4.1 confirmPoints sem pontos = false"    r1
-    e12_eq "T4.2 stage permanece #collectingPoints"   AmenoDimensionContinuousTool.stage #collectingPoints
+    local r1 = AmenoDimensionContinuousTool.requestCommit()
+    e12_no "T4.1 requestCommit sem pontos = false"    r1
+    e12_eq "T4.2 stage permanece #collecting"         AmenoDimensionContinuousTool.stage #collecting
 
     e12_addPoint 0 0
-    local r2 = AmenoDimensionContinuousTool.confirmPoints()
-    e12_no "T4.3 confirmPoints com 1 ponto = false"   r2
+    local r2 = AmenoDimensionContinuousTool.requestCommit()
+    e12_no "T4.3 requestCommit com 1 ponto = false"   r2
 
     e12_addPoint 1000 0
-    local r3 = AmenoDimensionContinuousTool.confirmPoints()
-    e12_ok "T4.4 confirmPoints com 2 pontos = true"   r3
-    e12_eq "T4.5 stage muda para #offset"             AmenoDimensionContinuousTool.stage #offset
+    local r3 = AmenoDimensionContinuousTool.requestCommit()
+    e12_ok "T4.4 requestCommit com 2 pontos = true"   r3
+    e12_eq "T4.5 stage muda para #committing"         AmenoDimensionContinuousTool.stage #committing
 
-    local r4 = AmenoDimensionContinuousTool.confirmPoints()
-    e12_no "T4.6 confirmPoints em #offset = false"    r4
+    local r4 = AmenoDimensionContinuousTool.requestCommit()
+    e12_no "T4.6 requestCommit em #committing = false" r4
 
     -- ── Teste 5: Cancel ───────────────────────────────────────────────────────
 
