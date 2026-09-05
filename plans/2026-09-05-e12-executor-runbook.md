@@ -235,7 +235,7 @@ Conclusão: R aprovado somente após mouse real estável. Sem merge automático 
 Atualizar PLAN e checklist abaixo antes de encerrar. Relatar: causa comprovada; arquivos alterados; teste e caminho do log; comportamento instalado vs worktree; commit/push; pendência manual. Não instalar conjunto de estágios não testados para economizar viagens.
 
 - [x] Auditoria estática e plano detalhado produzidos.
-- [ ] R0 diagnóstico real identificado.
+- [ ] R0 diagnóstico real identificado. Branch/worktree isoladas e build diagnóstico opt-in preparados; teste Batch e reprodução real ainda pendentes enquanto o 3ds Max está aberto. Instruções: `docs/e12-r0-diagnostics.md`.
 - [ ] R1 lifecycle e modos.
 - [ ] R2 picking/eventos/offset, gate real.
 - [ ] R3 draft e preview/hover.

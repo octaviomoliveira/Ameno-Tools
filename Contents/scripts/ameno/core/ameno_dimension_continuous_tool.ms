@@ -34,6 +34,7 @@ global AmenoAnchorService
 global AmenoDimensionCA
 global AmenoDimensionChainMath
 global AmenoContinuousClickClassification
+global AmenoContinuousDiagnostics
 
 struct AmenoContinuousClickClassification
 (
@@ -120,6 +121,24 @@ struct AmenoDimensionContinuousToolService
     (
         if pointValue == undefined then return undefined
         [pointValue.x, pointValue.y, 0.0]
+    ),
+
+    fn diagnosticTrace eventName fields:#() throttleKey:undefined =
+    (
+        if ::AmenoContinuousDiagnostics == undefined then return false
+        try (::AmenoContinuousDiagnostics.trace eventName fields:fields throttleKey:throttleKey) catch false
+    ),
+
+    fn diagnosticNodeText nodeValue =
+    (
+        if ::AmenoContinuousDiagnostics == undefined then return "<diagnostics-unavailable>"
+        try (::AmenoContinuousDiagnostics.nodeText nodeValue) catch "<diagnostics-error>"
+    ),
+
+    fn diagnosticPointText pointValue =
+    (
+        if ::AmenoContinuousDiagnostics == undefined then return "<diagnostics-unavailable>"
+        try (::AmenoContinuousDiagnostics.pointText pointValue) catch "<diagnostics-error>"
     ),
 
     fn isEligibleReferenceNode nodeValue =
@@ -212,8 +231,24 @@ struct AmenoDimensionContinuousToolService
     (
         local detectedHit = detectHitNode pointValue screenPoint:screenPoint snapNode:snapNode \
             snapWorldPoint:snapWorldPoint snapHit:snapHit
-        classifyDetectedHit detectedHit snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint \
+        local classification = classifyDetectedHit detectedHit snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint \
             fallbackWorldPoint:pointValue
+        local detectedNodeText = "<undefined>"
+        local detectedVertexText = "-1"
+        try (detectedNodeText = diagnosticNodeText detectedHit.node) catch ()
+        try (detectedVertexText = detectedHit.vertexId as string) catch ()
+        diagnosticTrace #classification #(
+            "stage=" + (stage as string),
+            "mode=" + (activeMode as string),
+            "snapHit=" + (snapHit as string),
+            "snapNode=" + (diagnosticNodeText snapNode),
+            "detectedNode=" + detectedNodeText,
+            "detectedVertex=" + detectedVertexText,
+            "kind=" + (classification.kind as string),
+            "reason=" + classification.detail,
+            "worldPoint=" + (diagnosticPointText classification.worldPoint)
+        )
+        classification
     ),
 
     -- ── Status / Prompt ───────────────────────────────────────────────────────
@@ -472,13 +507,19 @@ struct AmenoDimensionContinuousToolService
 
     fn begin =
     (
-        if active then return false
+        diagnosticTrace #beginRequested #("active=" + (active as string), "mode=" + (activeMode as string))
+        if active then
+        (
+            diagnosticTrace #beginRejected #("reason=already-active")
+            return false
+        )
 
         local sceneState = AmenoSceneSetup.inspect()
         if sceneState.status != #ready do sceneState = AmenoSceneSetup.prepare()
 
         if sceneState.status != #ready then
         (
+            diagnosticTrace #beginRejected #("reason=scene-not-ready", "detail=" + sceneState.detail)
             displayTempPrompt ("Ameno Cota Contínua: prepare a cena antes de cotar. " + sceneState.detail) 2200
             return false
         )
@@ -498,11 +539,13 @@ struct AmenoDimensionContinuousToolService
         setStage #collecting
         openHUD()
         updateHUD()
+        diagnosticTrace #beginReady #("stage=" + (stage as string), "mode=" + (activeMode as string))
         true
     ),
 
     fn cancel =
     (
+        diagnosticTrace #cancelBegin #("stage=" + (stage as string), "references=" + (points.count as string))
         removeAllPreviews()
         points          = #()
         anchorNodes     = #()
@@ -514,6 +557,7 @@ struct AmenoDimensionContinuousToolService
         stage           = #idle
         closeHUD()
         panelStatus "E12: sessão cancelada."
+        diagnosticTrace #cancelEnd #("stage=" + (stage as string), "active=" + (active as string))
         true
     ),
 
@@ -521,14 +565,21 @@ struct AmenoDimensionContinuousToolService
 
     fn requestCommit =
     (
-        if stage != #collecting then return false
+        diagnosticTrace #commitRequested #("stage=" + (stage as string), "references=" + (points.count as string), "mode=" + (activeMode as string))
+        if stage != #collecting then
+        (
+            diagnosticTrace #commitRequestRejected #("reason=invalid-stage", "stage=" + (stage as string))
+            return false
+        )
         if points.count < 2 then
         (
+            diagnosticTrace #commitRequestRejected #("reason=insufficient-references", "references=" + (points.count as string))
             displayTempPrompt "Ameno Cota Contínua: defina ao menos 2 pontos antes de confirmar." 1600
             return false
         )
         setStage #committing
         updateHUD()
+        diagnosticTrace #commitRequestAccepted #("stage=" + (stage as string), "references=" + (points.count as string))
         true
     ),
 
@@ -547,10 +598,21 @@ struct AmenoDimensionContinuousToolService
 
     fn commitChain offsetPoint failAtSegment:0 =
     (
-        if stage != #committing and stage != #collecting then return false
+        diagnosticTrace #commitBegin #(
+            "stage=" + (stage as string),
+            "mode=" + (activeMode as string),
+            "references=" + (points.count as string),
+            "offset=" + (diagnosticPointText offsetPoint)
+        )
+        if stage != #committing and stage != #collecting then
+        (
+            diagnosticTrace #commitRejected #("reason=invalid-stage", "stage=" + (stage as string))
+            return false
+        )
         if activeMode != #horizontal and activeMode != #vertical then
         (
             lastError = "E12-C suporta somente Horizontal e Vertical."
+            diagnosticTrace #commitRejected #("reason=unsupported-mode", "mode=" + (activeMode as string), "error=" + lastError)
             setStage #collecting
             return false
         )
@@ -559,8 +621,16 @@ struct AmenoDimensionContinuousToolService
         if chainLayout == undefined or not chainLayout.valid then
         (
             lastError = if chainLayout == undefined then "Layout de cadeia indisponível." else chainLayout.errorMessage
+            local layoutCodeText = "<undefined>"
+            try (layoutCodeText = chainLayout.errorCode as string) catch ()
+            diagnosticTrace #commitRejected #("reason=invalid-layout", "layoutCode=" + layoutCodeText, "error=" + lastError)
             setStage #collecting
             return false
+        )
+
+        diagnosticTrace #layoutAccepted #(
+            "segments=" + (chainLayout.segments.count as string),
+            "offset=" + (diagnosticPointText chainLayout.offsetPoint)
         )
 
         setStage #committing
@@ -572,6 +642,7 @@ struct AmenoDimensionContinuousToolService
             (
                 for segmentIndex = 1 to chainLayout.segments.count do
                 (
+                    diagnosticTrace #segmentCreateBegin #("segment=" + (segmentIndex as string))
                     if failAtSegment == segmentIndex do throw ("Falha injetada no segmento " + (segmentIndex as string))
                     local segmentLayout = chainLayout.segments[segmentIndex]
                     local sourceA = segmentLayout.sourceIndexA
@@ -583,6 +654,7 @@ struct AmenoDimensionContinuousToolService
                         dimensionMode:activeMode useUndo:false
                     if created == undefined do throw ("Segmento " + (segmentIndex as string) + " não foi criado.")
                     append createdIds created.dimensionId
+                    diagnosticTrace #segmentCreateEnd #("segment=" + (segmentIndex as string), "dimensionId=" + created.dimensionId)
                 )
             )
             completed = (createdIds.count == chainLayout.segments.count)
@@ -590,14 +662,17 @@ struct AmenoDimensionContinuousToolService
         catch
         (
             lastError = getCurrentException() as string
+            diagnosticTrace #commitException #("error=" + lastError, "createdIds=" + (createdIds.count as string))
             rollbackCreatedDimensions createdIds
             setStage #collecting
             panelStatus ("E12-C: falha; nenhuma cota mantida. " + lastError)
+            diagnosticTrace #commitRollbackEnd #("stage=" + (stage as string), "references=" + (points.count as string))
             return false
         )
 
         if not completed then
         (
+            diagnosticTrace #commitIncomplete #("createdIds=" + (createdIds.count as string), "segments=" + (chainLayout.segments.count as string))
             rollbackCreatedDimensions createdIds
             setStage #collecting
             return false
@@ -615,6 +690,7 @@ struct AmenoDimensionContinuousToolService
         updateHUD()
         if ::AmenoAnchorService != undefined do try (::AmenoAnchorService.rebuildIndex()) catch ()
         panelStatus ("E12-C: " + (createdIds.count as string) + " cota(s) criada(s).")
+        diagnosticTrace #commitSuccess #("createdIds=" + (createdIds.count as string), "stage=" + (stage as string), "active=" + (active as string))
         true
     ),
 
@@ -696,13 +772,40 @@ struct AmenoDimensionContinuousToolService
 
     fn handlePoint clickNumber pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
     (
-        if not active then return #stop
+        diagnosticTrace #handlePointBegin #(
+            "clickNumber=" + (clickNumber as string),
+            "stage=" + (stage as string),
+            "active=" + (active as string),
+            "references=" + (points.count as string),
+            "point=" + (diagnosticPointText pointValue),
+            "screen=" + (diagnosticPointText screenPoint),
+            "snapHit=" + (snapHit as string),
+            "snapNode=" + (diagnosticNodeText snapNode),
+            "snapPoint=" + (diagnosticPointText snapWorldPoint)
+        )
+        if not active then
+        (
+            diagnosticTrace #handlePointEnd #("outcome=stop", "reason=inactive")
+            return #stop
+        )
 
         local effectivePoint = if snapHit and snapWorldPoint != undefined then snapWorldPoint else pointValue
-        if flattenPoint effectivePoint == undefined then return #ambiguous
+        if flattenPoint effectivePoint == undefined then
+        (
+            diagnosticTrace #handlePointEnd #("outcome=ambiguous", "reason=missing-effective-point")
+            return #ambiguous
+        )
         local clickInfo = classifyClick effectivePoint screenPoint:screenPoint snapNode:snapNode \
             snapWorldPoint:snapWorldPoint snapHit:snapHit
-        handleClassifiedClick clickInfo commitNow:true
+        local outcome = handleClassifiedClick clickInfo commitNow:true
+        diagnosticTrace #handlePointEnd #(
+            "outcome=" + (outcome as string),
+            "stage=" + (stage as string),
+            "active=" + (active as string),
+            "references=" + (points.count as string),
+            "lastError=" + lastError
+        )
+        outcome
     ),
 
     fn handleMove clickNumber pointValue =
@@ -713,6 +816,12 @@ struct AmenoDimensionContinuousToolService
         if candidate == undefined then return undefined
 
         lastCursorPoint = candidate
+        diagnosticTrace #handleMove #(
+            "clickNumber=" + (clickNumber as string),
+            "stage=" + (stage as string),
+            "references=" + (points.count as string),
+            "point=" + (diagnosticPointText candidate)
+        ) throttleKey:("move:" + (stage as string) + ":" + (points.count as string))
         if stage == #collecting and points.count >= 2 then refreshChainPreview candidate else undefined
     ),
 
@@ -720,13 +829,16 @@ struct AmenoDimensionContinuousToolService
 
     fn onStart =
     (
+        diagnosticTrace #toolStart #("activeBefore=" + (active as string), "stageBefore=" + (stage as string))
         if not active do active = true
         updatePrompt()
+        diagnosticTrace #toolStartReady #("active=" + (active as string), "stage=" + (stage as string))
         true
     ),
 
     fn onAbort clickNumber =
     (
+        diagnosticTrace #toolAbort #("clickNumber=" + (clickNumber as string), "stage=" + (stage as string), "references=" + (points.count as string))
         cancel()
         displayTempPrompt "Ameno Cota Contínua: sessão cancelada." 1000
         undefined
@@ -734,12 +846,14 @@ struct AmenoDimensionContinuousToolService
 
     fn onStop =
     (
+        diagnosticTrace #toolStopBegin #("stage=" + (stage as string), "active=" + (active as string), "references=" + (points.count as string), "lastIds=" + (lastSessionIds.count as string))
         removeAllPreviews()
         closeHUD()
         try (popPrompt()) catch ()
         active = false
         stage  = #idle
         panelStatus "E12: ferramenta pronta."
+        diagnosticTrace #toolStopEnd #("stage=" + (stage as string), "active=" + (active as string), "lastIds=" + (lastSessionIds.count as string))
         true
     ),
 
@@ -747,17 +861,24 @@ struct AmenoDimensionContinuousToolService
 
     fn start =
     (
-        if not begin() then return undefined
+        diagnosticTrace #startRequested #("mode=" + (activeMode as string))
+        if not begin() then
+        (
+            diagnosticTrace #startRejected #("lastError=" + lastError)
+            return undefined
+        )
 
         local toolResult = #abort
         try
         (
             toolResult = startTool AmenoDimensionContinuousMouseTool \
                 prompt:"Ameno Cota Contínua: clique vértices · clique vazio posiciona · Esc cancela" snap:#3D
+            diagnosticTrace #startToolReturned #("toolResult=" + (toolResult as string), "lastIds=" + (lastSessionIds.count as string))
         )
         catch
         (
             lastError = getCurrentException() as string
+            diagnosticTrace #startException #("error=" + lastError)
             displayTempPrompt ("Ameno Cota Contínua: ferramenta interrompida — " + lastError) 2200
             cancel()
         )
@@ -775,11 +896,20 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
 (
     on start do
     (
+        if AmenoDimensionContinuousTool != undefined do
+            AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEvent #("type=start")
         if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.onStart()
     )
 
     on freeMove do
     (
+        if AmenoDimensionContinuousTool != undefined do
+            AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEvent #(
+                "type=freeMove",
+                "stage=" + (AmenoDimensionContinuousTool.stage as string),
+                "references=" + (AmenoDimensionContinuousTool.points.count as string),
+                "worldPoint=" + (worldPoint as string)
+            ) throttleKey:("native-freeMove:" + (AmenoDimensionContinuousTool.stage as string) + ":" + (AmenoDimensionContinuousTool.points.count as string))
         if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.handleMove 1 worldPoint
     )
 
@@ -806,24 +936,65 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
             )
             catch ()
 
-            AmenoDimensionContinuousTool.handlePoint clickNumber worldPoint \
+            AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEvent #(
+                "type=mousePoint",
+                "clickNumber=" + (clickNumber as string),
+                "stage=" + (AmenoDimensionContinuousTool.stage as string),
+                "references=" + (AmenoDimensionContinuousTool.points.count as string),
+                "worldPoint=" + (worldPoint as string),
+                "viewPoint=" + (viewPoint as string),
+                "snapHit=" + (snapped as string),
+                "snapNode=" + (AmenoDimensionContinuousTool.diagnosticNodeText snappedNode),
+                "snapWorldPoint=" + (AmenoDimensionContinuousTool.diagnosticPointText snappedWorldPoint)
+            )
+
+            local eventOutcome = AmenoDimensionContinuousTool.handlePoint clickNumber worldPoint \
                 screenPoint:viewPoint snapNode:snappedNode \
                 snapWorldPoint:snappedWorldPoint snapHit:snapped
+            AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEventResult #(
+                "type=mousePoint",
+                "clickNumber=" + (clickNumber as string),
+                "outcome=" + (eventOutcome as string),
+                "stage=" + (AmenoDimensionContinuousTool.stage as string),
+                "references=" + (AmenoDimensionContinuousTool.points.count as string)
+            )
+            eventOutcome
         )
     )
 
     on mouseMove clickNumber do
     (
+        if AmenoDimensionContinuousTool != undefined do
+            AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEvent #(
+                "type=mouseMove",
+                "clickNumber=" + (clickNumber as string),
+                "stage=" + (AmenoDimensionContinuousTool.stage as string),
+                "references=" + (AmenoDimensionContinuousTool.points.count as string),
+                "worldPoint=" + (worldPoint as string)
+            ) throttleKey:("native-mouseMove:" + (clickNumber as string) + ":" + (AmenoDimensionContinuousTool.stage as string) + ":" + (AmenoDimensionContinuousTool.points.count as string))
         if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.handleMove clickNumber worldPoint
     )
 
     on mouseAbort clickNumber do
     (
+        if AmenoDimensionContinuousTool != undefined do
+            AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEvent #(
+                "type=mouseAbort",
+                "clickNumber=" + (clickNumber as string),
+                "stage=" + (AmenoDimensionContinuousTool.stage as string),
+                "references=" + (AmenoDimensionContinuousTool.points.count as string)
+            )
         if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.onAbort clickNumber
     )
 
     on stop do
     (
+        if AmenoDimensionContinuousTool != undefined do
+            AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEvent #(
+                "type=stop",
+                "stage=" + (AmenoDimensionContinuousTool.stage as string),
+                "references=" + (AmenoDimensionContinuousTool.points.count as string)
+            )
         if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.onStop()
     )
 )
