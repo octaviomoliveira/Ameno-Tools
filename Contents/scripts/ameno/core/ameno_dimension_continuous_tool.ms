@@ -37,7 +37,7 @@ global AmenoAnchorService
 rollout AmenoContinuousHUDRlt "Cotação Contínua" width:270
 (
     label   lblStatus "Pontos: 0" align:#left
-    label   lblInstr  "Clique os pontos a cotar" align:#left
+    label   lblInstr  "Btn-dir ou duplo-clique para confirmar" align:#left
     button  btnConfirm "Finalizar coleta de pontos" width:254 enabled:false
     button  btnUndo   "Desfazer" width:125 across:2 enabled:false
     button  btnCancel "Cancelar" width:125
@@ -567,6 +567,13 @@ struct AmenoDimensionContinuousToolService
         (
             #collectingPoints:
             (
+                -- Se não há snap (clique no vazio): confirmar se já tem pontos, senão ignorar
+                if not snapHit and snapWorldPoint == undefined then
+                (
+                    if points.count >= 2 then confirmPoints()
+                    return undefined
+                )
+
                 -- Verifica duplicata com ponto imediatamente anterior
                 if points.count > 0 and (length (candidate - points[points.count])) <= 0.00001 then
                 (
@@ -583,7 +590,8 @@ struct AmenoDimensionContinuousToolService
                 append anchorNodes     hit.node
                 append anchorVertexIds hit.vertexId
 
-                if points.count >= 2 do refreshSegmentPreview (points.count - 1)
+                -- NÃO mostramos preview de segmento aqui: evita os ângulos confusos durante coleta.
+                -- Previews de todos os segmentos aparecem apenas na fase #offset (ao mover o cursor).
                 setStage #collectingPoints
                 updateHUD()
                 undefined
@@ -686,9 +694,17 @@ struct AmenoDimensionContinuousToolService
 
     fn onAbort clickNumber =
     (
-        -- Botão direito / Esc: sempre cancela a sessão inteira
-        cancel()
-        displayTempPrompt "Ameno Cota Contínua: sessão cancelada." 1000
+        -- Clique direito: confirmar se >= 2 pontos (como Revit/AutoCAD)
+        -- Se não tem pontos suficientes, cancela
+        if stage == #collectingPoints and points.count >= 2 then
+        (
+            confirmPoints()
+        )
+        else
+        (
+            cancel()
+            displayTempPrompt "Ameno Cota Contínua: sessão cancelada." 1000
+        )
         undefined
     ),
 
@@ -731,7 +747,7 @@ AmenoDimensionContinuousTool = AmenoDimensionContinuousToolService()
 
 -- ── Mouse Tool block ──────────────────────────────────────────────────────────
 
-tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique pontos · duplo-clique confirma · Esc cancela"
+tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique pontos · btn-dir ou duplo-clique confirma · Esc cancela"
 (
     -- Detecção de duplo-clique por tempo (clickNumber é sequencial, não indica duplo-clique)
     local lastClickMs = 0
