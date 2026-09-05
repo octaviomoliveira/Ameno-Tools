@@ -174,7 +174,7 @@ Validar pacote desta worktree, fechar Max com autorização do usuário, fazer b
 
 - [x] Planejamento e diagnóstico estático documentados.
 - [x] E12-A: interação/classificador aprovados em Batch (21/21 novos + 43/43 legados); gate manual fica para E12-C, pois layout/commit ainda não existem.
-- [ ] E12-B: matemática H/V aprovada.
+- [x] E12-B: matemática H/V aprovada em Batch (29/29), pura e sem criar nós.
 - [ ] E12-C: preview/commit H/V e gate manual aprovados.
 - [ ] E12-D: alinhado oblíquo aprovado.
 - [ ] E12-E: persistência e integração aprovadas.

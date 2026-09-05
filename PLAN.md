@@ -54,7 +54,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Prioridade na branch E12:** E12-A implementada e aprovada em Batch: classificador separa referência, geometria sem vértice, vazio e ambíguo; removeu-se a heurística de duplo clique. Resultado: 21/21 testes novos e 43/43 legados. Próxima entrega isolada: E12-B, matemática pura H/V. Os testes legados ainda não validam alinhamento e fluxo real.
+- **Prioridade na branch E12:** E12-A e E12-B aprovadas em Batch. Entrada determinística: 21/21 novos + 43/43 legados. Matemática compartilhada H/V: 29/29, incluindo pontos desalinhados e ordem invertida. Próxima entrega: E12-C, conectando preview e commit H/V ao mesmo layout, com rollback atômico. Ainda sem instalação/gate visual.
 
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
 - Gate manual do **Editor Visual E11** no 3ds Max 2026 com a versão unificada instalada.
@@ -65,7 +65,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-**Para retomar a E12:** implementar somente E12-B do plano detalhado: calculador matemático puro e testes H/V, sem preview, instalação ou merge. Os passos E10/E11 abaixo ficam preservados como histórico de pendências, não como prioridade dessa branch.
+**Para retomar a E12:** implementar somente E12-C do plano detalhado: preview e commit H/V consumindo o layout compartilhado, rollback em falha e uma única ação Undo. Não instalar ou fazer merge antes dos testes e do gate manual. Os passos E10/E11 abaixo ficam preservados como histórico de pendências, não como prioridade dessa branch.
 
 1. Abrir o 3ds Max e executar o **gate manual interativo da E10 no 3ds Max 2026** com a versão de desenvolvimento já instalada:
    - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
@@ -89,6 +89,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | --- | --- | --- | --- |
 | 2026-09-05 | Planejar recuperação da cota contínua estilo Revit e salvar no Git para execução por outro agente. | Plano detalhado concluído; nenhuma alteração de código, instalação ou teste de runtime nesta entrega. Execução começa pela E12-A. | `plans/2026-09-05-e12-continuous-revit-implementation.md`, `docs/decisions/0020-e12-shared-dimension-chain.md`; base inspecionada `db88f1b` |
 | 2026-09-05 | Executar a E12-A: tornar entrada da cota contínua determinística e testável. | Concluída em Batch: sem timer de duplo clique; estados `#idle/#collecting/#committing`; referência/geometria/vazio/ambíguo separados; abort cancela. Sem instalação ou teste visual nesta etapa. | `ameno_dimension_continuous_tool.ms`, `test_e12_chain_input.ms` 21/21, `test_e12_continuous.ms` 43/43, `docs/e12-a-input-spike.md` |
+| 2026-09-05 | Executar a E12-B: calcular uma linha comum H/V para toda a sequência. | Concluída em Batch: módulo puro ordena estações, projeta todos os pontos na mesma baseline e rejeita intervalos zero; nenhuma criação de cena. | `ameno_dimension_chain_math.ms`, `test_e12_chain_math.ms` 29/29, `docs/e12-b-shared-layout.md` |
 | 2026-09-03 | Estruturar Ameno Tools e iniciar pelo módulo de cotas para plantas humanizadas. | Concluído na fundação | `README.md`, `docs/`, pacote `0.0.1` |
 | 2026-09-03 | Usar layer exclusiva, manter Beauty/LightMix intactos e renderizar cotas separadamente para composição. | Decidido e documentado | `docs/decisions/0002-*`, `0003-*` |
 | 2026-09-03 | Permitir valores manuais auditáveis com alerta visível somente no viewport. | Decidido e documentado | `docs/decisions/0004-*`, `docs/manual-overrides.md` |
