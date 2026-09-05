@@ -827,7 +827,7 @@ struct AmenoDimensionGraphicsService
 
     fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" \
         anchorType:"world" nodeA:undefined localPointA:undefined anchorVertexIdA:-1 anchorEdgeIdA:-1 anchorEdgeMidA:false \
-        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned =
+        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned useUndo:true =
     (
         local sceneState = ensureSceneReady()
 
@@ -858,7 +858,28 @@ struct AmenoDimensionGraphicsService
 
         try
         (
-            undo "Ameno: criar cota" on
+            if useUndo then
+            (
+                undo "Ameno: criar cota" on
+                (
+                    controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId \
+                        anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA anchorVertexIdA:anchorVertexIdA anchorEdgeIdA:anchorEdgeIdA anchorEdgeMidA:anchorEdgeMidA \
+                        nodeB:nodeB localPointB:resolvedLocalB anchorVertexIdB:anchorVertexIdB anchorEdgeIdB:anchorEdgeIdB anchorEdgeMidB:anchorEdgeMidB dimensionMode:dimensionMode
+                    local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
+                    if AmenoDimensionCA != undefined do
+                    (
+                        local rec = AmenoDimensionCA.readCA controller
+                        if rec != undefined do
+                        (
+                            rec.lastMeasuredMm = audit.measuredMillimeters
+                            rec.lastDeltaMm = audit.deltaMillimeters
+                            AmenoDimensionCA.applyCA controller rec
+                        )
+                    )
+                    result = createVisualNodes controller layout audit sceneState.dimensionsLayer
+                )
+            )
+            else
             (
                 controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId \
                     anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA anchorVertexIdA:anchorVertexIdA anchorEdgeIdA:anchorEdgeIdA anchorEdgeMidA:anchorEdgeMidA \

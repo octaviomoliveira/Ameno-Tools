@@ -45,7 +45,7 @@
     local refA = AmenoContinuousClickClassification kind:#reference node:sourceNode vertexId:1 worldPoint:[-50,-50,0]
     local refB = AmenoContinuousClickClassification kind:#reference node:sourceNode vertexId:2 worldPoint:[50,-50,0]
     local geometryHit = AmenoContinuousClickClassification kind:#geometryWithoutReference node:sourceNode
-    local emptyHit = AmenoContinuousClickClassification kind:#empty
+    local emptyHit = AmenoContinuousClickClassification kind:#empty worldPoint:[0,200,0]
     local ambiguousHit = AmenoContinuousClickClassification kind:#ambiguous
 
     e12aReset()

@@ -32,6 +32,7 @@ global AmenoRefreshMainPanel
 global AmenoDimensionAnchorHit
 global AmenoAnchorService
 global AmenoDimensionCA
+global AmenoDimensionChainMath
 global AmenoContinuousClickClassification
 
 struct AmenoContinuousClickClassification
@@ -93,6 +94,9 @@ struct AmenoDimensionContinuousToolService
     previewOutputUnit  = #meters,
     previewPrecision   = 2,
     lastError          = "",
+    lastCursorPoint    = undefined,
+    lastChainLayout    = undefined,
+    lastCommittedLayout = undefined,
 
     -- Pontos acumulados ───────────────────────────────────────────────────────
     points          = #(),
@@ -185,7 +189,7 @@ struct AmenoDimensionContinuousToolService
         result
     ),
 
-    fn classifyDetectedHit detectedHit snapHit:false snapNode:undefined snapWorldPoint:undefined =
+    fn classifyDetectedHit detectedHit snapHit:false snapNode:undefined snapWorldPoint:undefined fallbackWorldPoint:undefined =
     (
         if detectedHit != undefined and isEligibleReferenceNode detectedHit.node then
         (
@@ -200,14 +204,16 @@ struct AmenoDimensionContinuousToolService
             AmenoContinuousClickClassification kind:#ambiguous node:snapNode worldPoint:snapWorldPoint \
                 detail:"snap without an eligible vertex reference"
         else
-            AmenoContinuousClickClassification kind:#empty detail:"no eligible geometry under cursor"
+            AmenoContinuousClickClassification kind:#empty worldPoint:fallbackWorldPoint \
+                detail:"no eligible geometry under cursor"
     ),
 
     fn classifyClick pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
     (
         local detectedHit = detectHitNode pointValue screenPoint:screenPoint snapNode:snapNode \
             snapWorldPoint:snapWorldPoint snapHit:snapHit
-        classifyDetectedHit detectedHit snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint
+        classifyDetectedHit detectedHit snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint \
+            fallbackWorldPoint:pointValue
     ),
 
     -- ── Status / Prompt ───────────────────────────────────────────────────────
@@ -377,84 +383,59 @@ struct AmenoDimensionContinuousToolService
         segmentPreviews = #()
     ),
 
-    fn defaultOffset pA pB =
+    fn calculateChainLayout offsetPoint =
     (
-        local mv  = [pB.x - pA.x, pB.y - pA.y, 0.0]
-        local len = length mv
-        if len > 0.00001 then
-        (
-            local dir  = normalize mv
-            local perp = normalize (cross [0, 0, 1] dir)
-            local dist = amax (len * 0.2) 10.0
-            pA + (perp * dist)
-        )
-        else
-            pA + [0, 100.0, 0]
+        if activeMode != #horizontal and activeMode != #vertical then return undefined
+        AmenoDimensionChainMath.layout points offsetPoint mode:activeMode
     ),
 
-    fn refreshSegmentPreview segIdx =
+    fn refreshChainPreview offsetPoint =
     (
-        if segIdx < 1 or segIdx >= points.count then return false
-        local pA = points[segIdx]
-        local pB = points[segIdx + 1]
-        local calcOff = defaultOffset pA pB
+        if points.count < 2 then
+        (
+            removeAllPreviews()
+            lastChainLayout = undefined
+            return false
+        )
+
+        local chainLayout = calculateChainLayout offsetPoint
+        if chainLayout == undefined or not chainLayout.valid then
+        (
+            removeAllPreviews()
+            lastChainLayout = chainLayout
+            return false
+        )
+
+        while segmentPreviews.count > chainLayout.segments.count do
+        (
+            removeSegmentPreview segmentPreviews.count
+            deleteItem segmentPreviews segmentPreviews.count
+        )
 
         try
         (
-            while segmentPreviews.count < segIdx do append segmentPreviews undefined
-
-            if segIdx > segmentPreviews.count then
-                append segmentPreviews undefined
-
-            if segmentPreviews[segIdx] == undefined then
-                segmentPreviews[segIdx] = AmenoDimensionGraphics.createPreviewDimension pA pB calcOff \
-                    outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
-            else
-                segmentPreviews[segIdx] = AmenoDimensionGraphics.updatePreviewDimension segmentPreviews[segIdx] \
-                    pA pB calcOff outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
-        )
-        catch ()
-        true
-    ),
-
-    fn refreshActivePreview cursorPoint =
-    (
-        if points.count == 0 then return false
-        local pA = points[points.count]
-        if (length (cursorPoint - pA)) <= 0.00001 then return false
-        local calcOff = defaultOffset pA cursorPoint
-
-        try
-        (
-            if activePreview == undefined then
-                activePreview = AmenoDimensionGraphics.createPreviewDimension pA cursorPoint calcOff \
-                    outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
-            else
-                activePreview = AmenoDimensionGraphics.updatePreviewDimension activePreview pA cursorPoint calcOff \
-                    outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
-        )
-        catch ()
-        true
-    ),
-
-    fn refreshAllPreviewsWithOffset offsetPoint =
-    (
-        for i = 1 to (points.count - 1) do
-        (
-            local pA = points[i]
-            local pB = points[i + 1]
-            try
+            for segmentIndex = 1 to chainLayout.segments.count do
             (
-                while segmentPreviews.count < i do append segmentPreviews undefined
+                local segmentLayout = chainLayout.segments[segmentIndex]
+                local pointAValue = points[segmentLayout.sourceIndexA]
+                local pointBValue = points[segmentLayout.sourceIndexB]
+                while segmentPreviews.count < segmentIndex do append segmentPreviews undefined
 
-                if segmentPreviews[i] == undefined then
-                    segmentPreviews[i] = AmenoDimensionGraphics.createPreviewDimension pA pB offsetPoint \
+                if segmentPreviews[segmentIndex] == undefined then
+                    segmentPreviews[segmentIndex] = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue chainLayout.offsetPoint \
                         outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
                 else
-                    segmentPreviews[i] = AmenoDimensionGraphics.updatePreviewDimension segmentPreviews[i] \
-                        pA pB offsetPoint outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
+                    segmentPreviews[segmentIndex] = AmenoDimensionGraphics.updatePreviewDimension segmentPreviews[segmentIndex] \
+                        pointAValue pointBValue chainLayout.offsetPoint outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
             )
-            catch ()
+            lastChainLayout = chainLayout
+            true
+        )
+        catch
+        (
+            lastError = getCurrentException() as string
+            format "[E12-C] Falha no preview: %\n" lastError
+            false
         )
     ),
 
@@ -464,20 +445,7 @@ struct AmenoDimensionContinuousToolService
     (
         if points.count == 0 then return false
 
-        -- Remove preview do último segmento
-        local lastSeg = points.count - 1
-        if lastSeg >= 1 do removeSegmentPreview lastSeg
-
-        -- Compacta array de previews
-        if segmentPreviews.count > 0 do
-        (
-            local newPreviews = #()
-            for i = 1 to (segmentPreviews.count - 1) do append newPreviews segmentPreviews[i]
-            segmentPreviews = newPreviews
-        )
-
-        -- Remove preview ativo
-        removeActivePreview()
+        removeAllPreviews()
 
         -- Remove último ponto e âncoras
         local n = points.count - 1
@@ -495,6 +463,7 @@ struct AmenoDimensionContinuousToolService
         anchorVertexIds = newVertIds
 
         setStage #collecting
+        if points.count >= 2 and lastCursorPoint != undefined do refreshChainPreview lastCursorPoint
         updateHUD()
         true
     ),
@@ -522,6 +491,9 @@ struct AmenoDimensionContinuousToolService
         activePreview   = undefined
         lastSessionIds  = #()
         lastError       = ""
+        lastCursorPoint = undefined
+        lastChainLayout = undefined
+        lastCommittedLayout = undefined
         active          = true
         setStage #collecting
         openHUD()
@@ -536,6 +508,8 @@ struct AmenoDimensionContinuousToolService
         anchorNodes     = #()
         anchorVertexIds = #()
         segmentPreviews = #()
+        lastCursorPoint = undefined
+        lastChainLayout = undefined
         active          = false
         stage           = #idle
         closeHUD()
@@ -558,6 +532,92 @@ struct AmenoDimensionContinuousToolService
         true
     ),
 
+    fn rollbackCreatedDimensions dimensionIds =
+    (
+        with undo off
+        (
+            for dimensionId in dimensionIds do
+            (
+                local createdNodes = AmenoDimensionGraphics.findNodesForDimension dimensionId
+                AmenoDimensionGraphics.deleteNodes createdNodes
+            )
+        )
+        true
+    ),
+
+    fn commitChain offsetPoint failAtSegment:0 =
+    (
+        if stage != #committing and stage != #collecting then return false
+        if activeMode != #horizontal and activeMode != #vertical then
+        (
+            lastError = "E12-C suporta somente Horizontal e Vertical."
+            setStage #collecting
+            return false
+        )
+
+        local chainLayout = calculateChainLayout offsetPoint
+        if chainLayout == undefined or not chainLayout.valid then
+        (
+            lastError = if chainLayout == undefined then "Layout de cadeia indisponível." else chainLayout.errorMessage
+            setStage #collecting
+            return false
+        )
+
+        setStage #committing
+        local createdIds = #()
+        local completed = false
+        try
+        (
+            undo "Ameno: criar cadeia de cotas" on
+            (
+                for segmentIndex = 1 to chainLayout.segments.count do
+                (
+                    if failAtSegment == segmentIndex do throw ("Falha injetada no segmento " + (segmentIndex as string))
+                    local segmentLayout = chainLayout.segments[segmentIndex]
+                    local sourceA = segmentLayout.sourceIndexA
+                    local sourceB = segmentLayout.sourceIndexB
+                    local created = AmenoDimensionGraphics.createDimension points[sourceA] points[sourceB] chainLayout.offsetPoint \
+                        role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId \
+                        nodeA:anchorNodes[sourceA] anchorVertexIdA:anchorVertexIds[sourceA] \
+                        nodeB:anchorNodes[sourceB] anchorVertexIdB:anchorVertexIds[sourceB] \
+                        dimensionMode:activeMode useUndo:false
+                    if created == undefined do throw ("Segmento " + (segmentIndex as string) + " não foi criado.")
+                    append createdIds created.dimensionId
+                )
+            )
+            completed = (createdIds.count == chainLayout.segments.count)
+        )
+        catch
+        (
+            lastError = getCurrentException() as string
+            rollbackCreatedDimensions createdIds
+            setStage #collecting
+            panelStatus ("E12-C: falha; nenhuma cota mantida. " + lastError)
+            return false
+        )
+
+        if not completed then
+        (
+            rollbackCreatedDimensions createdIds
+            setStage #collecting
+            return false
+        )
+
+        removeAllPreviews()
+        lastSessionIds = createdIds
+        lastCommittedLayout = chainLayout
+        points = #()
+        anchorNodes = #()
+        anchorVertexIds = #()
+        lastCursorPoint = undefined
+        lastChainLayout = undefined
+        setStage #collecting
+        updateHUD()
+        if ::AmenoAnchorService != undefined do try (::AmenoAnchorService.rebuildIndex()) catch ()
+        panelStatus ("E12-C: " + (createdIds.count as string) + " cota(s) criada(s).")
+        true
+    ),
+
     fn confirmPoints =
     (
         displayTempPrompt "Ameno Cota Contínua: posicione com o primeiro clique vazio." 1400
@@ -577,7 +637,7 @@ struct AmenoDimensionContinuousToolService
         false
     ),
 
-    fn handleClassifiedClick clickInfo =
+    fn handleClassifiedClick clickInfo commitNow:false =
     (
         if not active then return #inactive
         if stage != #collecting then return #ignored
@@ -613,7 +673,16 @@ struct AmenoDimensionContinuousToolService
                     displayTempPrompt "Ameno Cota Contínua: escolha ao menos 2 vértices." 1400
                     #needsMoreReferences
                 )
-                else if requestCommit() then #commitRequested else #ignored
+                else if clickInfo.worldPoint == undefined then #ambiguous
+                else if requestCommit() then
+                (
+                    if commitNow then
+                    (
+                        if commitChain clickInfo.worldPoint then #chainCommitted else #commitFailed
+                    )
+                    else #commitRequested
+                )
+                else #ignored
             )
             default:
             (
@@ -633,7 +702,7 @@ struct AmenoDimensionContinuousToolService
         if flattenPoint effectivePoint == undefined then return #ambiguous
         local clickInfo = classifyClick effectivePoint screenPoint:screenPoint snapNode:snapNode \
             snapWorldPoint:snapWorldPoint snapHit:snapHit
-        handleClassifiedClick clickInfo
+        handleClassifiedClick clickInfo commitNow:true
     ),
 
     fn handleMove clickNumber pointValue =
@@ -643,8 +712,8 @@ struct AmenoDimensionContinuousToolService
         local candidate = flattenPoint pointValue
         if candidate == undefined then return undefined
 
-        -- O preview compartilhado será conectado ao calculador único na E12-C.
-        undefined
+        lastCursorPoint = candidate
+        if stage == #collecting and points.count >= 2 then refreshChainPreview candidate else undefined
     ),
 
     -- ── onStart / onAbort / onStop ────────────────────────────────────────────
