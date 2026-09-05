@@ -54,7 +54,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Prioridade na branch E12:** E12-C implementada, aprovada em Batch e instalada no commit `ba55d95`. Preview e commit H/V compartilham a mesma baseline; teste dedicado 43/43 cobre rollback atômico e Undo/Redo único. Regressivos e smoke da cópia instalada também passaram. Próximo gate: validar interativamente H/V; E12-D permanece bloqueada até essa aprovação.
+- **Prioridade na branch E12:** o pacote instalado foi restaurado ao commit validado `ba55d95` após a tentativa posterior `d8ce420` não resolver o fluxo interativo. Os 24 arquivos instalados foram conferidos e o smoke da cópia em `ApplicationPlugins` passou. Próximo gate: reproduzir e diagnosticar no `ba55d95` os problemas de picking, encerramento, HUD e marcador de snap relatados pelo usuário.
 
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
 - Gate manual do **Editor Visual E11** no 3ds Max 2026 com a versão unificada instalada.
@@ -65,7 +65,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-**Para retomar a E12:** instalar exatamente a branch `feature/e12-continuous-dimension` com o Max fechado e executar o gate manual da E12-C descrito em `docs/e12-c-preview-commit.md`. Não iniciar E12-D nem fazer merge antes da aprovação manual. Os passos E10/E11 abaixo ficam preservados como histórico de pendências, não como prioridade dessa branch.
+**Para retomar a E12:** testar o pacote instalado do commit `ba55d95` e registrar separadamente cada falha interativa: reutilização de referências, clique vazio, cancelamento, HUD e marcador de snap. A branch aponta para `d8ce420`, mas essa tentativa não é a instalação ativa. Não iniciar E12-D nem fazer merge antes de estabilizar esse fluxo.
 
 1. Abrir o 3ds Max e executar o **gate manual interativo da E10 no 3ds Max 2026** com a versão de desenvolvimento já instalada:
    - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
@@ -91,6 +91,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-05 | Executar a E12-A: tornar entrada da cota contínua determinística e testável. | Concluída em Batch: sem timer de duplo clique; estados `#idle/#collecting/#committing`; referência/geometria/vazio/ambíguo separados; abort cancela. Sem instalação ou teste visual nesta etapa. | `ameno_dimension_continuous_tool.ms`, `test_e12_chain_input.ms` 21/21, `test_e12_continuous.ms` 43/43, `docs/e12-a-input-spike.md` |
 | 2026-09-05 | Executar a E12-B: calcular uma linha comum H/V para toda a sequência. | Concluída em Batch: módulo puro ordena estações, projeta todos os pontos na mesma baseline e rejeita intervalos zero; nenhuma criação de cena. | `ameno_dimension_chain_math.ms`, `test_e12_chain_math.ms` 29/29, `docs/e12-b-shared-layout.md` |
 | 2026-09-05 | Executar a E12-C: conectar preview e commit H/V ao layout compartilhado, com rollback e Undo único. | Implementada, aprovada em Batch e instalada para gate manual. Horizontal e Vertical usam baseline comum, clique vazio confirma `N-1`, falha injetada não deixa cotas permanentes e o draft é preservado. | commit `ba55d95`; `test_e12_chain_commit.ms` 43/43; regressivos e pacote instalado aprovados; 24 hashes conferidos; `docs/e12-c-preview-commit.md` |
+| 2026-09-05 | Restaurar a versão trabalhada antes da tentativa de correção feita por outro agente. | Pacote `ApplicationPlugins` restaurado exatamente ao commit `ba55d95`; versão anterior preservada em backup, 24 arquivos validados por SHA-256 e smoke instalado aprovado. A branch continua em `d8ce420`, explicitamente diferente da instalação ativa. | `AmenoTools.backup-before-ba55d95-20260905-124838`; `[AMENO_INSTALLED_TEST][PASS]` |
 | 2026-09-03 | Estruturar Ameno Tools e iniciar pelo módulo de cotas para plantas humanizadas. | Concluído na fundação | `README.md`, `docs/`, pacote `0.0.1` |
 | 2026-09-03 | Usar layer exclusiva, manter Beauty/LightMix intactos e renderizar cotas separadamente para composição. | Decidido e documentado | `docs/decisions/0002-*`, `0003-*` |
 | 2026-09-03 | Permitir valores manuais auditáveis com alerta visível somente no viewport. | Decidido e documentado | `docs/decisions/0004-*`, `docs/manual-overrides.md` |
