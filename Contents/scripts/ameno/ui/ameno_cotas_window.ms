@@ -5,6 +5,7 @@
 */
 
 global AmenoCotasWindow
+global AmenoCotasEstilosTab
 
 struct AmenoCotasWindowDefinition
 (
@@ -232,6 +233,15 @@ struct AmenoCotasWindowDefinition
                             contentBorder.Child = tabControl
                             ::AmenoCotasCriarTab.updateCotaCount()
                         )
+                    )
+                )
+                2: -- Aba Estilos (E13-C)
+                (
+                    if ::AmenoCotasEstilosTab != undefined do
+                    (
+                        local tabControl = ::AmenoCotasEstilosTab.build()
+                        if tabControl != undefined do
+                            contentBorder.Child = tabControl
                     )
                 )
                 default:
