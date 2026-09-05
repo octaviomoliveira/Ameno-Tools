@@ -15,6 +15,7 @@ global AmenoSceneSetup
 global AmenoLog
 global AmenoRefreshMainPanel
 global AmenoDimensionAnchorHit
+global AmenoContinuousInputResolver
 
 struct AmenoDimensionAnchorHit
 (
@@ -43,6 +44,13 @@ struct AmenoDimensionToolService
     anchorVertexIdB = -1,
     lastAnchorSummary = "",
 
+    fn isEligibleReferenceNode nodeValue =
+    (
+        if ::AmenoContinuousInputResolver != undefined then
+            return ::AmenoContinuousInputResolver.isEligibleGeometryNode nodeValue
+        nodeValue != undefined and isValidNode nodeValue and not nodeValue.isHidden and not nodeValue.isFrozen
+    ),
+
     fn detectHitNode pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
     (
         local candidateNode = undefined
@@ -51,21 +59,17 @@ struct AmenoDimensionToolService
         -- Preferencia absoluta para o resultado real do sistema de Snap. O Max
         -- informa diretamente o no e o ponto mundial sob o marcador; isso evita
         -- inferir a ancora por raycast quando o clique ja foi resolvido pelo Snap.
-        if snapHit and snapNode != undefined and isValidNode snapNode and anchorPoint != undefined do
+        if snapHit and isEligibleReferenceNode snapNode and anchorPoint != undefined do
         (
-            local snapKind = ::AmenoDimensionGraphics.readTextProperty snapNode "Ameno.Kind"
-            if (snapKind == undefined or snapKind == "") and (findString snapNode.name "AMENO_" == undefined) do
-            (
-                local snapTolerance = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
-                local snappedVertex = undefined
-                if ::AmenoDimensionCA != undefined do
-                    snappedVertex = ::AmenoDimensionCA.findNearestVertex snapNode anchorPoint maxDistance:snapTolerance
+            local snapTolerance = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
+            local snappedVertex = undefined
+            if ::AmenoDimensionCA != undefined do
+                snappedVertex = ::AmenoDimensionCA.findNearestVertex snapNode anchorPoint maxDistance:snapTolerance
 
-                if snappedVertex != undefined then
-                    return (AmenoDimensionAnchorHit node:snapNode vertexId:snappedVertex.vertexId vertexWorldPoint:snappedVertex.worldPoint)
-                else
-                    return (AmenoDimensionAnchorHit node:snapNode)
-            )
+            if snappedVertex != undefined then
+                return (AmenoDimensionAnchorHit node:snapNode vertexId:snappedVertex.vertexId vertexWorldPoint:snappedVertex.worldPoint)
+            else
+                return (AmenoDimensionAnchorHit node:snapNode)
         )
 
         -- O ponto retornado pelo Vertex Snap e mais confiavel que o primeiro
@@ -81,8 +85,7 @@ struct AmenoDimensionToolService
 
             for obj in geometry where isValidNode obj and not obj.isHidden do
             (
-                local k = ::AmenoDimensionGraphics.readTextProperty obj "Ameno.Kind"
-                if (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
+                if isEligibleReferenceNode obj do
                 (
                     local insideCandidateBounds = false
                     try
@@ -131,8 +134,7 @@ struct AmenoDimensionToolService
                 for h in hits where isValidNode h[1] do
                 (
                     local nodeHit = h[1]
-                    local k = ::AmenoDimensionGraphics.readTextProperty nodeHit "Ameno.Kind"
-                    if (k == undefined or k == "") and (findString nodeHit.name "AMENO_" == undefined) do
+                    if isEligibleReferenceNode nodeHit do
                     (
                         candidateNode = nodeHit
                         exit
@@ -152,8 +154,7 @@ struct AmenoDimensionToolService
 
                 for obj in geometry where isValidNode obj and not obj.isHidden do
                 (
-                    local k = ::AmenoDimensionGraphics.readTextProperty obj "Ameno.Kind"
-                    if (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
+                    if isEligibleReferenceNode obj do
                     (
                         local bbMin = obj.min
                         local bbMax = obj.max

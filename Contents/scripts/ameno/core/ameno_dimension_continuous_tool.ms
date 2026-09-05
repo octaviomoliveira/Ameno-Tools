@@ -35,6 +35,7 @@ global AmenoDimensionCA
 global AmenoDimensionChainMath
 global AmenoContinuousClickClassification
 global AmenoContinuousDiagnostics
+global AmenoContinuousInputResolver
 
 struct AmenoContinuousClickClassification
 (
@@ -42,6 +43,9 @@ struct AmenoContinuousClickClassification
     node       = undefined,
     vertexId   = -1,
     worldPoint = undefined,
+    reasonCode = #unresolved,
+    provenance = #none,
+    screenDistancePx = 1e30,
     detail     = ""
 )
 
@@ -100,6 +104,7 @@ struct AmenoDimensionContinuousToolService
     sessionPrecision   = undefined,
     lastResult         = #idle,
     cleanupInProgress  = false,
+    inputSessionId     = "",
     lastError          = "",
     lastCursorPoint    = undefined,
     lastChainLayout    = undefined,
@@ -187,27 +192,14 @@ struct AmenoDimensionContinuousToolService
 
     fn isEligibleReferenceNode nodeValue =
     (
-        if nodeValue == undefined or not isValidNode nodeValue then return false
-
-        local hiddenState = false
-        local frozenState = false
-        try (hiddenState = nodeValue.isHidden) catch ()
-        try (frozenState = nodeValue.isFrozen) catch ()
-        if hiddenState or frozenState then return false
-
-        local kindValue = undefined
-        try (kindValue = ::AmenoDimensionGraphics.readTextProperty nodeValue "Ameno.Kind") catch ()
-        (kindValue == undefined or kindValue == "") and (findString nodeValue.name "AMENO_" == undefined)
+        if ::AmenoContinuousInputResolver == undefined then return false
+        ::AmenoContinuousInputResolver.isEligibleGeometryNode nodeValue
     ),
 
     -- Detecta âncora (cópia fiel do AmenoDimensionToolService)
     fn detectHitNode pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
     (
         local anchorPoint = if snapHit and snapWorldPoint != undefined then snapWorldPoint else pointValue
-
-        -- Grid/helper/Ameno snap nunca deve cair no raycast e virar referência por acidente.
-        if snapHit and not (isEligibleReferenceNode snapNode) then
-            return (AmenoDimensionAnchorHit node:undefined)
 
         if snapHit and isEligibleReferenceNode snapNode and anchorPoint != undefined do
         (
@@ -256,7 +248,7 @@ struct AmenoDimensionContinuousToolService
     (
         if detectedHit != undefined and isEligibleReferenceNode detectedHit.node then
         (
-            if detectedHit.vertexId >= 0 and detectedHit.vertexWorldPoint != undefined then
+            if detectedHit.vertexId >= 1 and detectedHit.vertexWorldPoint != undefined then
                 AmenoContinuousClickClassification kind:#reference node:detectedHit.node \
                     vertexId:detectedHit.vertexId worldPoint:detectedHit.vertexWorldPoint detail:"vertex"
             else
@@ -271,28 +263,48 @@ struct AmenoDimensionContinuousToolService
                 detail:"no eligible geometry under cursor"
     ),
 
-    fn classifyClick pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
+    fn classificationFromPickResult pickResult =
     (
-        local detectedHit = detectHitNode pointValue screenPoint:screenPoint snapNode:snapNode \
-            snapWorldPoint:snapWorldPoint snapHit:snapHit
-        local classification = classifyDetectedHit detectedHit snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint \
-            fallbackWorldPoint:pointValue
+        if pickResult == undefined then
+            return (AmenoContinuousClickClassification kind:#ambiguous reasonCode:#missingPickResult detail:"pick result unavailable")
+        AmenoContinuousClickClassification kind:pickResult.kind node:pickResult.node \
+            vertexId:pickResult.vertexId worldPoint:pickResult.worldPoint3D reasonCode:pickResult.reasonCode \
+            provenance:pickResult.provenance screenDistancePx:pickResult.screenDistancePx detail:pickResult.detail
+    ),
+
+    fn classifyInputSample sample =
+    (
+        if ::AmenoContinuousInputResolver == undefined then
+            return (AmenoContinuousClickClassification kind:#ambiguous reasonCode:#resolverUnavailable detail:"input resolver unavailable")
+        local pickResult = ::AmenoContinuousInputResolver.resolveSample sample
+        local classification = classificationFromPickResult pickResult
         local detectedNodeText = "<undefined>"
         local detectedVertexText = "-1"
-        try (detectedNodeText = diagnosticNodeText detectedHit.node) catch ()
-        try (detectedVertexText = detectedHit.vertexId as string) catch ()
+        try (detectedNodeText = diagnosticNodeText pickResult.node) catch ()
+        try (detectedVertexText = pickResult.vertexId as string) catch ()
         diagnosticTrace #classification #(
             "stage=" + (stage as string),
             "mode=" + ((effectiveMode()) as string),
-            "snapHit=" + (snapHit as string),
-            "snapNode=" + (diagnosticNodeText snapNode),
+            "snapHit=" + (sample.snapHit as string),
+            "snapNode=" + (diagnosticNodeText sample.snapNode),
             "detectedNode=" + detectedNodeText,
             "detectedVertex=" + detectedVertexText,
             "kind=" + (classification.kind as string),
+            "reasonCode=" + (classification.reasonCode as string),
+            "provenance=" + (classification.provenance as string),
             "reason=" + classification.detail,
             "worldPoint=" + (diagnosticPointText classification.worldPoint)
         )
         classification
+    ),
+
+    fn classifyClick pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false snapStatus:#ok clickNumber:0 =
+    (
+        if ::AmenoContinuousInputResolver == undefined then
+            return (AmenoContinuousClickClassification kind:#ambiguous reasonCode:#resolverUnavailable detail:"input resolver unavailable")
+        local sample = ::AmenoContinuousInputResolver.acquireSample #mousePoint clickNumber screenPoint pointValue \
+            snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint snapStatus:snapStatus sessionId:inputSessionId
+        classifyInputSample sample
     ),
 
     -- ── Status / Prompt ───────────────────────────────────────────────────────
@@ -596,6 +608,7 @@ struct AmenoDimensionContinuousToolService
             lastCommittedLayout = undefined
             lastResult      = #collecting
             cleanupInProgress = false
+            inputSessionId = (timeStamp()) as string
             snapshotSessionConfiguration()
             active          = true
             setStage #collecting
@@ -809,7 +822,7 @@ struct AmenoDimensionContinuousToolService
             local sameIdentity = false
             if clickInfo.node != undefined and i <= anchorNodes.count and anchorNodes[i] == clickInfo.node and \
                 i <= anchorVertexIds.count and anchorVertexIds[i] == clickInfo.vertexId do sameIdentity = true
-            if sameIdentity or (length ((flattenPoint clickInfo.worldPoint) - points[i])) <= tolerance do return true
+            if sameIdentity or (length ((flattenPoint clickInfo.worldPoint) - (flattenPoint points[i]))) <= tolerance do return true
         )
         false
     ),
@@ -824,14 +837,14 @@ struct AmenoDimensionContinuousToolService
         (
             #reference:
             (
-                if clickInfo.worldPoint == undefined or clickInfo.vertexId < 0 or \
+                if clickInfo.worldPoint == undefined or clickInfo.vertexId < 1 or \
                     clickInfo.node == undefined or not isValidNode clickInfo.node then return #ambiguous
                 if isDuplicateReference clickInfo then
                 (
                     displayTempPrompt "Ameno Cota Contínua: esta referência já foi escolhida." 1400
                     return #duplicateReference
                 )
-                append points (flattenPoint clickInfo.worldPoint)
+                append points clickInfo.worldPoint
                 append anchorNodes clickInfo.node
                 append anchorVertexIds clickInfo.vertexId
                 setStage #collecting
@@ -869,9 +882,15 @@ struct AmenoDimensionContinuousToolService
         )
     ),
 
+    fn handleInputSample sample commitNow:true =
+    (
+        local clickInfo = classifyInputSample sample
+        handleClassifiedClick clickInfo commitNow:commitNow
+    ),
+
     -- ── Handlers de mouse ─────────────────────────────────────────────────────
 
-    fn handlePoint clickNumber pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
+    fn handlePoint clickNumber pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false snapStatus:#ok =
     (
         diagnosticTrace #handlePointBegin #(
             "clickNumber=" + (clickNumber as string),
@@ -890,14 +909,8 @@ struct AmenoDimensionContinuousToolService
             return #stop
         )
 
-        local effectivePoint = if snapHit and snapWorldPoint != undefined then snapWorldPoint else pointValue
-        if flattenPoint effectivePoint == undefined then
-        (
-            diagnosticTrace #handlePointEnd #("outcome=ambiguous", "reason=missing-effective-point")
-            return #ambiguous
-        )
-        local clickInfo = classifyClick effectivePoint screenPoint:screenPoint snapNode:snapNode \
-            snapWorldPoint:snapWorldPoint snapHit:snapHit
+        local clickInfo = classifyClick pointValue screenPoint:screenPoint snapNode:snapNode \
+            snapWorldPoint:snapWorldPoint snapHit:snapHit snapStatus:snapStatus clickNumber:clickNumber
         local outcome = handleClassifiedClick clickInfo commitNow:true
         diagnosticTrace #handlePointEnd #(
             "outcome=" + (outcome as string),
@@ -1035,6 +1048,7 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
             local snapped           = false
             local snappedNode       = undefined
             local snappedWorldPoint = undefined
+            local snapReadStatus    = #ok
             try
             (
                 snapped = (snapMode.hit == true)
@@ -1044,7 +1058,7 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
                     snappedWorldPoint = snapMode.worldHitpoint
                 )
             )
-            catch ()
+            catch (snapReadStatus = #error)
 
             AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEvent #(
                 "type=mousePoint",
@@ -1054,13 +1068,14 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
                 "worldPoint=" + (worldPoint as string),
                 "viewPoint=" + (viewPoint as string),
                 "snapHit=" + (snapped as string),
+                "snapStatus=" + (snapReadStatus as string),
                 "snapNode=" + (AmenoDimensionContinuousTool.diagnosticNodeText snappedNode),
                 "snapWorldPoint=" + (AmenoDimensionContinuousTool.diagnosticPointText snappedWorldPoint)
             )
 
             local eventOutcome = AmenoDimensionContinuousTool.handlePoint clickNumber worldPoint \
                 screenPoint:viewPoint snapNode:snappedNode \
-                snapWorldPoint:snappedWorldPoint snapHit:snapped
+                snapWorldPoint:snappedWorldPoint snapHit:snapped snapStatus:snapReadStatus
             AmenoDimensionContinuousTool.diagnosticTrace #mouseToolEventResult #(
                 "type=mousePoint",
                 "clickNumber=" + (clickNumber as string),

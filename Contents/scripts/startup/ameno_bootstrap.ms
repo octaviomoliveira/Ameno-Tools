@@ -31,6 +31,11 @@ global AmenoDimensionMouseTool
 global AmenoDimensionContinuousTool
 global AmenoDimensionContinuousMouseTool
 global AmenoContinuousClickClassification
+global AmenoContinuousInputSample
+global AmenoContinuousSurfaceHit
+global AmenoContinuousVertexProbe
+global AmenoContinuousPickResult
+global AmenoContinuousInputResolver
 global AmenoContinuousDiagnostics
 global AmenoCoronaRendererAdapter
 global AmenoVRayRendererAdapter
@@ -100,6 +105,7 @@ struct AmenoBootstrapService
             @"core\ameno_anchor_service.ms",
             @"core\ameno_style_service.ms",
             @"core\ameno_dimension_tool.ms",
+            @"core\ameno_continuous_input.ms",
             @"core\ameno_continuous_diagnostics.ms",
             @"core\ameno_dimension_continuous_tool.ms",
             @"renderers\ameno_renderer_probe.ms",
