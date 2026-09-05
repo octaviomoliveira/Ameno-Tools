@@ -239,7 +239,7 @@ Atualizar PLAN e checklist abaixo antes de encerrar. Relatar: causa comprovada; 
 - [x] R1 lifecycle e modos — commit `8581175` instalado, publicado e aprovado com mouse real. Handoff: `plans/2026-09-05-e12-r1-handoff.md`.
 - [x] R2 picking/eventos/offset — commit `e53b553` instalado, 33/33 no teste dedicado, regressões e mouse real aprovados. Handoff: `plans/2026-09-05-e12-r2-handoff.md`.
 - [x] R3 draft válido e preview não-alvo — commit `83d9def` instalado, teste dedicado 28/28, regressões e mouse real aprovados. Handoff: `plans/2026-09-05-e12-r3-handoff.md`.
-- [ ] R4 transação robusta.
+- [ ] R4 transação robusta — commit `2a7d836` instalado, teste dedicado 17/17 e pacote instalado aprovado; publicação e gate final pendentes.
 - [ ] R5 definição e tratamento da referência de cota.
 - [ ] R6 regressões, pacote e aceitação interativa.
 
