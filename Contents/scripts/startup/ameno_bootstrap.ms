@@ -43,6 +43,7 @@ global AmenoRenderRollout
 global AmenoShowMainPanel
 global AmenoRefreshMainPanel
 global AmenoCotasWindow
+global AmenoCotasCriarTab
 
 struct AmenoBootstrapService
 (
@@ -101,6 +102,7 @@ struct AmenoBootstrapService
             @"ui\ameno_style_editor.ms",
             @"ui\ameno_preview_renderer.ms",
             @"ui\ameno_style_editor_wpf.ms",
+            @"ui\ameno_cotas_criar_tab.ms",
             @"ui\ameno_cotas_window.ms",
             @"ui\ameno_main_panel.ms"
         )

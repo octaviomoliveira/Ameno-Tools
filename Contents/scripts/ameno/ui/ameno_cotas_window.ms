@@ -172,17 +172,10 @@ struct AmenoCotasWindowDefinition
             "</StackPanel>" + \
             "</Border>"
 
-        -- separador e conteúdo placeholder
+        -- separador e area de conteudo (recebe o UserControl da aba ativa)
         local separator  = "<Rectangle Grid.Column='1' Fill='#333333'/>"
         local contentArea = \
-            "<Border Grid.Column='2' Background='#1E1E1E'>" + \
-            "<Grid><StackPanel HorizontalAlignment='Center' VerticalAlignment='Center'>" + \
-            "<TextBlock x:Name='txtPlaceholder' Text='Em construcao' Foreground='#555555'" + \
-            " FontSize='16' FontStyle='Italic' HorizontalAlignment='Center'/>" + \
-            "<TextBlock Text='(conteudo das abas vira nas proximas fases)'" + \
-            " Foreground='#3A3A3A' FontSize='11' HorizontalAlignment='Center' Margin='0,6,0,0'/>" + \
-            "</StackPanel></Grid>" + \
-            "</Border>"
+            "<Border x:Name='ContentArea' Grid.Column='2' Background='#1E1E1E'/>"
 
         local bodyGridEnd = "</Grid>"
 
@@ -212,7 +205,56 @@ struct AmenoCotasWindowDefinition
     ),
 
     -- -----------------------------------------------------------------
-    -- Realçar seção ativa na sidebar (borda azul à esquerda)
+    -- Injectar conteudo da aba ativa na ContentArea
+    -- -----------------------------------------------------------------
+    fn setTabContent sectionIndex =
+    (
+        local contentBorder = findControl "ContentArea"
+        if contentBorder == undefined do return false
+
+        try
+        (
+            contentBorder.Child = undefined
+        )
+        catch ()
+
+        try
+        (
+            case sectionIndex of
+            (
+                1: -- Aba Criar
+                (
+                    if ::AmenoCotasCriarTab != undefined do
+                    (
+                        local tabControl = ::AmenoCotasCriarTab.build()
+                        if tabControl != undefined do
+                        (
+                            contentBorder.Child = tabControl
+                            ::AmenoCotasCriarTab.updateCotaCount()
+                        )
+                    )
+                )
+                default:
+                (
+                    -- Outras abas: placeholder
+                    local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
+                    local placeholder = xamlReader.Parse ("<Border xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>" + \
+                        "<StackPanel HorizontalAlignment='Center' VerticalAlignment='Center'>" + \
+                        "<TextBlock Text='Em construcao' Foreground='#555555' FontSize='16' FontStyle='Italic' HorizontalAlignment='Center'/>" + \
+                        "<TextBlock Text='(disponivel nas proximas fases)' Foreground='#3A3A3A' FontSize='11' HorizontalAlignment='Center' Margin='0,6,0,0'/>" + \
+                        "</StackPanel>" + \
+                        "</Border>")
+                    contentBorder.Child = placeholder
+                )
+            )
+        )
+        catch ()
+
+        true
+    ),
+
+    -- -----------------------------------------------------------------
+    -- Realcar secao ativa na sidebar (borda azul a esquerda)
     -- -----------------------------------------------------------------
     fn setActiveSection sectionIndex =
     (
@@ -249,6 +291,9 @@ struct AmenoCotasWindowDefinition
                 catch ()
             )
         )
+
+        -- Injectar conteudo da aba selecionada
+        setTabContent sectionIndex
     ),
 
     -- -----------------------------------------------------------------
