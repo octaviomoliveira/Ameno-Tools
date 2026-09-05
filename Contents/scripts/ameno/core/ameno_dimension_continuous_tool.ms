@@ -611,12 +611,8 @@ struct AmenoDimensionContinuousToolService
         anchorVertexIds = #()
         lastCursorPoint = undefined
         lastChainLayout = undefined
-        -- Encerra a ferramenta limpa após commit bem-sucedido
-        -- (o usuário re-ativa para uma nova cadeia)
-        active = false
-        stage  = #idle
-        closeHUD()
-        try (stopTool AmenoDimensionContinuousMouseTool) catch ()
+        setStage #collecting
+        updateHUD()
         if ::AmenoAnchorService != undefined do try (::AmenoAnchorService.rebuildIndex()) catch ()
         panelStatus ("E12-C: " + (createdIds.count as string) + " cota(s) criada(s).")
         true
@@ -661,7 +657,6 @@ struct AmenoDimensionContinuousToolService
                 append points (flattenPoint clickInfo.worldPoint)
                 append anchorNodes clickInfo.node
                 append anchorVertexIds clickInfo.vertexId
-                removeActivePreview()
                 setStage #collecting
                 updateHUD()
                 #referenceAdded
@@ -673,8 +668,6 @@ struct AmenoDimensionContinuousToolService
             )
             #empty:
             (
-                -- Só comita se é clique verdadeiramente no vazio (sem snap ativo)
-                -- Snap em objeto inelegível (cotas, grid) retorna kind:#ambiguous e é ignorado
                 if points.count < 2 then
                 (
                     displayTempPrompt "Ameno Cota Contínua: escolha ao menos 2 vértices." 1400
@@ -691,9 +684,9 @@ struct AmenoDimensionContinuousToolService
                 )
                 else #ignored
             )
-            -- #ambiguous: snap em objeto inelegível (cota criada, grid, helper) — ignora silenciosamente
             default:
             (
+                displayTempPrompt "Ameno Cota Contínua: clique ambíguo; nenhuma ação executada." 1400
                 #ambiguous
             )
         )
@@ -720,31 +713,7 @@ struct AmenoDimensionContinuousToolService
         if candidate == undefined then return undefined
 
         lastCursorPoint = candidate
-
-        if stage == #collecting then
-        (
-            if points.count >= 2 then
-            (
-                -- Rubber-band completo: chain preview + segmento ativo até cursor
-                refreshChainPreview candidate
-                removeActivePreview()
-            )
-            else if points.count == 1 then
-            (
-                -- Rubber-band simples: só a linha do último ponto até o cursor
-                local pLast = points[1]
-                local dummyOffset = candidate + [0, 100, 0]
-                if activePreview == undefined then
-                    activePreview = AmenoDimensionGraphics.createPreviewDimension pLast candidate dummyOffset \
-                        outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
-                else
-                    activePreview = AmenoDimensionGraphics.updatePreviewDimension activePreview \
-                        pLast candidate dummyOffset outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
-            )
-            else
-                removeActivePreview()
-        )
-        undefined
+        if stage == #collecting and points.count >= 2 then refreshChainPreview candidate else undefined
     ),
 
     -- ── onStart / onAbort / onStop ────────────────────────────────────────────
@@ -758,17 +727,8 @@ struct AmenoDimensionContinuousToolService
 
     fn onAbort clickNumber =
     (
-        -- Clique direito: confirma se >= 2 pontos (como Revit/SketchUp Enter)
-        if stage == #collecting and points.count >= 2 and lastCursorPoint != undefined then
-        (
-            requestCommit()
-            commitChain lastCursorPoint
-        )
-        else
-        (
-            cancel()
-            displayTempPrompt "Ameno Cota Contínua: sessão cancelada." 1000
-        )
+        cancel()
+        displayTempPrompt "Ameno Cota Contínua: sessão cancelada." 1000
         undefined
     ),
 
