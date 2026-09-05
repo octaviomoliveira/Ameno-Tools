@@ -1,7 +1,7 @@
 # Plano compartilhado — Ameno Tools
 
 > Fonte de continuidade do projeto para qualquer pessoa ou agente (incluindo Antigravity).
-> Atualizado: 2026-09-04
+> Atualizado: 2026-09-05
 
 ## Regra de trabalho
 
@@ -19,6 +19,8 @@ Não substituir o histórico: acrescentar uma entrada datada. O plano corrente �
 Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions**. Ele deve criar cotas rápidas, editáveis e persistentes para plantas humanizadas, com apresentação controlável e uma saída de render independente para composição.
 
 ## Concluído
+
+- Planejamento de recuperação da E12 concluído em 2026-09-05, baseado na inspeção de `db88f1b`: interação estilo Revit, linha comum, reutilização do núcleo e gates E12-A a F. Somente documentação; implementação, testes e instalação desta recuperação ainda pendentes. Plano: `plans/2026-09-05-e12-continuous-revit-implementation.md`.
 
 - Repositório Git local criado e fundação `0.0.1` do pacote `ApplicationPlugins` estruturada.
 - Pacote carregado e smoke testado no 3ds Max 2026.3.
@@ -52,6 +54,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
+- **Prioridade na branch E12:** recuperação da cotagem contínua, ainda em planejamento concluído/execução pendente. Começar por E12-A; os 43 testes anteriores não validam alinhamento e fluxo real. Não misturar com o trabalho paralelo E10/E11.
+
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
 - Gate manual do **Editor Visual E11** no 3ds Max 2026 com a versão unificada instalada.
 
@@ -60,6 +64,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E11 — Editor Visual e Preview ao Vivo: implementação mesclada da branch `feature/e11-visual-editor`, validada estruturalmente e instalada. Falta somente o gate visual e funcional do usuário no 3ds Max. Plano detalhado em `plans/2026-09-04-e11-editor-visual-preview.md`.
 
 ## Próximo passo executável
+
+**Para o agente que retomar a E12:** ler `plans/2026-09-05-e12-continuous-revit-implementation.md` e ADR 0020; implementar somente E12-A e registrar evidências antes de avançar. Não instalar nem fazer merge nesta primeira entrega. Os passos E10/E11 abaixo ficam preservados como histórico de pendências, não como prioridade dessa branch.
 
 1. Abrir o 3ds Max e executar o **gate manual interativo da E10 no 3ds Max 2026** com a versão de desenvolvimento já instalada:
    - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
@@ -81,6 +87,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 | Data | Pedido / decisão | Situação | Evidência |
 | --- | --- | --- | --- |
+| 2026-09-05 | Planejar recuperação da cota contínua estilo Revit e salvar no Git para execução por outro agente. | Plano detalhado concluído; nenhuma alteração de código, instalação ou teste de runtime nesta entrega. Execução começa pela E12-A. | `plans/2026-09-05-e12-continuous-revit-implementation.md`, `docs/decisions/0020-e12-shared-dimension-chain.md`; base inspecionada `db88f1b` |
 | 2026-09-03 | Estruturar Ameno Tools e iniciar pelo módulo de cotas para plantas humanizadas. | Concluído na fundação | `README.md`, `docs/`, pacote `0.0.1` |
 | 2026-09-03 | Usar layer exclusiva, manter Beauty/LightMix intactos e renderizar cotas separadamente para composição. | Decidido e documentado | `docs/decisions/0002-*`, `0003-*` |
 | 2026-09-03 | Permitir valores manuais auditáveis com alerta visível somente no viewport. | Decidido e documentado | `docs/decisions/0004-*`, `docs/manual-overrides.md` |
