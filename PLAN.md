@@ -54,6 +54,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
+- Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. Próxima ação é C1 (rastrear evento real até commit na instalação ba55d95); hipóteses de snap inelegível, modo Alinhado recusado e coleta reiniciada devem ser discriminadas antes da correção. Nenhum código alterado nesta pesquisa.
+
 - **Prioridade na branch E12:** o pacote instalado foi restaurado ao commit validado `ba55d95` após a tentativa posterior `d8ce420` não resolver o fluxo interativo. Os 24 arquivos instalados foram conferidos e o smoke da cópia em `ApplicationPlugins` passou. Próximo gate: reproduzir e diagnosticar no `ba55d95` os problemas de picking, encerramento, HUD e marcador de snap relatados pelo usuário.
 
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
@@ -87,6 +89,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 | Data | Pedido / decisão | Situação | Evidência |
 | --- | --- | --- | --- |
+| 2026-09-05 | Pesquisar cotagem Revit/SketchUp e planejar solução da confirmação contínua no Max. | Documentação oficial comparada com código instalado; viabilidade confirmada no nível de APIs, causa runtime ainda pendente. Plano C1–C5; sem implementação. | `plans/2026-09-05-e12-finalization-research.md` |
 | 2026-09-05 | Planejar recuperação da cota contínua estilo Revit e salvar no Git para execução por outro agente. | Plano detalhado concluído; nenhuma alteração de código, instalação ou teste de runtime nesta entrega. Execução começa pela E12-A. | `plans/2026-09-05-e12-continuous-revit-implementation.md`, `docs/decisions/0020-e12-shared-dimension-chain.md`; base inspecionada `db88f1b` |
 | 2026-09-05 | Executar a E12-A: tornar entrada da cota contínua determinística e testável. | Concluída em Batch: sem timer de duplo clique; estados `#idle/#collecting/#committing`; referência/geometria/vazio/ambíguo separados; abort cancela. Sem instalação ou teste visual nesta etapa. | `ameno_dimension_continuous_tool.ms`, `test_e12_chain_input.ms` 21/21, `test_e12_continuous.ms` 43/43, `docs/e12-a-input-spike.md` |
 | 2026-09-05 | Executar a E12-B: calcular uma linha comum H/V para toda a sequência. | Concluída em Batch: módulo puro ordena estações, projeta todos os pontos na mesma baseline e rejeita intervalos zero; nenhuma criação de cena. | `ameno_dimension_chain_math.ms`, `test_e12_chain_math.ms` 29/29, `docs/e12-b-shared-layout.md` |
