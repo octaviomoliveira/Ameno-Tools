@@ -58,7 +58,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Prioridade atual — integração E13 sobre E12 aprovada:** a etapa 1 foi executada no worktree isolado `D:\Ameno\_worktrees\e13-integration` sobre `main` (`f131f08`), incorporando a E13 auditada (`676e008`) sem instalar ou publicar. O gate agregado permanece pendente porque `test_e12_r0_diagnostics.ms` reproduz três falhas comportamentais preexistentes também na main; não avançar para a etapa 2 até registrar a decisão/correção dessa base. Handoff: `plans/2026-09-06-e13-etapa-1-handoff.md`.
+- **Prioridade atual — integração E13 sobre E12 aprovada:** a etapa 1 foi executada no worktree isolado `D:\Ameno\_worktrees\e13-integration` sobre `main` (`f131f08`), incorporando a E13 auditada (`676e008`) sem instalar ou publicar. O gate agregado permanece pendente porque `test_e12_r0_diagnostics.ms` reproduz três falhas comportamentais preexistentes também na main e porque `AmenoApp.startContinuousDimensionTool` não está definido nem na main nem na E13; não avançar para a etapa 2 até registrar a decisão/correção desses pontos. Handoff: `plans/2026-09-06-e13-etapa-1-handoff.md`.
 
 - **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0–R6 estão concluídos para a E12-R; R4 foi aprovada em Batch, instalada e validada manualmente, R5 foi fechado como decisão de escopo e R6 foi aprovado com automação e gate manual. Handoff final: `plans/2026-09-05-e12-r6-handoff.md`.
 
@@ -77,7 +77,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Atual em 2026-09-06:** etapa 1 do roteiro E13 executada e documentada no worktree isolado; manter a publicação/instalação bloqueada e resolver ou aceitar explicitamente a falha baseline E12-R0 antes de qualquer etapa 2. Roteiro e evidências: `plans/2026-09-05-e13-executor-runbook.md` e `plans/2026-09-06-e13-etapa-1-handoff.md`.
+- **Atual em 2026-09-06:** etapa 1 do roteiro E13 executada e documentada no worktree isolado; manter a publicação/instalação bloqueada e resolver ou aceitar explicitamente a falha baseline E12-R0 e o entry point contínuo ausente antes de qualquer etapa 2. Roteiro e evidências: `plans/2026-09-05-e13-executor-runbook.md` e `plans/2026-09-06-e13-etapa-1-handoff.md`.
 
 **Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 

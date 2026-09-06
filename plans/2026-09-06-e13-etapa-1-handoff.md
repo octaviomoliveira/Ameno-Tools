@@ -18,7 +18,7 @@ Estado: PENDENTE — base integrada e smoke tests passam, mas a regressão E12-R
 - ameno_dimension_graphics.ms: E12 allocation registry/rollback/useUndo/transação externa preservados; terminais mesh, campos termNodeA/B e style:style integrados. Terminais novos entram no registro de rollback.
 - ameno_dimension_tool.ms: picking/resolução E12 preservados; exclusão de mesh técnico usa AMENO_TERMINAL, metadados Ameno.*, CA/IDs e o resolver contínuo. Nome AMENO não é o único critério.
 - ameno_main_panel.ms: stub WPF E13 adotado, com globals e entry points legados mantidos para compatibilidade.
-- Auto-merges revisados: runtime mantém startContinuousDimensionTool, lifecycle e fecha WPF; bootstrap carrega math/input/diagnostics/continuous E12 e ameno_dimension_terminal_mesh.ms antes dos consumidores; test_bootstrap.ms mantém E12 e valida terminais E13.
+- Auto-merges revisados: runtime mantém o lifecycle e fecha WPF; bootstrap carrega math/input/diagnostics/continuous E12 e ameno_dimension_terminal_mesh.ms antes dos consumidores; test_bootstrap.ms mantém E12 e valida terminais E13. O guard/fallback da macro foi preservado, mas `AmenoApp.startContinuousDimensionTool` não está definido nem na main nem na E13.
 - Não restam marcadores de conflito; git diff --check passou.
 
 ## Testes e evidências
@@ -48,10 +48,12 @@ test_e12_r0_diagnostics.ms falha com:
 
 A mesma reprodução ocorreu usando a suíte da própria main em f131f08. A causa está no comportamento baseline de hasConflictingStation quando o modo é #aligned; nenhuma expectativa foi alterada e nenhum ajuste E12 foi feito para mascarar a falha. A falha inicial de escrita do log em LOCALAPPDATA foi separada e resolvida pelo isolamento do runner.
 
+Também permanece pendente a compatibilidade do entry point `AmenoApp.startContinuousDimensionTool`: `AmenoTools.mcr` conserva o guard/fallback, mas não há definição dessa API em main ou E13. Nenhum wrapper foi criado na etapa 1 para não avançar o escopo para a etapa 2.
+
 Também não foi executado gate manual ou teste destrutivo na cena interativa. A instância interativa aberta permaneceu intocada.
 
 ## Commit e próximo passo
 
 - Commit da integração: d1e9e22f379a52ad5933cbea01a696e33d5d63bf (merge commit com pais f131f08 e 676e008); permanece fora da main.
 - Este handoff está sendo atualizado em um commit documental separado; não há alterações de código pendentes no branch de integração.
-- Próximo passo: decidir/corrigir explicitamente o R0 baseline, repetir a bateria da etapa 1 e só então decidir se a etapa 1 pode ser marcada OK. Não avançar para a etapa 2, não instalar e não publicar.
+- Próximo passo: decidir/corrigir explicitamente o R0 baseline e a compatibilidade do entry point contínuo, repetir a bateria da etapa 1 e só então decidir se a etapa 1 pode ser marcada OK. Não avançar para a etapa 2, não instalar e não publicar.

@@ -50,11 +50,12 @@ Os gates manuais 2–6 podem ser executados juntos no candidato da etapa 7. Até
 - [x] Graphics: conservar alocação rastreada, rollback, `useUndo` e transação externa E12; acrescentar terminais, campos do record e passagem `style:style` E13. Os dois terminais mesh também foram registrados para rollback; não foi introduzido Undo por segmento.
 - [x] Tool: conservar resolução geométrica/picking E12 e integrar exclusão de meshes técnicos E13 por terminal, metadados `Ameno.*`, IDs/CA e resolver contínuo; o nome AMENO não ficou como único critério.
 - [x] Painel: adotar a entrada WPF E13 e manter os nomes globais/entry points legados necessários ao runtime, macros e ferramenta.
-- [x] Revisar auto-merges de runtime/bootstrap/test_bootstrap: math/input/diagnostics/continuous E12 e `ameno_dimension_terminal_mesh.ms` carregam antes dos consumidores; `startContinuousDimensionTool` permanece disponível.
+- [x] Revisar auto-merges de runtime/bootstrap/test_bootstrap: math/input/diagnostics/continuous E12 e `ameno_dimension_terminal_mesh.ms` carregam antes dos consumidores; o guard de compatibilidade da macro foi preservado.
+- [ ] Confirmar o entry point legado `AmenoApp.startContinuousDimensionTool`: a busca não encontrou definição nem na main nem na E13, embora `AmenoTools.mcr` preserve o guard/fallback. A compatibilidade permanece PENDENTE; nenhum wrapper foi criado nesta etapa.
 - [x] Conferir desligamento/reload, chamadas ao painel antigo e referências globais por busca de consumidores; o shutdown fecha WPF e mantém guards dos rollouts legados.
 - [ ] Validar pacote, bootstrap e suítes E12 existentes. Pacote, bootstrap, E13 audit/A–H e 8/9 suítes E12 passaram; `test_e12_r0_diagnostics.ms` permanece PENDENTE por três falhas comportamentais reproduzidas também na main. Nenhuma instalação foi feita.
 
-Gate da etapa 1: PENDENTE. A árvore está sem conflitos, os módulos estão presentes, o bootstrap e a integração E13 funcionam, e a E12 foi preservada; o R0 baseline impede marcar OK até decisão/correção própria. Não foram executadas etapas 2–7.
+Gate da etapa 1: PENDENTE. A árvore está sem conflitos, os módulos estão presentes, o bootstrap e a integração E13 funcionam, e a E12 foi preservada; o R0 baseline e a ausência do entry point `AmenoApp.startContinuousDimensionTool` impedem marcar OK até decisão/correção própria. Não foram executadas etapas 2–7.
 
 ### Evidências da execução em 2026-09-06
 
@@ -64,6 +65,7 @@ Gate da etapa 1: PENDENTE. A árvore está sem conflitos, os módulos estão pre
 - `test_e13a.ms`…`test_e13h.ms`: 8/8 suítes, 57 PASS agregados, 0 FAIL.
 - E12: `test_e12_chain_commit`, `chain_input`, `chain_math`, `continuous`, `r1_lifecycle`, `r2_picking`, `r3_preview` e `r4_transaction` passaram (8/9). `test_e12_r0_diagnostics.ms` falhou com `#duplicateStation` no modo `#aligned`, deixando `points.count=0` e omitindo o evento esperado; a mesma falha foi reproduzida usando a própria main em `f131f08`. O isolamento de `LOCALAPPDATA` corrigiu somente a falha ambiental de escrita do log.
 - O runner foi endurecido em `tools/test-maxscript.ps1`: mantém a interface `-MaxBatchPath`, `-ConfigPath`, `-TestScript`; isola `PlugCFG`, `MaxData`, `Temp`, `Additional Macros` e `LOCALAPPDATA`; exige exit code 0, pelo menos um PASS e zero marcadores `[AMENO_TEST][FAIL]`/`[AMENO_INSTALLED_TEST][FAIL]`.
+- A busca de consumidores confirmou que a macro ainda oferece fallback quando `AmenoApp.startContinuousDimensionTool` não existe; a própria API não está definida em nenhum dos dois pontos de comparação (main/E13), portanto esse gap foi registrado e não mascarado.
 - Logs identificados por suíte estão em `D:\Ameno\_worktrees\e13-integration\.test-output\stage1-evidence\` (saída gerada e ignorada pelo Git). A instalação existente foi apenas inspecionada; `ApplicationPlugins` não foi alterado.
 
 ## 4. Etapa 2 — Aba Criar e interação
