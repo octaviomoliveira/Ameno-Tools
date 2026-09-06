@@ -2,7 +2,7 @@
 
 Data: 2026-09-05. Documento operacional para troca de agente/modelo.
 Pedido: integrar a interface E13 feita no Antigravity com a E12 aprovada, corrigindo os problemas auditados, uma etapa por vez.
-Estado: ETAPA 1 EXECUTADA NO WORKTREE ISOLADO; GATE AGREGADO PENDENTE POR FALHA PREEXISTENTE DA E12-R0.
+Estado: ETAPA 1 OK NO WORKTREE `develop`; sem instalação/publicação. ETAPAS 2–7 permanecem pendentes.
 
 ## 1. Contexto que o executor precisa preservar
 
@@ -31,7 +31,7 @@ Estado: ETAPA 1 EXECUTADA NO WORKTREE ISOLADO; GATE AGREGADO PENDENTE POR FALHA 
 | Etapa | Código + testes | Manual | Estado |
 |---|---|---|---|
 | 0 — Plano e direcionamento | [x] | não se aplica | OK documental |
-| 1 — Base integrada | [ ] | não exige instalação | PENDENTE — E12-R0 baseline |
+| 1 — Base integrada | [x] | não exige instalação | OK — base E12/E13 integrada, pacote/bootstrap/regressões aprovados em Batch; sem instalação |
 | 2 — Criar e ciclo de vida | [ ] | [ ] | PENDENTE |
 | 3 — Estilos e rascunho | [ ] | [ ] | PENDENTE |
 | 4 — Editar e reancorar | [ ] | [ ] | PENDENTE |
@@ -44,29 +44,30 @@ Os gates manuais 2–6 podem ser executados juntos no candidato da etapa 7. Até
 ## 3. Etapa 1 — Preparar e integrar a base
 
 - [x] Conferir `git status`, `git worktree list`, fetch origin e hashes. A tentativa de `git fetch origin --prune` foi registrada, mas falhou por `SEC_E_NO_CREDENTIALS`; os refs locais auditados continuaram em `main=f131f08` e `feature/e13-unified-ui=676e008`, e o delta além dos commits foi revisado.
-- [x] Criar branch proposta `integration/e13-on-e12` a partir da main atual em `D:\Ameno\_worktrees\e13-integration`, após verificar que nome/diretório não pertenciam a outro trabalho.
+- [x] Criar branch proposta `integration/e13-on-e12` a partir da main atual em `D:\Ameno\_worktrees\e13-integration`, após verificar que nome/diretório não pertenciam a outro trabalho. A situação integrada foi transferida para a branch `develop` em `D:\Ameno\_worktrees\develop` para continuidade da etapa 1.
 - [x] Transportar este plano e a atualização documental de PLAN.md para a integração. A alteração preexistente de `tests/maxscript/batch-isolated.ini` foi preservada byte a byte.
 - [x] Incorporar feature/e13-unified-ui. Os três conflitos previstos foram resolvidos e a árvore ficou sem marcadores: `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, `ameno_dimension_tool.ms` e `Contents/scripts/ameno/ui/ameno_main_panel.ms`.
 - [x] Graphics: conservar alocação rastreada, rollback, `useUndo` e transação externa E12; acrescentar terminais, campos do record e passagem `style:style` E13. Os dois terminais mesh também foram registrados para rollback; não foi introduzido Undo por segmento.
 - [x] Tool: conservar resolução geométrica/picking E12 e integrar exclusão de meshes técnicos E13 por terminal, metadados `Ameno.*`, IDs/CA e resolver contínuo; o nome AMENO não ficou como único critério.
 - [x] Painel: adotar a entrada WPF E13 e manter os nomes globais/entry points legados necessários ao runtime, macros e ferramenta.
 - [x] Revisar auto-merges de runtime/bootstrap/test_bootstrap: math/input/diagnostics/continuous E12 e `ameno_dimension_terminal_mesh.ms` carregam antes dos consumidores; o guard de compatibilidade da macro foi preservado.
-- [ ] Confirmar o entry point legado `AmenoApp.startContinuousDimensionTool`: a busca não encontrou definição nem na main nem na E13, embora `AmenoTools.mcr` preserve o guard/fallback. A compatibilidade permanece PENDENTE; nenhum wrapper foi criado nesta etapa.
+- [x] Confirmar o entry point legado `AmenoApp.startContinuousDimensionTool`: `AmenoRuntime.startContinuousDimensionTool` foi exposto como wrapper fino para `AmenoDimensionContinuousTool.start()`, e `test_e13_audit_fixes.ms` passou o Teste 0 de presença da API. A execução interativa da ferramenta não pertenceu à etapa 1 e continua coberta pela etapa 2.
 - [x] Conferir desligamento/reload, chamadas ao painel antigo e referências globais por busca de consumidores; o shutdown fecha WPF e mantém guards dos rollouts legados.
-- [ ] Validar pacote, bootstrap e suítes E12 existentes. Pacote, bootstrap, E13 audit/A–H e 8/9 suítes E12 passaram; `test_e12_r0_diagnostics.ms` permanece PENDENTE por três falhas comportamentais reproduzidas também na main. Nenhuma instalação foi feita.
+- [x] Validar pacote, bootstrap e suítes E12 existentes. Em `develop`, pacote passou; bootstrap passou com exit 0/PASS 1/FAIL 0; auditoria E13 passou com 8 PASS/0 FAIL; E13-A…H passou com 8/8 suítes e 57 PASS/0 FAIL; e as 9 suítes E12 passaram com 0 FAIL. Nenhuma instalação foi feita.
 
-Gate da etapa 1: PENDENTE. A árvore está sem conflitos, os módulos estão presentes, o bootstrap e a integração E13 funcionam, e a E12 foi preservada; o R0 baseline e a ausência do entry point `AmenoApp.startContinuousDimensionTool` impedem marcar OK até decisão/correção própria. Não foram executadas etapas 2–7.
+Gate da etapa 1: OK. A árvore `develop` está sem conflitos, os módulos estão presentes, o bootstrap e a integração E13 funcionam, a E12 foi preservada, o runner rejeita FAIL mesmo quando há PASS e todos os lotes executados terminaram sem FAIL. O R0 passou com fixture corrigido para um modo aceito pela cadeia, e o entry point legado está coberto por wrapper e teste estrutural. Não foram executadas etapas 2–7, nem instalação ou publicação.
 
 ### Evidências da execução em 2026-09-06
 
 - `tools/validate-package.ps1`: PASS.
 - `test_bootstrap.ms`: Batch exit 0, `PASS=1`, `FAIL=0`; o único `[Ameno][ERROR]` é a falha de render simulada do cenário E9, seguida do PASS da suíte.
-- `test_e13_audit_fixes.ms`: Batch exit 0, 7 PASS, 0 FAIL.
-- `test_e13a.ms`…`test_e13h.ms`: 8/8 suítes, 57 PASS agregados, 0 FAIL.
-- E12: `test_e12_chain_commit`, `chain_input`, `chain_math`, `continuous`, `r1_lifecycle`, `r2_picking`, `r3_preview` e `r4_transaction` passaram (8/9). `test_e12_r0_diagnostics.ms` falhou com `#duplicateStation` no modo `#aligned`, deixando `points.count=0` e omitindo o evento esperado; a mesma falha foi reproduzida usando a própria main em `f131f08`. O isolamento de `LOCALAPPDATA` corrigiu somente a falha ambiental de escrita do log.
+- `test_e13_audit_fixes.ms`: Batch exit 0, 8 PASS, 0 FAIL; o Teste 0 confirma o entry point legado.
+- `test_e13a.ms`…`test_e13h.ms`: 8/8 suítes, 57 PASS agregados, 0 FAIL, reexecutadas após as alterações finais.
+- E12: `test_e12_chain_commit`, `chain_input`, `chain_math`, `continuous`, `r0_diagnostics`, `r1_lifecycle`, `r2_picking`, `r3_preview` e `r4_transaction` passaram (9/9), com 1 PASS por suíte e 0 FAIL. O R0 foi corrigido apenas no fixture: ele agora salva o modo original, usa `#horizontal` durante o diagnóstico (modo aceito pela cadeia E12) e restaura o modo ao cancelar; nenhuma expectativa foi afrouxada e nenhum comportamento do núcleo foi alterado.
+- Reexecução final da etapa 1 em `develop`: `tools/validate-package.ps1` retornou sucesso; bootstrap exit 0/PASS 1/FAIL 0; auditoria E13 8 PASS/0 FAIL; E13-A…H 8/8 suítes, 57 PASS agregados/0 FAIL; E12 9/9 suítes, 9 PASS agregados/0 FAIL. A evidência atual está em `.test-output\stage1-evidence-develop\`, com logs `*.after-fix.*`, `*.final.*` e `*.final2.*` identificados por suíte.
 - O runner foi endurecido em `tools/test-maxscript.ps1`: mantém a interface `-MaxBatchPath`, `-ConfigPath`, `-TestScript`; isola `PlugCFG`, `MaxData`, `Temp`, `Additional Macros` e `LOCALAPPDATA`; exige exit code 0, pelo menos um PASS e zero marcadores `[AMENO_TEST][FAIL]`/`[AMENO_INSTALLED_TEST][FAIL]`.
-- A busca de consumidores confirmou que a macro ainda oferece fallback quando `AmenoApp.startContinuousDimensionTool` não existe; a própria API não está definida em nenhum dos dois pontos de comparação (main/E13), portanto esse gap foi registrado e não mascarado.
-- Logs identificados por suíte estão em `D:\Ameno\_worktrees\e13-integration\.test-output\stage1-evidence\` (saída gerada e ignorada pelo Git). A instalação existente foi apenas inspecionada; `ApplicationPlugins` não foi alterado.
+- A busca de consumidores confirmou que a macro continua com guard/fallback e que o runtime integrado agora expõe `AmenoRuntime.startContinuousDimensionTool`; o teste de auditoria verifica a propriedade pública em `AmenoApp`. O wrapper foi mantido mínimo e a chamada interativa ficou para a etapa 2.
+- Logs identificados por suíte estão em `D:\Ameno\_worktrees\develop\.test-output\stage1-evidence-develop\` (saída gerada e ignorada pelo Git). A instalação existente foi apenas inspecionada; `ApplicationPlugins` não foi alterado.
 
 ## 4. Etapa 2 — Aba Criar e interação
 
@@ -152,9 +153,9 @@ Arquivos: `ameno_cotas_render_tab.ms`, serviço render existente e adapters apen
 
 ## 10. Execução dos testes: cuidados descobertos
 
-O runner atual `tools/test-maxscript.ps1` aceita qualquer ocorrência de `[AMENO_TEST][PASS]` e não rejeita explicitamente `[AMENO_TEST][FAIL]`. Portanto exit code 0 e mensagem OK do runner NÃO comprovam suíte aprovada. Na etapa 1, endurecer runner para rejeitar FAIL e verificar conclusão da suíte, ou fazer validação adicional equivalente documentada. Alguns testes E13 verificam só existência de métodos: acrescentar testes comportamentais nos pontos corrigidos.
+Antes da etapa 1, o runner `tools/test-maxscript.ps1` aceitava qualquer ocorrência de `[AMENO_TEST][PASS]` e não rejeitava explicitamente `[AMENO_TEST][FAIL]`. Isso foi corrigido: agora exige exit code 0, pelo menos um PASS e zero FAIL; a reexecução em `develop` confirmou esse comportamento. Alguns testes E13 verificam só existência de métodos: acrescentar testes comportamentais nos pontos corrigidos.
 
-Interface real do runner: `-MaxBatchPath`, `-ConfigPath`, `-TestScript`. Usar scripts e config do worktree integrado. Não inventar switches. O runner sobrescreve `.test-output/listener.log` e `system.log`: executar suítes sequencialmente por worktree e copiar logs após cada uma para diretório identificado por etapa/suíte. Não usar logs antigos como evidência de execução atual. Conferir o INI para garantir isolamento; não publicar mutações geradas pelo Max sem revisão.
+Interface real do runner: `-MaxBatchPath`, `-ConfigPath`, `-TestScript`. Usar scripts e config do worktree `develop`. Não inventar switches. O runner sobrescreve `.test-output/listener.log` e `system.log`: executar suítes sequencialmente por worktree e copiar logs após cada uma para diretório identificado por etapa/suíte. Não usar logs antigos como evidência de execução atual. Conferir o INI para garantir isolamento; não publicar mutações geradas pelo Max sem revisão.
 
 ## 11. Modelo de handoff a preencher
 
@@ -173,4 +174,4 @@ Commit (ou alterações não commitadas):
 Próximo passo exato:
 ```
 
-Primeira ação do próximo agente: etapa 1, inspecionar estado e criar/retomar integração. Não partir diretamente para instalar E13.
+Primeira ação do próximo agente: retomar a branch `develop`, ler este checklist e aguardar autorização explícita para a etapa 2. Não instalar E13, não publicar e não executar etapas seguintes automaticamente.

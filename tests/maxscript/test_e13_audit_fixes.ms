@@ -42,6 +42,24 @@
     resetMaxFile #noPrompt
 
     -- ----------------------------------------------------------------
+    -- Teste 0: entry point legado da macro de cotação contínua
+    -- ----------------------------------------------------------------
+    local test0Ok = false
+    try
+    (
+        test0Ok = AmenoApp != undefined and isProperty AmenoApp #startContinuousDimensionTool
+    )
+    catch
+    (
+        format "[AMENO_TEST][DETAIL] Teste 0 erro: %\n" (getCurrentException() as string)
+    )
+
+    if test0Ok then
+        logPass "0. AmenoApp expõe o entry point legado startContinuousDimensionTool"
+    else
+        logFail "0. AmenoApp não expõe o entry point legado startContinuousDimensionTool"
+
+    -- ----------------------------------------------------------------
     -- Teste 1: BrushConverter e refresh() na aba Editar com cota real
     -- ----------------------------------------------------------------
     local test1Ok = false

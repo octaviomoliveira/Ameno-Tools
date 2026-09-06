@@ -41,6 +41,11 @@
 
     local sourceNode = box name:"E12_R0_SOURCE" length:100 width:100 height:100
     convertToPoly sourceNode
+    -- O default #aligned é válido para a ferramenta individual, mas a cadeia E12
+    -- desta versão aceita somente Horizontal/Vertical. O fixture precisa escolher
+    -- um modo válido para testar o efeito da instrumentação sem alterar o outcome.
+    local originalMode = AmenoDimensionContinuousTool.activeMode
+    AmenoDimensionContinuousTool.activeMode = #horizontal
     AmenoDimensionContinuousTool.active = true
     AmenoDimensionContinuousTool.stage = #collecting
     AmenoDimensionContinuousTool.points = #()
@@ -70,6 +75,7 @@
     r0Ok "log identifies session stop" ((findString logText "event=sessionStop") != undefined)
 
     AmenoDimensionContinuousTool.cancel()
+    AmenoDimensionContinuousTool.activeMode = originalMode
     format "=== [AMENO_E12_R0] RESULT %/% PASS ===\n" passedTests totalTests
     if passedTests == totalTests then
         format "[AMENO_TEST][PASS] E12-R0 diagnostics contract passed.\n"

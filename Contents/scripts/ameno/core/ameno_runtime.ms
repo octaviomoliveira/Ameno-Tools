@@ -64,6 +64,17 @@ struct AmenoRuntime
         lastInteractiveDimension
     ),
 
+    -- Compatibilidade com a macro legada da cotação contínua E12.
+    fn startContinuousDimensionTool =
+    (
+        if ::AmenoDimensionContinuousTool == undefined then throw "A ferramenta de cotação contínua Ameno não foi carregada."
+
+        lastInteractiveDimension = ::AmenoDimensionContinuousTool.start()
+        refreshScene()
+        refreshDimensions()
+        lastInteractiveDimension
+    ),
+
     fn createTestDimension =
     (
         lastTestDimension = AmenoDimensionGraphics.createTestDimension()

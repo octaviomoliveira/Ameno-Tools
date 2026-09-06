@@ -1,7 +1,7 @@
 # Plano compartilhado — Ameno Tools
 
 > Fonte de continuidade do projeto para qualquer pessoa ou agente (incluindo Antigravity).
-> Atualizado: 2026-09-05
+> Atualizado: 2026-09-06
 
 ## Regra de trabalho
 
@@ -47,6 +47,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E9 implementada e aprovada interativamente no 3ds Max 2026.3 com Corona 13 em 2026-09-04: rollout `Render Separado de Cotas` no painel, PNG com fundo transparente e somente linhas/textos de cotas, nome automático e proteção contra sobrescrita (`_001`), herança de câmera/frame/resolução/pixel aspect/Crop do Render Setup, restauração transacional da cena confirmada ("A cena foi restaurada."); bugs corrigidos durante o gate: `renderOutputFilename`/`renderSaveFile` obrigatórios para Corona gravar o PNG (`outputfile` ignorado), critérios de parada do Corona agora forçados para 1 % de noise e 20 passes máximos no passe de overlay.
 - E10.7.2 implementada e aprovada manualmente no 3ds Max 2026 em 2026-09-04: Vertex Snap registra `A=vN / B=vN`, as extremidades resolvem a malha avaliada e a cota acompanha o deslocamento dos vértices em edição de subobjeto. O usuário confirmou o gate final como "sucesso absoluto".
 - E11.0–E11.5 implementadas e integradas na `main` em 2026-09-04: editor visual WPF .NET 8, `StyleDraft` transacional, preview vetorial 2D ao vivo, aplicação/persistência, fallback para o rollout legado e correção do tema escuro. O pacote estrutural foi aprovado e a instalação unificada E10.7 + E11 foi verificada por 22/22 arquivos idênticos por SHA-256.
+- E13 — etapa 1 concluída e validada em `develop`: a E13 auditada (`676e008`) foi integrada sobre a E12 publicada (`f131f08`) no merge `d1e9e22`, com os três conflitos previstos resolvidos preservando as transações, picking e input E12. O wrapper de compatibilidade `AmenoRuntime.startContinuousDimensionTool`, o fixture válido do diagnóstico R0 e a verificação estrita do runner foram registrados; pacote, bootstrap, auditoria, E13-A…H e E12 passaram em Batch isolado. Nenhuma instalação, publicação ou etapa 2 foi executada. Evidência: `plans/2026-09-05-e13-executor-runbook.md`, `plans/2026-09-06-e13-etapa-1-handoff.md` e `.test-output/stage1-evidence-develop/`.
 - Pacote instalado com E1 a E9 validado em Batch isolado e aprovado em sessão interativa no 3ds Max 2026.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
@@ -58,7 +59,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Prioridade atual — integração E13 sobre E12 aprovada:** a etapa 1 foi executada no worktree isolado `D:\Ameno\_worktrees\e13-integration` sobre `main` (`f131f08`), incorporando a E13 auditada (`676e008`) sem instalar ou publicar. O gate agregado permanece pendente porque `test_e12_r0_diagnostics.ms` reproduz três falhas comportamentais preexistentes também na main e porque `AmenoApp.startContinuousDimensionTool` não está definido nem na main nem na E13; não avançar para a etapa 2 até registrar a decisão/correção desses pontos. Handoff: `plans/2026-09-06-e13-etapa-1-handoff.md`.
+- **Prioridade atual — etapa 1 da integração E13 concluída em `develop`:** a E13 auditada (`676e008`) está integrada sobre a E12 publicada (`f131f08`) no worktree `D:\Ameno\_worktrees\develop`. A revalidação final passou em pacote, bootstrap, auditoria E13 (8 PASS/0 FAIL), E13-A…H (8/8 suítes; 57 PASS/0 FAIL) e E12 (9/9 suítes; 0 FAIL). O R0 foi corrigido somente no fixture, que agora declara o modo `#horizontal` aceito pela cadeia; o runtime recebeu apenas o wrapper legado fino para `AmenoApp.startContinuousDimensionTool`. Não instalar nem publicar; aguardar autorização explícita antes da etapa 2. Handoff: `plans/2026-09-06-e13-etapa-1-handoff.md`.
 
 - **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0–R6 estão concluídos para a E12-R; R4 foi aprovada em Batch, instalada e validada manualmente, R5 foi fechado como decisão de escopo e R6 foi aprovado com automação e gate manual. Handoff final: `plans/2026-09-05-e12-r6-handoff.md`.
 
@@ -77,7 +78,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Atual em 2026-09-06:** etapa 1 do roteiro E13 executada e documentada no worktree isolado; manter a publicação/instalação bloqueada e resolver ou aceitar explicitamente a falha baseline E12-R0 e o entry point contínuo ausente antes de qualquer etapa 2. Roteiro e evidências: `plans/2026-09-05-e13-executor-runbook.md` e `plans/2026-09-06-e13-etapa-1-handoff.md`.
+- **Atual em 2026-09-06:** etapa 1 do roteiro E13 validada na branch `develop`. Manter instalação/publicação bloqueadas e não iniciar a etapa 2 sem solicitação explícita; os gates comportamentais da interface e os gates manuais continuam pertencendo às etapas seguintes. Roteiro e evidências: `plans/2026-09-05-e13-executor-runbook.md` e `plans/2026-09-06-e13-etapa-1-handoff.md`.
 
 **Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 
@@ -99,7 +100,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Histórico de solicitações
 
+- **2026-09-06 — Continuar a etapa 1 em `develop`:** o wrapper mínimo de compatibilidade contínua foi adicionado em `ameno_runtime.ms`; o teste R0 passou após o fixture declarar `#horizontal`, sem alterar expectativas nem o núcleo E12; a auditoria E13 passou com 8 PASS/0 FAIL; E13-A…H passou com 8/8 suítes, 57 PASS/0 FAIL; e as 9 suítes E12 passaram. Checklist e handoff foram atualizados. Sem instalação, publicação ou etapa 2.
+
 - **2026-09-06 — Executar somente a etapa 1 da integração E13 sobre a E12 aprovada:** worktree `integration/e13-on-e12` criado sobre `f131f08`; E13 `676e008` incorporada, conflitos resolvidos preservando E12, pacote/bootstrap/E13 aprovados e 8/9 regressões E12 aprovadas. O R0 continua PENDENTE por três falhas reproduzidas também na main; runner endurecido contra PASS+FAIL; sem instalação, merge ou publicação em main. Handoff: `plans/2026-09-06-e13-etapa-1-handoff.md`.
+
+- **2026-09-06 — Transferir a situação integrada para `develop` e continuar a etapa 1:** branch `develop` criada a partir de `d5aa9cc`; reexecução de pacote/bootstrap/E13 e regressões E12 concluída com 8/9 suítes E12 aprovadas, R0 reproduzido e compatibilidade do entry point contínuo ainda pendente. Sem instalação, merge ou publicação em main.
 
 - **2026-09-05 — Continuidade E13 para agente mais leve:** usuário solicitou plano Markdown com ações detalhadas por etapa e marcação de OK baseada em evidência. Criado `plans/2026-09-05-e13-executor-runbook.md`, com sete etapas, arquivos-alvo, regressões, gates manuais, implantação e modelo de handoff. Somente documentação nesta entrega; implementação E13 não iniciada. Registrada também limitação do runner: um PASS isolado não comprova ausência de FAIL.
 
