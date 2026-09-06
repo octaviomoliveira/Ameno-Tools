@@ -430,13 +430,39 @@ struct AmenoAnchorServiceDefinition
         syncAll force:false
     ),
 
-    fn reanchorDimension controller whichPoint targetNode targetWorldPoint =
+    fn reanchorDimension controller whichPoint targetNode targetWorldPoint anchorVertexId:-1 =
     (
         if controller == undefined or not isValidNode controller then return false
         if ::AmenoDimensionCA == undefined or ::AmenoDimensionGraphics == undefined then return false
+        if whichPoint != #pointA and whichPoint != #pointB then return false
+        if targetWorldPoint == undefined or (classof targetWorldPoint) != Point3 then return false
+        if targetNode != undefined and not isValidNode targetNode then return false
 
         local rec = ::AmenoDimensionCA.readCA controller
         if rec == undefined then return false
+
+        local resolvedWorldPoint = targetWorldPoint
+        local resolvedVertexId = -1
+        if targetNode != undefined and isValidNode targetNode do
+        (
+            if anchorVertexId != undefined and anchorVertexId > 0 then
+            (
+                local explicitVertexPoint = ::AmenoDimensionCA.resolveVertexWorld targetNode anchorVertexId
+                if explicitVertexPoint == undefined then return false
+                resolvedVertexId = anchorVertexId
+                resolvedWorldPoint = explicitVertexPoint
+            )
+            else
+            (
+                local tolerance = ::AmenoDimensionGraphics.toSceneUnits 10.0
+                local vertexHit = ::AmenoDimensionCA.findNearestVertex targetNode targetWorldPoint maxDistance:tolerance
+                if vertexHit != undefined do
+                (
+                    resolvedVertexId = vertexHit.vertexId
+                    resolvedWorldPoint = vertexHit.worldPoint
+                )
+            )
+        )
 
         undo "Ameno: reancorar cota" on
         (
@@ -445,14 +471,11 @@ struct AmenoAnchorServiceDefinition
                 if targetNode != undefined and isValidNode targetNode then
                 (
                     rec.nodeA = targetNode
-                    rec.localPointA = targetWorldPoint * (inverse targetNode.transform)
-                    rec.anchorVertexIdA = -1
+                    rec.localPointA = resolvedWorldPoint * (inverse targetNode.transform)
+                    rec.anchorVertexIdA = resolvedVertexId
                     rec.anchorEdgeIdA = -1
                     rec.anchorEdgeMidA = false
-                    local toleranceA = ::AmenoDimensionGraphics.toSceneUnits 10.0
-                    local vertexHitA = ::AmenoDimensionCA.findNearestVertex targetNode targetWorldPoint maxDistance:toleranceA
-                    if vertexHitA != undefined do rec.anchorVertexIdA = vertexHitA.vertexId
-                    rec.pointA = targetWorldPoint
+                    rec.pointA = resolvedWorldPoint
                     rec.anchorType = if (rec.anchorType == "nodeB" or rec.anchorType == "both") then "both" else "nodeA"
                 )
                 else
@@ -461,7 +484,7 @@ struct AmenoAnchorServiceDefinition
                     rec.anchorVertexIdA = -1
                     rec.anchorEdgeIdA = -1
                     rec.anchorEdgeMidA = false
-                    rec.pointA = targetWorldPoint
+                    rec.pointA = resolvedWorldPoint
                     rec.anchorType = if (rec.anchorType == "nodeB" or rec.anchorType == "both") then "nodeB" else "world"
                 )
             )
@@ -470,14 +493,11 @@ struct AmenoAnchorServiceDefinition
                 if targetNode != undefined and isValidNode targetNode then
                 (
                     rec.nodeB = targetNode
-                    rec.localPointB = targetWorldPoint * (inverse targetNode.transform)
-                    rec.anchorVertexIdB = -1
+                    rec.localPointB = resolvedWorldPoint * (inverse targetNode.transform)
+                    rec.anchorVertexIdB = resolvedVertexId
                     rec.anchorEdgeIdB = -1
                     rec.anchorEdgeMidB = false
-                    local toleranceB = ::AmenoDimensionGraphics.toSceneUnits 10.0
-                    local vertexHitB = ::AmenoDimensionCA.findNearestVertex targetNode targetWorldPoint maxDistance:toleranceB
-                    if vertexHitB != undefined do rec.anchorVertexIdB = vertexHitB.vertexId
-                    rec.pointB = targetWorldPoint
+                    rec.pointB = resolvedWorldPoint
                     rec.anchorType = if (rec.anchorType == "nodeA" or rec.anchorType == "both") then "both" else "nodeB"
                 )
                 else
@@ -486,7 +506,7 @@ struct AmenoAnchorServiceDefinition
                     rec.anchorVertexIdB = -1
                     rec.anchorEdgeIdB = -1
                     rec.anchorEdgeMidB = false
-                    rec.pointB = targetWorldPoint
+                    rec.pointB = resolvedWorldPoint
                     rec.anchorType = if (rec.anchorType == "nodeA" or rec.anchorType == "both") then "nodeA" else "world"
                 )
             )

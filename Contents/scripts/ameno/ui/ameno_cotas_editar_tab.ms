@@ -17,6 +17,24 @@ global AmenoDimensionGraphics
 global AmenoStyleService
 global AmenoAnchorService
 global AmenoDimensionTool
+global AmenoEditChangeRequest
+
+struct AmenoEditChangeRequest
+(
+    valid = false,
+    message = "",
+    mode = #measured,
+    manualValueMm = undefined,
+    manualText = undefined,
+    reason = undefined,
+    incrementMm = undefined
+)
+
+fn AmenoEditarGeometryFilter nodeValue =
+(
+    if ::AmenoDimensionTool == undefined then false
+    else try (::AmenoDimensionTool.isEligibleReferenceNode nodeValue) catch (false)
+)
 
 -- ---------------------------------------------------------------------
 -- Callbacks DotNet globais (evita closures e erros de escopo)
@@ -25,7 +43,7 @@ fn onAmenoEditarModeChanged s e =
 (
     try
     (
-        if ::AmenoCotasEditarTab != undefined do
+        if ::AmenoCotasEditarTab != undefined and not ::AmenoCotasEditarTab.isSyncing do
         (
             local rbRd = ::AmenoCotasEditarTab.findControl "rbModeRounded"
             local rbNum = ::AmenoCotasEditarTab.findControl "rbModeNumeric"
@@ -102,10 +120,172 @@ struct AmenoCotasEditarTabDefinition
     currentCtrl = undefined,
     styleIds    = #(),
     isSyncing   = false,
+    callbacksRegistered = false,
 
     fn findControl ctrlName =
     (
         if hostControl == undefined then undefined else hostControl.FindName ctrlName
+    ),
+
+    fn trimText value =
+    (
+        local textValue = if value == undefined then "" else (value as string)
+        try (((dotNetObject "System.String" textValue).Trim()) as string) catch (textValue)
+    ),
+
+    fn setStatus messageText isError:false =
+    (
+        local statusCtrl = findControl "txtEditStatus"
+        if statusCtrl != undefined do
+        (
+            statusCtrl.Text = if messageText == undefined then "" else (messageText as string)
+            local brushConv = try (dotNetObject "System.Windows.Media.BrushConverter") catch (undefined)
+            if brushConv != undefined do
+                statusCtrl.Foreground = brushConv.ConvertFromString (if isError then "#E06C75" else "#98C379")
+        )
+        not isError
+    ),
+
+    fn parsePositiveNumber textValue fieldLabel =
+    (
+        local raw = trimText textValue
+        if raw == "" then return #(false, undefined, fieldLabel + " e obrigatorio.")
+
+        local validCharacters = true
+        local decimalCount = 0
+        local digitCount = 0
+        for i = 1 to raw.count do
+        (
+            local ch = substring raw i 1
+            if findString "0123456789" ch != undefined then
+                digitCount += 1
+            else if ch == "." or ch == "," then
+            (
+                decimalCount += 1
+                if decimalCount > 1 do validCharacters = false
+            )
+            else if (ch == "+" or ch == "-") and i == 1 then
+            (
+                -- sinal permitido apenas no inicio; positivos sao exigidos abaixo
+            )
+            else
+                validCharacters = false
+        )
+
+        if not validCharacters or digitCount == 0 then
+            return #(false, undefined, fieldLabel + " deve conter apenas um numero decimal.")
+
+        local normalized = substituteString raw "," "."
+        local parsed = try (normalized as float) catch (undefined)
+        if parsed == undefined then return #(false, undefined, fieldLabel + " nao e um numero valido.")
+        if parsed <= 0.0 then return #(false, undefined, fieldLabel + " deve ser maior que zero.")
+        #(true, parsed, "")
+    ),
+
+    fn selectedValueMode =
+    (
+        local rbRd = findControl "rbModeRounded"
+        local rbNum = findControl "rbModeNumeric"
+        local rbTxt = findControl "rbModeText"
+        if rbRd != undefined and rbRd.IsChecked == true then #rounded
+        else if rbNum != undefined and rbNum.IsChecked == true then #manualNumeric
+        else if rbTxt != undefined and rbTxt.IsChecked == true then #manualText
+        else #measured
+    ),
+
+    fn validateChangeRequest modeName roundingText manualValueText manualText reasonText =
+    (
+        local request = AmenoEditChangeRequest mode:modeName
+        if (findItem #(#measured, #rounded, #manualNumeric, #manualText) modeName) == 0 do
+        (
+            request.message = "Modo de valor invalido."
+            return request
+        )
+
+        request.reason = if modeName == #measured then "" else trimText reasonText
+        case modeName of
+        (
+            #rounded:
+            (
+                local parsed = parsePositiveNumber roundingText "Passo de arredondamento"
+                if not parsed[1] do
+                (
+                    request.message = parsed[3]
+                    return request
+                )
+                -- Campo rotulado em centimetros; persistencia canonica em milimetros.
+                request.incrementMm = parsed[2] * 10.0
+            )
+            #manualNumeric:
+            (
+                local parsed = parsePositiveNumber manualValueText "Valor manual"
+                if not parsed[1] do
+                (
+                    request.message = parsed[3]
+                    return request
+                )
+                -- Campo rotulado em metros; persistencia canonica em milimetros.
+                request.manualValueMm = parsed[2] * 1000.0
+            )
+            #manualText:
+            (
+                local cleanText = trimText manualText
+                if cleanText == "" do
+                (
+                    request.message = "Texto manual e obrigatorio."
+                    return request
+                )
+                request.manualText = cleanText
+            )
+            default: ()
+        )
+        request.valid = true
+        request
+    ),
+
+    fn applyChangeToController ctrl modeName roundingText manualValueText manualText reasonText =
+    (
+        if ctrl == undefined or not isValidNode ctrl do
+        (
+            setStatus "Selecione uma cota valida para editar." isError:true
+            return false
+        )
+        if ::AmenoApp == undefined do
+        (
+            setStatus "O servico de edicao Ameno nao esta disponivel." isError:true
+            return false
+        )
+
+        local request = validateChangeRequest modeName roundingText manualValueText manualText reasonText
+        if not request.valid do
+        (
+            setStatus request.message isError:true
+            return false
+        )
+
+        local changed = false
+        try
+        (
+            if request.mode == #measured then
+                changed = ::AmenoApp.resetDimensionToMeasured ctrl
+            else
+                changed = ::AmenoApp.setDimensionMode ctrl request.mode manualValueMm:request.manualValueMm \
+                    manualText:request.manualText reason:request.reason incrementMm:request.incrementMm
+        )
+        catch
+        (
+            setStatus ("Nao foi possivel aplicar a alteracao: " + (getCurrentException() as string)) isError:true
+            return false
+        )
+
+        if changed != true do
+        (
+            setStatus "A alteracao nao foi aplicada." isError:true
+            return false
+        )
+        this.refresh()
+        setStatus "Alteracao aplicada."
+        true
     ),
 
     -- -----------------------------------------------------------------
@@ -334,6 +514,7 @@ struct AmenoCotasEditarTabDefinition
 
         -- Botoes de Acao no Rodape
         local actionButtonsSection = \
+            "<StackPanel>" + \
             "<Grid Margin='0,2,0,0'>" + \
             "<Grid.ColumnDefinitions>" + \
             "<ColumnDefinition Width='*'/>" + \
@@ -342,7 +523,9 @@ struct AmenoCotasEditarTabDefinition
             "</Grid.ColumnDefinitions>" + \
             "<Button x:Name='btnAplicarModo' Grid.Column='0' Style='{StaticResource EditPrimaryBtnStyle}' Content='Aplicar Alteracao'/>" + \
             "<Button x:Name='btnRestaurarMedido' Grid.Column='2' Style='{StaticResource EditSecondaryBtnStyle}' Content='Restaurar Medido'/>" + \
-            "</Grid>"
+            "</Grid>" + \
+            "<TextBlock x:Name='txtEditStatus' Text='' Foreground='#98C379' FontSize='10' TextWrapping='Wrap' Margin='0,6,0,0'/>" + \
+            "</StackPanel>"
 
         local panelSelected = \
             "<StackPanel x:Name='panelSelected' Visibility='Collapsed'>" + \
@@ -438,6 +621,7 @@ struct AmenoCotasEditarTabDefinition
     fn refresh =
     (
         if hostControl == undefined do return false
+        setStatus ""
 
         local panelEmpty = findControl "panelEmpty"
         local panelSelected = findControl "panelSelected"
@@ -572,46 +756,19 @@ struct AmenoCotasEditarTabDefinition
         local rbNum = findControl "rbModeNumeric"
         local rbTxt = findControl "rbModeText"
 
-        local modeName = #measured
-        if rbRd != undefined and rbRd.IsChecked == true then modeName = #rounded
-        else if rbNum != undefined and rbNum.IsChecked == true then modeName = #manualNumeric
-        else if rbTxt != undefined and rbTxt.IsChecked == true then modeName = #manualText
+        local modeName = selectedValueMode()
 
         local txtRounding = findControl "txtRounding"
         local txtManualVal = findControl "txtManualVal"
         local txtManualText = findControl "txtManualText"
         local txtReason = findControl "txtReason"
 
-        local incMm = 50.0
-        if txtRounding != undefined do
-        (
-            local rText = substituteString (txtRounding.Text as string) "," "."
-            local v = rText as float
-            if v != undefined and v > 0.0 do incMm = v * 10.0
-        )
+        local roundingText = if txtRounding != undefined then txtRounding.Text else ""
+        local manualValueText = if txtManualVal != undefined then txtManualVal.Text else ""
+        local manualText = if txtManualText != undefined then txtManualText.Text else ""
+        local reasonText = if txtReason != undefined then txtReason.Text else ""
 
-        local manValMm = 1000.0
-        if txtManualVal != undefined do
-        (
-            local mText = substituteString (txtManualVal.Text as string) "," "."
-            local v = mText as float
-            if v != undefined and v > 0.0 do manValMm = v * 1000.0
-        )
-
-        local manTxt = if txtManualText != undefined then txtManualText.Text else ""
-        local reasonTxt = if txtReason != undefined then txtReason.Text else ""
-
-        try
-        (
-            ::AmenoApp.setDimensionMode ctrl modeName manualValueMm:manValMm manualText:manTxt reason:reasonTxt incrementMm:incMm
-            refresh()
-            true
-        )
-        catch
-        (
-            try (messageBox ("Nao foi possivel aplicar a alteracao:\n" + (getCurrentException() as string)) title:"Ameno - Editar Cota") catch ()
-            false
-        )
+        applyChangeToController ctrl modeName roundingText manualValueText manualText reasonText
     ),
 
     -- -----------------------------------------------------------------
@@ -625,13 +782,19 @@ struct AmenoCotasEditarTabDefinition
 
         try
         (
-            ::AmenoApp.resetDimensionToMeasured ctrl
+            local restored = ::AmenoApp.resetDimensionToMeasured ctrl
+            if restored != true do
+            (
+                setStatus "O valor medido nao foi restaurado." isError:true
+                return false
+            )
             refresh()
+            setStatus "Valor medido restaurado."
             true
         )
         catch
         (
-            try (messageBox ("Nao foi possivel restaurar o valor medido:\n" + (getCurrentException() as string)) title:"Ameno - Editar Cota") catch ()
+            setStatus ("Nao foi possivel restaurar o valor medido: " + (getCurrentException() as string)) isError:true
             false
         )
     ),
@@ -644,36 +807,118 @@ struct AmenoCotasEditarTabDefinition
     -- -----------------------------------------------------------------
     -- Aplica estilo selecionado
     -- -----------------------------------------------------------------
+    fn applyStyleToController ctrl targetId =
+    (
+        if ctrl == undefined or not isValidNode ctrl do
+        (
+            setStatus "Selecione uma cota valida para aplicar o estilo." isError:true
+            return false
+        )
+        if ::AmenoStyleService == undefined do
+        (
+            setStatus "O servico de estilos Ameno nao esta disponivel." isError:true
+            return false
+        )
+        if targetId == undefined or targetId == "" or (::AmenoStyleService.getStyle targetId) == undefined do
+        (
+            setStatus "Selecione um estilo valido." isError:true
+            return false
+        )
+
+        local applied = false
+        try (applied = ::AmenoStyleService.applyStyleToDimension ctrl targetId) catch
+        (
+            setStatus ("Nao foi possivel aplicar o estilo: " + (getCurrentException() as string)) isError:true
+            return false
+        )
+        if applied != true do
+        (
+            setStatus "O estilo nao foi aplicado." isError:true
+            return false
+        )
+        refresh()
+        setStatus "Estilo aplicado."
+        true
+    ),
+
     fn applyStyle =
     (
-        if ::AmenoApp == undefined or ::AmenoStyleService == undefined do return false
+        if ::AmenoApp == undefined do return false
         local ctrl = ::AmenoApp.getSelectedDimensionController()
-        if ctrl == undefined or not isValidNode ctrl do return false
 
         local cb = findControl "cbEstilo"
         if cb != undefined and cb.SelectedIndex >= 0 and (cb.SelectedIndex + 1) <= styleIds.count do
         (
             local targetId = styleIds[cb.SelectedIndex + 1]
-            try
-            (
-                ::AmenoStyleService.applyStyleToDimension ctrl targetId
-                refresh()
-                true
-            )
-            catch ()
+            return applyStyleToController ctrl targetId
         )
+        setStatus "Selecione um estilo valido." isError:true
+        false
     ),
 
     -- -----------------------------------------------------------------
     -- Reancoragem interativa
     -- -----------------------------------------------------------------
+    fn applyReanchorTarget ctrl whichPoint targetNode targetWorldPoint vertexId:-1 =
+    (
+        if ctrl == undefined or not isValidNode ctrl do
+        (
+            setStatus "Selecione uma cota valida para reancorar." isError:true
+            return false
+        )
+        if whichPoint != #pointA and whichPoint != #pointB do
+        (
+            setStatus "Ponto de ancora invalido." isError:true
+            return false
+        )
+        if targetNode == undefined or not isValidNode targetNode do
+        (
+            setStatus "Reancoragem cancelada. Nenhuma ancora foi alterada." isError:true
+            return false
+        )
+        if not (AmenoEditarGeometryFilter targetNode) do
+        (
+            setStatus "Escolha uma geometria valida; textos e graficos Ameno nao podem ser ancoras." isError:true
+            return false
+        )
+        if targetWorldPoint == undefined or (classof targetWorldPoint) != Point3 do
+        (
+            setStatus "O ponto geometrico da nova ancora e invalido." isError:true
+            return false
+        )
+        if ::AmenoApp == undefined do
+        (
+            setStatus "O servico de reancoragem Ameno nao esta disponivel." isError:true
+            return false
+        )
+
+        local applied = false
+        try
+        (
+            applied = ::AmenoApp.reanchorDimension ctrl whichPoint targetNode targetWorldPoint anchorVertexId:vertexId
+        )
+        catch
+        (
+            setStatus ("Nao foi possivel reancorar: " + (getCurrentException() as string)) isError:true
+            return false
+        )
+        if applied != true do
+        (
+            setStatus "A reancoragem nao foi aplicada." isError:true
+            return false
+        )
+        refresh()
+        setStatus ("Ancora " + (if whichPoint == #pointA then "A" else "B") + " atualizada.")
+        true
+    ),
+
     fn reanchor whichPoint =
     (
         if ::AmenoApp == undefined do return false
         local ctrl = ::AmenoApp.getSelectedDimensionController()
         if ctrl == undefined or not isValidNode ctrl do
         (
-            try (messageBox "Selecione uma cota na cena para reancorar." title:"Ameno - Editar Cota") catch ()
+            setStatus "Selecione uma cota na cena para reancorar." isError:true
             return false
         )
 
@@ -700,18 +945,32 @@ struct AmenoCotasEditarTabDefinition
                 else undefined
             local foundNode = if hitResult != undefined then hitResult.node else undefined
             local resolvedPoint = if hitResult != undefined and hitResult.vertexWorldPoint != undefined then hitResult.vertexWorldPoint else pt
+            local vertexId = if hitResult != undefined then hitResult.vertexId else -1
 
             if foundNode == undefined do
             (
-                foundNode = pickObject prompt:("Objeto nao detectado automaticamente. Clique no objeto para vincular o ponto " + pointLabel + " (ou Esc para mundial):")
+                foundNode = pickObject prompt:("Objeto nao detectado. Clique em uma geometria para vincular o ponto " + pointLabel + " (Esc cancela):") filter:AmenoEditarGeometryFilter
+                if foundNode == undefined or not isValidNode foundNode do
+                (
+                    setStatus "Reancoragem cancelada. Nenhuma ancora foi alterada."
+                    return false
+                )
+                hitResult = ::AmenoDimensionTool.detectHitNode resolvedPoint snapNode:foundNode snapWorldPoint:resolvedPoint snapHit:true
+                if hitResult != undefined do
+                (
+                    foundNode = hitResult.node
+                    vertexId = hitResult.vertexId
+                    if hitResult.vertexWorldPoint != undefined do resolvedPoint = hitResult.vertexWorldPoint
+                )
             )
 
-            ::AmenoApp.reanchorDimension ctrl whichPoint foundNode resolvedPoint
-            refresh()
-            true
+            applyReanchorTarget ctrl whichPoint foundNode resolvedPoint vertexId:vertexId
         )
         else
+        (
+            setStatus "Reancoragem cancelada. Nenhuma ancora foi alterada."
             false
+        )
     ),
 
     -- -----------------------------------------------------------------
@@ -725,10 +984,42 @@ struct AmenoCotasEditarTabDefinition
 
         try
         (
-            ::AmenoApp.selectAnchors ctrl
-            true
+            local selected = ::AmenoApp.selectAnchors ctrl
+            if selected then setStatus "Nos ancora selecionados."
+            else setStatus "A cota selecionada nao possui nos ancora validos." isError:true
+            selected
         )
-        catch ()
+        catch
+        (
+            setStatus ("Nao foi possivel selecionar as ancoras: " + (getCurrentException() as string)) isError:true
+            false
+        )
+    ),
+
+    fn registerCallbacks =
+    (
+        try (callbacks.removeScripts id:#amenoCotasEditSync) catch ()
+        local callbackText = "if ::AmenoCotasWindow != undefined and ::AmenoCotasWindow.isOpen() and ::AmenoCotasWindow.activeSection == 3 and ::AmenoCotasEditarTab != undefined do (try (::AmenoCotasEditarTab.refresh()) catch ())"
+        try (callbacks.addScript #selectionSetChanged callbackText id:#amenoCotasEditSync) catch ()
+        try (callbacks.addScript #sceneUndo callbackText id:#amenoCotasEditSync) catch ()
+        try (callbacks.addScript #sceneRedo callbackText id:#amenoCotasEditSync) catch ()
+        callbacksRegistered = true
+        true
+    ),
+
+    fn unregisterCallbacks =
+    (
+        try (callbacks.removeScripts id:#amenoCotasEditSync) catch ()
+        callbacksRegistered = false
+        true
+    ),
+
+    fn onPanelClosed =
+    (
+        unregisterCallbacks()
+        hostControl = undefined
+        currentCtrl = undefined
+        true
     ),
 
     -- -----------------------------------------------------------------
@@ -770,6 +1061,11 @@ struct AmenoCotasEditarTabDefinition
     -- -----------------------------------------------------------------
     fn build =
     (
+        if hostControl != undefined do
+        (
+            refresh()
+            return hostControl
+        )
         local xamlStr    = getXAMLString()
         local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
         hostControl = xamlReader.Parse xamlStr

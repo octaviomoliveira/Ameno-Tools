@@ -188,10 +188,10 @@ struct AmenoRuntime
         res
     ),
 
-    fn reanchorDimension controller whichPoint targetNode targetWorldPoint =
+    fn reanchorDimension controller whichPoint targetNode targetWorldPoint anchorVertexId:-1 =
     (
         if ::AmenoAnchorService == undefined then return false
-        local res = ::AmenoAnchorService.reanchorDimension controller whichPoint targetNode targetWorldPoint
+        local res = ::AmenoAnchorService.reanchorDimension controller whichPoint targetNode targetWorldPoint anchorVertexId:anchorVertexId
         refreshDimensions()
         res
     ),

@@ -444,6 +444,7 @@ struct AmenoCotasWindowDefinition
                 try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
                 try (AmenoCotasWindow.unregisterSceneCountCallbacks()) catch ()
                 try (::AmenoCotasEstilosTab.onPanelClosed()) catch ()
+                try (::AmenoCotasEditarTab.onPanelClosed()) catch ()
                 try (AmenoCotasWindow.closeApproved = false) catch ()
                 try (AmenoCotasWindow.window = undefined) catch ()
             ))
@@ -565,13 +566,9 @@ struct AmenoCotasWindowDefinition
 
         buildWindow()
         window.Show()
-        try
-        (
-            callbacks.removeScripts id:#amenoCotasWindowSelection
-            callbacks.addScript #selectionSetChanged "if ::AmenoCotasWindow != undefined and ::AmenoCotasWindow.isOpen() and ::AmenoCotasWindow.activeSection == 3 and ::AmenoCotasEditarTab != undefined do (try (::AmenoCotasEditarTab.refresh()) catch ())" id:#amenoCotasWindowSelection
-        )
-        catch ()
+        try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
         try (::AmenoCotasEstilosTab.registerCallbacks()) catch ()
+        try (::AmenoCotasEditarTab.registerCallbacks()) catch ()
         try (AmenoCotasWindow.registerSceneCountCallbacks()) catch ()
         window
     ),
@@ -620,6 +617,7 @@ struct AmenoCotasWindowDefinition
         )
         closeApproved = true
         try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
+        try (::AmenoCotasEditarTab.unregisterCallbacks()) catch ()
         try (unregisterSceneCountCallbacks()) catch ()
         local loaded = try (window != undefined and window.IsLoaded) catch (false)
         if loaded do
