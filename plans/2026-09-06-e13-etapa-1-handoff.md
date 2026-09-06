@@ -52,5 +52,5 @@ D:\Ameno\_worktrees\develop\.test-output\stage1-evidence-develop\
 ## Commit e próximo passo
 
 - Commit da integração: d1e9e22f379a52ad5933cbea01a696e33d5d63bf (merge commit com pais f131f08 e 676e008); permanece fora da main.
-- A situação foi transferida para `develop` em `d5aa9cc`; o wrapper, o fixture R0, o teste de auditoria e esta atualização documental ficam registrados no commit de encerramento desta execução.
+- A situação foi transferida para `develop` em `d5aa9cc`; o wrapper, o fixture R0, o teste de auditoria e a atualização documental estão registrados no commit `3daba25` (`fix: close E13 stage 1 compatibility gates`).
 - Próximo passo: aguardar solicitação/autorização explícita para a etapa 2. Não instalar, não publicar, não fazer merge na `main` e não avançar automaticamente.
