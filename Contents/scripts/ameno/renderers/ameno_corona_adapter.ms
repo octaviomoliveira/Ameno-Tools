@@ -119,26 +119,28 @@ struct AmenoCoronaRendererAdapterService
     (
         if state == undefined then return true
 
-        try (pngio.setAlpha state.pngAlpha) catch ()
-        try (pngio.setType state.pngType) catch ()
-        try (pngio.setInterlaced state.pngInterlaced) catch ()
-        try (renderOutputFilename = state.savedOutputPath) catch ()
-        try (renderSaveFile = state.savedSaveFile) catch ()
+        local restoreErrors = #()
+        try (pngio.setAlpha state.pngAlpha) catch (append restoreErrors ("png alpha: " + (getCurrentException() as string)))
+        try (pngio.setType state.pngType) catch (append restoreErrors ("png type: " + (getCurrentException() as string)))
+        try (pngio.setInterlaced state.pngInterlaced) catch (append restoreErrors ("png interlaced: " + (getCurrentException() as string)))
+        try (renderOutputFilename = state.savedOutputPath) catch (append restoreErrors ("output path: " + (getCurrentException() as string)))
+        try (renderSaveFile = state.savedSaveFile) catch (append restoreErrors ("save file: " + (getCurrentException() as string)))
 
         -- Restaurar critérios de parada originais do usuário.
         local r = renderers.current
         if state.savedPassesEntry[1] != "" do
             try (if isProperty r state.savedPassesEntry[1] do
-                setProperty r state.savedPassesEntry[1] state.savedPassesEntry[2]) catch ()
+                setProperty r state.savedPassesEntry[1] state.savedPassesEntry[2]) catch (append restoreErrors ("passes: " + (getCurrentException() as string)))
         if state.savedNoiseEntry[1] != "" do
             try (if isProperty r state.savedNoiseEntry[1] do
-                setProperty r state.savedNoiseEntry[1] state.savedNoiseEntry[2]) catch ()
+                setProperty r state.savedNoiseEntry[1] state.savedNoiseEntry[2]) catch (append restoreErrors ("noise: " + (getCurrentException() as string)))
 
         if state.renderer != renderers.current then
         (
-            throw "O renderer ativo mudou durante o passe de cotas; a restauração foi interrompida para não sobrescrever a escolha do usuário."
+            append restoreErrors "O renderer ativo mudou durante o passe de cotas; os parâmetros do renderer atual não foram tocados."
         )
 
+        if restoreErrors.count > 0 then throw ("Restauração do Corona falhou: " + restoreErrors[1])
         true
     ),
 
@@ -175,6 +177,7 @@ struct AmenoCoronaRendererAdapterService
         try
         (
             renderedBitmap = render \
+                camera:(if request.cameraNode != undefined and isValidNode request.cameraNode then request.cameraNode else undefined) \
                 frame:request.frame \
                 outputwidth:request.width \
                 outputheight:request.height \

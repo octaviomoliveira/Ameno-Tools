@@ -636,6 +636,7 @@ struct AmenoStyleEditorWPFDefinition
             cbTerminalType.Items.Clear()
             cbTerminalType.Items.Add "Traço Arquitetônico (45°)"
             cbTerminalType.Items.Add "Seta Fechada"
+            cbTerminalType.Items.Add "Losango"
             cbTerminalType.Items.Add "Seta Aberta"
             cbTerminalType.Items.Add "Ponto / Losango"
             cbTerminalType.Items.Add "Nenhum"
@@ -718,9 +719,10 @@ struct AmenoStyleEditorWPFDefinition
                 (
                     #tick: 0
                     #arrowClosed: 1
-                    #arrowOpen: 2
-                    #dot: 3
-                    #none: 4
+                    #diamond: 2
+                    #arrowOpen: 3
+                    #dot: 4
+                    #none: 5
                     default: 0
                 )
                 cbTerminalType.SelectedIndex = tIdx
@@ -1048,9 +1050,10 @@ struct AmenoStyleEditorWPFDefinition
                 (
                     0: #tick
                     1: #arrowClosed
-                    2: #arrowOpen
-                    3: #dot
-                    4: #none
+                    2: #diamond
+                    3: #arrowOpen
+                    4: #dot
+                    5: #none
                     default: #tick
                 )
                 AmenoStyleEditorWPF.onFieldChanged #terminalType tType

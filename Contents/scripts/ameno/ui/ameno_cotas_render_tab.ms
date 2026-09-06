@@ -230,6 +230,10 @@ struct AmenoCotasRenderTabDefinition
         local cbCam = findControl "cbCameras"
         if cbCam == undefined do return false
 
+        local previousCamera = undefined
+        if cbCam.SelectedIndex > 0 and (cbCam.SelectedIndex + 1) <= cameraList.count do
+            previousCamera = cameraList[cbCam.SelectedIndex + 1]
+
         cbCam.Items.Clear()
         cameraList = #()
 
@@ -242,7 +246,14 @@ struct AmenoCotasRenderTabDefinition
             append cameraList c
         )
 
-        cbCam.SelectedIndex = 0
+        local selectedIndex = 0
+        if previousCamera != undefined and isValidNode previousCamera do
+        (
+            if cameraList.count >= 2 do
+                for cameraIndex = 2 to cameraList.count do
+                    if cameraList[cameraIndex] == previousCamera do selectedIndex = cameraIndex - 1
+        )
+        cbCam.SelectedIndex = selectedIndex
         true
     ),
 
@@ -317,25 +328,30 @@ struct AmenoCotasRenderTabDefinition
 
         if txtStatus != undefined do txtStatus.Text = "Renderizando cotas... Por favor aguarde."
 
-        local prevCamera = try (viewport.getCamera()) catch (undefined)
-        local prevType = try (viewport.getType()) catch (undefined)
-        local camSwitched = false
-
-        -- Se camera especifica foi selecionada, direcionar viewport para ela
+        -- A câmera escolhida é enviada diretamente ao serviço/adapter. Isso
+        -- preserva a viewport ativa, incluindo vista livre, transform e zoom.
         local cbCam = findControl "cbCameras"
-        if cbCam != undefined and cbCam.SelectedIndex > 0 and (cbCam.SelectedIndex + 1) <= cameraList.count do
+        local selectedCamera = undefined
+        if cbCam != undefined and cbCam.SelectedIndex > 0 do
         (
-            local camNode = cameraList[cbCam.SelectedIndex + 1]
-            if camNode != undefined and isValidNode camNode do
+            local cameraIndex = cbCam.SelectedIndex + 1
+            if cameraIndex > cameraList.count then
             (
-                try (viewport.setCamera camNode; camSwitched = true) catch ()
+                if txtStatus != undefined do txtStatus.Text = "Falha: a câmera selecionada não existe mais."
+                return false
+            )
+            selectedCamera = cameraList[cameraIndex]
+            if selectedCamera == undefined or not isValidNode selectedCamera then
+            (
+                if txtStatus != undefined do txtStatus.Text = "Falha: a câmera selecionada não existe mais."
+                return false
             )
         )
 
         local success = false
         try
         (
-            local result = ::AmenoApp.renderCotas outputPath:outPath selectionMode:scope
+            local result = ::AmenoApp.renderCotas outputPath:outPath selectionMode:scope cameraNode:selectedCamera
             if result != undefined and result.success then
             (
                 if txtOut != undefined do txtOut.Text = result.outputPath
@@ -362,19 +378,6 @@ struct AmenoCotasRenderTabDefinition
             if txtStatus != undefined do txtStatus.Text = "Falha: " + err
             try (messageBox ("Falha inesperada no render:\n\n" + err) title:"Ameno - Render de Cotas") catch ()
             success = false
-        )
-
-        -- Restaurar viewport original se foi alterado
-        if camSwitched do
-        (
-            try
-            (
-                if prevCamera != undefined and isValidNode prevCamera then
-                    viewport.setCamera prevCamera
-                else if prevType != undefined then
-                    viewport.setType prevType
-            )
-            catch ()
         )
 
         success

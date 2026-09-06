@@ -23,6 +23,10 @@ struct AmenoAlignedDimensionLayout
     projectedOffsetPoint = [0, 0, 0],
     direction = [0, 0, 0],
     perpendicular = [0, 0, 0],
+    -- Plano suportado pela representação gráfica. O núcleo E2 continua
+    -- projetando a planta no XY, mas expõe a normal para que consumidores
+    -- não precisem inferir orientação por um eixo global.
+    planeNormal = [0, 0, 1],
     linePointA = [0, 0, 0],
     linePointB = [0, 0, 0],
     signedOffsetSceneUnits = 0.0,
@@ -193,7 +197,7 @@ struct AmenoDimensionMathDefinition
         local linePointA = projectedA + (perpendicular * signedOffset)
         local linePointB = projectedB + (perpendicular * signedOffset)
 
-        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit) dimensionMode:#aligned
+        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular planeNormal:[0, 0, 1] linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit) dimensionMode:#aligned
     ),
 
     -- Cota horizontal: mede somente a componente X de A para B.
@@ -230,7 +234,7 @@ struct AmenoDimensionMathDefinition
         local linePointA = [projectedA.x, projectedA.y + signedOffset, 0.0]
         local linePointB = [projectedB.x, projectedA.y + signedOffset, 0.0]
 
-        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit) dimensionMode:#horizontal
+        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular planeNormal:[0, 0, 1] linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit) dimensionMode:#horizontal
     ),
 
     -- Cota vertical: mede somente a componente Y de A para B.
@@ -267,7 +271,7 @@ struct AmenoDimensionMathDefinition
         local linePointA = [projectedA.x + signedOffset, projectedA.y, 0.0]
         local linePointB = [projectedA.x + signedOffset, projectedB.y, 0.0]
 
-        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit) dimensionMode:#vertical
+        AmenoAlignedDimensionLayout valid:true pointA:pointA pointB:pointB offsetPoint:offsetPoint projectedA:projectedA projectedB:projectedB projectedOffsetPoint:projectedOffset direction:direction perpendicular:perpendicular planeNormal:[0, 0, 1] linePointA:linePointA linePointB:linePointB signedOffsetSceneUnits:signedOffset side:(if signedOffset >= 0.0 then #positive else #negative) measuredSceneUnits:measuredSceneUnits measuredMillimeters:(measuredSceneUnits * resolvedMillimetersPerSceneUnit) dimensionMode:#vertical
     ),
 
     -- Dispatcher público: escolhe o layout correto pelo modo.

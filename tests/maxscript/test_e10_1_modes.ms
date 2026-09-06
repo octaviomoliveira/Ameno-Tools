@@ -7,6 +7,7 @@ global AmenoDimensionMath
 global AmenoDimensionCA
 global AmenoDimensionRecord
 
+(
 local passed = 0
 local failed = 0
 local errors = #()
@@ -189,6 +190,13 @@ if failed > 0 do
 )
 
 if failed == 0 then
+(
     format "E10.1 PASS\n"
+    format "[AMENO_TEST][PASS] E10.1 modes passed\n"
+)
 else
+(
     format "E10.1 FAIL\n"
+    format "[AMENO_TEST][FAIL] E10.1 modes failed\n"
+)
+)

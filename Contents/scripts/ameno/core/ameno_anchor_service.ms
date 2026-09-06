@@ -15,6 +15,7 @@ global AmenoDimensionCA
 global AmenoDimensionGraphics
 global AmenoDimensionMath
 global AmenoStyleService
+global AmenoSceneSetup
 global AmenoRefreshMainPanel
 global AmenoRegisterTransformWatcher
 global AmenoRegisterGeometryWatcher
@@ -207,6 +208,13 @@ struct AmenoAnchorServiceDefinition
 
         ::AmenoDimensionGraphics.updateLineSplinePoints lineNode layout style:resolvedStyle
         ::AmenoDimensionGraphics.updateTextNode textNode audit.displayText layout style:resolvedStyle
+        local sceneState = ::AmenoSceneSetup.inspect()
+        if sceneState.status != #ready or sceneState.dimensionsLayer == undefined then
+            return false
+        -- Terminais mesh fazem parte da mesma atualização rápida que spline e
+        -- texto. A sincronização também troca o tipo quando o estilo mudou e
+        -- falha explicitamente se um terminal obrigatório não puder ser criado.
+        ::AmenoDimensionGraphics.syncTerminalNodes dimensionId layout audit resolvedStyle sceneState.dimensionsLayer material:(try (lineNode.material) catch (undefined))
 
         rec.lastMeasuredMm = audit.measuredMillimeters
         rec.lastDeltaMm = audit.deltaMillimeters

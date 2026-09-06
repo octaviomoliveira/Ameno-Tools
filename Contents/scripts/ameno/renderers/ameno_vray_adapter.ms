@@ -98,27 +98,29 @@ struct AmenoVRayRendererAdapterService
     (
         if state == undefined then return true
 
-        try (pngio.setAlpha state.pngAlpha) catch ()
-        try (pngio.setType state.pngType) catch ()
-        try (pngio.setInterlaced state.pngInterlaced) catch ()
-        try (renderOutputFilename = state.savedOutputPath) catch ()
-        try (renderSaveFile = state.savedSaveFile) catch ()
+        local restoreErrors = #()
+        try (pngio.setAlpha state.pngAlpha) catch (append restoreErrors ("png alpha: " + (getCurrentException() as string)))
+        try (pngio.setType state.pngType) catch (append restoreErrors ("png type: " + (getCurrentException() as string)))
+        try (pngio.setInterlaced state.pngInterlaced) catch (append restoreErrors ("png interlaced: " + (getCurrentException() as string)))
+        try (renderOutputFilename = state.savedOutputPath) catch (append restoreErrors ("output path: " + (getCurrentException() as string)))
+        try (renderSaveFile = state.savedSaveFile) catch (append restoreErrors ("save file: " + (getCurrentException() as string)))
 
         local r = renderers.current
         if state.savedGiEntry[1] != "" do
-            try (if isProperty r state.savedGiEntry[1] do setProperty r state.savedGiEntry[1] state.savedGiEntry[2]) catch ()
+            try (if isProperty r state.savedGiEntry[1] do setProperty r state.savedGiEntry[1] state.savedGiEntry[2]) catch (append restoreErrors ("GI: " + (getCurrentException() as string)))
         if state.savedNoiseEntry[1] != "" do
-            try (if isProperty r state.savedNoiseEntry[1] do setProperty r state.savedNoiseEntry[1] state.savedNoiseEntry[2]) catch ()
+            try (if isProperty r state.savedNoiseEntry[1] do setProperty r state.savedNoiseEntry[1] state.savedNoiseEntry[2]) catch (append restoreErrors ("noise: " + (getCurrentException() as string)))
         if state.savedTimeEntry[1] != "" do
-            try (if isProperty r state.savedTimeEntry[1] do setProperty r state.savedTimeEntry[1] state.savedTimeEntry[2]) catch ()
+            try (if isProperty r state.savedTimeEntry[1] do setProperty r state.savedTimeEntry[1] state.savedTimeEntry[2]) catch (append restoreErrors ("time: " + (getCurrentException() as string)))
         if state.savedSamplesEntry[1] != "" do
-            try (if isProperty r state.savedSamplesEntry[1] do setProperty r state.savedSamplesEntry[1] state.savedSamplesEntry[2]) catch ()
+            try (if isProperty r state.savedSamplesEntry[1] do setProperty r state.savedSamplesEntry[1] state.savedSamplesEntry[2]) catch (append restoreErrors ("samples: " + (getCurrentException() as string)))
 
         if state.renderer != renderers.current then
         (
-            throw "O renderer ativo mudou durante o passe de cotas; a restauração foi interrompida para não sobrescrever a escolha do usuário."
+            append restoreErrors "O renderer ativo mudou durante o passe de cotas; os parâmetros do renderer atual não foram tocados."
         )
 
+        if restoreErrors.count > 0 then throw ("Restauração do V-Ray falhou: " + restoreErrors[1])
         true
     ),
 
@@ -166,6 +168,7 @@ struct AmenoVRayRendererAdapterService
         try
         (
             renderedBitmap = render \
+                camera:(if request.cameraNode != undefined and isValidNode request.cameraNode then request.cameraNode else undefined) \
                 frame:request.frame \
                 outputwidth:request.width \
                 outputheight:request.height \

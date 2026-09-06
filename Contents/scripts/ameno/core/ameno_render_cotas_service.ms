@@ -11,7 +11,10 @@ struct AmenoRenderCotasRequest
     width = 0,
     height = 0,
     pixelAspect = 1.0,
-    renderType = #normal
+    renderType = #normal,
+    -- Quando preenchida, a câmera é passada diretamente ao comando render;
+    -- a viewport ativa não precisa ser trocada para executar o passe.
+    cameraNode = undefined
 )
 
 struct AmenoRenderCotasResult
@@ -141,7 +144,7 @@ struct AmenoRenderCotasServiceDefinition
         )
     ),
 
-    fn createRequest outputPath:"" selectionMode:#all overwrite:false =
+    fn createRequest outputPath:"" selectionMode:#all overwrite:false cameraNode:undefined =
     (
         local inheritedRenderType = #normal
         try (inheritedRenderType = normalizeRenderType (getRenderType())) catch ()
@@ -154,7 +157,8 @@ struct AmenoRenderCotasServiceDefinition
             width:renderWidth \
             height:renderHeight \
             pixelAspect:renderPixelAspect \
-            renderType:inheritedRenderType
+            renderType:inheritedRenderType \
+            cameraNode:cameraNode
     ),
 
     fn collectDimensionIds selectionMode =
@@ -191,7 +195,7 @@ struct AmenoRenderCotasServiceDefinition
             for node in (AmenoDimensionGraphics.findNodesForDimension dimensionId) where isValidNode node do
             (
                 local graphicRole = AmenoDimensionGraphics.readTextProperty node "Ameno.GraphicRole"
-                if (graphicRole == "lines" or graphicRole == "label") and (findItem targetNodes node) == 0 do append targetNodes node
+                if (graphicRole == "lines" or graphicRole == "label" or graphicRole == "terminal") and (findItem targetNodes node) == 0 do append targetNodes node
             )
         )
 
@@ -279,31 +283,35 @@ struct AmenoRenderCotasServiceDefinition
     (
         if sceneState == undefined then return true
 
+        local restoreErrors = #()
         with undo off
         (
             for nodeState in sceneState.nodes where nodeState.node != undefined and isValidNode nodeState.node do
             (
                 local node = nodeState.node
-                if nodeState.hasMaterial do try (node.material = nodeState.material) catch ()
-                try (node.isHidden = nodeState.isHidden) catch ()
-                try (node.primaryVisibility = nodeState.primaryVisibility) catch ()
-                try (node.renderable = nodeState.renderable) catch ()
-                try (node.renderByLayer = nodeState.renderByLayer) catch ()
+                if nodeState.hasMaterial do
+                    try (node.material = nodeState.material) catch (append restoreErrors ("material " + node.name + ": " + (getCurrentException() as string)))
+                try (node.isHidden = nodeState.isHidden) catch (append restoreErrors ("hidden " + node.name + ": " + (getCurrentException() as string)))
+                try (node.primaryVisibility = nodeState.primaryVisibility) catch (append restoreErrors ("primaryVisibility " + node.name + ": " + (getCurrentException() as string)))
+                try (node.renderable = nodeState.renderable) catch (append restoreErrors ("renderable " + node.name + ": " + (getCurrentException() as string)))
+                try (node.renderByLayer = nodeState.renderByLayer) catch (append restoreErrors ("renderByLayer " + node.name + ": " + (getCurrentException() as string)))
             )
 
             for layerState in sceneState.layers where layerState.layer != undefined do
             (
                 local layer = layerState.layer
-                try (layer.visibility = layerState.visibility) catch ()
-                try (layer.primaryVisibility = layerState.primaryVisibility) catch ()
-                try (layer.renderable = layerState.renderable) catch ()
-                try (layer.ishidden = layerState.isHidden) catch ()
-                try (layer.on = layerState.layerOn) catch ()
+                try (layer.visibility = layerState.visibility) catch (append restoreErrors ("visibility " + layer.name + ": " + (getCurrentException() as string)))
+                try (layer.primaryVisibility = layerState.primaryVisibility) catch (append restoreErrors ("primaryVisibility layer " + layer.name + ": " + (getCurrentException() as string)))
+                try (layer.renderable = layerState.renderable) catch (append restoreErrors ("renderable layer " + layer.name + ": " + (getCurrentException() as string)))
+                try (layer.ishidden = layerState.isHidden) catch (append restoreErrors ("hidden layer " + layer.name + ": " + (getCurrentException() as string)))
+                try (layer.on = layerState.layerOn) catch (append restoreErrors ("on layer " + layer.name + ": " + (getCurrentException() as string)))
             )
 
-            try (if sceneState.currentLayer != undefined do sceneState.currentLayer.current = true) catch ()
+            try (if sceneState.currentLayer != undefined do sceneState.currentLayer.current = true) catch (append restoreErrors ("current layer: " + (getCurrentException() as string)))
         )
 
+        if restoreErrors.count > 0 then
+            throw ("A restauração da cena falhou em " + (restoreErrors[1]))
         true
     ),
 

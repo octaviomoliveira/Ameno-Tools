@@ -553,11 +553,11 @@ struct AmenoRuntime
         if ::AmenoRenderCotasService == undefined then "" else ::AmenoRenderCotasService.defaultOutputPath()
     ),
 
-    fn renderCotas outputPath:"" selectionMode:#all =
+    fn renderCotas outputPath:"" selectionMode:#all cameraNode:undefined =
     (
         if ::AmenoRenderCotasService == undefined then throw "O serviço Renderizar Cotas não foi carregado."
 
-        local request = ::AmenoRenderCotasService.createRequest outputPath:outputPath selectionMode:selectionMode overwrite:false
+        local request = ::AmenoRenderCotasService.createRequest outputPath:outputPath selectionMode:selectionMode overwrite:false cameraNode:cameraNode
         lastRenderResult = ::AmenoRenderCotasService.renderDimensions request
         lastRenderResult
     ),

@@ -38,7 +38,7 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
     button btnThick "Forte (2.5)" pos:[306,278] width:70 height:20
 
     groupBox grpTerminals "Terminais de Cota" pos:[12,333] width:376 height:95
-    dropdownList ddlTerminalType "Tipo de Terminal:" pos:[24,353] width:210 height:40 items:#("Traço Arquitetônico (45°)", "Seta Fechada", "Seta Aberta", "Ponto / Losango", "Nenhum")
+    dropdownList ddlTerminalType "Tipo de Terminal:" pos:[24,353] width:210 height:40 items:#("Traço Arquitetônico (45°)", "Seta Fechada", "Losango", "Seta Aberta", "Ponto", "Nenhum")
     spinner spnTerminalSize "Tamanho Terminal:" pos:[244,373] width:132 height:18 range:[1.0, 200.0, 14.0] type:#float fieldWidth:40
 
     button btnUpdateBatch "Atualizar Estilo (Em Lote)" pos:[12,438] width:184 height:30
@@ -51,9 +51,10 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
         (
             #tick: 1
             #arrowClosed: 2
-            #arrowOpen: 3
-            #dot: 4
-            #none: 5
+            #diamond: 3
+            #arrowOpen: 4
+            #dot: 5
+            #none: 6
             default: 1
         )
     )
@@ -64,9 +65,10 @@ rollout AmenoStyleEditorRollout "Ameno Dimensions — Editor de Estilos" width:4
         (
             1: #tick
             2: #arrowClosed
-            3: #arrowOpen
-            4: #dot
-            5: #none
+            3: #diamond
+            4: #arrowOpen
+            5: #dot
+            6: #none
             default: #tick
         )
     )
