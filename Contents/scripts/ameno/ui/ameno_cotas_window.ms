@@ -7,6 +7,7 @@
 global AmenoCotasWindow
 global AmenoCotasEstilosTab
 global AmenoCotasEditarTab
+global AmenoCotasRenderTab
 
 struct AmenoCotasWindowDefinition
 (
@@ -257,6 +258,19 @@ struct AmenoCotasWindowDefinition
                         )
                     )
                 )
+                4: -- Aba Render (E13-E)
+                (
+                    if ::AmenoCotasRenderTab != undefined do
+                    (
+                        local tabControl = ::AmenoCotasRenderTab.build()
+                        if tabControl != undefined do
+                        (
+                            contentBorder.Child = tabControl
+                            ::AmenoCotasRenderTab.refreshCameras()
+                            ::AmenoCotasRenderTab.refreshRendererInfo()
+                        )
+                    )
+                )
                 default:
                 (
                     -- Outras abas: placeholder
@@ -319,6 +333,11 @@ struct AmenoCotasWindowDefinition
         setTabContent sectionIndex
         if sectionIndex == 3 and ::AmenoCotasEditarTab != undefined do
             try (::AmenoCotasEditarTab.refresh()) catch ()
+        if sectionIndex == 4 and ::AmenoCotasRenderTab != undefined do
+        (
+            try (::AmenoCotasRenderTab.refreshCameras()) catch ()
+            try (::AmenoCotasRenderTab.refreshRendererInfo()) catch ()
+        )
     ),
 
     -- -----------------------------------------------------------------
