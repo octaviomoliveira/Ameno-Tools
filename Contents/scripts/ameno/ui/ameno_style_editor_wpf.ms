@@ -15,6 +15,7 @@ global AmenoStyleEditorWindow
 global AmenoStyleService
 global AmenoStyleDraft
 global AmenoPreviewRenderer
+global AmenoCotasEstilosTab
 
 struct AmenoStyleEditorWPFDefinition
 (
@@ -1233,6 +1234,8 @@ struct AmenoStyleEditorWindowStub
             (
                 ::AmenoCotasWindow.show()
                 ::AmenoCotasWindow.setActiveSection 2
+                if styleId != undefined and styleId != "" and ::AmenoCotasEstilosTab != undefined do
+                    try (::AmenoCotasEstilosTab.requestStyleSwitch styleId) catch ()
             )
             else
             (

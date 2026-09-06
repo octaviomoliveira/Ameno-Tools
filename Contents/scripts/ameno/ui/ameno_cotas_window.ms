@@ -15,6 +15,7 @@ struct AmenoCotasWindowDefinition
     window        = undefined,
     btnClose      = undefined,
     activeSection = 0,
+    closeApproved = false,
 
     -- -----------------------------------------------------------------
     -- Helpers
@@ -288,7 +289,10 @@ struct AmenoCotasWindowDefinition
                     (
                         local tabControl = ::AmenoCotasEstilosTab.build()
                         if tabControl != undefined do
+                        (
                             contentBorder.Child = tabControl
+                            try (::AmenoCotasEstilosTab.refresh()) catch ()
+                        )
                     )
                 )
                 3: -- Aba Editar (E13-D)
@@ -415,12 +419,32 @@ struct AmenoCotasWindowDefinition
             dotNet.addEventHandler btnClose "Click" \
                 (fn onClose s e = (try (AmenoCotasWindow.close()) catch ()))
 
+        -- Interceptar tambem Alt+F4/fechamento externo. O botao e o Esc
+        -- passam pelo mesmo contrato em AmenoCotasWindow.close().
+        dotNet.addEventHandler window "Closing" \
+            (fn onWindowClosing s e =
+            (
+                try
+                (
+                    if not ::AmenoCotasWindow.closeApproved and ::AmenoCotasEstilosTab != undefined do
+                    (
+                        if not (::AmenoCotasEstilosTab.prepareToClose()) then
+                            e.Cancel = true
+                        else
+                            ::AmenoCotasWindow.closeApproved = true
+                    )
+                )
+                catch (e.Cancel = true)
+            ))
+
         -- Cleaned: limpar singleton
         dotNet.addEventHandler window "Closed" \
             (fn onWindowClosed s e =
             (
                 try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
                 try (AmenoCotasWindow.unregisterSceneCountCallbacks()) catch ()
+                try (::AmenoCotasEstilosTab.onPanelClosed()) catch ()
+                try (AmenoCotasWindow.closeApproved = false) catch ()
                 try (AmenoCotasWindow.window = undefined) catch ()
             ))
 
@@ -547,6 +571,7 @@ struct AmenoCotasWindowDefinition
             callbacks.addScript #selectionSetChanged "if ::AmenoCotasWindow != undefined and ::AmenoCotasWindow.isOpen() and ::AmenoCotasWindow.activeSection == 3 and ::AmenoCotasEditarTab != undefined do (try (::AmenoCotasEditarTab.refresh()) catch ())" id:#amenoCotasWindowSelection
         )
         catch ()
+        try (::AmenoCotasEstilosTab.registerCallbacks()) catch ()
         try (AmenoCotasWindow.registerSceneCountCallbacks()) catch ()
         window
     ),
@@ -589,6 +614,11 @@ struct AmenoCotasWindowDefinition
     -- -----------------------------------------------------------------
     fn close =
     (
+        if ::AmenoCotasEstilosTab != undefined do
+        (
+            if not (::AmenoCotasEstilosTab.prepareToClose()) then return false
+        )
+        closeApproved = true
         try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
         try (unregisterSceneCountCallbacks()) catch ()
         local loaded = try (window != undefined and window.IsLoaded) catch (false)
@@ -596,6 +626,7 @@ struct AmenoCotasWindowDefinition
         (
             try (window.Close()) catch ()
         )
+        true
     )
 )
 

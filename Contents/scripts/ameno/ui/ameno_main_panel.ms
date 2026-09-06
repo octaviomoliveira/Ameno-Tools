@@ -36,15 +36,10 @@ fn AmenoRefreshMainPanel =
             -- Aba 2: Estilos
             if ::AmenoCotasEstilosTab != undefined do
             (
-                try
-                (
-                    if ::AmenoStyleService != undefined then
-                        ::AmenoCotasEstilosTab.currentDraft = ::AmenoStyleService.createDraftFromStyle "default"
-                    ::AmenoCotasEstilosTab.populateStyleList()
-                    ::AmenoCotasEstilosTab.loadDraftToUI()
-                    ::AmenoCotasEstilosTab.updatePreview()
-                )
-                catch ()
+                -- Refresh de cena/seleção não troca o draft em edição. A troca
+                -- de estilo passa exclusivamente por requestStyleSwitch(),
+                -- que aplica o contrato Save/Discard/Cancel.
+                try (::AmenoCotasEstilosTab.refresh()) catch ()
             )
             -- Aba 3: Editar
             if ::AmenoCotasEditarTab != undefined do

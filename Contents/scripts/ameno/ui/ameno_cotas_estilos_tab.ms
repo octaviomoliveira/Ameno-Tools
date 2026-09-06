@@ -9,6 +9,7 @@ global AmenoCotasEstilosTab
 global AmenoStyleService
 global AmenoStyleDraft
 global AmenoPreviewRenderer
+global AmenoDimensionGraphics
 
 struct AmenoCotasEstilosTabDefinition
 (
@@ -16,6 +17,10 @@ struct AmenoCotasEstilosTabDefinition
     hostControl  = undefined,
     currentDraft = undefined,
     isSyncing    = false,
+    sceneGeneration = 0,
+    draftSceneGeneration = -1,
+    dirtyDecisionOverride = undefined,
+    callbacksRegistered = false,
 
     -- Controles nomeados (preenchidos em build)
     cbStyleSelect     = undefined,
@@ -66,6 +71,233 @@ struct AmenoCotasEstilosTabDefinition
 
     btnApplySelection = undefined,
     btnSaveStyle      = undefined,
+
+    -- -----------------------------------------------------------------
+    -- Estado do draft e contrato de transicao
+    -- -----------------------------------------------------------------
+    fn setCurrentDraft draftValue =
+    (
+        currentDraft = draftValue
+        draftSceneGeneration = if draftValue != undefined then sceneGeneration else -1
+        currentDraft
+    ),
+
+    fn ensureCurrentDraft styleId:"default" =
+    (
+        if currentDraft == undefined or draftSceneGeneration != sceneGeneration or currentDraft.styleRecord == undefined do
+        (
+            if ::AmenoStyleService != undefined then
+                this.setCurrentDraft (::AmenoStyleService.createDraftFromStyle styleId)
+            else
+            (
+                local fallbackDraft = AmenoStyleDraft()
+                fallbackDraft.styleRecord = AmenoStyleRecord()
+                this.setCurrentDraft fallbackDraft
+            )
+        )
+        currentDraft
+    ),
+
+    fn discardCurrentDraft clearDraft:true =
+    (
+        if currentDraft != undefined and ::AmenoStyleService != undefined do
+            try (::AmenoStyleService.discardDraft currentDraft) catch ()
+        if clearDraft then
+        (
+            currentDraft = undefined
+            draftSceneGeneration = -1
+        )
+        true
+    ),
+
+    fn setDirtyDecision decision =
+    (
+        dirtyDecisionOverride = decision
+        decision
+    ),
+
+    fn resolveDirtyDecision contextLabel =
+    (
+        if dirtyDecisionOverride != undefined then
+        (
+            local decision = dirtyDecisionOverride
+            dirtyDecisionOverride = undefined
+            decision
+        )
+        else
+        (
+            local msgText = "O rascunho atual possui alteracoes nao salvas.\n\n" + \
+                "Deseja salvar antes de " + contextLabel + "?"
+            local result = (dotNetClass "System.Windows.MessageBox").Show \
+                msgText "Rascunho de estilo" \
+                (dotNetClass "System.Windows.MessageBoxButton").YesNoCancel \
+                (dotNetClass "System.Windows.MessageBoxImage").Warning
+            local resultType = dotNetClass "System.Windows.MessageBoxResult"
+            if result == resultType.Yes then #save
+            else if result == resultType.No then #discard
+            else #cancel
+        )
+    ),
+
+    fn saveDraftForTransition =
+    (
+        if currentDraft == undefined or not currentDraft.isDirty then return true
+        if ::AmenoStyleService == undefined then return false
+        try
+        (
+            ::AmenoStyleService.saveDraftAsStyle currentDraft
+            true
+        )
+        catch
+        (
+            if txtPreviewStatus != undefined do
+                txtPreviewStatus.Text = "Nao foi possivel salvar o rascunho"
+            false
+        )
+    ),
+
+    fn resolveDirtyDraft contextLabel =
+    (
+        if currentDraft == undefined or not currentDraft.isDirty then return true
+        local decision = this.resolveDirtyDecision contextLabel
+        case decision of
+        (
+            #save: this.saveDraftForTransition()
+            #discard: (this.discardCurrentDraft(); true)
+            default: false
+        )
+    ),
+
+    fn findStyle styleId =
+    (
+        if ::AmenoStyleService == undefined then undefined
+        else
+        (
+            local stylesList = ::AmenoStyleService.listStyles()
+            for styleRecord in stylesList where styleRecord.styleId == styleId do return styleRecord
+            undefined
+        )
+    ),
+
+    fn requestStyleSwitch styleId =
+    (
+        if styleId == undefined or styleId == "" do return false
+        if currentDraft != undefined and currentDraft.sourceStyleId == styleId and currentDraft.styleRecord != undefined do
+        (
+            this.loadDraftToUI()
+            return true
+        )
+        if this.findStyle styleId == undefined do return false
+        if not this.resolveDirtyDraft "trocar de estilo" do
+        (
+            this.loadDraftToUI()
+            return false
+        )
+        if ::AmenoStyleService == undefined then return false
+        this.setCurrentDraft (::AmenoStyleService.createDraftFromStyle styleId)
+        this.loadDraftToUI()
+        if txtPreviewStatus != undefined do
+            txtPreviewStatus.Text = "Editando estilo '" + currentDraft.styleRecord.name + "'"
+        true
+    ),
+
+    fn onSceneSelectionChanged =
+    (
+        if currentDraft == undefined do return false
+        this.updateInUseCount()
+        if txtPreviewStatus != undefined do
+        (
+            local selectedDimensionIds = #()
+            if ::AmenoDimensionGraphics != undefined do
+            (
+                for obj in selection where isValidNode obj do
+                (
+                    local dimId = ::AmenoDimensionGraphics.getDimensionId obj
+                    if dimId != "" and (findItem selectedDimensionIds dimId) == 0 do
+                        append selectedDimensionIds dimId
+                )
+            )
+            local selectedCount = selectedDimensionIds.count
+            if selectedCount > 0 then
+                txtPreviewStatus.Text = (selectedCount as string) + " elemento(s) selecionado(s) pronto(s) para aplicacao"
+            else if currentDraft.isDirty then
+                txtPreviewStatus.Text = "Rascunho com alteracoes nao salvas"
+            else
+                txtPreviewStatus.Text = "Pronto"
+        )
+        true
+    ),
+
+    fn registerCallbacks =
+    (
+        try (callbacks.removeScripts id:#amenoCotasStyleSelection) catch ()
+        local callbackText = "if ::AmenoCotasWindow != undefined and ::AmenoCotasWindow.isOpen() and ::AmenoCotasWindow.activeSection == 2 and ::AmenoCotasEstilosTab != undefined do (try (::AmenoCotasEstilosTab.onSceneSelectionChanged()) catch ())"
+        try (callbacks.addScript #selectionSetChanged callbackText id:#amenoCotasStyleSelection) catch ()
+        callbacksRegistered = true
+        true
+    ),
+
+    fn unregisterCallbacks =
+    (
+        try (callbacks.removeScripts id:#amenoCotasStyleSelection) catch ()
+        callbacksRegistered = false
+        true
+    ),
+
+    fn onSceneReset =
+    (
+        sceneGeneration += 1
+        this.discardCurrentDraft()
+        local wasSyncing = isSyncing
+        isSyncing = true
+        try
+        (
+            if hostControl != undefined do
+            (
+                this.ensureCurrentDraft()
+                this.populateStyleList()
+                this.populateFontList()
+                this.loadDraftToUI()
+                if txtPreviewStatus != undefined do txtPreviewStatus.Text = "Cena recarregada; rascunho anterior descartado"
+            )
+        )
+        catch ()
+        isSyncing = wasSyncing
+        true
+    ),
+
+    fn refresh =
+    (
+        if currentDraft == undefined do this.ensureCurrentDraft()
+        if hostControl == undefined then return true
+        local wasSyncing = isSyncing
+        isSyncing = true
+        try
+        (
+            this.populateStyleList()
+            this.populateFontList()
+            this.loadDraftToUI()
+        )
+        catch ()
+        isSyncing = wasSyncing
+        this.updateDirtyUI()
+        this.updateInUseCount()
+        this.updatePreview()
+        true
+    ),
+
+    fn prepareToClose =
+    (
+        if not this.resolveDirtyDraft "fechar a janela" do return false
+        true
+    ),
+
+    fn onPanelClosed =
+    (
+        this.unregisterCallbacks()
+        this.discardCurrentDraft()
+        true
+    ),
 
     -- -----------------------------------------------------------------
     -- XAML do UserControl (construido por concatenacao — sem @"..." verbatim)
@@ -638,6 +870,14 @@ struct AmenoCotasEstilosTabDefinition
         )
     ),
 
+    -- Cancelar explicitamente descarta o draft sem tocar no estilo persistido.
+    -- O fechamento da janela usa prepareToClose(), que oferece Save/Discard/Cancel.
+    fn onCancel =
+    (
+        this.discardCurrentDraft()
+        true
+    ),
+
     -- -----------------------------------------------------------------
     -- Aplicar rascunho as cotas selecionadas
     -- -----------------------------------------------------------------
@@ -672,12 +912,13 @@ struct AmenoCotasEstilosTabDefinition
     fn onNewStyle =
     (
         if ::AmenoStyleService == undefined do return false
+        if not this.resolveDirtyDraft "criar um novo estilo" do return false
         try
         (
             local newRec = ::AmenoStyleService.saveAsNewStyle "Novo Estilo" undefined
-            currentDraft = ::AmenoStyleService.createDraftFromStyle newRec.styleId
-            populateStyleList()
-            loadDraftToUI()
+            this.setCurrentDraft (::AmenoStyleService.createDraftFromStyle newRec.styleId)
+            this.populateStyleList()
+            this.loadDraftToUI()
             if txtPreviewStatus != undefined do
                 txtPreviewStatus.Text = "Novo estilo criado: " + newRec.name
             true
@@ -697,8 +938,8 @@ struct AmenoCotasEstilosTabDefinition
             local created = ::AmenoStyleService.saveDraftAsNewStyle currentDraft newName:(baseName + " (Copia)")
             if created != undefined do
             (
-                populateStyleList()
-                loadDraftToUI()
+                this.populateStyleList()
+                this.loadDraftToUI()
                 if txtPreviewStatus != undefined do
                     txtPreviewStatus.Text = "Estilo duplicado: " + created.name
             )
@@ -715,6 +956,22 @@ struct AmenoCotasEstilosTabDefinition
         if currentDraft == undefined or ::AmenoStyleService == undefined do return false
         try
         (
+            local targetId = currentDraft.sourceStyleId
+            local inUseCount = ::AmenoStyleService.countDimensionsUsingStyle targetId
+            if inUseCount > 0 do
+            (
+                if txtPreviewStatus != undefined do
+                    txtPreviewStatus.Text = "Nao e possivel excluir um estilo em uso (" + (inUseCount as string) + " cota(s))"
+                return false
+            )
+            local existingStyles = ::AmenoStyleService.listStyles()
+            if existingStyles.count <= 1 do
+            (
+                if txtPreviewStatus != undefined do
+                    txtPreviewStatus.Text = "Nao e possivel excluir o ultimo estilo"
+                return false
+            )
+            if not this.resolveDirtyDraft "excluir o estilo" do return false
             local msgBtnType  = dotNetClass "System.Windows.MessageBoxButton"
             local msgIconType = dotNetClass "System.Windows.MessageBoxImage"
             local msgResType  = dotNetClass "System.Windows.MessageBoxResult"
@@ -733,9 +990,9 @@ struct AmenoCotasEstilosTabDefinition
                 -- Selecionar primeiro estilo disponivel
                 local newStyles = ::AmenoStyleService.listStyles()
                 local newId = if newStyles.count > 0 then newStyles[1].styleId else "default"
-                currentDraft = ::AmenoStyleService.createDraftFromStyle newId
-                populateStyleList()
-                loadDraftToUI()
+                this.setCurrentDraft (::AmenoStyleService.createDraftFromStyle newId)
+                this.populateStyleList()
+                this.loadDraftToUI()
                 if txtPreviewStatus != undefined do
                     txtPreviewStatus.Text = "Estilo removido"
             )
@@ -750,10 +1007,11 @@ struct AmenoCotasEstilosTabDefinition
     fn onPresetClick presetId =
     (
         if ::AmenoStyleService == undefined do return false
-        currentDraft = ::AmenoStyleService.createDraftFromPreset presetId
-        loadDraftToUI()
-        updateDirtyUI()
-        updatePreview()
+        if not this.resolveDirtyDraft "carregar um preset" do return false
+        this.setCurrentDraft (::AmenoStyleService.createDraftFromPreset presetId)
+        this.loadDraftToUI()
+        this.updateDirtyUI()
+        this.updatePreview()
         true
     ),
 
@@ -774,8 +1032,7 @@ struct AmenoCotasEstilosTabDefinition
                         local idx = s.SelectedIndex + 1
                         if idx <= stylesList.count do
                         (
-                            ::AmenoCotasEstilosTab.currentDraft = ::AmenoStyleService.createDraftFromStyle stylesList[idx].styleId
-                            ::AmenoCotasEstilosTab.loadDraftToUI()
+                            ::AmenoCotasEstilosTab.requestStyleSwitch stylesList[idx].styleId
                         )
                     )
                 )
@@ -1088,6 +1345,20 @@ struct AmenoCotasEstilosTabDefinition
     -- -----------------------------------------------------------------
     fn build =
     (
+        -- O UserControl e o draft sao donos da aba, nao da visita. Isso evita
+        -- perder edicoes quando AmenoCotasWindow troca de secao e volta.
+        if hostControl != undefined do
+        (
+            local cachedControlOk = try (hostControl.FindName "cbStyleSelect" != undefined) catch (false)
+            if cachedControlOk do
+            (
+                this.ensureCurrentDraft()
+                this.refresh()
+                return hostControl
+            )
+            hostControl = undefined
+        )
+
         local xamlStr    = getXAMLString()
         local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
         hostControl = xamlReader.Parse xamlStr
@@ -1141,27 +1412,21 @@ struct AmenoCotasEstilosTabDefinition
         btnApplySelection = findControl "btnApplySelection"
         btnSaveStyle      = findControl "btnSaveStyle"
 
-        -- Inicializar rascunho
-        if ::AmenoStyleService != undefined then
-            currentDraft = ::AmenoStyleService.createDraftFromStyle "default"
-        else
-        (
-            currentDraft = AmenoStyleDraft()
-            currentDraft.styleRecord = AmenoStyleRecord()
-        )
+        -- Inicializar somente se ainda nao houver um draft valido para a cena.
+        this.ensureCurrentDraft()
 
         -- Popular controles
-        populateTerminalOptions()
-        populateFontList()
-        populateStyleList()
-        loadDraftToUI()
+        this.populateTerminalOptions()
+        this.populateFontList()
+        this.populateStyleList()
+        this.loadDraftToUI()
 
         -- Fundo inicial do preview
         if pnlPreviewHost != undefined and ::AmenoPreviewRenderer != undefined do
             pnlPreviewHost.Background = ::AmenoPreviewRenderer.createBrush "#121212"
 
         -- Bind de eventos
-        bindEvents()
+        this.bindEvents()
 
         hostControl
     )

@@ -17,6 +17,7 @@ global AmenoAnchorService
 global AmenoRenderCotasService
 global AmenoCotasWindow
 global AmenoCotasCriarTab
+global AmenoCotasEstilosTab
 
 struct AmenoRuntime
 (
@@ -565,6 +566,10 @@ struct AmenoRuntime
     (
         if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
         if ::AmenoAnchorService != undefined do ::AmenoAnchorService.init()
+        -- A aba unificada deve invalidar o draft da cena anterior antes de
+        -- qualquer refresh global. O novo draft só nasce do novo registro.
+        if ::AmenoCotasEstilosTab != undefined do
+            try (::AmenoCotasEstilosTab.onSceneReset()) catch ()
         if ::AmenoStyleEditorWPF != undefined and ::AmenoStyleEditorWPF.isOpen() do
         (
             try (::AmenoStyleEditorWPF.onSceneReset()) catch ()
@@ -579,6 +584,10 @@ struct AmenoRuntime
     (
         if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
         if ::AmenoAnchorService != undefined do ::AmenoAnchorService.init()
+        -- Nunca reaplicar silenciosamente um draft ou referências da cena
+        -- anterior após reset/new scene.
+        if ::AmenoCotasEstilosTab != undefined do
+            try (::AmenoCotasEstilosTab.onSceneReset()) catch ()
         if ::AmenoStyleEditorWPF != undefined and ::AmenoStyleEditorWPF.isOpen() do
         (
             try (::AmenoStyleEditorWPF.onSceneReset()) catch ()
