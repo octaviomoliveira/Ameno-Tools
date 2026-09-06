@@ -2,7 +2,7 @@
 
 Data: 2026-09-05. Documento operacional para troca de agente/modelo.
 Pedido: integrar a interface E13 feita no Antigravity com a E12 aprovada, corrigindo os problemas auditados, uma etapa por vez.
-Estado: PLANEJAMENTO CONCLUÍDO. Nenhuma etapa de implementação iniciada por este roteiro.
+Estado: ETAPA 1 EXECUTADA NO WORKTREE ISOLADO; GATE AGREGADO PENDENTE POR FALHA PREEXISTENTE DA E12-R0.
 
 ## 1. Contexto que o executor precisa preservar
 
@@ -31,7 +31,7 @@ Estado: PLANEJAMENTO CONCLUÍDO. Nenhuma etapa de implementação iniciada por e
 | Etapa | Código + testes | Manual | Estado |
 |---|---|---|---|
 | 0 — Plano e direcionamento | [x] | não se aplica | OK documental |
-| 1 — Base integrada | [ ] | não exige instalação | PENDENTE |
+| 1 — Base integrada | [ ] | não exige instalação | PENDENTE — E12-R0 baseline |
 | 2 — Criar e ciclo de vida | [ ] | [ ] | PENDENTE |
 | 3 — Estilos e rascunho | [ ] | [ ] | PENDENTE |
 | 4 — Editar e reancorar | [ ] | [ ] | PENDENTE |
@@ -43,18 +43,28 @@ Os gates manuais 2–6 podem ser executados juntos no candidato da etapa 7. Até
 
 ## 3. Etapa 1 — Preparar e integrar a base
 
-- [ ] Conferir `git status`, `git worktree list`, fetch origin e hashes. Se E13 ou main avançaram, revisar o delta além dos commits auditados antes do merge.
-- [ ] Criar branch proposta `integration/e13-on-e12` a partir da main atual em `D:\Ameno\_worktrees\e13-integration`, após verificar que nome/diretório não pertencem a outro trabalho. Se já existir, inspecionar e retomar, não sobrescrever.
-- [ ] Transportar este plano e a atualização documental de PLAN.md para a integração. Preservar a alteração INI da main.
-- [ ] Incorporar feature/e13-unified-ui. Conflitos previstos: `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, `ameno_dimension_tool.ms`, `Contents/scripts/ameno/ui/ameno_main_panel.ms`.
-- [ ] Graphics: conservar alocação rastreada, rollback, `useUndo` e transação externa E12; acrescentar terminais, campos do record e passagem `style:style` E13. Não duplicar Undo de cada segmento dentro da cadeia.
-- [ ] Tool: conservar resolução geométrica/picking E12 e integrar exclusão de meshes técnicos E13. Nome AMENO não deve ser a única garantia; conferir metadados e IDs.
-- [ ] Painel: adotar entrada da janela WPF, inventariando funções públicas antes de retirar rollouts. Preservar funções de compatibilidade ainda chamadas pelo runtime e ferramenta.
-- [ ] Revisar auto-merges de runtime/bootstrap/test_bootstrap: carregar math/input/diagnostics/continuous E12 e terminal_mesh E13 antes dos consumidores; manter startContinuousDimensionTool disponível.
-- [ ] Conferir funções de desligamento/reload, chamadas ao painel antigo e referências globais; pesquisar consumidores, não apenas definições.
-- [ ] Validar pacote, bootstrap e suítes E12 existentes; registrar falhas de integração. Não instalar ainda.
+- [x] Conferir `git status`, `git worktree list`, fetch origin e hashes. A tentativa de `git fetch origin --prune` foi registrada, mas falhou por `SEC_E_NO_CREDENTIALS`; os refs locais auditados continuaram em `main=f131f08` e `feature/e13-unified-ui=676e008`, e o delta além dos commits foi revisado.
+- [x] Criar branch proposta `integration/e13-on-e12` a partir da main atual em `D:\Ameno\_worktrees\e13-integration`, após verificar que nome/diretório não pertenciam a outro trabalho.
+- [x] Transportar este plano e a atualização documental de PLAN.md para a integração. A alteração preexistente de `tests/maxscript/batch-isolated.ini` foi preservada byte a byte.
+- [x] Incorporar feature/e13-unified-ui. Os três conflitos previstos foram resolvidos e a árvore ficou sem marcadores: `Contents/scripts/ameno/core/ameno_dimension_graphics.ms`, `ameno_dimension_tool.ms` e `Contents/scripts/ameno/ui/ameno_main_panel.ms`.
+- [x] Graphics: conservar alocação rastreada, rollback, `useUndo` e transação externa E12; acrescentar terminais, campos do record e passagem `style:style` E13. Os dois terminais mesh também foram registrados para rollback; não foi introduzido Undo por segmento.
+- [x] Tool: conservar resolução geométrica/picking E12 e integrar exclusão de meshes técnicos E13 por terminal, metadados `Ameno.*`, IDs/CA e resolver contínuo; o nome AMENO não ficou como único critério.
+- [x] Painel: adotar a entrada WPF E13 e manter os nomes globais/entry points legados necessários ao runtime, macros e ferramenta.
+- [x] Revisar auto-merges de runtime/bootstrap/test_bootstrap: math/input/diagnostics/continuous E12 e `ameno_dimension_terminal_mesh.ms` carregam antes dos consumidores; `startContinuousDimensionTool` permanece disponível.
+- [x] Conferir desligamento/reload, chamadas ao painel antigo e referências globais por busca de consumidores; o shutdown fecha WPF e mantém guards dos rollouts legados.
+- [ ] Validar pacote, bootstrap e suítes E12 existentes. Pacote, bootstrap, E13 audit/A–H e 8/9 suítes E12 passaram; `test_e12_r0_diagnostics.ms` permanece PENDENTE por três falhas comportamentais reproduzidas também na main. Nenhuma instalação foi feita.
 
-OK: árvore sem conflitos, módulos presentes, bootstrap funcional e E12 preservada. Não exige que os defeitos específicos de interface das próximas etapas já estejam corrigidos; eles devem estar registrados.
+Gate da etapa 1: PENDENTE. A árvore está sem conflitos, os módulos estão presentes, o bootstrap e a integração E13 funcionam, e a E12 foi preservada; o R0 baseline impede marcar OK até decisão/correção própria. Não foram executadas etapas 2–7.
+
+### Evidências da execução em 2026-09-06
+
+- `tools/validate-package.ps1`: PASS.
+- `test_bootstrap.ms`: Batch exit 0, `PASS=1`, `FAIL=0`; o único `[Ameno][ERROR]` é a falha de render simulada do cenário E9, seguida do PASS da suíte.
+- `test_e13_audit_fixes.ms`: Batch exit 0, 7 PASS, 0 FAIL.
+- `test_e13a.ms`…`test_e13h.ms`: 8/8 suítes, 57 PASS agregados, 0 FAIL.
+- E12: `test_e12_chain_commit`, `chain_input`, `chain_math`, `continuous`, `r1_lifecycle`, `r2_picking`, `r3_preview` e `r4_transaction` passaram (8/9). `test_e12_r0_diagnostics.ms` falhou com `#duplicateStation` no modo `#aligned`, deixando `points.count=0` e omitindo o evento esperado; a mesma falha foi reproduzida usando a própria main em `f131f08`. O isolamento de `LOCALAPPDATA` corrigiu somente a falha ambiental de escrita do log.
+- O runner foi endurecido em `tools/test-maxscript.ps1`: mantém a interface `-MaxBatchPath`, `-ConfigPath`, `-TestScript`; isola `PlugCFG`, `MaxData`, `Temp`, `Additional Macros` e `LOCALAPPDATA`; exige exit code 0, pelo menos um PASS e zero marcadores `[AMENO_TEST][FAIL]`/`[AMENO_INSTALLED_TEST][FAIL]`.
+- Logs identificados por suíte estão em `D:\Ameno\_worktrees\e13-integration\.test-output\stage1-evidence\` (saída gerada e ignorada pelo Git). A instalação existente foi apenas inspecionada; `ApplicationPlugins` não foi alterado.
 
 ## 4. Etapa 2 — Aba Criar e interação
 
