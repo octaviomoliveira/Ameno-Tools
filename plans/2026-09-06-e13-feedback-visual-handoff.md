@@ -24,6 +24,8 @@ Reexecução final após a correção Nullable: `test_e13_visual_feedback` 18 PA
 
 Hotfix de posição: `test_e13_text_commit_position` 4 PASS; `test_e13_visual_feedback` 18 PASS; `test_e13_stage2_create` 21 PASS; `test_e13_stage3_styles` 25 PASS. Todos com exit 0 e zero FAIL. O diagnóstico capturou antes a rotação indevida da posição (`expected=[32.3622,50.0,0.0]`, observado `[-50.0,32.3622,0.0]`) e depois confirmou preview/commit em `[32.3622,50.0,0.0]`.
 
+Pacote do hotfix validado por `tools/validate-package.ps1`: `dist/AmenoTools-0.0.1-e13-positionfix.zip`, 138371 bytes, SHA-256 `B2D02450B655823759A5104383A5873D61579C2B9CD20C8DB16E5D98C82E9BA6`. A instalação ativa ainda contém o commit anterior; o Max está aberto e não foi alterado.
+
 Falha descoberta na regressão Criar: atribuir `true` diretamente a `CheckBox.IsChecked` lançou erro de conversão para `System.Nullable[Boolean]` e interrompeu a atualização de unidade/precisão. A primeira execução terminou com exit -130 e 2 marcadores FAIL (uma asserção e o resumo), preservada em `stage2-failed-listener.log`/`stage2-failed-system.log`. Diagnóstico em `stage2-diagnostic-listener.log`; corrigido usando o mesmo tipo Nullable já empregado em Estilos/Editar, com duas verificações novas no teste específico. O catch de sincronização agora registra a exceção em vez de silenciá-la.
 
 Validação estrutural `tools/validate-package.ps1`: aprovada. ZIP novo `dist/AmenoTools-0.0.1-e13-feedback1.zip`, 137824 bytes, SHA-256 `2289B9D8753DD1FA38A4D3B0302979D2B5FCD455D891A8A2C04F66902E5C4463`; todos os 44 arquivos do ZIP conferidos por hash com o worktree. O candidato anterior não foi sobrescrito.
