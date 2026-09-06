@@ -99,6 +99,32 @@
     AmenoDimensionContinuousTool.cancel()
     r1Eq "cancel clears session mode" AmenoDimensionContinuousTool.sessionMode undefined
 
+    -- Um segundo ponto em eixo oposto ao modo ativo encerra a sessão em vez
+    -- de deixar o MouseTool preso em uma rejeição de estação duplicada.
+    resetTool()
+    AmenoDimensionContinuousTool.activeMode = #horizontal
+    r1Ok "mode mismatch begin succeeds" (AmenoDimensionContinuousTool.begin())
+    AmenoDimensionContinuousTool.points = #([10, 20, 0])
+    r1Eq "horizontal detects vertical candidate" (AmenoDimensionContinuousTool.modeMismatchForCandidate [10, 120, 0]) true
+    r1Eq "horizontal accepts horizontal candidate" (AmenoDimensionContinuousTool.modeMismatchForCandidate [110, 20, 0]) false
+    r1Eq "mode mismatch returns stop" (AmenoDimensionContinuousTool.mouseReturnForOutcome #modeMismatch) #stop
+    local mismatchClick = AmenoContinuousClickClassification kind:#reference worldPoint:[10, 120, 0]
+    r1Eq "mode mismatch cancels through click handler" (AmenoDimensionContinuousTool.handleClassifiedClick mismatchClick) #modeMismatch
+    r1Eq "mode mismatch leaves tool inactive" AmenoDimensionContinuousTool.active false
+
+    -- O Esc é armado apenas durante startTool e a preferência anterior é
+    -- restaurada depois.
+    local previousEscapeEnable = try (escapeEnable) catch (undefined)
+    if previousEscapeEnable != undefined do
+    (
+        escapeEnable = false
+        AmenoDimensionContinuousTool.armEscapeAbort()
+        r1Eq "escape abort is enabled during tool" escapeEnable true
+        AmenoDimensionContinuousTool.restoreEscapeAbort()
+        r1Eq "escape preference is restored" escapeEnable false
+        escapeEnable = previousEscapeEnable
+    )
+
     -- Abort com 0, 1 e 3 referências nunca cria cotas.
     for referenceCount in #(0,1,3) do
     (

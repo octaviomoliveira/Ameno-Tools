@@ -125,6 +125,7 @@ struct AmenoDimensionContinuousToolService
     sessionPrecision   = undefined,
     lastResult         = #idle,
     cleanupInProgress  = false,
+    escapeEnableBeforeTool = undefined,
     inputSessionId     = "",
     lastError          = "",
     lastCursorPoint    = undefined,
@@ -194,6 +195,25 @@ struct AmenoDimensionContinuousToolService
     fn persistentError message =
     (
         persistentLog #error message
+    ),
+
+    -- O startTool deve receber o Esc mesmo quando o Max estiver com o
+    -- escapeEnable global desligado por outra rotina. O valor anterior é
+    -- restaurado assim que a ferramenta termina, sem alterar a preferência
+    -- global do usuário.
+    fn armEscapeAbort =
+    (
+        escapeEnableBeforeTool = try (escapeEnable) catch (undefined)
+        try (escapeEnable = true) catch ()
+        true
+    ),
+
+    fn restoreEscapeAbort =
+    (
+        if escapeEnableBeforeTool != undefined do
+            try (escapeEnable = escapeEnableBeforeTool) catch ()
+        escapeEnableBeforeTool = undefined
+        true
     ),
 
     fn diagnosticNodeText nodeValue =
@@ -797,6 +817,42 @@ struct AmenoDimensionContinuousToolService
         true
     ),
 
+    -- Detecta o erro mais comum da cotação contínua: o usuário pretende uma
+    -- cadeia vertical, mas inicia a sessão com Horizontal (ou vice-versa).
+    -- A checagem ocorre antes de rejeitar a segunda referência como estação
+    -- duplicada, encerra a sessão e devolve o painel para a correção do modo.
+    fn modeMismatchForCandidate pointValue =
+    (
+        if points.count != 1 or pointValue == undefined then return false
+        local firstPoint = flattenPoint points[1]
+        local candidatePoint = flattenPoint pointValue
+        if firstPoint == undefined or candidatePoint == undefined then return false
+
+        local deltaX = abs (candidatePoint.x - firstPoint.x)
+        local deltaY = abs (candidatePoint.y - firstPoint.y)
+        local epsilon = 0.00001
+
+        if deltaX <= epsilon and deltaY > epsilon then
+            return (effectiveMode() == #horizontal)
+        if deltaY <= epsilon and deltaX > epsilon then
+            return (effectiveMode() == #vertical)
+
+        local dominantAxisRatio = 1.5
+        if effectiveMode() == #horizontal then
+            deltaY > (deltaX * dominantAxisRatio)
+        else if effectiveMode() == #vertical then
+            deltaX > (deltaY * dominantAxisRatio)
+        else
+            false
+    ),
+
+    fn modeMismatchMessage =
+    (
+        local activeModeText = if effectiveMode() == #horizontal then "Horizontal" else "Vertical"
+        local expectedModeText = if effectiveMode() == #horizontal then "Vertical" else "Horizontal"
+        "O modo " + activeModeText + " está ativo, mas os dois primeiros pontos parecem " + expectedModeText + "."
+    ),
+
     fn cancel =
     (
         diagnosticTrace #cancelBegin #("stage=" + (stage as string), "references=" + (points.count as string))
@@ -951,7 +1007,7 @@ struct AmenoDimensionContinuousToolService
 
     fn mouseReturnForOutcome outcome =
     (
-        if outcome == #chainCommitted then #stop else outcome
+        if outcome == #chainCommitted or outcome == #modeMismatch then #stop else outcome
     ),
 
     fn confirmPoints =
@@ -1046,6 +1102,14 @@ struct AmenoDimensionContinuousToolService
         (
             #reference:
             (
+                if modeMismatchForCandidate clickInfo.worldPoint do
+                (
+                    lastError = modeMismatchMessage()
+                    persistentWarn ("E12 modo incompatível · " + lastError)
+                    cancel()
+                    displayTempPrompt ("Ameno Cota Contínua: " + lastError + " Sessão cancelada; selecione o modo correto e tente novamente.") 3000
+                    return #modeMismatch
+                )
                 local appendOutcome = appendDraftReference clickInfo
                 if appendOutcome == #duplicateReference then
                 (
@@ -1266,6 +1330,7 @@ struct AmenoDimensionContinuousToolService
         )
 
         local toolResult = #abort
+        armEscapeAbort()
         try
         (
             toolResult = startTool AmenoDimensionContinuousMouseTool \
@@ -1282,6 +1347,7 @@ struct AmenoDimensionContinuousToolService
             cleanupSession clearDraft:true
             panelStatus ("E12: ferramenta interrompida — " + lastError)
         )
+        restoreEscapeAbort()
 
         if toolResult == #abort do removeAllPreviews()
         lastSessionIds
@@ -1418,7 +1484,14 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
                 "stage=" + (AmenoDimensionContinuousTool.stage as string),
                 "references=" + (AmenoDimensionContinuousTool.points.count as string)
             )
-        if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.onAbort clickNumber
+        try
+        (
+            if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.onAbort clickNumber
+        )
+        catch ()
+        -- Retorno explícito evita que um erro secundário no cleanup mantenha o
+        -- MouseTool ativo sem devolver o controle ao Max/painel.
+        #stop
     )
 
     on stop do
