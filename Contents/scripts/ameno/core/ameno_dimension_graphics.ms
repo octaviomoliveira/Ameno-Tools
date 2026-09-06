@@ -93,13 +93,28 @@ struct AmenoDimensionGraphicsService
     fn rollbackAllocation =
     (
         local allocated = allocationRegistry
-        with undo off
+        local undoHolding = false
+        try (undoHolding = theHold.Holding()) catch ()
+
+        -- Quando uma fábrica falha dentro de um `undo ... on` externo, não
+        -- suspenda o mesmo Hold novamente. A transação externa será abortada
+        -- pelo chamador e restaurará as alocações desta tentativa. O
+        -- `with undo off` fica reservado para rollback fora de uma transação.
+        if undoHolding then
         (
-            for i = allocated.count to 1 by -1 do
-                if allocated[i] != undefined and isValidNode allocated[i] do delete allocated[i]
+            allocationRegistry = #()
+            allocationActive = false
         )
-        allocationRegistry = #()
-        allocationActive = false
+        else
+        (
+            with undo off
+            (
+                for i = allocated.count to 1 by -1 do
+                    if allocated[i] != undefined and isValidNode allocated[i] do delete allocated[i]
+            )
+            allocationRegistry = #()
+            allocationActive = false
+        )
         true
     ),
 

@@ -104,6 +104,15 @@
     e12cEq "rollback returns collecting" AmenoDimensionContinuousTool.stage #collecting
     e12cEq "rollback preserves preview records" AmenoDimensionContinuousTool.segmentPreviews.count 2
 
+    -- Falha na fábrica gráfica dentro do undo real da cadeia (caminho que
+    -- reproduziu a suspensão observada no Max interativo).
+    AmenoDimensionGraphics.setFailureInjection "afterText"
+    e12cEq "graphics failure rolls back" (AmenoDimensionContinuousTool.commitChain [100,baselineY,0]) false
+    e12cEq "graphics failure does not suspend Hold" (theHold.IsSuspended()) false
+    e12cEq "graphics failure closes Hold" (theHold.Holding()) false
+    e12cEq "graphics failure keeps controller baseline" (AmenoDimensionGraphics.findControllers role:"interactive").count controllerCountBefore
+    AmenoDimensionGraphics.setFailureInjection ""
+
     clearUndoBuffer()
     local emptyClick = AmenoContinuousClickClassification kind:#empty worldPoint:[100,baselineY,0]
     e12cEq "first empty commits chain" (AmenoDimensionContinuousTool.handleClassifiedClick emptyClick commitNow:true) #chainCommitted

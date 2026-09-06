@@ -39,6 +39,23 @@
         r4Eq ("registro de alocacao desativa em " + failureStage) AmenoDimensionGraphics.allocationActive false
     )
 
+    -- A falha real da cadeia ocorre dentro de um `undo ... on` externo.
+    -- Este caso garante que o rollback não deixe o Hold global suspenso.
+    AmenoDimensionGraphics.setFailureInjection "afterText"
+    local nestedCaught = false
+    try
+    (
+        undo "E12-R4 falha aninhada" on
+        (
+            AmenoDimensionGraphics.createDimension pointA pointB offset role:"r4-nested-failure" dimensionMode:#horizontal useUndo:false
+        )
+    )
+    catch (nestedCaught = true)
+    r4Ok "falha aninhada propaga excecao" nestedCaught
+    r4Eq "falha aninhada restaura contagem de nos" (for n in objects where isValidNode n collect n.handle).count baseline
+    r4Eq "falha aninhada nao deixa Hold suspenso" (theHold.IsSuspended()) false
+    r4Eq "falha aninhada nao deixa Hold aberto" (theHold.Holding()) false
+
     AmenoDimensionGraphics.setFailureInjection ""
     local created = AmenoDimensionGraphics.createDimension pointA pointB offset role:"r4-success" dimensionMode:#horizontal useUndo:false
     r4Ok "sucesso cria uma cota completa" (created != undefined and isValidNode created.controller and isValidNode created.lineNode and isValidNode created.textNode)
