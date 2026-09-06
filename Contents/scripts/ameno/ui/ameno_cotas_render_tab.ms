@@ -317,15 +317,22 @@ struct AmenoCotasRenderTabDefinition
 
         if txtStatus != undefined do txtStatus.Text = "Renderizando cotas... Por favor aguarde."
 
+        local prevCamera = try (viewport.getCamera()) catch (undefined)
+        local prevType = try (viewport.getType()) catch (undefined)
+        local camSwitched = false
+
         -- Se camera especifica foi selecionada, direcionar viewport para ela
         local cbCam = findControl "cbCameras"
         if cbCam != undefined and cbCam.SelectedIndex > 0 and (cbCam.SelectedIndex + 1) <= cameraList.count do
         (
             local camNode = cameraList[cbCam.SelectedIndex + 1]
             if camNode != undefined and isValidNode camNode do
-                try (viewport.setCamera camNode) catch ()
+            (
+                try (viewport.setCamera camNode; camSwitched = true) catch ()
+            )
         )
 
+        local success = false
         try
         (
             local result = ::AmenoApp.renderCotas outputPath:outPath selectionMode:scope
@@ -334,19 +341,19 @@ struct AmenoCotasRenderTabDefinition
                 if txtOut != undefined do txtOut.Text = result.outputPath
                 if txtStatus != undefined do txtStatus.Text = "Concluido! Overlay salvo com sucesso."
                 try (messageBox ("Overlay criado com sucesso:\n\n" + result.outputPath + "\n\nA cena foi restaurada.") title:"Ameno - Render de Cotas") catch ()
-                true
+                success = true
             )
             else if result != undefined and result.cancelled then
             (
                 if txtStatus != undefined do txtStatus.Text = "Cancelado pelo usuario. Cena restaurada."
-                false
+                success = false
             )
             else
             (
                 local err = if result != undefined then result.errorMessage else "Erro desconhecido"
                 if txtStatus != undefined do txtStatus.Text = "Falha: " + err
                 try (messageBox ("Nao foi possivel renderizar as cotas:\n\n" + err) title:"Ameno - Render de Cotas") catch ()
-                false
+                success = false
             )
         )
         catch
@@ -354,8 +361,23 @@ struct AmenoCotasRenderTabDefinition
             local err = getCurrentException() as string
             if txtStatus != undefined do txtStatus.Text = "Falha: " + err
             try (messageBox ("Falha inesperada no render:\n\n" + err) title:"Ameno - Render de Cotas") catch ()
-            false
+            success = false
         )
+
+        -- Restaurar viewport original se foi alterado
+        if camSwitched do
+        (
+            try
+            (
+                if prevCamera != undefined and isValidNode prevCamera then
+                    viewport.setCamera prevCamera
+                else if prevType != undefined then
+                    viewport.setType prevType
+            )
+            catch ()
+        )
+
+        success
     ),
 
     -- -----------------------------------------------------------------

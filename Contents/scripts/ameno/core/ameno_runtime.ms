@@ -327,49 +327,53 @@ struct AmenoRuntime
         count
     ),
 
-    -- E13-B: remove cotas selecionadas + seus Custom Attributes
+    -- E13-B: remove cotas selecionadas (contagem por cota)
     fn deletarSelecao =
     (
         if selection.count == 0 then return 0
-        local removed = 0
+        local dimsRemoved = 0
         undo "Ameno: deletar cotas selecionadas" on
         (
-            local toDelete = #()
+            local dimIdsToDelete = #()
+            local orphanNodesToDelete = #()
+
             for obj in selection where isValidNode obj do
             (
                 local dimId = try (AmenoDimensionGraphics.getDimensionId obj) catch ("")
-                if dimId != "" do
+                if dimId != "" and dimId != undefined then
                 (
-                    local nodes = try (AmenoDimensionGraphics.findNodesForDimension dimId) catch (#())
-                    for n in nodes where isValidNode n do
-                    (
-                        if (findItem toDelete n) == 0 do append toDelete n
-                    )
+                    if (findItem dimIdsToDelete dimId) == 0 do append dimIdsToDelete dimId
                 )
-                if ::AmenoDimensionCA != undefined and (try (::AmenoDimensionCA.hasCA obj) catch (false)) do
+                else if ::AmenoDimensionCA != undefined and (try (::AmenoDimensionCA.hasCA obj) catch (false)) then
                 (
-                    if (findItem toDelete obj) == 0 do append toDelete obj
+                    if (findItem orphanNodesToDelete obj) == 0 do append orphanNodesToDelete obj
                 )
             )
-            for n in toDelete where isValidNode n do
+
+            for dimId in dimIdsToDelete do
             (
-                try
+                local nodes = try (AmenoDimensionGraphics.findNodesForDimension dimId) catch (#())
+                for n in nodes where isValidNode n do
                 (
-                    if ::AmenoDimensionCA != undefined do ::AmenoDimensionCA.removeCA n
-                    delete n
-                    removed += 1
+                    try (delete n) catch ()
                 )
-                catch ()
+                dimsRemoved += 1
+            )
+
+            for n in orphanNodesToDelete where isValidNode n do
+            (
+                try (delete n) catch ()
+                dimsRemoved += 1
             )
         )
         if ::AmenoAnchorService != undefined do
             try (::AmenoAnchorService.rebuildIndex()) catch ()
         refreshScene()
         refreshDimensions()
-        removed
+        dimsRemoved
     ),
 
-    -- E13-B: remove cotas cujas ancoras nao existem mais na cena
+    -- E13-B: remove cotas cujas ancoras nao existem mais na cena (valida com AmenoDimensionCA.resolvePoints)
     fn limparOrfas =
     (
         local removed = 0
@@ -386,13 +390,8 @@ struct AmenoRuntime
                         local rec = try (::AmenoDimensionCA.readCA ctrl) catch (undefined)
                         if rec != undefined do
                         (
-                            if rec.anchorType == "node" or rec.anchorType == undefined do
-                            (
-                                local nodeAValid = (rec.nodeA == undefined or isValidNode rec.nodeA)
-                                local nodeBValid = (rec.nodeB == undefined or isValidNode rec.nodeB)
-                                if not nodeAValid or not nodeBValid do isOrphan = true
-                            )
-                            if rec.isOrphan == true do isOrphan = true
+                            local resolved = try (::AmenoDimensionCA.resolvePoints rec) catch (undefined)
+                            if resolved != undefined and resolved.isOrphan do isOrphan = true
                         )
                     )
                     if isOrphan do
@@ -403,8 +402,7 @@ struct AmenoRuntime
                             local nodes = ::AmenoDimensionGraphics.findNodesForDimension dimId
                             for n in nodes where isValidNode n do
                             (
-                                if ::AmenoDimensionCA != undefined do ::AmenoDimensionCA.removeCA n
-                                delete n
+                                try (delete n) catch ()
                             )
                             removed += 1
                         )
@@ -420,7 +418,7 @@ struct AmenoRuntime
         removed
     ),
 
-    -- E13-B: remove TODAS as cotas da cena (confirmacao feita na UI antes de chamar)
+    -- E13-B: remove TODAS as cotas da cena (contagem por cota)
     fn deletarTudo =
     (
         local removed = 0
@@ -429,26 +427,20 @@ struct AmenoRuntime
             if ::AmenoDimensionGraphics != undefined do
             (
                 local controllers = try (::AmenoDimensionGraphics.findControllers()) catch (#())
-                local allNodes = #()
                 for ctrl in controllers where isValidNode ctrl do
-                (
-                    local dimId = try (::AmenoDimensionGraphics.getDimensionId ctrl) catch ("")
-                    if dimId != "" do
-                    (
-                        local nodes = try (::AmenoDimensionGraphics.findNodesForDimension dimId) catch (#())
-                        for n in nodes where isValidNode n do
-                        (
-                            if (findItem allNodes n) == 0 do append allNodes n
-                        )
-                    )
-                )
-                for n in allNodes where isValidNode n do
                 (
                     try
                     (
-                        if ::AmenoDimensionCA != undefined do ::AmenoDimensionCA.removeCA n
-                        delete n
-                        removed += 1
+                        local dimId = try (::AmenoDimensionGraphics.getDimensionId ctrl) catch ("")
+                        if dimId != "" and dimId != undefined do
+                        (
+                            local nodes = try (::AmenoDimensionGraphics.findNodesForDimension dimId) catch (#())
+                            for n in nodes where isValidNode n do
+                            (
+                                try (delete n) catch ()
+                            )
+                            removed += 1
+                        )
                     )
                     catch ()
                 )

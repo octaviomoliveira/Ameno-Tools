@@ -305,27 +305,30 @@ struct AmenoCotasWindowDefinition
 
         activeSection = sectionIndex
 
-        local converter = dotNetClass "System.Windows.Media.BrushConverter"
-        for i = 1 to btnNames.count do
+        local converter = try (dotNetObject "System.Windows.Media.BrushConverter") catch (undefined)
+        if converter != undefined do
         (
-            local btn = findControl btnNames[i]
-            if btn != undefined do
+            for i = 1 to btnNames.count do
             (
-                try
+                local btn = findControl btnNames[i]
+                if btn != undefined do
                 (
-                    local isActive = (i == sectionIndex)
-                    if isActive then
+                    try
                     (
-                        btn.Background = converter.ConvertFromString "#1A4a9eff"
-                        btn.Foreground = converter.ConvertFromString "#FFFFFF"
+                        local isActive = (i == sectionIndex)
+                        if isActive then
+                        (
+                            btn.Background = converter.ConvertFromString "#1A4a9eff"
+                            btn.Foreground = converter.ConvertFromString "#FFFFFF"
+                        )
+                        else
+                        (
+                            btn.Background = converter.ConvertFromString "Transparent"
+                            btn.Foreground = converter.ConvertFromString "#AAAAAA"
+                        )
                     )
-                    else
-                    (
-                        btn.Background = converter.ConvertFromString "Transparent"
-                        btn.Foreground = converter.ConvertFromString "#AAAAAA"
-                    )
+                    catch ()
                 )
-                catch ()
             )
         )
 
@@ -375,16 +378,32 @@ struct AmenoCotasWindowDefinition
                 try (AmenoCotasWindow.window = undefined) catch ()
             ))
 
-        -- Tecla Esc fecha a janela
+        -- Tecla Esc fecha a janela; Ctrl+S e Ctrl+Enter repassam para a aba Estilos
         dotNet.addEventHandler window "PreviewKeyDown" \
             (fn onKeyDown s e =
             (
                 try
                 (
-                    if e.Key.ToString() == "Escape" do
+                    local keyStr = e.Key.ToString()
+                    if keyStr == "Escape" then
                     (
                         e.Handled = true
                         AmenoCotasWindow.close()
+                    )
+                    else
+                    (
+                        local modStr = (dotNetClass "System.Windows.Input.Keyboard").Modifiers.ToString()
+                        local isCtrl = matchPattern modStr pattern:"*Control*"
+                        if isCtrl and keyStr == "S" and ::AmenoCotasWindow.activeSection == 2 and ::AmenoCotasEstilosTab != undefined do
+                        (
+                            e.Handled = true
+                            try (::AmenoCotasEstilosTab.onSaveStyle()) catch ()
+                        )
+                        if isCtrl and (keyStr == "Return" or keyStr == "Enter") and ::AmenoCotasWindow.activeSection == 2 and ::AmenoCotasEstilosTab != undefined do
+                        (
+                            e.Handled = true
+                            try (::AmenoCotasEstilosTab.onApplyToSelection()) catch ()
+                        )
                     )
                 )
                 catch ()
@@ -483,6 +502,39 @@ struct AmenoCotasWindowDefinition
         )
         catch ()
         window
+    ),
+
+    -- -----------------------------------------------------------------
+    -- Selecionar e exibir uma aba por indice (1..5) ou nome
+    -- -----------------------------------------------------------------
+    fn showTab tabIdentifier =
+    (
+        local tabIdx = 1
+        if (isKindOf tabIdentifier Integer) then
+        (
+            tabIdx = tabIdentifier
+        )
+        else if (isKindOf tabIdentifier String) then
+        (
+            local lowerName = toLower tabIdentifier
+            case lowerName of
+            (
+                "criar": tabIdx = 1
+                "estilos": tabIdx = 2
+                "estilo": tabIdx = 2
+                "editar": tabIdx = 3
+                "edicao": tabIdx = 3
+                "render": tabIdx = 4
+                "renderizar": tabIdx = 4
+                "config": tabIdx = 5
+                "configuracoes": tabIdx = 5
+                default: tabIdx = 1
+            )
+        )
+        if tabIdx < 1 or tabIdx > 5 do tabIdx = 1
+
+        if not isOpen() do show()
+        if isOpen() do setActiveSection tabIdx
     ),
 
     -- -----------------------------------------------------------------

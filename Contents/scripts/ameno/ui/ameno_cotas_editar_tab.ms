@@ -472,23 +472,27 @@ struct AmenoCotasEditarTabDefinition
         if txtDisplay != undefined do txtDisplay.Text = "Exibido: " + audit.displayText
         if txtDelta != undefined do txtDelta.Text = "Delta: " + audit.deltaText
 
-        local brushConv = dotNetClass "System.Windows.Media.BrushConverter"
-        if txtBadge != undefined and bdBadge != undefined do
+        local brushConv = try (dotNetObject "System.Windows.Media.BrushConverter") catch (undefined)
+        if txtBadge != undefined and bdBadge != undefined and brushConv != undefined do
         (
-            if audit.isManual then
+            try
             (
-                txtBadge.Text = "MANUAL"
-                txtBadge.Foreground = brushConv.ConvertFromString "#E5C07B"
-                bdBadge.Background = brushConv.ConvertFromString "#33E5C07B"
-                bdBadge.BorderBrush = brushConv.ConvertFromString "#66E5C07B"
+                if audit.isManual then
+                (
+                    txtBadge.Text = "MANUAL"
+                    txtBadge.Foreground = brushConv.ConvertFromString "#E5C07B"
+                    bdBadge.Background = brushConv.ConvertFromString "#33E5C07B"
+                    bdBadge.BorderBrush = brushConv.ConvertFromString "#66E5C07B"
+                )
+                else
+                (
+                    txtBadge.Text = "EXATO"
+                    txtBadge.Foreground = brushConv.ConvertFromString "#98C379"
+                    bdBadge.Background = brushConv.ConvertFromString "#3398C379"
+                    bdBadge.BorderBrush = brushConv.ConvertFromString "#6698C379"
+                )
             )
-            else
-            (
-                txtBadge.Text = "EXATO"
-                txtBadge.Foreground = brushConv.ConvertFromString "#98C379"
-                bdBadge.Background = brushConv.ConvertFromString "#3398C379"
-                bdBadge.BorderBrush = brushConv.ConvertFromString "#6698C379"
-            )
+            catch ()
         )
 
         -- Modo de Valor
@@ -503,12 +507,13 @@ struct AmenoCotasEditarTabDefinition
         local txtReason = findControl "txtReason"
 
         isSyncing = true
+        local nullTrue = dotNetObject "System.Nullable`1[System.Boolean]" true
         case audit.mode of
         (
-            #rounded: if rbRd != undefined do rbRd.IsChecked = true
-            #manualNumeric: if rbNum != undefined do rbNum.IsChecked = true
-            #manualText: if rbTxt != undefined do rbTxt.IsChecked = true
-            default: if rbMeas != undefined do rbMeas.IsChecked = true
+            #rounded: if rbRd != undefined do rbRd.IsChecked = nullTrue
+            #manualNumeric: if rbNum != undefined do rbNum.IsChecked = nullTrue
+            #manualText: if rbTxt != undefined do rbTxt.IsChecked = nullTrue
+            default: if rbMeas != undefined do rbMeas.IsChecked = nullTrue
         )
 
         if txtManualVal != undefined do txtManualVal.Text = ((audit.displayMillimeters / 1000.0) as string)
@@ -535,16 +540,20 @@ struct AmenoCotasEditarTabDefinition
         if txtAnchorsDesc != undefined do txtAnchorsDesc.Text = "Ancoras: " + audit.anchorDesc
         if txtOrphanStatus != undefined do
         (
-            if audit.isOrphan then
+            try
             (
-                txtOrphanStatus.Text = "[ALERTA] " + audit.orphanReason
-                txtOrphanStatus.Foreground = brushConv.ConvertFromString "#E06C75"
+                if audit.isOrphan then
+                (
+                    txtOrphanStatus.Text = "[ALERTA] " + audit.orphanReason
+                    if brushConv != undefined do txtOrphanStatus.Foreground = brushConv.ConvertFromString "#E06C75"
+                )
+                else
+                (
+                    txtOrphanStatus.Text = "Status: Ancoras sincronizadas"
+                    if brushConv != undefined do txtOrphanStatus.Foreground = brushConv.ConvertFromString "#98C379"
+                )
             )
-            else
-            (
-                txtOrphanStatus.Text = "Status: Ancoras sincronizadas"
-                txtOrphanStatus.Foreground = brushConv.ConvertFromString "#98C379"
-            )
+            catch ()
         )
 
         true
@@ -576,14 +585,16 @@ struct AmenoCotasEditarTabDefinition
         local incMm = 50.0
         if txtRounding != undefined do
         (
-            local v = txtRounding.Text as float
+            local rText = substituteString (txtRounding.Text as string) "," "."
+            local v = rText as float
             if v != undefined and v > 0.0 do incMm = v * 10.0
         )
 
         local manValMm = 1000.0
         if txtManualVal != undefined do
         (
-            local v = txtManualVal.Text as float
+            local mText = substituteString (txtManualVal.Text as string) "," "."
+            local v = mText as float
             if v != undefined and v > 0.0 do manValMm = v * 1000.0
         )
 

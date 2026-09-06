@@ -19,16 +19,40 @@ global AmenoCotasRenderTab
 
 fn AmenoRefreshMainPanel =
 (
-    -- Se a janela unificada estiver aberta, notificar as abas ativas
+    -- Se a janela unificada estiver aberta, sincronizar os dados de todas as abas
     if ::AmenoCotasWindow != undefined and ::AmenoCotasWindow.isOpen() do
     (
         try
         (
-            case ::AmenoCotasWindow.activeSection of
+            -- Aba 1: Criar
+            if ::AmenoCotasCriarTab != undefined do
             (
-                1: if ::AmenoCotasCriarTab != undefined do ::AmenoCotasCriarTab.updateCotaCount()
-                3: if ::AmenoCotasEditarTab != undefined do ::AmenoCotasEditarTab.refresh()
-                4: if ::AmenoCotasRenderTab != undefined do ::AmenoCotasRenderTab.refreshRendererInfo()
+                try (::AmenoCotasCriarTab.populateEstilos()) catch ()
+                try (::AmenoCotasCriarTab.updateCotaCount()) catch ()
+            )
+            -- Aba 2: Estilos
+            if ::AmenoCotasEstilosTab != undefined do
+            (
+                try
+                (
+                    if ::AmenoStyleService != undefined then
+                        ::AmenoCotasEstilosTab.currentDraft = ::AmenoStyleService.createDraftFromStyle "default"
+                    ::AmenoCotasEstilosTab.populateStyleList()
+                    ::AmenoCotasEstilosTab.loadDraftToUI()
+                    ::AmenoCotasEstilosTab.updatePreview()
+                )
+                catch ()
+            )
+            -- Aba 3: Editar
+            if ::AmenoCotasEditarTab != undefined do
+            (
+                try (::AmenoCotasEditarTab.refresh()) catch ()
+            )
+            -- Aba 4: Render
+            if ::AmenoCotasRenderTab != undefined do
+            (
+                try (::AmenoCotasRenderTab.refreshCameras()) catch ()
+                try (::AmenoCotasRenderTab.refreshRendererInfo()) catch ()
             )
         )
         catch ()

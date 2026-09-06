@@ -54,7 +54,8 @@ struct AmenoDimensionToolService
         if snapHit and snapNode != undefined and isValidNode snapNode and anchorPoint != undefined do
         (
             local snapKind = ::AmenoDimensionGraphics.readTextProperty snapNode "Ameno.Kind"
-            if (snapKind == undefined or snapKind == "") and (findString snapNode.name "AMENO_" == undefined) do
+            local isTerm = (try ((getUserProp snapNode "AMENO_TERMINAL") == true) catch (false))
+            if not isTerm and (snapKind == undefined or snapKind == "") and (findString snapNode.name "AMENO_" == undefined) do
             (
                 local snapTolerance = if ::AmenoDimensionGraphics != undefined then (::AmenoDimensionGraphics.toSceneUnits 10.0) else 1.0
                 local snappedVertex = undefined
@@ -81,8 +82,9 @@ struct AmenoDimensionToolService
 
             for obj in geometry where isValidNode obj and not obj.isHidden do
             (
+                local isTerm = (try ((getUserProp obj "AMENO_TERMINAL") == true) catch (false))
                 local k = ::AmenoDimensionGraphics.readTextProperty obj "Ameno.Kind"
-                if (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
+                if not isTerm and (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
                 (
                     local insideCandidateBounds = false
                     try
@@ -131,8 +133,9 @@ struct AmenoDimensionToolService
                 for h in hits where isValidNode h[1] do
                 (
                     local nodeHit = h[1]
+                    local isTerm = (try ((getUserProp nodeHit "AMENO_TERMINAL") == true) catch (false))
                     local k = ::AmenoDimensionGraphics.readTextProperty nodeHit "Ameno.Kind"
-                    if (k == undefined or k == "") and (findString nodeHit.name "AMENO_" == undefined) do
+                    if not isTerm and (k == undefined or k == "") and (findString nodeHit.name "AMENO_" == undefined) do
                     (
                         candidateNode = nodeHit
                         exit
@@ -152,8 +155,9 @@ struct AmenoDimensionToolService
 
                 for obj in geometry where isValidNode obj and not obj.isHidden do
                 (
+                    local isTerm = (try ((getUserProp obj "AMENO_TERMINAL") == true) catch (false))
                     local k = ::AmenoDimensionGraphics.readTextProperty obj "Ameno.Kind"
-                    if (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
+                    if not isTerm and (k == undefined or k == "") and (findString obj.name "AMENO_" == undefined) do
                     (
                         local bbMin = obj.min
                         local bbMax = obj.max

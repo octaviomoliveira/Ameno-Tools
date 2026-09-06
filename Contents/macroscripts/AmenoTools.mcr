@@ -8,6 +8,7 @@ category:"Ameno Tools"
 internalCategory:"Ameno Tools"
 toolTip:"Abrir Painel Ameno · Cotas"
 buttonText:"Cotas"
+Icon:#("ameno/cotas_panel", 1)
 (
     on execute do
     (
@@ -41,6 +42,7 @@ category:"Ameno Tools"
 internalCategory:"Ameno Tools"
 toolTip:"Criar Cota Individual (3 cliques)"
 buttonText:"Cota Indiv."
+Icon:#("ameno/cota_individual", 1)
 (
     on execute do
     (
@@ -68,6 +70,7 @@ category:"Ameno Tools"
 internalCategory:"Ameno Tools"
 toolTip:"Criar Cota Contínua"
 buttonText:"Cota Cont."
+Icon:#("ameno/cota_continua", 1)
 (
     on execute do
     (
@@ -98,6 +101,7 @@ category:"Ameno Tools"
 internalCategory:"Ameno Tools"
 toolTip:"Abrir Editor de Estilos Ameno"
 buttonText:"Estilos"
+Icon:#("ameno/editor_estilos", 1)
 (
     on execute do
     (
@@ -106,8 +110,7 @@ buttonText:"Estilos"
         (
             try
             (
-                AmenoCotasWindow.show()
-                AmenoCotasWindow.setActiveSection 2
+                AmenoCotasWindow.showTab "Estilos"
             )
             catch
             (
@@ -126,6 +129,7 @@ category:"Ameno Tools"
 internalCategory:"Ameno Tools"
 toolTip:"Renderizar Cotas em PNG Transparente"
 buttonText:"Render Cotas"
+Icon:#("ameno/render_cotas", 1)
 (
     on execute do
     (
@@ -134,8 +138,7 @@ buttonText:"Render Cotas"
         (
             try
             (
-                AmenoCotasWindow.show()
-                AmenoCotasWindow.setActiveSection 4
+                AmenoCotasWindow.showTab "Render"
             )
             catch
             (
@@ -154,6 +157,7 @@ category:"Ameno Tools"
 internalCategory:"Ameno Tools"
 toolTip:"Abrir Ameno Tools"
 buttonText:"Ameno Tools"
+Icon:#("ameno/cotas_panel", 1)
 (
     on execute do
     (
