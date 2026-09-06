@@ -89,7 +89,7 @@
     r1Ok "horizontal begin succeeds" (AmenoDimensionContinuousTool.begin())
     r1Eq "horizontal begins collecting" AmenoDimensionContinuousTool.stage #collecting
     r1Eq "HUD remains closed" AmenoDimensionContinuousTool.hudOpen false
-    r1Ok "onStart keeps HUD closed and starts Enter monitor" (AmenoDimensionContinuousTool.onStart() and AmenoDimensionContinuousTool.enterTimer != undefined)
+    r1Ok "onStart keeps HUD closed without keyboard monitor" (AmenoDimensionContinuousTool.onStart() and AmenoDimensionContinuousTool.hudOpen == false)
     AmenoDimensionContinuousTool.activeMode = #vertical
     AmenoDimensionContinuousTool.previewOutputUnit = #millimeters
     AmenoDimensionContinuousTool.previewPrecision = 0
@@ -136,8 +136,8 @@
     r1Eq "success add A" (addReference anchorA) #referenceAdded
     r1Eq "success add B" (addReference anchorB) #referenceAdded
     AmenoDimensionContinuousTool.lastCursorPoint = [50,80,0]
-    r1Ok "Enter confirmation commits at cursor" (AmenoDimensionContinuousTool.confirmPoints())
-    r1Eq "Enter reaches finished" AmenoDimensionContinuousTool.stage #finished
+    r1Ok "programmatic confirmation commits at cursor" (AmenoDimensionContinuousTool.confirmPoints())
+    r1Eq "confirmation reaches finished" AmenoDimensionContinuousTool.stage #finished
     local serviceOutcome = #chainCommitted
     r1Eq "success reaches finished" AmenoDimensionContinuousTool.stage #finished
     r1Eq "success records committed result" AmenoDimensionContinuousTool.lastResult #committed

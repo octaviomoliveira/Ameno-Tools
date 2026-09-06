@@ -77,22 +77,28 @@ struct AmenoBootstrapService
 
         if not doesFileExist fullPath then
         (
+            if AmenoLog != undefined do
+                try (AmenoLog.error ("Módulo ausente: " + fullPath)) catch ()
             format "[Ameno][ERROR] Módulo ausente: %\n" fullPath
             false
         )
         else
-        (
-            try
             (
-                fileIn fullPath quiet:true
-                true
-            )
-            catch
-            (
-                AmenoStartupError = "Falha ao carregar " + fullPath + ": " + (getCurrentException() as string)
-                format "[Ameno][ERROR] %\n" AmenoStartupError
-                false
-            )
+                try
+                (
+                    fileIn fullPath quiet:true
+                    if relativePath == @"core\ameno_logger.ms" and AmenoLog != undefined do
+                        try (AmenoLog.startSession()) catch ()
+                    true
+                )
+                catch
+                (
+                    AmenoStartupError = "Falha ao carregar " + fullPath + ": " + (getCurrentException() as string)
+                    if AmenoLog != undefined do
+                        try (AmenoLog.error AmenoStartupError) catch ()
+                    format "[Ameno][ERROR] %\n" AmenoStartupError
+                    false
+                )
         )
     ),
 
