@@ -184,7 +184,16 @@ O relato “referência de outra cota” é ambíguo. Confirmar com usuário se 
 
 Se ele confirmar ponta da anotação: resolver dimensionId -> controller -> lado A/B -> referência original. Definir quais pontos visuais representam cada lado; texto, centro da linha e terminal fora de tolerância não servem. Usar posição projetada apenas para picking; guardar original nó/vertexId. Órfã não cria vínculo falso. Cota baked/localPoint exige DTO que suporte esse tipo e teste próprio; entregar mensagem de não suporte enquanto isso, sem forçar vertexId=-1 no caminho que exige vértice. Não criar dependência circular cota->cota.
 
-Gate: adicionar pela ponta e mover geometria original atualiza; apagar anotação fonte não apaga vínculo ao modelo; preview próprio nunca vira fonte. Se pedido for só geometria, marcar esta extensão fora de escopo com resposta do usuário.
+Resultado do gate: o relato foi confirmado como reutilização de um vértice da
+geometria original entre cadeias Horizontal e Vertical, não como seleção da ponta de
+uma anotação. O contrato `node + vertexId` já foi corrigido e aprovado na R2; gráficos
+Ameno, terminais, textos e previews continuam inelegíveis como fontes. Vínculo
+cota→cota fica fora desta E12-R e exigiria uma extensão com contrato e testes próprios.
+Evidência detalhada: `docs/decisions/0021-e12-reference-reuse-scope.md` e
+`plans/2026-09-05-e12-r5-handoff.md`.
+
+Gate encerrado: reuso do vértice geométrico funciona; a posição da anotação não é
+tratada como âncora; o próximo passo é R6.
 
 ### R6 — Integração, instalação e aceitação
 
@@ -240,7 +249,9 @@ Atualizar PLAN e checklist abaixo antes de encerrar. Relatar: causa comprovada; 
 - [x] R2 picking/eventos/offset — commit `e53b553` instalado, 33/33 no teste dedicado, regressões e mouse real aprovados. Handoff: `plans/2026-09-05-e12-r2-handoff.md`.
 - [x] R3 draft válido e preview não-alvo — commit `83d9def` instalado, teste dedicado 28/28, regressões e mouse real aprovados. Handoff: `plans/2026-09-05-e12-r3-handoff.md`.
 - [x] R4 transação robusta — commit `688c8bc` instalado; testes dedicados 21/21, cadeia 48/48, pacote 26/26 e gate manual Undo/Redo aprovados.
-- [ ] R5 definição e tratamento da referência de cota.
+- [x] R5 definição e tratamento da referência de cota — caso confirmado como
+  vértice geométrico; vínculo cota→cota explicitamente fora de escopo. ADR e handoff
+  registrados.
 - [ ] R6 regressões, pacote e aceitação interativa.
 
 ## 9. Referências técnicas
