@@ -1,7 +1,7 @@
 # Handoff — hotfix do crash no Enter da cotação contínua
 
-Data: 2026-09-06  
-Branch: `develop`  
+Data: 2026-09-06
+Branch: `develop`
 Commit: `2135b3b` — `fix: remove crashing continuous Enter monitor`
 
 ## Contexto
@@ -83,3 +83,69 @@ evento de teclado suportado pelo `MouseTool` sem callback assíncrono.
 Reabrir o Max, confirmar que o fluxo por clique está estável e coletar o novo
 log persistente se ocorrer qualquer erro. Depois decidir separadamente se vale
 implementar uma confirmação por teclado suportada pelo host.
+
+## Atualização — recuperação após modo incorreto
+
+Data: 2026-09-06
+Branch: `develop`
+Commit: `5a31643` — `fix: recover continuous dimension mode mismatch`
+
+### Sintoma e causa
+
+O usuário relatou que, com o painel em Horizontal, uma tentativa acidental de
+cotar uma sequência Vertical podia deixar o aplicativo sem responder a Esc,
+troca de modo ou fechamento do painel. O fluxo confirma que o painel é ocultado
+durante o `MouseTool` e que o modo é capturado no início da sessão; portanto,
+os controles do painel não podem ser usados como recuperação durante a coleta.
+O caminho anterior também não rejeitava explicitamente uma direção incompatível
+no segundo ponto e não forçava um retorno `#stop` no abort caso a limpeza
+lançasse exceção.
+
+### Alterações
+
+- `ameno_dimension_continuous_tool.ms` compara o segundo ponto com o primeiro
+  usando os eixos X/Y; se a direção dominante contradiz Horizontal/Vertical,
+  registra o motivo, cancela a sessão, restaura o painel e mostra uma mensagem
+  acionável.
+- `escapeEnable` é salvo, habilitado apenas durante o `startTool` e restaurado
+  ao sair, sem alterar permanentemente a preferência global do usuário.
+- `on mouseAbort` isola a limpeza e retorna explicitamente `#stop`, para que um
+  erro de cleanup não mantenha o `MouseTool` ativo.
+- O Enter continua fora do fluxo interativo; não foi reintroduzido o
+  `DispatcherTimer` que provocou o crash CLR anterior.
+
+### Evidências automatizadas
+
+- `git diff --check`: passou.
+- `tests/maxscript/test_e12_r1_lifecycle.ms`: 70/70 verificações, exit 0,
+  70 marcadores PASS e 0 FAIL, incluindo mismatch Horizontal/Vertical,
+  cancelamento e armamento/restauração de `escapeEnable`.
+- Regressões `test_e12_continuous.ms`, `test_e12_r2_picking.ms` e
+  `test_e13_stage2_create.ms`: exit 0 e 0 FAIL.
+- `tools/package-alpha.ps1`: pacote validado.
+- Pacote: `dist/AmenoTools-0.0.1-e13-mode-recovery-20260906.zip`;
+  SHA-256 `D029DEC315250DBE8947C47A52128F9945FC051FBD9897BA312A7AC4C9940B3F`.
+- Instalação: `SOURCE_FILES=41`, ausentes 0, divergências 0; teste pelo
+  `ApplicationPlugins` exit 0, 1 PASS e 0 FAIL.
+
+### Instalação e estado
+
+O Max estava fechado antes da instalação. Foi preservado o backup em
+`D:\Ameno\backups\AmenoTools-before-mode-recovery-20260906-175430`.
+Depois do teste instalado, não havia processo `3dsmax.exe` ou `3dsmaxbatch`
+ativo. Isso confirma a instalação do código, mas não substitui o gate manual
+em uma nova sessão interativa.
+
+### Pendente
+
+- Reabrir o Max e, sem pressionar Enter, iniciar em Horizontal e clicar dois
+  pontos claramente verticais; a sessão deve cancelar sozinha e devolver o
+  painel com a mensagem de modo incompatível.
+- Repetir uma cadeia correta Horizontal e uma correta Vertical, confirmar por
+  clique dentro e fora das paredes e verificar Undo/Redo.
+- Pressionar Esc antes do segundo ponto e depois de referências coletadas;
+  confirmar que o painel retorna e que a contagem não muda.
+- Se o Max voltar a travar, anexar o log em
+  `%LOCALAPPDATA%\AmenoTools\Logs\ameno-<sessao>.log`.
+
+Não publicar, fazer merge na `main` ou testar Enter nesta versão.
