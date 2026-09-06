@@ -58,13 +58,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0–R5 estão concluídos; R4 corrigida foi aprovada em Batch, instalada e validada manualmente, e R5 foi fechado como decisão de escopo. R6 permanece como próximo incremento.
+- **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0–R6 estão concluídos para a E12-R; R4 foi aprovada em Batch, instalada e validada manualmente, R5 foi fechado como decisão de escopo e R6 foi aprovado com automação e gate manual. Handoff final: `plans/2026-09-05-e12-r6-handoff.md`.
 
 - Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. O C1 equivalente foi encerrado pelo R0; ciclo de vida pelo R1; e a causa do vértice ignorado foi tratada na R2 removendo o bloqueio causado pelo snap em gráfico Ameno e resolvendo o vértice geométrico pelo pixel.
 
 - **Instalação ativa da branch E12:** commit R4 `688c8bc`, com 26/26 arquivos conferidos por SHA-256, pacote instalado aprovado em Batch e Undo/Redo validado manualmente. R5 foi documental, sem mudança de pacote; próximo incremento: R6. Handoffs: `plans/2026-09-05-e12-r4-handoff.md` e `plans/2026-09-05-e12-r5-handoff.md`.
 
-- **R6 — automação executada:** com o Max interativo fechado, `validate-package.ps1` passou; as 11 suítes do lote e a R2 repetida passaram após o fixture E12-A declarar explicitamente o modo Horizontal. Evidência por suíte em `work/r6-test-logs`; o gate manual final no Max ainda está pendente.
+- **R6 — automação e gate manual executados:** com o Max interativo fechado, `validate-package.ps1` passou; as 11 suítes do lote e a R2 repetida passaram após o fixture E12-A declarar explicitamente o modo Horizontal. O usuário abriu o Max, repetiu o caso H/V com o vértice compartilhado e confirmou “tudo funcionando”. Evidência por suíte em `work/r6-test-logs` e handoff final em `plans/2026-09-05-e12-r6-handoff.md`.
 
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
 - Gate manual do **Editor Visual E11** no 3ds Max 2026 com a versão unificada instalada.
@@ -75,7 +75,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-**Para retomar a E12:** executar o R6 de regressões, pacote e aceitação interativa. Não fazer merge na `main`.
+**Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 
 1. Abrir o 3ds Max e executar o **gate manual interativo da E10 no 3ds Max 2026** com a versão de desenvolvimento já instalada:
    - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
@@ -146,6 +146,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-04 | Integrar `feature/e11-visual-editor` na `main`, validar, instalar a versão unificada com E10.7 e publicar. | Merge concluído com um único conflito documental em `PLAN.md`, reconciliado preservando os históricos E10.7 e E11. Validação estrutural aprovada; instalação em `ApplicationPlugins` conferida com 22/22 arquivos e zero diferenças SHA-256. Pronto para o gate interativo unificado após reiniciar o Max. | merge `5aa6afc`; `tools/validate-package.ps1`; `tools/install-dev.ps1` |
 | 2026-09-05 | Fechar o R5 da recuperação E12. | O caso foi definido como reuso do vértice da geometria original entre cadeias H/V; a ponta de anotação não vira âncora nesta E12-R. R5 documental concluído; R6 é o próximo gate. | `docs/decisions/0021-e12-reference-reuse-scope.md`; `plans/2026-09-05-e12-r5-handoff.md`; R2 aprovado |
 | 2026-09-05 | Executar a automação do R6 e corrigir o fixture E12-A obsoleto. | `validate-package.ps1` passou; 11/11 suítes do lote + R2 repetida passaram. E12-A foi ajustada para declarar Horizontal, preservando o contrato de estação H/V. Gate manual final permanece pendente. | `tests/maxscript/test_e12_chain_input.ms`; `work/r6-test-logs`; Batch 3ds Max 2026.3 |
+| 2026-09-05 | Aprovar manualmente a aceitação final da E12-R. | Usuário abriu o Max, repetiu Horizontal→Vertical com o mesmo vértice da geometria original e confirmou “tudo funcionando”; encerramento, cancelamento e Undo/Redo foram aceitos. E12-R R6 concluído; publicação dos commits locais pendente de autorização. | `plans/2026-09-05-e12-r6-handoff.md`; confirmação do usuário |
 
 ## Como retomar sem contexto
 

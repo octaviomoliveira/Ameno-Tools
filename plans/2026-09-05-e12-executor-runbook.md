@@ -252,7 +252,10 @@ Atualizar PLAN e checklist abaixo antes de encerrar. Relatar: causa comprovada; 
 - [x] R5 definição e tratamento da referência de cota — caso confirmado como
   vértice geométrico; vínculo cota→cota explicitamente fora de escopo. ADR e handoff
   registrados.
-- [ ] R6 regressões, pacote e aceitação interativa — automação aprovada (`validate-package.ps1`, 11/11 suítes do lote e R2 repetida; logs em `work/r6-test-logs`); gate manual final no Max ainda pendente.
+- [x] R6 regressões, pacote e aceitação interativa — `validate-package.ps1`, 11/11
+  suítes do lote e R2 repetida aprovados; o usuário confirmou no Max o caso H/V com
+  reuso do vértice, encerramento, cancelamento e Undo/Redo. Logs em
+  `work/r6-test-logs`; handoff: `plans/2026-09-05-e12-r6-handoff.md`.
 
 ## 9. Referências técnicas
 
