@@ -106,6 +106,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Histórico de solicitações
 
+- **2026-09-06 — Registrar preview das fontes:** criada a issue [#1](https://github.com/octaviomoliveira/Ameno-Tools/issues/1) para renderizar cada item do seletor de tipografia usando sua própria família, com fallback, preservação do schema e cobertura de seleção/preview.
+
 - **2026-09-06 — Instalar E13 e corrigir feedback visual:** instalação do candidato autorizada e realizada com Max fechado; após as capturas, foram implementados aplicação a todas as cotas, nome antes de salvar, orientação do texto e contraste legível. A atualização do commit `20d618f` foi instalada depois; 42/42 hashes e o teste instalado passaram. Aceitação visual do usuário ainda pendente. Handoff: `plans/2026-09-06-e13-feedback-visual-handoff.md`.
 
 - **2026-09-06 — Finalizar as etapas 5, 6 e 7 da E13 e fazer pente-fino:** no `develop`, terminais, preview, transação, câmera explícita e restauração foram implementados; a suíte E13 final passou com 217 PASS/0 FAIL. A regressão combinada passou E10.1–E10.7, E11.0–E11.5, E12 chain/R0–R4 e Corona real; E10.1/E10.2 tiveram um defeito de sintaxe/contrato do próprio teste descoberto e corrigido antes da aprovação. Pacote estrutural e candidato `AmenoTools-0.0.1-e13-candidate.zip` foram gerados, SHA-256 registrado, sem instalação, publicação ou merge. Gates manuais 2–6, V-Ray CPU real, aprovação do usuário e publicação permanecem pendentes. Evidências: `plans/2026-09-05-e13-executor-runbook.md`, `plans/2026-09-06-e13-candidate-manifest.sha256`, `plans/2026-09-06-e13-etapa-5-handoff.md`, `plans/2026-09-06-e13-etapa-6-handoff.md` e `plans/2026-09-06-e13-etapa-7-handoff.md`.
