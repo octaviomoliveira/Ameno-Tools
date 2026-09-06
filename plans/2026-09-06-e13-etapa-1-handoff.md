@@ -52,6 +52,6 @@ Também não foi executado gate manual ou teste destrutivo na cena interativa. A
 
 ## Commit e próximo passo
 
-- Commit da integração: será preenchido após a criação deste handoff e o commit local do worktree; permanece fora da main.
-- Alterações pendentes no momento deste registro: documentação, runner, INI preservado e conteúdo integrado ainda precisam ser staged/commitados no branch de integração.
+- Commit da integração: d1e9e22f379a52ad5933cbea01a696e33d5d63bf (merge commit com pais f131f08 e 676e008); permanece fora da main.
+- Este handoff está sendo atualizado em um commit documental separado; não há alterações de código pendentes no branch de integração.
 - Próximo passo: decidir/corrigir explicitamente o R0 baseline, repetir a bateria da etapa 1 e só então decidir se a etapa 1 pode ser marcada OK. Não avançar para a etapa 2, não instalar e não publicar.
