@@ -73,6 +73,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 - **Prioridade atual — gate manual do hotfix E13 em `develop`:** o pacote de recuperação de modo foi instalado com o Max fechado depois que o usuário relatou travamento ao tentar cotar na orientação errada. A aprovação visual final, V-Ray CPU real, eventual spike de teclado suportado pelo host e publicação continuam pendentes; não fazer merge/push.
 
+- **Investigação de cor de render e persistência de perfis (2026-09-06):** o passe de overlay cria um material branco no adapter e substitui temporariamente os materiais das cotas; `annotationColor`/`textColor` hoje são usados no preview, mas não são encaminhados ao render. A UI precisa de uma cor explícita para o overlay e de verificação RGB além do alpha. Os estilos salvos atualmente vivem no `.max` (Custom Attribute/UserProp): a suíte E13 etapa 3 confirma save/load da cena, mas não há biblioteca global para sobreviver a reinício sem salvar o arquivo. Decisão pendente: manter perfis apenas por cena ou adicionar biblioteca global do usuário sem quebrar referências scene-local.
+
 - **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0–R6 estão concluídos para a E12-R; R4 foi aprovada em Batch, instalada e validada manualmente, R5 foi fechado como decisão de escopo e R6 foi aprovado com automação e gate manual. Handoff final: `plans/2026-09-05-e12-r6-handoff.md`.
 
 - Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. O C1 equivalente foi encerrado pelo R0; ciclo de vida pelo R1; e a causa do vértice ignorado foi tratada na R2 removendo o bloqueio causado pelo snap em gráfico Ameno e resolvendo o vértice geométrico pelo pixel.
@@ -91,6 +93,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 ## Próximo passo executável
 
 - **Atual em 2026-09-06:** hotfix de recuperação de modo instalado e carregamento pelo `ApplicationPlugins` aprovado. Reabrir o Max e validar: iniciar em Horizontal e clicar dois pontos claramente verticais para confirmar cancelamento automático e retorno do painel; repetir o caso correto H/V; cancelar com Esc antes e depois da coleta; conferir preview, commit e Undo/Redo. Não testar Enter nesta versão. Se o gate passar, abrir spike separado para teclado suportado pelo host; merge/push continuam sem autorização. Ver `plans/2026-09-06-e13-enter-crash-fix-handoff.md`.
+
+- **Investigação seguinte:** definir se os perfis devem ser globais entre projetos (recomendado para “perfis salvos”) ou estritamente vinculados ao `.max`; depois implementar o seletor de cor do overlay, encaminhar a cor ao adapter e adicionar teste de persistência após reinício/sem cena salva. Se o usuário já tiver salvo o `.max` e ainda perder perfis, reproduzir esse caminho como defeito de persistência, pois o `saveToScene()` atualmente engole falhas e retorna apenas `false`.
 
 **Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 
@@ -111,6 +115,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-06 — Analisar cotas invisíveis no render e perfis que somem após reinício:** confirmado que o material temporário do render é branco e que as cores do estilo ainda ficam restritas ao preview; confirmado também que a persistência atual é scene-local e depende do `.max` ser salvo. A suíte E13 etapa 3 cobre save/load de cena, não uma biblioteca global entre reinícios. Implementação da cor e decisão do escopo global/scene-local ainda pendentes.
 
 - **2026-09-06 — Corrigir o travamento ao tentar cotar na orientação errada:** a análise do logger e do ciclo do `MouseTool` confirmou que o painel fica oculto durante a sessão, o modo é congelado no início e não havia uma rejeição explícita para a direção incompatível; o cancelamento também não forçava `#stop` em todos os caminhos. Foi implementada a detecção/cancelamento de modo incompatível, o armamento temporário de `escapeEnable` e o retorno explícito no abort. O usuário precisou fechar o Max; após isso, o pacote foi instalado com backup e o teste instalado passou. Commit `5a31643`; gate interativo após reabrir o Max pendente.
 
