@@ -13,6 +13,10 @@ global AmenoRendererProbe
 global AmenoSceneSetup
 global AmenoUnitService
 global AmenoDimensionMath
+global AmenoDimensionChainMath
+global AmenoDimensionChainLayout
+global AmenoDimensionChainReferenceLayout
+global AmenoDimensionChainSegmentLayout
 global AmenoDimensionCA
 global AmenoDimensionRecord
 global AmenoStyleRecord
@@ -24,6 +28,15 @@ global AmenoAnchorService
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
+global AmenoDimensionContinuousTool
+global AmenoDimensionContinuousMouseTool
+global AmenoContinuousClickClassification
+global AmenoContinuousInputSample
+global AmenoContinuousSurfaceHit
+global AmenoContinuousVertexProbe
+global AmenoContinuousPickResult
+global AmenoContinuousInputResolver
+global AmenoContinuousDiagnostics
 global AmenoCoronaRendererAdapter
 global AmenoVRayRendererAdapter
 global AmenoAdapterRenderResult
@@ -86,11 +99,15 @@ struct AmenoBootstrapService
             @"core\ameno_logger.ms",
             @"core\ameno_scene_setup.ms",
             @"core\ameno_dimensions_math.ms",
+            @"core\ameno_dimension_chain_math.ms",
             @"core\ameno_dimension_ca.ms",
             @"core\ameno_dimension_graphics.ms",
             @"core\ameno_anchor_service.ms",
             @"core\ameno_style_service.ms",
             @"core\ameno_dimension_tool.ms",
+            @"core\ameno_continuous_input.ms",
+            @"core\ameno_continuous_diagnostics.ms",
+            @"core\ameno_dimension_continuous_tool.ms",
             @"renderers\ameno_renderer_probe.ms",
             @"renderers\ameno_corona_adapter.ms",
             @"renderers\ameno_vray_adapter.ms",

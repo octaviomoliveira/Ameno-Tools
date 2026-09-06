@@ -10,6 +10,7 @@ global AmenoDimensionCA
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
+global AmenoContinuousInputResolver
 global AmenoStyleService
 global AmenoStyleRecord
 global AmenoAnchorService
@@ -66,6 +67,7 @@ struct AmenoE9MockAdapter
     if AmenoDimensionGraphics == undefined then throw "Construtor gráfico de cotas não foi carregado pelo bootstrap."
     if AmenoDimensionTool == undefined then throw "Ferramenta interativa E4 não foi carregada pelo bootstrap."
     if (classOf AmenoDimensionMouseTool) != MouseTool then throw "MouseTool E4 não foi registrado."
+    if AmenoContinuousInputResolver == undefined then throw "Resolvedor de input contínuo E12-R2 não foi carregado."
     if AmenoAnchorService == undefined then throw "Serviço de âncoras E8 não foi carregado pelo bootstrap."
     if AmenoCoronaRendererAdapter == undefined then throw "Adapter Corona E9 não foi carregado pelo bootstrap."
     if AmenoRenderCotasService == undefined then throw "Serviço Renderizar Cotas E9 não foi carregado pelo bootstrap."

@@ -185,7 +185,9 @@ format "\n=== A4b: leitura usa geometria avaliada no topo da modifier stack ===\
 local stackedNode = Box name:"AMENO_TEST_STACK" length:120 width:80 height:200
 convertToPoly stackedNode
 stackedNode.position = [900, 100, 0]
-local stackedVertexId = 1
+-- Usa um vertice no topo da caixa: o vertice 1 fica no limite inferior do
+-- Bend e pode permanecer no eixo neutro, tornando a assercao dependente da versao.
+local stackedVertexId = 5
 local stackedBefore = AmenoDimensionCA.resolveVertexWorld stackedNode stackedVertexId
 local bendModifier = Bend()
 bendModifier.angle = 55

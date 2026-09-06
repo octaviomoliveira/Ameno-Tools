@@ -1,7 +1,7 @@
 # Plano compartilhado — Ameno Tools
 
 > Fonte de continuidade do projeto para qualquer pessoa ou agente (incluindo Antigravity).
-> Atualizado: 2026-09-04
+> Atualizado: 2026-09-05
 
 ## Regra de trabalho
 
@@ -19,6 +19,12 @@ Não substituir o histórico: acrescentar uma entrada datada. O plano corrente �
 Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions**. Ele deve criar cotas rápidas, editáveis e persistentes para plantas humanizadas, com apresentação controlável e uma saída de render independente para composição.
 
 ## Concluído
+
+- E12-R0 concluído em 2026-09-05 no commit instalado `e1bc114`: seis suítes MAXScript e a validação estrutural passaram; 25/25 arquivos instalados corresponderam por SHA-256; trace real comprovou que o commit Horizontal cria a cadeia mas mantém o MouseTool em `stage=collecting | active=true`, e que Alinhado entra na captura antes de ser recusado como `unsupported-mode`. A reutilização Horizontal→Vertical permanece apenas como relato, pois não houve sessão Vertical no trace. Evidência: `docs/e12-r0-diagnostics.md`.
+
+- E12-R5 concluído em 2026-09-05 como gate de definição: o relato foi confirmado como reuso do vértice da geometria original entre cadeias Horizontal e Vertical. O vínculo cota→cota (ponta/terminal/texto como âncora) não será inferido nesta E12-R. Evidência: `docs/decisions/0021-e12-reference-reuse-scope.md`, `plans/2026-09-05-e12-r5-handoff.md` e gate R2 aprovado pelo usuário.
+
+- Planejamento de recuperação da E12 concluído em 2026-09-05, baseado na inspeção de `db88f1b`: interação estilo Revit, linha comum, reutilização do núcleo e gates E12-A a F. Somente documentação; implementação, testes e instalação desta recuperação ainda pendentes. Plano: `plans/2026-09-05-e12-continuous-revit-implementation.md`.
 
 - Repositório Git local criado e fundação `0.0.1` do pacote `ApplicationPlugins` estruturada.
 - Pacote carregado e smoke testado no 3ds Max 2026.3.
@@ -52,6 +58,14 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
+- **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0–R6 estão concluídos para a E12-R; R4 foi aprovada em Batch, instalada e validada manualmente, R5 foi fechado como decisão de escopo e R6 foi aprovado com automação e gate manual. Handoff final: `plans/2026-09-05-e12-r6-handoff.md`.
+
+- Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. O C1 equivalente foi encerrado pelo R0; ciclo de vida pelo R1; e a causa do vértice ignorado foi tratada na R2 removendo o bloqueio causado pelo snap em gráfico Ameno e resolvendo o vértice geométrico pelo pixel.
+
+- **Instalação ativa da branch E12:** commit R4 `688c8bc`, com 26/26 arquivos conferidos por SHA-256, pacote instalado aprovado em Batch e Undo/Redo validado manualmente. R5 foi documental, sem mudança de pacote; próximo incremento: R6. Handoffs: `plans/2026-09-05-e12-r4-handoff.md` e `plans/2026-09-05-e12-r5-handoff.md`.
+
+- **R6 — automação e gate manual executados:** com o Max interativo fechado, `validate-package.ps1` passou; as 11 suítes do lote e a R2 repetida passaram após o fixture E12-A declarar explicitamente o modo Horizontal. O usuário abriu o Max, repetiu o caso H/V com o vértice compartilhado e confirmou “tudo funcionando”. Evidência por suíte em `work/r6-test-logs` e handoff final em `plans/2026-09-05-e12-r6-handoff.md`.
+
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
 - Gate manual do **Editor Visual E11** no 3ds Max 2026 com a versão unificada instalada.
 
@@ -60,6 +74,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E11 — Editor Visual e Preview ao Vivo: implementação mesclada da branch `feature/e11-visual-editor`, validada estruturalmente e instalada. Falta somente o gate visual e funcional do usuário no 3ds Max. Plano detalhado em `plans/2026-09-04-e11-editor-visual-preview.md`.
 
 ## Próximo passo executável
+
+**Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 
 1. Abrir o 3ds Max e executar o **gate manual interativo da E10 no 3ds Max 2026** com a versão de desenvolvimento já instalada:
    - Validar criação de cotas nos modos Horizontal, Vertical e Alinhada;
@@ -81,6 +97,16 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 | Data | Pedido / decisão | Situação | Evidência |
 | --- | --- | --- | --- |
+| 2026-09-05 | Concluir o gate interativo E12-R0 e analisar o trace real. | R0 concluído: Horizontal criou quatro segmentos, mas `commitSuccess` deixou o MouseTool ativo/coletando; Alinhado foi aceito na captura e recusado no commit. Batch, instalação por hash e trace foram comprovados. Reutilização Horizontal→Vertical segue sem causa comprovada. | commit instalado `e1bc114`; `docs/e12-r0-diagnostics.md`; trace `e12-r0-20260905-165149-560.log` |
+| 2026-09-05 | Auditar minuciosamente o código e detalhar etapas para execução por agente mais leve. | Runbook R0–R6 com contratos de entrada/estado, mapa de falhas, testes negativos, gates reais e prompt de execução. Sem código alterado ou instalação. | `plans/2026-09-05-e12-executor-runbook.md`, `plans/2026-09-05-e12-agent-prompt.md` |
+| 2026-09-05 | Iniciar R0 em worktree própria e preparar observabilidade da interação real. | Código voltou ao comportamento `ba55d95`; probe opt-in instrumenta MouseTool, classificação, commit e cleanup sem correção funcional. Batch/instalação/trace real pendentes porque o Max está aberto. | branch `feature/e12-input-recovery`; `ameno_continuous_diagnostics.ms`; `docs/e12-r0-diagnostics.md`; `test_e12_r0_diagnostics.ms` |
+| 2026-09-05 | Preparar a transferência do R0 para outro agente. | Relatório registra commits, arquivos, instalação ainda funcional, testes e trace pendentes, comandos e proibições. Nenhuma correção R1–R6 executada. | `plans/2026-09-05-e12-r0-handoff.md` |
+| 2026-09-05 | Pesquisar cotagem Revit/SketchUp e planejar solução da confirmação contínua no Max. | Documentação oficial comparada com código instalado; viabilidade confirmada no nível de APIs, causa runtime ainda pendente. Plano C1–C5; sem implementação. | `plans/2026-09-05-e12-finalization-research.md` |
+| 2026-09-05 | Planejar recuperação da cota contínua estilo Revit e salvar no Git para execução por outro agente. | Plano detalhado concluído; nenhuma alteração de código, instalação ou teste de runtime nesta entrega. Execução começa pela E12-A. | `plans/2026-09-05-e12-continuous-revit-implementation.md`, `docs/decisions/0020-e12-shared-dimension-chain.md`; base inspecionada `db88f1b` |
+| 2026-09-05 | Executar a E12-A: tornar entrada da cota contínua determinística e testável. | Concluída em Batch: sem timer de duplo clique; estados `#idle/#collecting/#committing`; referência/geometria/vazio/ambíguo separados; abort cancela. Sem instalação ou teste visual nesta etapa. | `ameno_dimension_continuous_tool.ms`, `test_e12_chain_input.ms` 21/21, `test_e12_continuous.ms` 43/43, `docs/e12-a-input-spike.md` |
+| 2026-09-05 | Executar a E12-B: calcular uma linha comum H/V para toda a sequência. | Concluída em Batch: módulo puro ordena estações, projeta todos os pontos na mesma baseline e rejeita intervalos zero; nenhuma criação de cena. | `ameno_dimension_chain_math.ms`, `test_e12_chain_math.ms` 29/29, `docs/e12-b-shared-layout.md` |
+| 2026-09-05 | Executar a E12-C: conectar preview e commit H/V ao layout compartilhado, com rollback e Undo único. | Implementada, aprovada em Batch e instalada para gate manual. Horizontal e Vertical usam baseline comum, clique vazio confirma `N-1`, falha injetada não deixa cotas permanentes e o draft é preservado. | commit `ba55d95`; `test_e12_chain_commit.ms` 43/43; regressivos e pacote instalado aprovados; 24 hashes conferidos; `docs/e12-c-preview-commit.md` |
+| 2026-09-05 | Restaurar a versão trabalhada antes da tentativa de correção feita por outro agente. | Pacote `ApplicationPlugins` restaurado exatamente ao commit `ba55d95`; versão anterior preservada em backup, 24 arquivos validados por SHA-256 e smoke instalado aprovado. A branch continua em `d8ce420`, explicitamente diferente da instalação ativa. | `AmenoTools.backup-before-ba55d95-20260905-124838`; `[AMENO_INSTALLED_TEST][PASS]` |
 | 2026-09-03 | Estruturar Ameno Tools e iniciar pelo módulo de cotas para plantas humanizadas. | Concluído na fundação | `README.md`, `docs/`, pacote `0.0.1` |
 | 2026-09-03 | Usar layer exclusiva, manter Beauty/LightMix intactos e renderizar cotas separadamente para composição. | Decidido e documentado | `docs/decisions/0002-*`, `0003-*` |
 | 2026-09-03 | Permitir valores manuais auditáveis com alerta visível somente no viewport. | Decidido e documentado | `docs/decisions/0004-*`, `docs/manual-overrides.md` |
@@ -118,6 +144,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-04 | Confirmar o resultado final da E10.7.2 em edição de subobjeto. | Concluída e aprovada manualmente: Vertex Snap persistiu os IDs e a cota acompanhou o deslocamento dos vértices; o usuário confirmou "sucesso absoluto". | confirmação textual e vídeo `WhatsApp Video 2026-09-04 at 18.52.27.mp4`; commit funcional `32a00a7` |
 | 2026-09-04 | Implementação completa da Etapa E11 (E11.0 a E11.5): Editor Visual de Estilos com Preview Vetorial 2D ao Vivo (WPF .NET 8), StyleDraft transacional, Persistência, Integração e Instalação no ApplicationPlugins. | E11.0 (Spike WPF .NET 8 aprovado, ADR 0019), E11.1 (StyleDraft e Schema v2 retrocompatível), E11.2 (Shell WPF moderno, 2 colunas com GridSplitter, atalhos e preferências INI), E11.3 (Renderer vetorial 2D no Canvas WPF com planta neutra, 5 terminais e zoom), E11.4 (Persistência atômica, deduplicação de nós, rollback de snapshot e reatividade à seleção), E11.5 (Ponto de entrada integrado no painel principal, fallback diagnósticável para rollout legado, ciclo de vida robusto com reset de cena, empacotamento determinístico e instalação funcional no ApplicationPlugins). Suítes automatizadas 100% aprovadas. Pronto para Gate Manual no 3ds Max. | commits `4c61f20`, `e309892`, `6a60dcf`, `acd810d`, `cbc5927`, `ADR 0019`, `tests/maxscript/test_e11_*.ms`, `test_installed_package.ms` |
 | 2026-09-04 | Integrar `feature/e11-visual-editor` na `main`, validar, instalar a versão unificada com E10.7 e publicar. | Merge concluído com um único conflito documental em `PLAN.md`, reconciliado preservando os históricos E10.7 e E11. Validação estrutural aprovada; instalação em `ApplicationPlugins` conferida com 22/22 arquivos e zero diferenças SHA-256. Pronto para o gate interativo unificado após reiniciar o Max. | merge `5aa6afc`; `tools/validate-package.ps1`; `tools/install-dev.ps1` |
+| 2026-09-05 | Fechar o R5 da recuperação E12. | O caso foi definido como reuso do vértice da geometria original entre cadeias H/V; a ponta de anotação não vira âncora nesta E12-R. R5 documental concluído; R6 é o próximo gate. | `docs/decisions/0021-e12-reference-reuse-scope.md`; `plans/2026-09-05-e12-r5-handoff.md`; R2 aprovado |
+| 2026-09-05 | Executar a automação do R6 e corrigir o fixture E12-A obsoleto. | `validate-package.ps1` passou; 11/11 suítes do lote + R2 repetida passaram. E12-A foi ajustada para declarar Horizontal, preservando o contrato de estação H/V. Gate manual final permanece pendente. | `tests/maxscript/test_e12_chain_input.ms`; `work/r6-test-logs`; Batch 3ds Max 2026.3 |
+| 2026-09-05 | Aprovar manualmente a aceitação final da E12-R. | Usuário abriu o Max, repetiu Horizontal→Vertical com o mesmo vértice da geometria original e confirmou “tudo funcionando”; encerramento, cancelamento e Undo/Redo foram aceitos. E12-R R6 concluído; publicação dos commits locais pendente de autorização. | `plans/2026-09-05-e12-r6-handoff.md`; confirmação do usuário |
 
 ## Como retomar sem contexto
 

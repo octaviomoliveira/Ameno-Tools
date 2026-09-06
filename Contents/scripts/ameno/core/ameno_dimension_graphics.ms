@@ -52,6 +52,71 @@ struct AmenoDimensionGraphicsService
     controllerKind = "dimension",
     graphicKind = "dimensionGraphic",
     testRole = "test",
+    allocationRegistry = #(),
+    allocationActive = false,
+    failureInjection = "",
+
+    fn setFailureInjection stageName =
+    (
+        failureInjection = if stageName == undefined then "" else (stageName as string)
+        true
+    ),
+
+    fn maybeInjectFailure stageName =
+    (
+        if failureInjection == (stageName as string) then throw ("Falha injetada: " + (stageName as string))
+        true
+    ),
+
+    fn beginAllocation =
+    (
+        allocationRegistry = #()
+        allocationActive = true
+        true
+    ),
+
+    fn registerAllocation nodeValue =
+    (
+        if allocationActive and nodeValue != undefined and isValidNode nodeValue and (findItem allocationRegistry nodeValue) == 0 do
+            append allocationRegistry nodeValue
+        nodeValue
+    ),
+
+    fn finishAllocation =
+    (
+        local allocated = allocationRegistry
+        allocationRegistry = #()
+        allocationActive = false
+        allocated
+    ),
+
+    fn rollbackAllocation =
+    (
+        local allocated = allocationRegistry
+        local undoHolding = false
+        try (undoHolding = theHold.Holding()) catch ()
+
+        -- Quando uma fábrica falha dentro de um `undo ... on` externo, não
+        -- suspenda o mesmo Hold novamente. A transação externa será abortada
+        -- pelo chamador e restaurará as alocações desta tentativa. O
+        -- `with undo off` fica reservado para rollback fora de uma transação.
+        if undoHolding then
+        (
+            allocationRegistry = #()
+            allocationActive = false
+        )
+        else
+        (
+            with undo off
+            (
+                for i = allocated.count to 1 by -1 do
+                    if allocated[i] != undefined and isValidNode allocated[i] do delete allocated[i]
+            )
+            allocationRegistry = #()
+            allocationActive = false
+        )
+        true
+    ),
 
     fn toSceneUnits valMm =
     (
@@ -619,6 +684,8 @@ struct AmenoDimensionGraphicsService
         nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned =
     (
         local controller = Point name:(uniqueName "AMENO_DIM_CTRL_") size:5.0
+        registerAllocation controller
+        maybeInjectFailure #afterController
         local dimensionId = "dimension-" + (controller.handle as string)
 
         try (controller.isHidden = true) catch ()
@@ -712,12 +779,18 @@ struct AmenoDimensionGraphicsService
 
         local dimensionMaterial = createDimensionMaterial()
         local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
+        registerAllocation lineNode
+        maybeInjectFailure #afterLine
         local textNode = createTextNode labelText layout style:resolvedStyle material:dimensionMaterial
+        registerAllocation textNode
+        maybeInjectFailure #afterText
         local markerNode = undefined
 
         if audit != undefined and audit.isManual then
         (
             markerNode = createMarkerNode layout style:resolvedStyle
+            registerAllocation markerNode
+            maybeInjectFailure #afterMarker
             decorateGraphicNode markerNode dimensionId "marker" dimensionsLayer
         )
 
@@ -750,6 +823,17 @@ struct AmenoDimensionGraphicsService
         AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode markerNode:markerNode layout:layout displayText:labelText audit:audit style:resolvedStyle
     ),
 
+    fn configurePreviewNode nodeValue =
+    (
+        if nodeValue == undefined or not isValidNode nodeValue then return false
+        try (nodeValue.renderable = false) catch ()
+        try (if isProperty nodeValue #render_renderable do nodeValue.render_renderable = false) catch ()
+        try (if isProperty nodeValue #render_displayRenderMesh do nodeValue.render_displayRenderMesh = false) catch ()
+        try (nodeValue.showFrozenInGray = false) catch ()
+        try (nodeValue.isFrozen = true) catch ()
+        true
+    ),
+
     fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned =
     (
         local sceneState = ensureSceneReady()
@@ -764,11 +848,16 @@ struct AmenoDimensionGraphicsService
         local resolvedStyle = undefined
         if ::AmenoStyleService != undefined do resolvedStyle = ::AmenoStyleService.getStyle styleId
 
-        with undo off
+        beginAllocation()
+        try
+        (
+            with undo off
         (
             local dimensionMaterial = createDimensionMaterial()
-            local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
-            local textNode = createTextNode measurement.text layout style:resolvedStyle material:dimensionMaterial
+        local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
+        registerAllocation lineNode
+        local textNode = createTextNode measurement.text layout style:resolvedStyle material:dimensionMaterial
+        registerAllocation textNode
             local dimensionId = "preview-" + (lineNode.handle as string)
 
             try (lineNode.isHidden = false) catch ()
@@ -779,9 +868,18 @@ struct AmenoDimensionGraphicsService
             setTextProperty textNode "Ameno.Kind" "dimensionPreview"
             setTextProperty lineNode "Ameno.Preview" "1"
             setTextProperty textNode "Ameno.Preview" "1"
+            configurePreviewNode lineNode
+            configurePreviewNode textNode
 
             result = AmenoGraphicDimensionRecord dimensionId:dimensionId lineNode:lineNode textNode:textNode layout:layout displayText:measurement.text style:resolvedStyle
+            )
         )
+        catch
+        (
+            rollbackAllocation()
+            throw
+        )
+        finishAllocation()
 
         result
     ),
@@ -801,6 +899,8 @@ struct AmenoDimensionGraphicsService
         (
             updateLineSplinePoints preview.lineNode layout style:resolvedStyle
             updateTextNode preview.textNode measurement.text layout style:resolvedStyle
+            configurePreviewNode preview.lineNode
+            configurePreviewNode preview.textNode
         )
 
         preview.layout = layout
@@ -827,7 +927,7 @@ struct AmenoDimensionGraphicsService
 
     fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" \
         anchorType:"world" nodeA:undefined localPointA:undefined anchorVertexIdA:-1 anchorEdgeIdA:-1 anchorEdgeMidA:false \
-        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned =
+        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned useUndo:true =
     (
         local sceneState = ensureSceneReady()
 
@@ -856,9 +956,31 @@ struct AmenoDimensionGraphicsService
         local controller = undefined
         local result = undefined
 
+        beginAllocation()
         try
         (
-            undo "Ameno: criar cota" on
+            if useUndo then
+            (
+                undo "Ameno: criar cota" on
+                (
+                    controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId \
+                        anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA anchorVertexIdA:anchorVertexIdA anchorEdgeIdA:anchorEdgeIdA anchorEdgeMidA:anchorEdgeMidA \
+                        nodeB:nodeB localPointB:resolvedLocalB anchorVertexIdB:anchorVertexIdB anchorEdgeIdB:anchorEdgeIdB anchorEdgeMidB:anchorEdgeMidB dimensionMode:dimensionMode
+                    local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
+                    if AmenoDimensionCA != undefined do
+                    (
+                        local rec = AmenoDimensionCA.readCA controller
+                        if rec != undefined do
+                        (
+                            rec.lastMeasuredMm = audit.measuredMillimeters
+                            rec.lastDeltaMm = audit.deltaMillimeters
+                            AmenoDimensionCA.applyCA controller rec
+                        )
+                    )
+                    result = createVisualNodes controller layout audit sceneState.dimensionsLayer
+                )
+            )
+            else
             (
                 controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId \
                     anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA anchorVertexIdA:anchorVertexIdA anchorEdgeIdA:anchorEdgeIdA anchorEdgeMidA:anchorEdgeMidA \
@@ -874,14 +996,16 @@ struct AmenoDimensionGraphicsService
                         AmenoDimensionCA.applyCA controller rec
                     )
                 )
-                result = createVisualNodes controller layout audit sceneState.dimensionsLayer
+            result = createVisualNodes controller layout audit sceneState.dimensionsLayer
             )
         )
         catch
         (
-            if controller != undefined and isValidNode controller do delete controller
+            rollbackAllocation()
             throw
         )
+
+        finishAllocation()
 
         result
     ),
