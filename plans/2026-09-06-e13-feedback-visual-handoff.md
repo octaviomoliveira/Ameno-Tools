@@ -1,6 +1,6 @@
 # E13 — Correções do feedback visual (2026-09-06)
 
-Estado: implementadas; reinstalação e aceitação visual pendentes.
+Estado: implementadas e instaladas; aceitação visual pendente.
 Branch/worktree: `develop`, `D:\Ameno\_worktrees\develop`; base `ba4778a`.
 
 ## Pedido e alterações
@@ -28,8 +28,8 @@ Não validado nesta rodada: diálogo modal por interação humana, legibilidade 
 
 ## Instalação e continuidade
 
-Instalação ativa em `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`: candidato anterior `d79211a`, instalado com autorização do usuário, 42/42 arquivos conferidos e teste instalado exit 0 / 1 PASS / 0 FAIL. Backup anterior: `D:\Ameno\backups\AmenoTools-before-e13-20260906-120546` (26 arquivos).
+Instalação ativa em `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`: atualização do commit `20d618f` instalada com autorização do usuário em 2026-09-06. Os 42 arquivos do pacote instalado conferem por SHA-256 com o `develop`; o teste pelo caminho instalado terminou com exit 0 / 1 PASS / 0 FAIL. Backup anterior: `D:\Ameno\backups\AmenoTools-before-e13-20260906-120546` (26 arquivos). Evidências: `.test-output/visual-feedback/test_installed_package-runner.log` e `test_installed_package-listener.log`.
 
-As correções acima ainda não estão instaladas. Sessão interativa do usuário preservada; todos os testes desta rodada são Batch descartáveis. Nenhum merge/push/publicação.
+As correções acima estão instaladas. A sessão interativa foi preservada e o Max foi reaberto após a instalação; nenhum teste destrutivo foi executado nela. Nenhum merge/push/publicação.
 
-Próximo passo: usuário salva a cena e fecha o Max; atualizar instalação, conferir hashes e executar teste instalado. Depois conferir dropdowns, Novo/Salvar/Cancelar, aplicação às selecionadas versus todas e criação vertical com orientação ligada/desligada. Não declarar E13 aprovada até o gate manual.
+Próximo passo: conferir no Max os dropdowns, Novo/Salvar/Cancelar, aplicação às selecionadas versus todas e criação vertical com orientação ligada/desligada. Não declarar E13 aprovada até o gate manual.

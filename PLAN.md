@@ -20,7 +20,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Concluído
 
-- Correções do feedback visual E13 implementadas em `develop` (2026-09-06): tema escuro compartilhado, nome antes de salvar/criar estilo, aplicação a todas as cotas e opção de orientação por cota. Teste específico 18 PASS, regressão Criar 21 PASS e Estilos 25 PASS; todos exit 0 / zero FAIL após corrigir a conversão Nullable do checkbox. Pacote estrutural válido e ZIP feedback1 conferido (44/44 arquivos). Ainda não reinstalado nem aprovado visualmente; detalhes em `plans/2026-09-06-e13-feedback-visual-handoff.md`.
+- Correções do feedback visual E13 implementadas e instaladas em `develop` (2026-09-06): tema escuro compartilhado, nome antes de salvar/criar estilo, aplicação a todas as cotas e opção de orientação por cota. Teste específico 18 PASS, regressão Criar 21 PASS e Estilos 25 PASS; todos exit 0 / zero FAIL após corrigir a conversão Nullable do checkbox. Pacote instalado com 42/42 hashes conferidos e teste instalado 1 PASS/0 FAIL; aceitação visual ainda pendente. Detalhes em `plans/2026-09-06-e13-feedback-visual-handoff.md`.
 
 - E12-R0 concluído em 2026-09-05 no commit instalado `e1bc114`: seis suítes MAXScript e a validação estrutural passaram; 25/25 arquivos instalados corresponderam por SHA-256; trace real comprovou que o commit Horizontal cria a cadeia mas mantém o MouseTool em `stage=collecting | active=true`, e que Alinhado entra na captura antes de ser recusado como `unsupported-mode`. A reutilização Horizontal→Vertical permanece apenas como relato, pois não houve sessão Vertical no trace. Evidência: `docs/e12-r0-diagnostics.md`.
 
@@ -71,7 +71,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 - Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. O C1 equivalente foi encerrado pelo R0; ciclo de vida pelo R1; e a causa do vértice ignorado foi tratada na R2 removendo o bloqueio causado pelo snap em gráfico Ameno e resolvendo o vértice geométrico pelo pixel.
 
-- **Instalação ativa:** candidato E13 do commit funcional `d79211a`, instalado com autorização em 2026-09-06; 42/42 arquivos conferidos por SHA-256 e teste instalado aprovado (exit 0, 1 PASS, 0 FAIL). Backup anterior: `D:\Ameno\backups\AmenoTools-before-e13-20260906-120546`. As correções do feedback visual permanecem somente no `develop` até o próximo fechamento do Max.
+- **Instalação ativa:** correções do feedback visual do commit `20d618f`, instaladas com autorização em 2026-09-06; 42/42 arquivos conferidos por SHA-256 e teste instalado aprovado (exit 0, 1 PASS, 0 FAIL). Backup anterior: `D:\Ameno\backups\AmenoTools-before-e13-20260906-120546`. Aceitação visual do usuário permanece pendente.
 
 - **R6 — automação e gate manual executados:** com o Max interativo fechado, `validate-package.ps1` passou; as 11 suítes do lote e a R2 repetida passaram após o fixture E12-A declarar explicitamente o modo Horizontal. O usuário abriu o Max, repetiu o caso H/V com o vértice compartilhado e confirmou “tudo funcionando”. Evidência por suíte em `work/r6-test-logs` e handoff final em `plans/2026-09-05-e12-r6-handoff.md`.
 
@@ -84,7 +84,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Atual em 2026-09-06:** com o Max fechado pelo usuário, instalar as correções do feedback visual, conferir hashes e testar o pacote instalado. Depois validar listas abertas, diálogo de nome, aplicação global e criação de cotas verticais com a opção de orientação ligada/desligada. Não fechar nem alterar a sessão interativa automaticamente. Ver `plans/2026-09-06-e13-feedback-visual-handoff.md`; merge/push continuam sem autorização.
+- **Atual em 2026-09-06:** atualização visual instalada e carregamento pelo `ApplicationPlugins` aprovado. Validar no Max listas abertas, diálogo de nome, aplicação global e criação de cotas verticais com a opção de orientação ligada/desligada. Não fechar nem alterar a sessão interativa automaticamente. Ver `plans/2026-09-06-e13-feedback-visual-handoff.md`; merge/push continuam sem autorização.
 
 **Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 
@@ -106,7 +106,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Histórico de solicitações
 
-- **2026-09-06 — Instalar E13 e corrigir feedback visual:** instalação do candidato autorizada e realizada com Max fechado; em seguida o usuário forneceu duas capturas e solicitou aplicação de estilo a todas as cotas, nome antes de salvar, opção de texto acompanhando a linha e contraste legível. Implementação no `develop`, sem alteração da cena interativa e sem reinstalação nesta rodada. Handoff: `plans/2026-09-06-e13-feedback-visual-handoff.md`.
+- **2026-09-06 — Instalar E13 e corrigir feedback visual:** instalação do candidato autorizada e realizada com Max fechado; após as capturas, foram implementados aplicação a todas as cotas, nome antes de salvar, orientação do texto e contraste legível. A atualização do commit `20d618f` foi instalada depois; 42/42 hashes e o teste instalado passaram. Aceitação visual do usuário ainda pendente. Handoff: `plans/2026-09-06-e13-feedback-visual-handoff.md`.
 
 - **2026-09-06 — Finalizar as etapas 5, 6 e 7 da E13 e fazer pente-fino:** no `develop`, terminais, preview, transação, câmera explícita e restauração foram implementados; a suíte E13 final passou com 217 PASS/0 FAIL. A regressão combinada passou E10.1–E10.7, E11.0–E11.5, E12 chain/R0–R4 e Corona real; E10.1/E10.2 tiveram um defeito de sintaxe/contrato do próprio teste descoberto e corrigido antes da aprovação. Pacote estrutural e candidato `AmenoTools-0.0.1-e13-candidate.zip` foram gerados, SHA-256 registrado, sem instalação, publicação ou merge. Gates manuais 2–6, V-Ray CPU real, aprovação do usuário e publicação permanecem pendentes. Evidências: `plans/2026-09-05-e13-executor-runbook.md`, `plans/2026-09-06-e13-candidate-manifest.sha256`, `plans/2026-09-06-e13-etapa-5-handoff.md`, `plans/2026-09-06-e13-etapa-6-handoff.md` e `plans/2026-09-06-e13-etapa-7-handoff.md`.
 

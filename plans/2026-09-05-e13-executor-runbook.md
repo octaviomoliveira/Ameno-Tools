@@ -245,7 +245,7 @@ Próximo passo exato:
 - [x] Compartilhar o template escuro de ComboBox entre as abas.
 - [x] Adicionar opção de texto acompanhando a linha, persistida por cota e preservada na reconstrução. Cotas antigas sem a propriedade mantêm orientação horizontal.
 - [x] Reexecutar testes após correção do Nullable Boolean: feedback visual 18 PASS, Criar 21 PASS, Estilos 25 PASS; todos exit 0 e zero FAIL. Pacote estrutural válido; novo ZIP `AmenoTools-0.0.1-e13-feedback1.zip` conferido com 44/44 arquivos idênticos. Logs e hash no handoff do feedback.
-- [ ] Instalar esta atualização com Max fechado; repetir conferência de hashes e teste instalado.
+- [x] Instalar esta atualização com Max fechado; repetir conferência de hashes e teste instalado. Commit `20d618f`, 42/42 hashes conferidos, teste instalado exit 0 / 1 PASS / 0 FAIL; logs em `.test-output/visual-feedback/`.
 - [ ] Validar visualmente dropdowns/diálogo e orientação no viewport com o usuário. Batch não substitui este gate.
 
 Continuidade: `plans/2026-09-06-e13-feedback-visual-handoff.md`. A instalação foi autorizada, mas aguarda fechamento do Max para atualizar. Não fechar a sessão do usuário, não executar testes destrutivos nela e não publicar/merge/push sem autorização.
