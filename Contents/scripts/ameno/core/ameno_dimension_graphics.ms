@@ -606,8 +606,13 @@ struct AmenoDimensionGraphicsService
 
         try
         (
-            textNode.pos = textPosition
+            -- TextPlus aplica a rotação sobre a transformação completa. Se a
+            -- rotação vier depois de pos, o ponto de inserção gira em torno da
+            -- origem mundial (ex.: [32,50] vira [-50,32]). Zerar, orientar e
+            -- só então posicionar mantém o rótulo preso à linha.
+            textNode.pos = [0,0,0]
             orientTextNode textNode layout ((getUserProp textNode "Ameno.TextFollowsLine") == true)
+            textNode.pos = textPosition
             textNode.size = resolvedHeightScene
             textNode.ResetString()
             textNode.AppendString labelText
@@ -692,10 +697,9 @@ struct AmenoDimensionGraphicsService
         local resolvedHeightScene = toSceneUnits resolvedHeight
         local extDir = if layout.signedOffsetSceneUnits >= 0.0 then layout.perpendicular else -layout.perpendicular
         local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (extDir * resolvedGapScene)
-        local textNode = TextPlus name:(uniqueName "AMENO_LABEL_") pos:textPosition
+        local textNode = TextPlus name:(uniqueName "AMENO_LABEL_") pos:[0,0,0]
         local follow = if followLine == undefined then textFollowsLine else followLine
         setUserProp textNode "Ameno.TextFollowsLine" follow
-        orientTextNode textNode layout follow
 
         textNode.layouttype = 0
         textNode.plane = 1
@@ -708,6 +712,11 @@ struct AmenoDimensionGraphicsService
         try (textNode.SetBold resolvedBold) catch ()
         try (textNode.SetItalic resolvedItalic) catch ()
         textNode.AppendString labelText
+
+        -- Posicionar depois da rotação evita que o pivot do TextPlus gire a
+        -- coordenada do rótulo em torno da origem da cena.
+        orientTextNode textNode layout follow
+        textNode.pos = textPosition
 
         try (textNode.renderable = true) catch ()
         if material != undefined do textNode.material = material

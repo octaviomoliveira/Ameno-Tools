@@ -20,6 +20,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Concluído
 
+- Hotfix E13 de posição do texto (2026-09-06): após o commit de uma cota vertical, o `TextPlus` girava também sua posição em torno da origem e saltava para fora da linha. A criação/atualização agora zera a posição, aplica a rotação e reposiciona o rótulo depois. O diagnóstico reproduziu o defeito (`[32,36;50]` esperado contra `[-50;32,36]` observado) e a correção passou com 4 PASS; visual 18, Criar 21 e Estilos 25 também passaram, todos exit 0/zero FAIL. Instalação aguarda fechamento do Max.
+
 - Correções do feedback visual E13 implementadas e instaladas em `develop` (2026-09-06): tema escuro compartilhado, nome antes de salvar/criar estilo, aplicação a todas as cotas e opção de orientação por cota. Teste específico 18 PASS, regressão Criar 21 PASS e Estilos 25 PASS; todos exit 0 / zero FAIL após corrigir a conversão Nullable do checkbox. Pacote instalado com 42/42 hashes conferidos e teste instalado 1 PASS/0 FAIL; aceitação visual ainda pendente. Detalhes em `plans/2026-09-06-e13-feedback-visual-handoff.md`.
 
 - E12-R0 concluído em 2026-09-05 no commit instalado `e1bc114`: seis suítes MAXScript e a validação estrutural passaram; 25/25 arquivos instalados corresponderam por SHA-256; trace real comprovou que o commit Horizontal cria a cadeia mas mantém o MouseTool em `stage=collecting | active=true`, e que Alinhado entra na captura antes de ser recusado como `unsupported-mode`. A reutilização Horizontal→Vertical permanece apenas como relato, pois não houve sessão Vertical no trace. Evidência: `docs/e12-r0-diagnostics.md`.
