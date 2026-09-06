@@ -64,8 +64,8 @@ Pacote estrutural:
 ## Estado Git
 
 - Branch: `develop`.
-- HEAD antes do commit deste handoff: `e0455d6`.
-- Alterações funcionais e documentais estão pendentes de commit neste momento; `tests/maxscript/batch-isolated.ini` permanece preservado. A instalação ativa corresponde ao worktree atual, ainda não a um commit publicado.
+- HEAD de base antes deste conjunto: `e0455d6`.
+- Commit local do conjunto funcional/documental: `b8fd640` (`fix: guard renderer-specific dimension renders`). `tests/maxscript/batch-isolated.ini` permanece preservado. A instalação ativa corresponde a esse commit local; ele não foi publicado nem mesclado na `main`.
 
 ## Próximo passo exato
 
