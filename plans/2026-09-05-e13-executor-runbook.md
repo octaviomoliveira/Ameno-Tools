@@ -2,7 +2,7 @@
 
 Data: 2026-09-05. Documento operacional para troca de agente/modelo.
 Pedido: integrar a interface E13 feita no Antigravity com a E12 aprovada, corrigindo os problemas auditados, uma etapa por vez.
-Estado: ETAPA 3 IMPLEMENTADA/TESTADA NO WORKTREE `develop`; sem instalação/publicação. O gate manual da etapa 3 e as etapas 4–7 permanecem pendentes.
+Estado: ETAPA 4 IMPLEMENTADA/TESTADA NO WORKTREE `develop`; sem instalação/publicação. Os gates manuais das etapas 3 e 4 e as etapas 5–7 permanecem pendentes.
 
 ## 1. Contexto que o executor precisa preservar
 
@@ -34,7 +34,7 @@ Estado: ETAPA 3 IMPLEMENTADA/TESTADA NO WORKTREE `develop`; sem instalação/pub
 | 1 — Base integrada | [x] | não exige instalação | OK — base E12/E13 integrada, pacote/bootstrap/regressões aprovados em Batch; sem instalação |
 | 2 — Criar e ciclo de vida | [x] | [ ] | IMPLEMENTADA/TESTADA |
 | 3 — Estilos e rascunho | [x] | [ ] | IMPLEMENTADA/TESTADA |
-| 4 — Editar e reancorar | [ ] | [ ] | PENDENTE |
+| 4 — Editar e reancorar | [x] | [ ] | IMPLEMENTADA/TESTADA |
 | 5 — Terminais e transações | [ ] | [ ] | PENDENTE |
 | 6 — Render e restauração | [ ] | [ ] | PENDENTE |
 | 7 — Candidato, aceitação e publicação | [ ] | [ ] | PENDENTE |
@@ -92,7 +92,7 @@ Manual futuro: criar H com 4 vértices; finalizar; criar V reutilizando vértice
 - Comportamento comprovado no Batch: comando compartilhado botão/macro; sincronização de modo, estilo, unidade e precisão; rejeição durante sessão ativa sem alterar o snapshot; cadeia alinhada rejeitada; alinhada individual disponível; hide/show do painel pelo runtime; contagem após criar/remover.
 - Regressão: `test_bootstrap.ms` 1 PASS; E13-A…H 8/8 suítes, 57 PASS agregados/0 FAIL na rodada de regressão, com E13-H repetido após o ajuste final; E12 chain commit/input/math/continuous/R0/R1/R2/R3/R4 9/9 suítes, 9 PASS/0 FAIL.
 - Logs identificados (listener e system) estão em `D:\Ameno\_worktrees\develop\.test-output\stage2-evidence-develop\`; os logs da suíte dedicada e de E13-H foram regravados após o ajuste final do macro. O runner exige exit code 0, ao menos um PASS e zero marcadores de FAIL.
-- Nenhuma instalação em `ApplicationPlugins`, publicação, push, merge na `main` ou teste destrutivo na cena interativa foi feito. O gate manual H/V, losangos e Undo/Redo continua pendente; a etapa 3 foi implementada/testada posteriormente e a etapa 4 não foi iniciada.
+- Nenhuma instalação em `ApplicationPlugins`, publicação, push, merge na `main` ou teste destrutivo na cena interativa foi feito. O gate manual H/V, losangos e Undo/Redo continua pendente; as etapas 3 e 4 foram implementadas/testadas posteriormente, com seus gates manuais ainda pendentes.
 
 ## 5. Etapa 3 — Estilos, navegação e ciclo de cena
 
@@ -118,20 +118,35 @@ OK manual: não perder trabalho ao navegar e não carregar dados da cena anterio
 - Commit funcional: `1fe7039` (`feat: complete E13 stage 3 styles workflow`). A atualização documental e este handoff permanecem como alterações separadas até o commit documental.
 - Nenhuma instalação em `ApplicationPlugins`, publicação, push ou merge na `main` foi feita; nenhuma cena interativa do usuário foi alterada. Batch não substitui o gate visual/funcional manual.
 
-Gate manual da etapa 3: PENDENTE. A suíte cobre os contratos e o ciclo em Batch, mas ainda falta o usuário validar visualmente a navegação, preservação de trabalho e troca de cena no 3ds Max interativo. A etapa 4 não foi iniciada.
+Gate manual da etapa 3: PENDENTE. A suíte cobre os contratos e o ciclo em Batch, mas ainda falta o usuário validar visualmente a navegação, preservação de trabalho e troca de cena no 3ds Max interativo. A etapa 4 foi implementada/testada posteriormente.
 
 ## 6. Etapa 4 — Editar, validar e reancorar
 
 Arquivos: `ameno_cotas_editar_tab.ms`, serviços runtime/graphics/anchors existentes.
 
-- [ ] Validar somente campos do modo escolhido antes de escrever dados. Não usar 1000 mm/50 mm como substitutos silenciosos de entradas inválidas.
-- [ ] Tratar vazio, letras, vírgula decimal, ponto, zero e negativo. Reusar limites do serviço; quando inválido, mensagem clara, nenhum dado alterado e nenhum Undo vazio.
-- [ ] Preservar medição real, override, motivo e unidades; verificar conversão explícita cm→mm e m→mm dos campos rotulados.
-- [ ] Atualizar painel na seleção e Undo/Redo, sem recursão de handlers.
-- [ ] Reancorar usando picking geométrico E12; não aceitar terminal/texto como geometria. Confirmar vertexId no serviço de âncoras.
-- [ ] Cancelar pick não deve converter uma âncora para mundial por acidente; exigir ação explícita para tal mudança.
-- [ ] Revisar seleção única/múltipla, controlador inválido, órfãs, aplicação de estilo e retorno ao valor medido.
-- [ ] Exercitar editar → Undo → Redo, reancorar → mover vértice, excluir geometria e restaurar; incluir entradas inválidas nos testes.
+- [x] Validar somente campos do modo escolhido antes de escrever dados. Não usar 1000 mm/50 mm como substitutos silenciosos de entradas inválidas; `applyChangeToController` valida antes de chamar o serviço.
+- [x] Tratar vazio, letras, vírgula decimal, ponto, zero e negativo. A entrada inválida mostra mensagem clara, não altera CA e não cria Undo vazio; coberto pela suíte dedicada.
+- [x] Preservar medição real, override, motivo e unidades; conversões explícitas cm→mm e m→mm foram verificadas, com auditoria/última medição preservadas.
+- [x] Atualizar painel na seleção e Undo/Redo, sem recursão de handlers; callbacks próprios de seleção, `sceneUndo` e `sceneRedo` foram registrados e removidos no fechamento.
+- [x] Reancorar usando picking geométrico E12; textos/terminais/gráficos técnicos são rejeitados e `vertexId` explícito é resolvido/persistido no serviço de âncoras.
+- [x] Cancelar pick não converte uma âncora para mundial: alvo ausente/cancelado é rejeitado e a mudança mundial continua dependente de chamada explícita do serviço.
+- [x] Revisar seleção única/múltipla, controlador inválido, órfãs, aplicação de estilo e retorno ao valor medido; todos cobertos na suíte dedicada.
+- [x] Exercitar editar → Undo → Redo, reancorar → mover vértice, excluir geometria e restaurar, incluindo entradas inválidas, em cena descartável Batch.
+
+OK automatizado da etapa 4: IMPLEMENTADA/TESTADA. O gate manual permanece pendente.
+
+### Evidências da etapa 4 em 2026-09-06
+
+- Arquivos funcionais: `Contents/scripts/ameno/ui/ameno_cotas_editar_tab.ms`, `Contents/scripts/ameno/ui/ameno_cotas_window.ms`, `Contents/scripts/ameno/core/ameno_anchor_service.ms`, `Contents/scripts/ameno/core/ameno_runtime.ms`. Teste dedicado: `tests/maxscript/test_e13_stage4_edit_reanchor.ms`.
+- `tools/validate-package.ps1`: PASS — pacote válido para 3ds Max 2026; saída preservada em `D:\Ameno\_worktrees\develop\.test-output\stage4-evidence-develop\validate-package-final.txt`.
+- `test_e13_stage4_edit_reanchor.ms`: Batch exit 0; 44 verificações internas, 45 marcadores `[AMENO_TEST][PASS]` contando o resumo final e 0 `[AMENO_TEST][FAIL]`.
+- Regressões: `test_bootstrap.ms` PASS; `test_e13_audit_fixes.ms` 8 PASS; E13-A…H 8/8 suítes e 57 PASS agregados; `test_e13_stage2_create.ms` 21 PASS; `test_e13_stage3_styles.ms` 25 PASS; E11.1–E11.5, E10.7 e E12 chain commit/input/math/continuous/R0/R1/R2/R3/R4 passaram, todos com exit 0 e 0 FAIL.
+- O runner `tools/test-maxscript.ps1` exigiu exit code 0, pelo menos um PASS e zero marcadores `[AMENO_TEST][FAIL]`/`[AMENO_INSTALLED_TEST][FAIL]`; não houve falso sucesso PASS+FAIL. Os pares listener/system e a saída do runner estão em `D:\Ameno\_worktrees\develop\.test-output\stage4-evidence-develop\`.
+- `git diff --check` não apontou erro de whitespace; a busca por marcadores de conflito não encontrou `<<<<<<<`, `=======` ou `>>>>>>>` nos arquivos revisados.
+- Commit funcional: `95a0ee0` (`feat: complete E13 stage 4 edit and reanchor workflow`). O checklist, `PLAN.md` e o handoff da etapa 4 serão registrados em commit documental separado.
+- Nenhuma instalação em `ApplicationPlugins`, publicação, push ou merge na `main` foi feita; nenhuma cena interativa do usuário foi alterada. Batch não substitui o gate manual.
+
+Gate manual da etapa 4: PENDENTE. Ainda falta validar no 3ds Max interativo a apresentação visual da aba Editar, mensagens/estado WPF, o pickPoint real (incluindo Esc), reancoragem em geometrias reais, seleção múltipla e o ciclo de edição/Undo/Redo na cena de teste. A etapa 5 não foi iniciada.
 
 ## 7. Etapa 5 — Terminais, preview e transação
 
@@ -196,4 +211,4 @@ Commit (ou alterações não commitadas):
 Próximo passo exato:
 ```
 
-Primeira ação do próximo agente: retomar a branch `develop`, ler este checklist e aguardar autorização explícita para a etapa 2. Não instalar E13, não publicar e não executar etapas seguintes automaticamente.
+Primeira ação do próximo agente: retomar a branch `develop`, ler este checklist e executar somente o gate manual pendente da etapa 4 quando autorizado; depois aguardar autorização explícita para a etapa 5. Não instalar E13, não publicar e não executar etapas seguintes automaticamente.
