@@ -415,9 +415,10 @@ struct AmenoE9MockAdapter
     local dimDot = AmenoDimensionGraphics.createDimension [0, 150, 0] [100, 150, 0] [0, 170, 0] styleId:"t_dot"
     local dimNone = AmenoDimensionGraphics.createDimension [0, 200, 0] [100, 200, 0] [0, 220, 0] styleId:"t_none"
 
-    if (numSplines dimArrowC.lineNode) < 5 then throw "E7: Spline com setas fechadas deveria possuir as splines dos terminais."
+    -- E13-F: #arrowClosed e #dot geram nós mesh preenchidos separados (termNodeA e termNodeB), mantendo 3 splines na linha base
+    if (numSplines dimArrowC.lineNode) != 3 or dimArrowC.termNodeA == undefined or dimArrowC.termNodeB == undefined then throw "E13-F: Cota com setas fechadas deveria possuir 3 splines de linha e nós mesh de terminais."
     if (numSplines dimArrowO.lineNode) < 5 then throw "E7: Spline com setas abertas deveria possuir as splines dos terminais."
-    if (numSplines dimDot.lineNode) < 5 then throw "E7: Spline com pontos em losango deveria possuir as splines dos terminais."
+    if (numSplines dimDot.lineNode) != 3 or dimDot.termNodeA == undefined or dimDot.termNodeB == undefined then throw "E13-F: Cota com pontos/losango deveria possuir 3 splines de linha e nós mesh de terminais."
     if (numSplines dimNone.lineNode) != 3 then throw "E7: Cota sem terminais (#none) deveria possuir exatamente 3 splines (extA, extB, cota)."
 
     -- 2. Propriedades de tipografia no TextPlus

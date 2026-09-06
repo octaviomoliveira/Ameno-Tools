@@ -1216,3 +1216,57 @@ struct AmenoStyleEditorWPFDefinition
 )
 
 AmenoStyleEditorWPF = AmenoStyleEditorWPFDefinition()
+
+-- ============================================================
+-- E13-C: Stub de compatibilidade - AmenoStyleEditorWindow
+-- AmenoStyleEditorWindow.show() redireciona para a aba Estilos
+-- da janela unificada (AmenoCotasWindow), preservando a
+-- interface publica para nao quebrar codigo existente.
+-- ============================================================
+struct AmenoStyleEditorWindowStub
+(
+    fn show styleId:undefined =
+    (
+        try
+        (
+            if ::AmenoCotasWindow != undefined then
+            (
+                ::AmenoCotasWindow.show()
+                ::AmenoCotasWindow.setActiveSection 2
+            )
+            else
+            (
+                format "[Ameno][WARN] AmenoCotasWindow nao disponivel - nao foi possivel abrir aba Estilos\n"
+            )
+        )
+        catch
+        (
+            format "[Ameno][ERROR] AmenoStyleEditorWindow.show() falhou: %\n" (getCurrentException() as string)
+        )
+    ),
+
+    fn open styleId:undefined =
+    (
+        show styleId:styleId
+    ),
+
+    fn close =
+    (
+        try
+        (
+            if ::AmenoCotasWindow != undefined do ::AmenoCotasWindow.close()
+        )
+        catch ()
+    ),
+
+    fn isOpen =
+    (
+        try
+        (
+            ::AmenoCotasWindow != undefined and ::AmenoCotasWindow.isOpen()
+        )
+        catch (false)
+    )
+)
+
+AmenoStyleEditorWindow = AmenoStyleEditorWindowStub()

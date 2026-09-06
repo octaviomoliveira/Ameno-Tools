@@ -58,6 +58,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
+- **Prioridade atual — integração E13 sobre E12 aprovada:** a etapa 1 foi executada no worktree isolado `D:\Ameno\_worktrees\e13-integration` sobre `main` (`f131f08`), incorporando a E13 auditada (`676e008`) sem instalar ou publicar. O gate agregado permanece pendente porque `test_e12_r0_diagnostics.ms` reproduz três falhas comportamentais preexistentes também na main; não avançar para a etapa 2 até registrar a decisão/correção dessa base. Handoff: `plans/2026-09-06-e13-etapa-1-handoff.md`.
+
 - **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0–R6 estão concluídos para a E12-R; R4 foi aprovada em Batch, instalada e validada manualmente, R5 foi fechado como decisão de escopo e R6 foi aprovado com automação e gate manual. Handoff final: `plans/2026-09-05-e12-r6-handoff.md`.
 
 - Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. O C1 equivalente foi encerrado pelo R0; ciclo de vida pelo R1; e a causa do vértice ignorado foi tratada na R2 removendo o bloqueio causado pelo snap em gráfico Ameno e resolvendo o vértice geométrico pelo pixel.
@@ -74,6 +76,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E11 — Editor Visual e Preview ao Vivo: implementação mesclada da branch `feature/e11-visual-editor`, validada estruturalmente e instalada. Falta somente o gate visual e funcional do usuário no 3ds Max. Plano detalhado em `plans/2026-09-04-e11-editor-visual-preview.md`.
 
 ## Próximo passo executável
+
+- **Atual em 2026-09-06:** etapa 1 do roteiro E13 executada e documentada no worktree isolado; manter a publicação/instalação bloqueada e resolver ou aceitar explicitamente a falha baseline E12-R0 antes de qualquer etapa 2. Roteiro e evidências: `plans/2026-09-05-e13-executor-runbook.md` e `plans/2026-09-06-e13-etapa-1-handoff.md`.
 
 **Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 
@@ -94,6 +98,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-06 — Executar somente a etapa 1 da integração E13 sobre a E12 aprovada:** worktree `integration/e13-on-e12` criado sobre `f131f08`; E13 `676e008` incorporada, conflitos resolvidos preservando E12, pacote/bootstrap/E13 aprovados e 8/9 regressões E12 aprovadas. O R0 continua PENDENTE por três falhas reproduzidas também na main; runner endurecido contra PASS+FAIL; sem instalação, merge ou publicação em main. Handoff: `plans/2026-09-06-e13-etapa-1-handoff.md`.
+
+- **2026-09-05 — Continuidade E13 para agente mais leve:** usuário solicitou plano Markdown com ações detalhadas por etapa e marcação de OK baseada em evidência. Criado `plans/2026-09-05-e13-executor-runbook.md`, com sete etapas, arquivos-alvo, regressões, gates manuais, implantação e modelo de handoff. Somente documentação nesta entrega; implementação E13 não iniciada. Registrada também limitação do runner: um PASS isolado não comprova ausência de FAIL.
 
 | Data | Pedido / decisão | Situação | Evidência |
 | --- | --- | --- | --- |

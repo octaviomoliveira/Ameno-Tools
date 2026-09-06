@@ -329,6 +329,132 @@ struct AmenoRuntime
         count
     ),
 
+    -- E13-B: remove cotas selecionadas (contagem por cota)
+    fn deletarSelecao =
+    (
+        if selection.count == 0 then return 0
+        local dimsRemoved = 0
+        undo "Ameno: deletar cotas selecionadas" on
+        (
+            local dimIdsToDelete = #()
+            local orphanNodesToDelete = #()
+
+            for obj in selection where isValidNode obj do
+            (
+                local dimId = try (AmenoDimensionGraphics.getDimensionId obj) catch ("")
+                if dimId != "" and dimId != undefined then
+                (
+                    if (findItem dimIdsToDelete dimId) == 0 do append dimIdsToDelete dimId
+                )
+                else if ::AmenoDimensionCA != undefined and (try (::AmenoDimensionCA.hasCA obj) catch (false)) then
+                (
+                    if (findItem orphanNodesToDelete obj) == 0 do append orphanNodesToDelete obj
+                )
+            )
+
+            for dimId in dimIdsToDelete do
+            (
+                local nodes = try (AmenoDimensionGraphics.findNodesForDimension dimId) catch (#())
+                for n in nodes where isValidNode n do
+                (
+                    try (delete n) catch ()
+                )
+                dimsRemoved += 1
+            )
+
+            for n in orphanNodesToDelete where isValidNode n do
+            (
+                try (delete n) catch ()
+                dimsRemoved += 1
+            )
+        )
+        if ::AmenoAnchorService != undefined do
+            try (::AmenoAnchorService.rebuildIndex()) catch ()
+        refreshScene()
+        refreshDimensions()
+        dimsRemoved
+    ),
+
+    -- E13-B: remove cotas cujas ancoras nao existem mais na cena (valida com AmenoDimensionCA.resolvePoints)
+    fn limparOrfas =
+    (
+        local removed = 0
+        undo "Ameno: limpar cotas orfas" on
+        (
+            if ::AmenoDimensionGraphics != undefined do
+            (
+                local controllers = try (::AmenoDimensionGraphics.findControllers()) catch (#())
+                for ctrl in controllers where isValidNode ctrl do
+                (
+                    local isOrphan = false
+                    if ::AmenoDimensionCA != undefined do
+                    (
+                        local rec = try (::AmenoDimensionCA.readCA ctrl) catch (undefined)
+                        if rec != undefined do
+                        (
+                            local resolved = try (::AmenoDimensionCA.resolvePoints rec) catch (undefined)
+                            if resolved != undefined and resolved.isOrphan do isOrphan = true
+                        )
+                    )
+                    if isOrphan do
+                    (
+                        try
+                        (
+                            local dimId = ::AmenoDimensionGraphics.getDimensionId ctrl
+                            local nodes = ::AmenoDimensionGraphics.findNodesForDimension dimId
+                            for n in nodes where isValidNode n do
+                            (
+                                try (delete n) catch ()
+                            )
+                            removed += 1
+                        )
+                        catch ()
+                    )
+                )
+            )
+        )
+        if ::AmenoAnchorService != undefined do
+            try (::AmenoAnchorService.rebuildIndex()) catch ()
+        refreshScene()
+        refreshDimensions()
+        removed
+    ),
+
+    -- E13-B: remove TODAS as cotas da cena (contagem por cota)
+    fn deletarTudo =
+    (
+        local removed = 0
+        undo "Ameno: deletar todas as cotas" on
+        (
+            if ::AmenoDimensionGraphics != undefined do
+            (
+                local controllers = try (::AmenoDimensionGraphics.findControllers()) catch (#())
+                for ctrl in controllers where isValidNode ctrl do
+                (
+                    try
+                    (
+                        local dimId = try (::AmenoDimensionGraphics.getDimensionId ctrl) catch ("")
+                        if dimId != "" and dimId != undefined do
+                        (
+                            local nodes = try (::AmenoDimensionGraphics.findNodesForDimension dimId) catch (#())
+                            for n in nodes where isValidNode n do
+                            (
+                                try (delete n) catch ()
+                            )
+                            removed += 1
+                        )
+                    )
+                    catch ()
+                )
+            )
+        )
+        if ::AmenoAnchorService != undefined do
+            try (::AmenoAnchorService.rebuildIndex()) catch ()
+        refreshScene()
+        refreshDimensions()
+        removed
+    ),
+
     fn openStyleEditor styleId:undefined useLegacy:false =
     (
         if not useLegacy and ::AmenoStyleEditorWPF != undefined then
@@ -441,6 +567,7 @@ struct AmenoRuntime
         try (destroyDialog AmenoMainPanelRollout) catch ()
         try (destroyDialog AmenoStyleEditorRollout) catch ()
         try (if ::AmenoStyleEditorWPF != undefined do ::AmenoStyleEditorWPF.close()) catch ()
+        try (if ::AmenoCotasWindow != undefined do ::AmenoCotasWindow.close()) catch ()
         started = false
         true
     )

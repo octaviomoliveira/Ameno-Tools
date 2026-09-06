@@ -25,6 +25,7 @@ global AmenoStyleDraft
 global AmenoStyleServiceDefinition
 global AmenoStyleService
 global AmenoAnchorService
+global AmenoDimensionTerminalMesh
 global AmenoDimensionGraphics
 global AmenoDimensionTool
 global AmenoDimensionMouseTool
@@ -55,6 +56,11 @@ global AmenoMainPanelRollout
 global AmenoRenderRollout
 global AmenoShowMainPanel
 global AmenoRefreshMainPanel
+global AmenoCotasWindow
+global AmenoCotasCriarTab
+global AmenoCotasEstilosTab
+global AmenoCotasEditarTab
+global AmenoCotasRenderTab
 
 struct AmenoBootstrapService
 (
@@ -101,6 +107,7 @@ struct AmenoBootstrapService
             @"core\ameno_dimensions_math.ms",
             @"core\ameno_dimension_chain_math.ms",
             @"core\ameno_dimension_ca.ms",
+            @"core\ameno_dimension_terminal_mesh.ms",
             @"core\ameno_dimension_graphics.ms",
             @"core\ameno_anchor_service.ms",
             @"core\ameno_style_service.ms",
@@ -117,6 +124,11 @@ struct AmenoBootstrapService
             @"ui\ameno_style_editor.ms",
             @"ui\ameno_preview_renderer.ms",
             @"ui\ameno_style_editor_wpf.ms",
+            @"ui\ameno_cotas_criar_tab.ms",
+            @"ui\ameno_cotas_estilos_tab.ms",
+            @"ui\ameno_cotas_editar_tab.ms",
+            @"ui\ameno_cotas_render_tab.ms",
+            @"ui\ameno_cotas_window.ms",
             @"ui\ameno_main_panel.ms"
         )
 
