@@ -32,6 +32,8 @@
     (
         AmenoDimensionContinuousTool.active = true
         AmenoDimensionContinuousTool.stage = #collecting
+        AmenoDimensionContinuousTool.activeMode = #horizontal
+        AmenoDimensionContinuousTool.sessionMode = #horizontal
         AmenoDimensionContinuousTool.points = #()
         AmenoDimensionContinuousTool.anchorNodes = #()
         AmenoDimensionContinuousTool.anchorVertexIds = #()

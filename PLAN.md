@@ -64,6 +64,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 - **Instalação ativa da branch E12:** commit R4 `688c8bc`, com 26/26 arquivos conferidos por SHA-256, pacote instalado aprovado em Batch e Undo/Redo validado manualmente. R5 foi documental, sem mudança de pacote; próximo incremento: R6. Handoffs: `plans/2026-09-05-e12-r4-handoff.md` e `plans/2026-09-05-e12-r5-handoff.md`.
 
+- **R6 — automação executada:** com o Max interativo fechado, `validate-package.ps1` passou; as 11 suítes do lote e a R2 repetida passaram após o fixture E12-A declarar explicitamente o modo Horizontal. Evidência por suíte em `work/r6-test-logs`; o gate manual final no Max ainda está pendente.
+
 - Validação interativa das funcionalidades acumuladas restantes da **E10** no 3ds Max 2026 (modos H/V, lote/bake, V-Ray CPU, diagnóstico e pacote alpha).
 - Gate manual do **Editor Visual E11** no 3ds Max 2026 com a versão unificada instalada.
 
@@ -143,6 +145,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-04 | Implementação completa da Etapa E11 (E11.0 a E11.5): Editor Visual de Estilos com Preview Vetorial 2D ao Vivo (WPF .NET 8), StyleDraft transacional, Persistência, Integração e Instalação no ApplicationPlugins. | E11.0 (Spike WPF .NET 8 aprovado, ADR 0019), E11.1 (StyleDraft e Schema v2 retrocompatível), E11.2 (Shell WPF moderno, 2 colunas com GridSplitter, atalhos e preferências INI), E11.3 (Renderer vetorial 2D no Canvas WPF com planta neutra, 5 terminais e zoom), E11.4 (Persistência atômica, deduplicação de nós, rollback de snapshot e reatividade à seleção), E11.5 (Ponto de entrada integrado no painel principal, fallback diagnósticável para rollout legado, ciclo de vida robusto com reset de cena, empacotamento determinístico e instalação funcional no ApplicationPlugins). Suítes automatizadas 100% aprovadas. Pronto para Gate Manual no 3ds Max. | commits `4c61f20`, `e309892`, `6a60dcf`, `acd810d`, `cbc5927`, `ADR 0019`, `tests/maxscript/test_e11_*.ms`, `test_installed_package.ms` |
 | 2026-09-04 | Integrar `feature/e11-visual-editor` na `main`, validar, instalar a versão unificada com E10.7 e publicar. | Merge concluído com um único conflito documental em `PLAN.md`, reconciliado preservando os históricos E10.7 e E11. Validação estrutural aprovada; instalação em `ApplicationPlugins` conferida com 22/22 arquivos e zero diferenças SHA-256. Pronto para o gate interativo unificado após reiniciar o Max. | merge `5aa6afc`; `tools/validate-package.ps1`; `tools/install-dev.ps1` |
 | 2026-09-05 | Fechar o R5 da recuperação E12. | O caso foi definido como reuso do vértice da geometria original entre cadeias H/V; a ponta de anotação não vira âncora nesta E12-R. R5 documental concluído; R6 é o próximo gate. | `docs/decisions/0021-e12-reference-reuse-scope.md`; `plans/2026-09-05-e12-r5-handoff.md`; R2 aprovado |
+| 2026-09-05 | Executar a automação do R6 e corrigir o fixture E12-A obsoleto. | `validate-package.ps1` passou; 11/11 suítes do lote + R2 repetida passaram. E12-A foi ajustada para declarar Horizontal, preservando o contrato de estação H/V. Gate manual final permanece pendente. | `tests/maxscript/test_e12_chain_input.ms`; `work/r6-test-logs`; Batch 3ds Max 2026.3 |
 
 ## Como retomar sem contexto
 
