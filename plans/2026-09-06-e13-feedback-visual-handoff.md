@@ -1,6 +1,6 @@
 # E13 — Correções do feedback visual (2026-09-06)
 
-Estado: implementadas e instaladas; hotfix de posição preparado, reinstalação e aceitação visual do hotfix pendentes.
+Estado: implementadas e instaladas; hotfix de posição instalado, aceitação visual pendente.
 Branch/worktree: `develop`, `D:\Ameno\_worktrees\develop`; base `ba4778a`.
 
 ## Pedido e alterações
@@ -24,7 +24,7 @@ Reexecução final após a correção Nullable: `test_e13_visual_feedback` 18 PA
 
 Hotfix de posição: `test_e13_text_commit_position` 4 PASS; `test_e13_visual_feedback` 18 PASS; `test_e13_stage2_create` 21 PASS; `test_e13_stage3_styles` 25 PASS. Todos com exit 0 e zero FAIL. O diagnóstico capturou antes a rotação indevida da posição (`expected=[32.3622,50.0,0.0]`, observado `[-50.0,32.3622,0.0]`) e depois confirmou preview/commit em `[32.3622,50.0,0.0]`.
 
-Pacote do hotfix validado por `tools/validate-package.ps1`: `dist/AmenoTools-0.0.1-e13-positionfix.zip`, 138371 bytes, SHA-256 `B2D02450B655823759A5104383A5873D61579C2B9CD20C8DB16E5D98C82E9BA6`. A instalação ativa ainda contém o commit anterior; o Max está aberto e não foi alterado.
+Pacote do hotfix validado por `tools/validate-package.ps1`: `dist/AmenoTools-0.0.1-e13-positionfix.zip`, 138371 bytes, SHA-256 `B2D02450B655823759A5104383A5873D61579C2B9CD20C8DB16E5D98C82E9BA6`. O commit `715e078` foi instalado após o encerramento normal do Max; 42/42 arquivos conferem por SHA-256 e o teste instalado terminou com exit 0 / 1 PASS / 0 FAIL. Evidências: `.test-output/text-position-fix/test_installed_package-runner.log` e `test_installed_package-listener.log`.
 
 Falha descoberta na regressão Criar: atribuir `true` diretamente a `CheckBox.IsChecked` lançou erro de conversão para `System.Nullable[Boolean]` e interrompeu a atualização de unidade/precisão. A primeira execução terminou com exit -130 e 2 marcadores FAIL (uma asserção e o resumo), preservada em `stage2-failed-listener.log`/`stage2-failed-system.log`. Diagnóstico em `stage2-diagnostic-listener.log`; corrigido usando o mesmo tipo Nullable já empregado em Estilos/Editar, com duas verificações novas no teste específico. O catch de sincronização agora registra a exceção em vez de silenciá-la.
 
@@ -38,4 +38,4 @@ Instalação ativa em `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugin
 
 As correções acima estão instaladas. A sessão interativa foi preservada e o Max foi reaberto após a instalação; nenhum teste destrutivo foi executado nela. Nenhum merge/push/publicação.
 
-Próximo passo: fechar o Max para instalar o hotfix; depois conferir no Max a criação de cotas verticais/contínuas, incluindo preview versus commit e Undo/Redo. Não declarar E13 aprovada até o gate manual.
+Próximo passo: reabrir o Max e conferir a criação de cotas verticais/contínuas, incluindo preview versus commit e Undo/Redo. Não declarar E13 aprovada até o gate manual.

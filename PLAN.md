@@ -20,7 +20,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Concluído
 
-- Hotfix E13 de posição do texto (2026-09-06): após o commit de uma cota vertical, o `TextPlus` girava também sua posição em torno da origem e saltava para fora da linha. A criação/atualização agora zera a posição, aplica a rotação e reposiciona o rótulo depois. O diagnóstico reproduziu o defeito (`[32,36;50]` esperado contra `[-50;32,36]` observado) e a correção passou com 4 PASS; visual 18, Criar 21 e Estilos 25 também passaram, todos exit 0/zero FAIL. Instalação aguarda fechamento do Max.
+- Hotfix E13 de posição do texto (2026-09-06): após o commit de uma cota vertical, o `TextPlus` girava também sua posição em torno da origem e saltava para fora da linha. A criação/atualização agora zera a posição, aplica a rotação e reposiciona o rótulo depois. O diagnóstico reproduziu o defeito (`[32,36;50]` esperado contra `[-50;32,36]` observado) e a correção passou com 4 PASS; visual 18, Criar 21 e Estilos 25 também passaram, todos exit 0/zero FAIL. Hotfix instalado com 42/42 hashes conferidos e teste instalado 1 PASS/0 FAIL; aceitação visual pendente.
 
 - Correções do feedback visual E13 implementadas e instaladas em `develop` (2026-09-06): tema escuro compartilhado, nome antes de salvar/criar estilo, aplicação a todas as cotas e opção de orientação por cota. Teste específico 18 PASS, regressão Criar 21 PASS e Estilos 25 PASS; todos exit 0 / zero FAIL após corrigir a conversão Nullable do checkbox. Pacote instalado com 42/42 hashes conferidos e teste instalado 1 PASS/0 FAIL; aceitação visual ainda pendente. Detalhes em `plans/2026-09-06-e13-feedback-visual-handoff.md`.
 
@@ -73,7 +73,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 - Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. O C1 equivalente foi encerrado pelo R0; ciclo de vida pelo R1; e a causa do vértice ignorado foi tratada na R2 removendo o bloqueio causado pelo snap em gráfico Ameno e resolvendo o vértice geométrico pelo pixel.
 
-- **Instalação ativa:** correções do feedback visual do commit `20d618f`, instaladas com autorização em 2026-09-06; 42/42 arquivos conferidos por SHA-256 e teste instalado aprovado (exit 0, 1 PASS, 0 FAIL). Backup anterior: `D:\Ameno\backups\AmenoTools-before-e13-20260906-120546`. Aceitação visual do usuário permanece pendente.
+- **Instalação ativa:** hotfix de posição do commit `715e078`, instalado em 2026-09-06; 42/42 arquivos conferidos por SHA-256 e teste instalado aprovado (exit 0, 1 PASS, 0 FAIL). Backup anterior: `D:\Ameno\backups\AmenoTools-before-e13-20260906-120546`. Aceitação visual do usuário permanece pendente.
 
 - **R6 — automação e gate manual executados:** com o Max interativo fechado, `validate-package.ps1` passou; as 11 suítes do lote e a R2 repetida passaram após o fixture E12-A declarar explicitamente o modo Horizontal. O usuário abriu o Max, repetiu o caso H/V com o vértice compartilhado e confirmou “tudo funcionando”. Evidência por suíte em `work/r6-test-logs` e handoff final em `plans/2026-09-05-e12-r6-handoff.md`.
 
@@ -86,7 +86,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Atual em 2026-09-06:** atualização visual instalada e carregamento pelo `ApplicationPlugins` aprovado. Validar no Max listas abertas, diálogo de nome, aplicação global e criação de cotas verticais com a opção de orientação ligada/desligada. Não fechar nem alterar a sessão interativa automaticamente. Ver `plans/2026-09-06-e13-feedback-visual-handoff.md`; merge/push continuam sem autorização.
+- **Atual em 2026-09-06:** hotfix de posição instalado e carregamento pelo `ApplicationPlugins` aprovado. Reabrir o Max e validar criação de cotas verticais/contínuas, conferindo preview versus commit e Undo/Redo; depois retomar listas, diálogo de nome e aplicação global. Não fechar nem alterar a sessão interativa automaticamente. Ver `plans/2026-09-06-e13-feedback-visual-handoff.md`; merge/push continuam sem autorização.
 
 **Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 
@@ -107,6 +107,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-06 — Instalar hotfix de posição E13:** após o Max encerrar normalmente, o commit `715e078` foi instalado no `ApplicationPlugins`; 42/42 arquivos conferidos por SHA-256 e teste instalado exit 0 / 1 PASS / 0 FAIL. O Max ainda precisa ser reaberto para o gate visual do comportamento corrigido.
 
 - **2026-09-06 — Registrar falha de fontes no viewport/render:** criada a issue [#3](https://github.com/octaviomoliveira/Ameno-Tools/issues/3) para investigar Fredoka e famílias semelhantes. As capturas mostram texto deformado/preenchido em uma visualização e contorno legível em Wire Color; a hipótese de triangulação/conversão interna do TextPlus foi registrada sem assumir causa, pois a produção não chama `convertToPoly` diretamente.
 
