@@ -106,6 +106,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Histórico de solicitações
 
+- **2026-09-06 — Registrar layout responsivo:** criada a issue [#2](https://github.com/octaviomoliveira/Ameno-Tools/issues/2) para permitir redimensionar/maximizar a janela de cotas e garantir acesso aos controles cortados à direita, com critérios para layout responsivo, rolagem e DPI.
+
 - **2026-09-06 — Registrar preview das fontes:** criada a issue [#1](https://github.com/octaviomoliveira/Ameno-Tools/issues/1) para renderizar cada item do seletor de tipografia usando sua própria família, com fallback, preservação do schema e cobertura de seleção/preview.
 
 - **2026-09-06 — Instalar E13 e corrigir feedback visual:** instalação do candidato autorizada e realizada com Max fechado; após as capturas, foram implementados aplicação a todas as cotas, nome antes de salvar, orientação do texto e contraste legível. A atualização do commit `20d618f` foi instalada depois; 42/42 hashes e o teste instalado passaram. Aceitação visual do usuário ainda pendente. Handoff: `plans/2026-09-06-e13-feedback-visual-handoff.md`.
