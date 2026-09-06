@@ -196,7 +196,7 @@ Arquivos: `ameno_cotas_render_tab.ms`, serviço render existente e adapters apen
 - [x] Reexecutar conjunto combinado após alterações finais: pacote/bootstrap; E12 input/math/commit/continuous/R0–R4; E13 A–H/audit_fixes; testes novos de integração; E10/E11 impactados e persistência. Todos os processos válidos terminaram com exit 0 e zero FAIL.
 - [x] Registrar código exato testado e contagens. A matriz final está nos handoffs e nos logs identificados por suíte.
 - [x] Gerar candidato e manifesto SHA-256. `dist\AmenoTools-0.0.1-e13-candidate.zip`, 136888 bytes, SHA-256 `4077049B1858E9CBB3944DF69DB1B7A6CB500C037AD9CA5FFE3F102F8E6A67CA`; manifesto em `plans/2026-09-06-e13-candidate-manifest.sha256`. Não houve instalação.
-- [ ] Confirmar Max fechado antes de instalar. Conferir hashes do pacote instalado e testar bootstrap/installed package pelo caminho instalado.
+- [x] Confirmar Max fechado antes de instalar. Instalação do candidato autorizada e realizada em 2026-09-06: 42/42 arquivos idênticos por SHA-256; teste instalado exit 0, 1 PASS, 0 FAIL. Backup `D:\Ameno\backups\AmenoTools-before-e13-20260906-120546`. Isso não abrange as correções posteriores do feedback visual.
 - [ ] Executar gates manuais 2–6 em cena de teste e fechar/reabrir painel/cena. Solicitar ao usuário apenas os passos concretos que exigem interação.
 - [ ] Registrar aprovação do usuário e limitações por renderer/vista. Não inventar aprovação visual a partir de Batch.
 - [x] Atualizar `PLAN.md` e os handoffs, mantendo `f131f08` como referência histórica da E12 publicada.
@@ -237,4 +237,15 @@ Commit (ou alterações não commitadas):
 Próximo passo exato:
 ```
 
-Primeira ação do próximo agente: retomar a branch `develop`, ler este checklist e executar os gates manuais 2–6 no candidato somente quando o usuário autorizar a interação no 3ds Max. Não instalar em `ApplicationPlugins`, não publicar e não fazer merge/push sem autorização explícita.
+### Feedback manual posterior à instalação — 2026-09-06
+
+- [x] Registrar as duas capturas: ComboBox branco com texto branco e texto horizontal cruzando cotas verticais.
+- [x] Implementar botão de aplicação a todas as cotas, mantendo aplicação às selecionadas.
+- [x] Pedir nome ao criar/salvar estilo; cancelar não salva e nome vazio não é aceito.
+- [x] Compartilhar o template escuro de ComboBox entre as abas.
+- [x] Adicionar opção de texto acompanhando a linha, persistida por cota e preservada na reconstrução. Cotas antigas sem a propriedade mantêm orientação horizontal.
+- [x] Reexecutar testes após correção do Nullable Boolean: feedback visual 18 PASS, Criar 21 PASS, Estilos 25 PASS; todos exit 0 e zero FAIL. Pacote estrutural válido; novo ZIP `AmenoTools-0.0.1-e13-feedback1.zip` conferido com 44/44 arquivos idênticos. Logs e hash no handoff do feedback.
+- [ ] Instalar esta atualização com Max fechado; repetir conferência de hashes e teste instalado.
+- [ ] Validar visualmente dropdowns/diálogo e orientação no viewport com o usuário. Batch não substitui este gate.
+
+Continuidade: `plans/2026-09-06-e13-feedback-visual-handoff.md`. A instalação foi autorizada, mas aguarda fechamento do Max para atualizar. Não fechar a sessão do usuário, não executar testes destrutivos nela e não publicar/merge/push sem autorização.

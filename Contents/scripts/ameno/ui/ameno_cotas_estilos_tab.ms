@@ -70,6 +70,7 @@ struct AmenoCotasEstilosTabDefinition
     txtTerminalAngle    = undefined,
 
     btnApplySelection = undefined,
+    btnApplyAll = undefined,
     btnSaveStyle      = undefined,
 
     -- -----------------------------------------------------------------
@@ -577,6 +578,7 @@ struct AmenoCotasEstilosTabDefinition
             "<Border Margin='0,8,0,0'>" + \
             "<DockPanel LastChildFill='True'>" + \
             "<StackPanel DockPanel.Dock='Right' Orientation='Horizontal'>" + \
+            "<Button x:Name='btnApplyAll' Content='Atualizar todas as cotas' Width='160' Height='28' Margin='0,0,8,0' Background='#333337' Foreground='#FFFFFF' BorderBrush='#444444' ToolTip='Aplicar este estilo a todas as cotas da cena' />" + \
             "<Button x:Name='btnApplySelection' Content='Aplicar as Selecionadas' Width='150' Height='28' Margin='0,0,8,0' Background='#333337' Foreground='#FFFFFF' BorderBrush='#444444' ToolTip='Aplicar rascunho de estilo as cotas selecionadas' />" + \
             "<Button x:Name='btnSaveStyle' Content='Salvar Estilo' Width='110' Height='28' Background='#0E639C' Foreground='#FFFFFF' BorderBrush='#1177BB' FontWeight='SemiBold' ToolTip='Salvar alteracoes no estilo e atualizar cotas vinculadas' />" + \
             "</StackPanel>" + \
@@ -850,12 +852,57 @@ struct AmenoCotasEstilosTabDefinition
     -- -----------------------------------------------------------------
     -- Salvar estilo atual
     -- -----------------------------------------------------------------
-    fn onSaveStyle =
+    fn promptStyleName initialName =
+    (
+        dotNet.loadAssembly "System.Windows.Forms"
+        local form = dotNetObject "System.Windows.Forms.Form"
+        form.Text = "Nome do estilo"
+        form.Width = 380
+        form.Height = 150
+        form.StartPosition = (dotNetClass "System.Windows.Forms.FormStartPosition").CenterScreen
+        local input = dotNetObject "System.Windows.Forms.TextBox"
+        input.Text = initialName
+        input.SetBounds 16 16 330 24
+        local ok = dotNetObject "System.Windows.Forms.Button"
+        ok.Text = "Salvar"
+        ok.SetBounds 170 55 85 28
+        ok.DialogResult = (dotNetClass "System.Windows.Forms.DialogResult").OK
+        local cancel = dotNetObject "System.Windows.Forms.Button"
+        cancel.Text = "Cancelar"
+        cancel.SetBounds 261 55 85 28
+        cancel.DialogResult = (dotNetClass "System.Windows.Forms.DialogResult").Cancel
+        form.Controls.Add input
+        form.Controls.Add ok
+        form.Controls.Add cancel
+        form.AcceptButton = ok
+        form.CancelButton = cancel
+        local result = form.ShowDialog()
+        local value = if result == ok.DialogResult then (trimRight (trimLeft (input.Text as string))) else undefined
+        form.Dispose()
+        value
+    ),
+
+    fn onSaveStyle nameValue:undefined =
     (
         if currentDraft == undefined or ::AmenoStyleService == undefined do return 0
+        local chosenName = if nameValue != undefined then nameValue else this.promptStyleName currentDraft.styleRecord.name
+        if chosenName == undefined do return 0
+        chosenName = trimRight (trimLeft chosenName)
+        if chosenName == "" do
+        (
+            if txtPreviewStatus != undefined do txtPreviewStatus.Text = "Informe um nome para o estilo."
+            return 0
+        )
+        for existing in ::AmenoStyleService.listStyles() where existing.styleId != currentDraft.styleRecord.styleId and (stricmp existing.name chosenName) == 0 do
+        (
+            if txtPreviewStatus != undefined do txtPreviewStatus.Text = "Ja existe um estilo com esse nome."
+            return 0
+        )
+        currentDraft.styleRecord.name = chosenName
         try
         (
             local cnt = ::AmenoStyleService.saveDraftAsStyle currentDraft
+            this.populateStyleList()
             updateDirtyUI()
             updateInUseCount()
             if txtPreviewStatus != undefined do
@@ -881,10 +928,10 @@ struct AmenoCotasEstilosTabDefinition
     -- -----------------------------------------------------------------
     -- Aplicar rascunho as cotas selecionadas
     -- -----------------------------------------------------------------
-    fn onApplyToSelection =
+    fn onApplyToSelection allDimensions:false =
     (
         if currentDraft == undefined or ::AmenoStyleService == undefined do return 0
-        if selection.count == 0 do
+        if not allDimensions and selection.count == 0 do
         (
             if txtPreviewStatus != undefined do
                 txtPreviewStatus.Text = "Nenhuma cota selecionada na cena"
@@ -892,10 +939,10 @@ struct AmenoCotasEstilosTabDefinition
         )
         try
         (
-            local cnt = ::AmenoStyleService.applyDraftToSelection currentDraft
+            local cnt = ::AmenoStyleService.applyDraftToSelection currentDraft allDimensions:allDimensions
             updateInUseCount()
             if txtPreviewStatus != undefined do
-                txtPreviewStatus.Text = "Estilo aplicado a " + (cnt as string) + " cota(s) selecionada(s)"
+                txtPreviewStatus.Text = "Estilo aplicado a " + (cnt as string) + " cota(s)"
             cnt
         )
         catch
@@ -913,9 +960,11 @@ struct AmenoCotasEstilosTabDefinition
     (
         if ::AmenoStyleService == undefined do return false
         if not this.resolveDirtyDraft "criar um novo estilo" do return false
+        local chosenName = this.promptStyleName ""
+        if chosenName == undefined or chosenName == "" do return false
         try
         (
-            local newRec = ::AmenoStyleService.saveAsNewStyle "Novo Estilo" undefined
+            local newRec = ::AmenoStyleService.saveAsNewStyle chosenName undefined
             this.setCurrentDraft (::AmenoStyleService.createDraftFromStyle newRec.styleId)
             this.populateStyleList()
             this.loadDraftToUI()
@@ -1325,6 +1374,8 @@ struct AmenoCotasEstilosTabDefinition
             ))
 
         -- Botoes de acao
+        if btnApplyAll != undefined do
+            dotNet.addEventHandler btnApplyAll "Click" (fn onEstiloTabAll s e = (::AmenoCotasEstilosTab.onApplyToSelection allDimensions:true))
         if btnApplySelection != undefined do
             dotNet.addEventHandler btnApplySelection "Click" (fn onEstiloTabApply s e =
             (
@@ -1410,6 +1461,7 @@ struct AmenoCotasEstilosTabDefinition
         txtTerminalAngle    = findControl "txtTerminalAngle"
 
         btnApplySelection = findControl "btnApplySelection"
+        btnApplyAll = findControl "btnApplyAll"
         btnSaveStyle      = findControl "btnSaveStyle"
 
         -- Inicializar somente se ainda nao houver um draft valido para a cena.

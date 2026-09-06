@@ -210,6 +210,7 @@ struct AmenoCotasCriarTabDefinition
             "<ComboBoxItem Content='3 casas'/>" + \
             "</ComboBox>" + \
             "</Grid>" + \
+            "<CheckBox x:Name='chkTextFollowsLine' Content='Texto acompanha a orientacao da linha' Foreground='#EEEEEE' IsChecked='True' Margin='0,10,0,0'/>" + \
             "</StackPanel>" + \
             "</Border>"
 
@@ -437,6 +438,9 @@ struct AmenoCotasCriarTabDefinition
         try
         (
             this.populateEstilos selectedStyleId:styleId
+            local orientationCheck = findControl "chkTextFollowsLine"
+            if orientationCheck != undefined and ::AmenoDimensionGraphics != undefined and isProperty ::AmenoDimensionGraphics #textFollowsLine do
+                orientationCheck.IsChecked = (dotNetObject "System.Nullable`1[System.Boolean]" ::AmenoDimensionGraphics.textFollowsLine)
             local cbUnd = findControl "cbUnidade"
             if cbUnd != undefined do
                 cbUnd.SelectedIndex = case unit of
@@ -449,7 +453,7 @@ struct AmenoCotasCriarTabDefinition
             if cbPrec != undefined do cbPrec.SelectedIndex = precision
             this.updateModoButtons mode
         )
-        catch ()
+        catch (format "[Ameno][ERROR] Sincronizacao da aba Criar: %\n" (getCurrentException() as string))
         isSyncing = false
         true
     ),
@@ -763,6 +767,16 @@ struct AmenoCotasCriarTabDefinition
         local xamlStr    = getXAMLString()
         local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
         hostControl = xamlReader.Parse xamlStr
+        local orientationCheck = findControl "chkTextFollowsLine"
+        dotNet.addEventHandler orientationCheck "Click" (fn onOrientation s e =
+        (
+            if not ::AmenoCotasCriarTab.isSyncing do
+            (
+                if ::AmenoCotasCriarTab.isInteractiveToolActive() then
+                    s.IsChecked = (dotNetObject "System.Nullable`1[System.Boolean]" ::AmenoDimensionGraphics.textFollowsLine)
+                else ::AmenoDimensionGraphics.textFollowsLine = (s.IsChecked == true)
+            )
+        ))
 
         syncFromServices()
         updateCotaCount()

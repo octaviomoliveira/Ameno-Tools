@@ -59,6 +59,20 @@ struct AmenoDimensionGraphicsService
     allocationActive = false,
     failureInjection = "",
     failureInjectionRemaining = 1,
+    textFollowsLine = true,
+
+    fn orientTextNode textNode layout followLine =
+    (
+        local angle = 0.0
+        if followLine do
+        (
+            angle = atan2 layout.direction.y layout.direction.x
+            if angle > 90.0 do angle -= 180.0
+            if angle <= -90.0 do angle += 180.0
+        )
+        textNode.rotation = quat angle [0,0,1]
+        true
+    ),
 
     fn setFailureInjection stageName occurrence:1 =
     (
@@ -593,6 +607,7 @@ struct AmenoDimensionGraphicsService
         try
         (
             textNode.pos = textPosition
+            orientTextNode textNode layout ((getUserProp textNode "Ameno.TextFollowsLine") == true)
             textNode.size = resolvedHeightScene
             textNode.ResetString()
             textNode.AppendString labelText
@@ -646,7 +661,7 @@ struct AmenoDimensionGraphicsService
         lineNode
     ),
 
-    fn createTextNode labelText layout style:undefined textHeight:140.0 textGap:60.0 fontName:"Arial" bold:false italic:false tracking:0.0 material:undefined =
+    fn createTextNode labelText layout style:undefined textHeight:140.0 textGap:60.0 fontName:"Arial" bold:false italic:false tracking:0.0 material:undefined followLine:undefined =
     (
         local resolvedHeight = textHeight
         local resolvedGap = textGap
@@ -678,6 +693,9 @@ struct AmenoDimensionGraphicsService
         local extDir = if layout.signedOffsetSceneUnits >= 0.0 then layout.perpendicular else -layout.perpendicular
         local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (extDir * resolvedGapScene)
         local textNode = TextPlus name:(uniqueName "AMENO_LABEL_") pos:textPosition
+        local follow = if followLine == undefined then textFollowsLine else followLine
+        setUserProp textNode "Ameno.TextFollowsLine" follow
+        orientTextNode textNode layout follow
 
         textNode.layouttype = 0
         textNode.plane = 1
@@ -879,6 +897,7 @@ struct AmenoDimensionGraphicsService
     (
         local controller = Point name:(uniqueName "AMENO_DIM_CTRL_") size:5.0
         registerAllocation controller
+        setUserProp controller "Ameno.TextFollowsLine" textFollowsLine
         maybeInjectFailure #afterController
         local dimensionId = "dimension-" + (controller.handle as string)
 
@@ -975,7 +994,8 @@ struct AmenoDimensionGraphicsService
         local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
         registerAllocation lineNode
         maybeInjectFailure #afterLine
-        local textNode = createTextNode labelText layout style:resolvedStyle material:dimensionMaterial
+        local follow = (getUserProp controller "Ameno.TextFollowsLine") == true
+        local textNode = createTextNode labelText layout style:resolvedStyle material:dimensionMaterial followLine:follow
         registerAllocation textNode
         maybeInjectFailure #afterText
         local markerNode = undefined

@@ -521,6 +521,10 @@ struct AmenoCotasWindowDefinition
         local xamlStr    = getXAMLString()
         local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
         window = xamlReader.Parse xamlStr
+        -- Compartilhar os templates escuros com Criar/Editar/Render, inclusive popups.
+        local styleHost = xamlReader.Parse (::AmenoCotasEstilosTab.getXAMLString())
+        for resourceKey in styleHost.Resources.Keys do
+            window.Resources.Add resourceKey (styleHost.Resources.Item resourceKey)
 
         -- Referência ao botão fechar
         btnClose = findControl "btnClose"

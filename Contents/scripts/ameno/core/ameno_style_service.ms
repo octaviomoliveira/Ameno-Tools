@@ -694,15 +694,16 @@ struct AmenoStyleServiceDefinition
         newRecord
     ),
 
-    fn applyDraftToSelection draft =
+    fn applyDraftToSelection draft allDimensions:false =
     (
         if draft == undefined or draft.styleRecord == undefined then return 0
-        if selection.count == 0 then return 0
+        if not allDimensions and selection.count == 0 then return 0
         global AmenoDimensionGraphics
         global AmenoDimensionCA
 
         local controllersToUpdate = #()
-        for obj in selection where isValidNode obj do
+        local targets = if allDimensions then ::AmenoDimensionGraphics.findControllers() else (selection as array)
+        for obj in targets where isValidNode obj do
         (
             local dimId = if ::AmenoDimensionGraphics != undefined then ::AmenoDimensionGraphics.getDimensionId obj else ""
             if dimId != "" do

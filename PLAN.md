@@ -20,6 +20,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Concluído
 
+- Correções do feedback visual E13 implementadas em `develop` (2026-09-06): tema escuro compartilhado, nome antes de salvar/criar estilo, aplicação a todas as cotas e opção de orientação por cota. Teste específico 18 PASS, regressão Criar 21 PASS e Estilos 25 PASS; todos exit 0 / zero FAIL após corrigir a conversão Nullable do checkbox. Pacote estrutural válido e ZIP feedback1 conferido (44/44 arquivos). Ainda não reinstalado nem aprovado visualmente; detalhes em `plans/2026-09-06-e13-feedback-visual-handoff.md`.
+
 - E12-R0 concluído em 2026-09-05 no commit instalado `e1bc114`: seis suítes MAXScript e a validação estrutural passaram; 25/25 arquivos instalados corresponderam por SHA-256; trace real comprovou que o commit Horizontal cria a cadeia mas mantém o MouseTool em `stage=collecting | active=true`, e que Alinhado entra na captura antes de ser recusado como `unsupported-mode`. A reutilização Horizontal→Vertical permanece apenas como relato, pois não houve sessão Vertical no trace. Evidência: `docs/e12-r0-diagnostics.md`.
 
 - E12-R5 concluído em 2026-09-05 como gate de definição: o relato foi confirmado como reuso do vértice da geometria original entre cadeias Horizontal e Vertical. O vínculo cota→cota (ponta/terminal/texto como âncora) não será inferido nesta E12-R. Evidência: `docs/decisions/0021-e12-reference-reuse-scope.md`, `plans/2026-09-05-e12-r5-handoff.md` e gate R2 aprovado pelo usuário.
@@ -63,13 +65,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Prioridade atual — candidato E13 pronto para aceitação manual em `develop`:** no worktree `D:\Ameno\_worktrees\develop`, as etapas 2–6 foram implementadas/testadas e a etapa 7 foi automatizada até a geração do candidato. A matriz final exige exit 0, PASS e zero FAIL e passou para E13, E10 impactado, E11, E12 e Corona real; o ZIP e o manifesto SHA-256 estão em `dist/` e `plans/2026-09-06-e13-candidate-manifest.sha256`. Não instalar nem publicar. Faltam os gates manuais 2–6, render V-Ray CPU real, aprovação do usuário e autorização de merge/push/publicação. Handoffs: `plans/2026-09-06-e13-etapa-5-handoff.md`, `plans/2026-09-06-e13-etapa-6-handoff.md` e `plans/2026-09-06-e13-etapa-7-handoff.md`.
+- **Prioridade atual — ajustes do gate manual E13 em `develop`:** o candidato foi instalado após autorização e fechamento do Max. O usuário apontou contraste ilegível nas listas, falta de aplicação a todas as cotas, nome automático de estilo e orientação horizontal do texto vertical. Correções implementadas; evidências e pendências em `plans/2026-09-06-e13-feedback-visual-handoff.md`. Esta atualização ainda não está instalada. Aprovação visual final, V-Ray CPU real e publicação continuam pendentes; não fazer merge/push.
 
 - **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0–R6 estão concluídos para a E12-R; R4 foi aprovada em Batch, instalada e validada manualmente, R5 foi fechado como decisão de escopo e R6 foi aprovado com automação e gate manual. Handoff final: `plans/2026-09-05-e12-r6-handoff.md`.
 
 - Pesquisa da finalização E12 concluída: `plans/2026-09-05-e12-finalization-research.md`. O C1 equivalente foi encerrado pelo R0; ciclo de vida pelo R1; e a causa do vértice ignorado foi tratada na R2 removendo o bloqueio causado pelo snap em gráfico Ameno e resolvendo o vértice geométrico pelo pixel.
 
-- **Instalação ativa da branch E12:** commit R4 `688c8bc`, com 26/26 arquivos conferidos por SHA-256, pacote instalado aprovado em Batch e Undo/Redo validado manualmente. R5 foi documental, sem mudança de pacote; próximo incremento: R6. Handoffs: `plans/2026-09-05-e12-r4-handoff.md` e `plans/2026-09-05-e12-r5-handoff.md`.
+- **Instalação ativa:** candidato E13 do commit funcional `d79211a`, instalado com autorização em 2026-09-06; 42/42 arquivos conferidos por SHA-256 e teste instalado aprovado (exit 0, 1 PASS, 0 FAIL). Backup anterior: `D:\Ameno\backups\AmenoTools-before-e13-20260906-120546`. As correções do feedback visual permanecem somente no `develop` até o próximo fechamento do Max.
 
 - **R6 — automação e gate manual executados:** com o Max interativo fechado, `validate-package.ps1` passou; as 11 suítes do lote e a R2 repetida passaram após o fixture E12-A declarar explicitamente o modo Horizontal. O usuário abriu o Max, repetiu o caso H/V com o vértice compartilhado e confirmou “tudo funcionando”. Evidência por suíte em `work/r6-test-logs` e handoff final em `plans/2026-09-05-e12-r6-handoff.md`.
 
@@ -82,7 +84,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Atual em 2026-09-06:** candidato E13 gerado na branch `develop`, com automação das etapas 5–7 concluída no commit funcional `d79211a`; documentação e handoffs estão nesta atualização. Manter instalação/publicação bloqueadas; executar os gates manuais 2–6 no Max interativo quando autorizado, registrar aprovação ou limitações, e somente então avaliar merge/push/publicação. Roteiro, manifesto e evidências: `plans/2026-09-05-e13-executor-runbook.md`, `plans/2026-09-06-e13-candidate-manifest.sha256` e os handoffs E13.
+- **Atual em 2026-09-06:** com o Max fechado pelo usuário, instalar as correções do feedback visual, conferir hashes e testar o pacote instalado. Depois validar listas abertas, diálogo de nome, aplicação global e criação de cotas verticais com a opção de orientação ligada/desligada. Não fechar nem alterar a sessão interativa automaticamente. Ver `plans/2026-09-06-e13-feedback-visual-handoff.md`; merge/push continuam sem autorização.
 
 **Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 
@@ -103,6 +105,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-06 — Instalar E13 e corrigir feedback visual:** instalação do candidato autorizada e realizada com Max fechado; em seguida o usuário forneceu duas capturas e solicitou aplicação de estilo a todas as cotas, nome antes de salvar, opção de texto acompanhando a linha e contraste legível. Implementação no `develop`, sem alteração da cena interativa e sem reinstalação nesta rodada. Handoff: `plans/2026-09-06-e13-feedback-visual-handoff.md`.
 
 - **2026-09-06 — Finalizar as etapas 5, 6 e 7 da E13 e fazer pente-fino:** no `develop`, terminais, preview, transação, câmera explícita e restauração foram implementados; a suíte E13 final passou com 217 PASS/0 FAIL. A regressão combinada passou E10.1–E10.7, E11.0–E11.5, E12 chain/R0–R4 e Corona real; E10.1/E10.2 tiveram um defeito de sintaxe/contrato do próprio teste descoberto e corrigido antes da aprovação. Pacote estrutural e candidato `AmenoTools-0.0.1-e13-candidate.zip` foram gerados, SHA-256 registrado, sem instalação, publicação ou merge. Gates manuais 2–6, V-Ray CPU real, aprovação do usuário e publicação permanecem pendentes. Evidências: `plans/2026-09-05-e13-executor-runbook.md`, `plans/2026-09-06-e13-candidate-manifest.sha256`, `plans/2026-09-06-e13-etapa-5-handoff.md`, `plans/2026-09-06-e13-etapa-6-handoff.md` e `plans/2026-09-06-e13-etapa-7-handoff.md`.
 
