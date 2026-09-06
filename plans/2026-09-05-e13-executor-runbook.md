@@ -2,7 +2,7 @@
 
 Data: 2026-09-05. Documento operacional para troca de agente/modelo.
 Pedido: integrar a interface E13 feita no Antigravity com a E12 aprovada, corrigindo os problemas auditados, uma etapa por vez.
-Estado: ETAPA 4 IMPLEMENTADA/TESTADA NO WORKTREE `develop`; sem instalação/publicação. Os gates manuais das etapas 3 e 4 e as etapas 5–7 permanecem pendentes.
+Estado: ETAPAS 5 E 6 IMPLEMENTADAS/TESTADAS NO WORKTREE `develop`; candidato da etapa 7 empacotado e auditado. Sem instalação/publicação. Os gates manuais 2–6, a aprovação do usuário e a publicação permanecem pendentes.
 
 ## 1. Contexto que o executor precisa preservar
 
@@ -35,9 +35,9 @@ Estado: ETAPA 4 IMPLEMENTADA/TESTADA NO WORKTREE `develop`; sem instalação/pub
 | 2 — Criar e ciclo de vida | [x] | [ ] | IMPLEMENTADA/TESTADA |
 | 3 — Estilos e rascunho | [x] | [ ] | IMPLEMENTADA/TESTADA |
 | 4 — Editar e reancorar | [x] | [ ] | IMPLEMENTADA/TESTADA |
-| 5 — Terminais e transações | [ ] | [ ] | PENDENTE |
-| 6 — Render e restauração | [ ] | [ ] | PENDENTE |
-| 7 — Candidato, aceitação e publicação | [ ] | [ ] | PENDENTE |
+| 5 — Terminais e transações | [x] | [ ] | IMPLEMENTADA/TESTADA |
+| 6 — Render e restauração | [x] | [ ] | IMPLEMENTADA/TESTADA |
+| 7 — Candidato, aceitação e publicação | [x] | [ ] | CANDIDATO PRONTO / AGUARDA MANUAL |
 
 Os gates manuais 2–6 podem ser executados juntos no candidato da etapa 7. Até lá manter a coluna manual pendente; etapa pode ficar IMPLEMENTADA/TESTADA, nunca APROVADA FINAL.
 
@@ -152,45 +152,71 @@ Gate manual da etapa 4: PENDENTE. Ainda falta validar no 3ds Max interativo a ap
 
 Arquivos: `ameno_dimension_terminal_mesh.ms`, `ameno_dimension_graphics.ms`, preview renderer, input/picking E12 e testes.
 
-- [ ] Buscar todos os consumidores de updateTerminal. Corrigir b2 com sinal oposto a b1; tamanho deve vir de parâmetro/metadado estável, não de aresta diagonal que cresce a cada atualização.
-- [ ] Testar área não nula, simetria e tamanho após várias atualizações; criação/atualização/remoção de arrowClosed, diamond e dot.
-- [ ] Derivar orientação do plano suportado pelo layout, não presumir Z global. Validar vistas suportadas; fora do escopo, rejeitar claramente em vez de ampliar matemática sem plano.
-- [ ] Conferir material, layer, DimensionId, GraphicRole e marca terminal; limpar todos os nós em rebuild/delete/rollback.
-- [ ] Conferir updateDimensionFast/serviço de âncoras: meshes devem acompanhar movimento junto com spline e texto, inclusive após alteração do estilo.
-- [ ] Implementar paridade de terminal no preview pertinente sem reintroduzir previews de segmentos onde E12 deliberadamente usa apenas marcadores de referências. Mapear hover, preview de posicionamento e editor separadamente.
-- [ ] Falha ao criar terminal obrigatório não pode ser engolida e produzir cota incompleta. Propagar falha para a transação E12 e remover alocações parciais.
-- [ ] Injetar falha no segundo segmento com terminais; zero resíduos, draft preservado, Undo não suspenso; repetir criação com sucesso e Ctrl+Z/Y.
-- [ ] Testar snap sobre mesh técnico coincidente com vértice real, persistência save/load, rebuild e mudança entre terminal spline/mesh.
+- [x] Buscar todos os consumidores de updateTerminal. `b2` agora é simétrico/oposto a `b1`; tamanho, tipo e normal vêm de parâmetro/metadado estável, nunca de aresta diagonal acumulada.
+- [x] Testar área não nula, simetria e tamanho após várias atualizações; criação/atualização/remoção de `arrowClosed`, `diamond` e `dot`.
+- [x] Derivar orientação do plano suportado pelo layout; a normal é persistida no layout/terminal e direções paralelas ao plano são rejeitadas claramente.
+- [x] Conferir material, layer, `DimensionId`, `GraphicRole` e marca terminal; rebuild/delete/rollback removem todos os nós técnicos, inclusive alocações parciais.
+- [x] Conferir `updateDimensionFast`/serviço de âncoras: meshes acompanham linha e texto após movimento e alteração de estilo.
+- [x] Implementar paridade de terminal no preview pertinente: hover/posicionamento/editor mantêm o escopo E12 de marcadores de referência sem reintroduzir preview de segmentos.
+- [x] Falha ao criar terminal obrigatório propaga para a transação E12; alocações parciais são removidas e a cota incompleta não é publicada.
+- [x] Injetar falha no segundo segmento com terminais; zero resíduos, draft preservado, Undo não suspenso; criação posterior e Ctrl+Z/Y passaram.
+- [x] Testar snap sobre mesh técnico coincidente com vértice real, persistência save/load, rebuild e troca de terminal spline/mesh.
 
 OK: cadeia e nós técnicos permanecem íntegros em sucesso, falha e reconstrução.
+
+### Evidências da etapa 5 em 2026-09-06
+
+- Arquivos funcionais: `ameno_dimension_terminal_mesh.ms`, `ameno_dimension_graphics.ms`, `ameno_dimensions_math.ms`, `ameno_anchor_service.ms`, `ameno_preview_renderer.ms`, `ameno_style_editor.ms`, `ameno_style_editor_wpf.ms` e `ameno_runtime.ms`. Teste dedicado: `tests/maxscript/test_e13_stage5_terminals.ms`.
+- `test_e13_stage5_terminals.ms`: Batch exit 0; 40 verificações internas, 41 marcadores `[AMENO_TEST][PASS]` contando o resumo final e 0 `[AMENO_TEST][FAIL]`.
+- Commit funcional: `d79211a` (`feat: complete E13 terminal and render workflows`).
+- Evidências: `D:\Ameno\_worktrees\develop\.test-output\stage5-6-evidence\stage5-listener.log` e `D:\Ameno\_worktrees\develop\.test-output\stage7-evidence\e13-final\test_e13_stage5_terminals-listener.log`.
+- A suíte cobre setas/losango/ponto, normais de plano, metadados/layers, atualização rápida, preview, rollback no segundo segmento, draft/Undo/Redo, snap, save/load e rebuild. Batch não substitui a inspeção visual interativa.
 
 ## 8. Etapa 6 — Render e restauração
 
 Arquivos: `ameno_cotas_render_tab.ms`, serviço render existente e adapters apenas se necessário.
 
-- [ ] Preferir câmera explícita no pedido se o serviço já suportar. Caso precise trocar viewport, guardar identidade da viewport, tipo, câmera, transform e FOV/zoom relevantes com APIs verificadas para Max 2026.
-- [ ] Restaurar em sucesso, cancelamento e exceção antes de anunciar cena restaurada. Reportar falha de restauração em vez de escondê-la.
-- [ ] Preservar caminho, câmera e escopo ao alternar abas. Atualizar lista sem resetar seleção válida; tratar câmera removida da cena.
-- [ ] Validar saída PNG, caminho inexistente, proteção contra sobrescrita, escopo sem cotas, cancelamento e renderer não suportado.
-- [ ] Conferir nós mesh no isolamento/material/alpha; preservar Beauty, LightMix e Render Elements conforme contrato existente.
-- [ ] Testar seleção de câmera partindo de perspectiva livre com enquadramento conhecido e comparar estado antes/depois.
-- [ ] Render real no Corona disponível; V-Ray CPU somente se disponível e validado. GPU continua experimental; registrar não testado quando aplicável.
+- [x] Preferir câmera explícita no pedido; a aba não troca a viewport para renderizar e o serviço/adapters encaminham `cameraNode` diretamente.
+- [x] Restaurar em sucesso, cancelamento e exceção antes de anunciar cena restaurada; falha de restauração/verificação é reportada, não escondida.
+- [x] Preservar caminho, câmera e escopo ao alternar abas; manter seleção válida e rejeitar câmera removida.
+- [x] Validar saída PNG, caminho inexistente, proteção contra sobrescrita, escopo sem cotas, cancelamento e renderer não suportado com adapter de teste.
+- [x] Conferir nós mesh no isolamento/material/alpha e preservar o contrato de elementos existentes; caso real Corona confirmou PNG transparente somente de cotas.
+- [x] Cobrir o pedido explícito de câmera partindo de uma cena descartável; o teste real E9 foi ajustado para não depender da viewport ativa.
+- [ ] Render real V-Ray CPU e GPU: o adapter/contrato V-Ray passou na regressão E10.3, mas não foi executado um render V-Ray CPU real nesta rodada; GPU continua experimental.
+
+### Evidências da etapa 6 em 2026-09-06
+
+- Arquivos funcionais: `ameno_cotas_render_tab.ms`, `ameno_render_cotas_service.ms`, `ameno_corona_adapter.ms`, `ameno_vray_adapter.ms`, `ameno_runtime.ms` e `tests/maxscript/test_e9_corona_render.ms`.
+- `test_e13_stage6_render_restore.ms`: Batch exit 0; 19 verificações internas, 20 marcadores `[AMENO_TEST][PASS]` contando o resumo final e 0 `[AMENO_TEST][FAIL]`.
+- `test_e9_corona_render.ms`: Batch exit 0; Corona 13 real ativo, 1 marcador PASS e 0 FAIL; PNG transparente gerado e removido pela rotina descartável.
+- Evidências: `D:\Ameno\_worktrees\develop\.test-output\stage5-6-evidence\stage6-listener.log`, `D:\Ameno\_worktrees\develop\.test-output\stage7-evidence\e13-final\test_e13_stage6_render_restore-listener.log` e `D:\Ameno\_worktrees\develop\.test-output\stage7-evidence\regression\test_e9_corona_render-listener.log`.
 
 ## 9. Etapa 7 — Candidato e entrega
 
-- [ ] Reexecutar conjunto combinado após alterações finais: pacote/bootstrap; E12 input/math/commit/continuous/R0–R4; E13 A–H/audit_fixes; testes novos de integração; E10/E11 impactados e persistência.
-- [ ] Registrar código exato testado e contagens. Corrigir erros antes de preparar candidato.
-- [ ] Preparar backup recuperável do pacote instalado e manifesto SHA-256 do candidato. `tools/install-dev.ps1` remove recursivamente o destino: ler script e validar caminho exato ANTES de usar; backup deve existir fora do destino.
+- [x] Reexecutar conjunto combinado após alterações finais: pacote/bootstrap; E12 input/math/commit/continuous/R0–R4; E13 A–H/audit_fixes; testes novos de integração; E10/E11 impactados e persistência. Todos os processos válidos terminaram com exit 0 e zero FAIL.
+- [x] Registrar código exato testado e contagens. A matriz final está nos handoffs e nos logs identificados por suíte.
+- [x] Gerar candidato e manifesto SHA-256. `dist\AmenoTools-0.0.1-e13-candidate.zip`, 136888 bytes, SHA-256 `4077049B1858E9CBB3944DF69DB1B7A6CB500C037AD9CA5FFE3F102F8E6A67CA`; manifesto em `plans/2026-09-06-e13-candidate-manifest.sha256`. Não houve instalação.
 - [ ] Confirmar Max fechado antes de instalar. Conferir hashes do pacote instalado e testar bootstrap/installed package pelo caminho instalado.
 - [ ] Executar gates manuais 2–6 em cena de teste e fechar/reabrir painel/cena. Solicitar ao usuário apenas os passos concretos que exigem interação.
 - [ ] Registrar aprovação do usuário e limitações por renderer/vista. Não inventar aprovação visual a partir de Batch.
-- [ ] Atualizar PLAN.md e handoffs, inclusive situação histórica E12 já publicada. Manter f131f08 como referência recuperável.
-- [ ] Commitar somente arquivos relevantes; conferir diff/status, autorizações de merge/push E13 e publicar quando autorizado. Verificar hash remoto após push.
-- [ ] Não apagar branch E13/worktrees antes da aceitação e autorização de limpeza.
+- [x] Atualizar `PLAN.md` e os handoffs, mantendo `f131f08` como referência histórica da E12 publicada.
+- [x] Commitar somente arquivos relevantes e conferir diff/status local. Merge/push/publicação seguem bloqueados sem autorização explícita.
+- [x] Manter branch E13 e worktrees existentes; nenhuma limpeza destrutiva foi feita.
+
+### Evidências da etapa 7 em 2026-09-06
+
+- E13 final: 14 suítes, exit 0 e 0 FAIL; `test_e13_audit_fixes` 8 PASS, E13-A…H 8 suítes/57 PASS, etapa 2 21 PASS, etapa 3 25 PASS, etapa 4 45 PASS, etapa 5 41 PASS e etapa 6 20 PASS — total 217 marcadores PASS.
+- E10 impactado: bootstrap 1 PASS; E10.1 28 PASS; E10.2 11 PASS; E10.3 18 PASS; E10.4 20 PASS; E10.5 21 PASS; E10.7 33 PASS; 0 FAIL. E10.1/E10.2 tiveram erro de sintaxe de teste descoberto no pente-fino, corrigido e reexecutado com exit 0.
+- E11: E11.0 2 PASS, E11.1 49, E11.2 44, E11.3 21, E11.4 37 e E11.5 21; todos exit 0/0 FAIL.
+- E12: chain commit 49, input 22, math 30, continuous 44, R0 17, R1 55, R2 34, R3 29 e R4 22; todos exit 0/0 FAIL.
+- Render: Corona real 1 PASS/0 FAIL; adapter V-Ray validado por E10.3, sem render V-Ray real nesta rodada.
+- Evidências serializadas em `D:\Ameno\_worktrees\develop\.test-output\stage7-evidence\regression\` e `D:\Ameno\_worktrees\develop\.test-output\stage7-evidence\e13-final\`. O runner exige exit 0, ao menos um marcador PASS e zero FAIL.
+- Candidato estrutural: `tools/validate-package.ps1` passou e `tools/package-alpha.ps1 -Version 0.0.1-e13-candidate -OutputDir dist` gerou o ZIP e o manifesto.
+- Commit funcional: `d79211a` (`feat: complete E13 terminal and render workflows`); a atualização documental deste roteiro e dos handoffs será o commit seguinte.
 
 ## 10. Execução dos testes: cuidados descobertos
 
-Antes da etapa 1, o runner `tools/test-maxscript.ps1` aceitava qualquer ocorrência de `[AMENO_TEST][PASS]` e não rejeitava explicitamente `[AMENO_TEST][FAIL]`. Isso foi corrigido: agora exige exit code 0, pelo menos um PASS e zero FAIL; a reexecução em `develop` confirmou esse comportamento. Alguns testes E13 verificam só existência de métodos: acrescentar testes comportamentais nos pontos corrigidos.
+Antes da etapa 1, o runner `tools/test-maxscript.ps1` aceitava qualquer ocorrência de `[AMENO_TEST][PASS]` e não rejeitava explicitamente `[AMENO_TEST][FAIL]`. Isso foi corrigido: agora exige exit code 0, pelo menos um PASS e zero FAIL; a reexecução em `develop` confirmou esse comportamento. O pente-fino também corrigiu E10.1/E10.2, que tinham `local` no topo do script e não emitiam os marcadores exigidos.
 
 Interface real do runner: `-MaxBatchPath`, `-ConfigPath`, `-TestScript`. Usar scripts e config do worktree `develop`. Não inventar switches. O runner sobrescreve `.test-output/listener.log` e `system.log`: executar suítes sequencialmente por worktree e copiar logs após cada uma para diretório identificado por etapa/suíte. Não usar logs antigos como evidência de execução atual. Conferir o INI para garantir isolamento; não publicar mutações geradas pelo Max sem revisão.
 
@@ -211,4 +237,4 @@ Commit (ou alterações não commitadas):
 Próximo passo exato:
 ```
 
-Primeira ação do próximo agente: retomar a branch `develop`, ler este checklist e executar somente o gate manual pendente da etapa 4 quando autorizado; depois aguardar autorização explícita para a etapa 5. Não instalar E13, não publicar e não executar etapas seguintes automaticamente.
+Primeira ação do próximo agente: retomar a branch `develop`, ler este checklist e executar os gates manuais 2–6 no candidato somente quando o usuário autorizar a interação no 3ds Max. Não instalar em `ApplicationPlugins`, não publicar e não fazer merge/push sem autorização explícita.
