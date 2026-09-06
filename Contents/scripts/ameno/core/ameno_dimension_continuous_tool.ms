@@ -4,15 +4,17 @@
     Fluxo de interação:
       1. Painel principal valida o modo e ativa o MouseTool.
       2. Usuário clica N referências de vértice (≥ 2).
-      3. O primeiro clique realmente vazio solicita o commit do conjunto.
-      4. Layout e commit da cadeia são implementados nos gates E12-B/C.
+      3. Um clique na viewport posiciona a cadeia e conclui o commit.
+      4. Enter confirma na posição atual quando o clique da viewport não é reconhecido.
+      5. Layout e commit da cadeia são implementados nos gates E12-B/C.
 
     Gestos:
       - Clique em vértice           : adiciona referência
-      - Clique vazio                : solicita posicionamento/commit
+      - Clique na viewport          : posiciona e cria a cadeia
+      - Enter                       : confirma na posição atual do cursor
       - Esc / botão direito         : cancela toda a sessão
 
-    HUD nativo:
+    HUD nativo legado (não aberto neste fluxo):
       - Label com contagem de pontos e comprimento total acumulado
       - Botão "↩ Desfazer ponto"  : remove o último ponto acumulado
       - Botão "✕ Cancelar"        : fecha o HUD e cancela a sessão
@@ -153,6 +155,11 @@ struct AmenoDimensionContinuousToolService
 
     -- HUD (rollout nativo MaxScript — funciona durante startTool)
     hudOpen = false,
+
+    -- Monitor de Enter. MouseTool não expõe um evento de teclado; o monitor
+    -- usa um DispatcherTimer leve somente durante a sessão ativa.
+    enterTimer = undefined,
+    enterWasDown = false,
 
     -- ── Geométrica ───────────────────────────────────────────────────────────
 
@@ -386,7 +393,7 @@ struct AmenoDimensionContinuousToolService
                 if n == 0 then
                     "Ameno Cota Contínua: clique o 1º ponto  (Esc cancela)"
                 else
-                    ("Ameno Cota Contínua: " + n as string + " referência(s) · clique vazio posiciona")
+                    ("Ameno Cota Contínua: " + n as string + " referência(s) · clique na viewport ou pressione Enter")
             #committing:
                 "Ameno Cota Contínua: preparando a cadeia"
             default:
@@ -487,12 +494,13 @@ struct AmenoDimensionContinuousToolService
             if stage == #committing then
                 instrStr = "Preparando posicionamento da cadeia"
             else if segs > 0 then
-                instrStr = "Clique em outro vértice ou no vazio para posicionar"
+                instrStr = "Clique na viewport para confirmar; Enter é fallback"
             else
                 instrStr = "Continue clicando os pontos"
             ::AmenoContinuousHUDRlt.lblInstr.text = instrStr
 
-            -- Botão Finalizar
+            -- O HUD não é aberto durante a ferramenta; mantém o estado legado se
+            -- outra rotina o utilizar explicitamente.
             ::AmenoContinuousHUDRlt.btnConfirm.enabled = false
 
             -- Botão Undo
@@ -506,6 +514,122 @@ struct AmenoDimensionContinuousToolService
     (
         try (destroyDialog ::AmenoContinuousHUDRlt) catch ()
         hudOpen = false
+    ),
+
+    -- ── Confirmação por Enter ───────────────────────────────────────────────
+
+    fn isEnterDown =
+    (
+        try
+        (
+            local keyboardClass = dotNetClass "System.Windows.Input.Keyboard"
+            local keyClass = dotNetClass "System.Windows.Input.Key"
+            keyboardClass.IsKeyDown keyClass.Return
+        )
+        catch false
+    ),
+
+    fn stopEnterMonitor =
+    (
+        if enterTimer != undefined do
+        (
+            try (enterTimer.Stop()) catch ()
+            try (enterTimer.Dispose()) catch ()
+            enterTimer = undefined
+        )
+        enterWasDown = false
+        true
+    ),
+
+    fn onEnterMonitorTick =
+    (
+        if not active then
+        (
+            stopEnterMonitor()
+            return true
+        )
+
+        local isDown = isEnterDown()
+        if isDown and not enterWasDown then
+        (
+            enterWasDown = true
+            local accepted = confirmPoints()
+            if accepted and enterTimer != undefined do
+                try (stopTool ::AmenoDimensionContinuousMouseTool) catch ()
+        )
+        else if not isDown then enterWasDown = false
+        true
+    ),
+
+    fn startEnterMonitor =
+    (
+        stopEnterMonitor()
+        try
+        (
+            enterTimer = dotNetObject "System.Windows.Threading.DispatcherTimer"
+            enterTimer.Interval = (dotNetClass "System.TimeSpan").FromMilliseconds 50
+            dotNet.addEventHandler enterTimer "Tick" \
+                (fn onAmenoContinuousEnterTick sender args =
+                (
+                    if ::AmenoDimensionContinuousTool != undefined do
+                        ::AmenoDimensionContinuousTool.onEnterMonitorTick()
+                ))
+            enterWasDown = isEnterDown()
+            enterTimer.Start()
+            diagnosticTrace #enterMonitorStarted #("intervalMs=50")
+            true
+        )
+        catch
+        (
+            enterTimer = undefined
+            enterWasDown = false
+            diagnosticTrace #enterMonitorStartFailed #("error=" + (getCurrentException() as string))
+            false
+        )
+    ),
+
+    fn positionPointFromScreen screenPoint fallbackPoint:undefined =
+    (
+        local positionPoint = undefined
+        if screenPoint != undefined and ::AmenoContinuousInputResolver != undefined do
+        (
+            try
+            (
+                local rayValue = mapScreenToWorldRay screenPoint
+                positionPoint = ::AmenoContinuousInputResolver.intersectRayWithPlane rayValue targetZ:0.0
+            )
+            catch ()
+        )
+        if positionPoint == undefined do positionPoint = fallbackPoint
+        flattenPoint positionPoint
+    ),
+
+    fn currentPositionPoint =
+    (
+        local screenPoint = undefined
+        try (screenPoint = mouse.pos) catch ()
+        local positionPoint = positionPointFromScreen screenPoint fallbackPoint:lastCursorPoint
+        if positionPoint == undefined and lastCursorPoint != undefined do
+            positionPoint = flattenPoint lastCursorPoint
+        positionPoint
+    ),
+
+    fn handlePositionClick clickNumber pointValue screenPoint:undefined =
+    (
+        if not active or stage != #committing then return #ignored
+
+        local offsetPoint = positionPointFromScreen screenPoint fallbackPoint:pointValue
+        diagnosticTrace #positionClick #(
+            "clickNumber=" + (clickNumber as string),
+            "offset=" + (diagnosticPointText offsetPoint)
+        )
+        if offsetPoint == undefined then
+        (
+            displayTempPrompt "Ameno Cota Contínua: não foi possível obter o ponto de posicionamento." 1800
+            return #ambiguous
+        )
+
+        if commitChain offsetPoint then #chainCommitted else #commitFailed
     ),
 
 
@@ -680,7 +804,6 @@ struct AmenoDimensionContinuousToolService
             active          = true
             registerViewportOverlay()
             setStage #collecting
-            -- O HUD não abre automaticamente no R1; status/prompt conduzem a sessão.
             diagnosticTrace #beginReady #("stage=" + (stage as string), "mode=" + ((effectiveMode()) as string))
             true
         )
@@ -705,6 +828,7 @@ struct AmenoDimensionContinuousToolService
 
         -- Desativar antes de fechar o HUD impede que o callback close reentre em cancel().
         active = false
+        stopEnterMonitor()
         unregisterViewportOverlay()
         removeAllPreviews()
         if clearDraft do
@@ -879,8 +1003,25 @@ struct AmenoDimensionContinuousToolService
 
     fn confirmPoints =
     (
-        displayTempPrompt "Ameno Cota Contínua: posicione com o primeiro clique vazio." 1400
-        false
+        if not active then return false
+        if stage != #collecting and stage != #committing then return false
+
+        local offsetPoint = currentPositionPoint()
+        if offsetPoint == undefined then
+        (
+            displayTempPrompt "Ameno Cota Contínua: a posição atual não foi reconhecida; mova o cursor na viewport e pressione Enter." 2200
+            return false
+        )
+
+        if stage == #collecting and not requestCommit() then return false
+        if stage != #committing then return false
+
+        if commitChain offsetPoint then
+        (
+            displayTempPrompt "Ameno Cota Contínua: cota confirmada." 1000
+            true
+        )
+        else false
     ),
 
     fn isDuplicateReference clickInfo tolerance:0.00001 =
@@ -1025,9 +1166,39 @@ struct AmenoDimensionContinuousToolService
             return #stop
         )
 
-        local clickInfo = classifyClick pointValue screenPoint:screenPoint snapNode:snapNode \
-            snapWorldPoint:snapWorldPoint snapHit:snapHit snapStatus:snapStatus clickNumber:clickNumber
-        local outcome = handleClassifiedClick clickInfo commitNow:true
+        local outcome = #ignored
+        if stage == #committing then
+            outcome = handlePositionClick clickNumber pointValue screenPoint:screenPoint
+        else
+        (
+            local clickInfo = classifyClick pointValue screenPoint:screenPoint snapNode:snapNode \
+                snapWorldPoint:snapWorldPoint snapHit:snapHit snapStatus:snapStatus clickNumber:clickNumber
+            local isReference = (clickInfo != undefined and clickInfo.kind == #reference)
+            if isReference or points.count < 2 then
+                outcome = handleClassifiedClick clickInfo commitNow:true
+            else
+            (
+                -- Depois de duas referências, qualquer clique que não seja um
+                -- vértice é uma tentativa de posicionamento. Isso permite
+                -- clicar sobre uma face, bloco ou objeto que não tenha um
+                -- vértice dentro da tolerância de picking.
+                local offsetPoint = positionPointFromScreen screenPoint fallbackPoint:pointValue
+                if offsetPoint == undefined then
+                (
+                    displayTempPrompt "Ameno Cota Contínua: clique não reconhecido; pressione Enter para confirmar." 1800
+                    outcome = #needsPosition
+                )
+                else if requestCommit() then
+                (
+                    if commitChain offsetPoint then
+                        outcome = #chainCommitted
+                    else
+                        outcome = #commitFailed
+                )
+                else
+                    outcome = #ignored
+            )
+        )
         diagnosticTrace #handlePointEnd #(
             "outcome=" + (outcome as string),
             "stage=" + (stage as string),
@@ -1053,6 +1224,7 @@ struct AmenoDimensionContinuousToolService
 
         lastCursorPoint = sample.planePoint
         if stage == #collecting and points.count >= 2 do refreshChainPreview sample.planePoint
+        if stage == #committing and points.count >= 2 do refreshChainPreview sample.planePoint
         classification
     ),
 
@@ -1078,7 +1250,7 @@ struct AmenoDimensionContinuousToolService
             "references=" + (points.count as string),
             "point=" + (diagnosticPointText candidate)
         ) throttleKey:("move:" + (stage as string) + ":" + (points.count as string))
-        if stage == #collecting and points.count >= 2 then refreshChainPreview candidate else undefined
+        if (stage == #collecting or stage == #committing) and points.count >= 2 then refreshChainPreview candidate else undefined
     ),
 
     -- ── onStart / onAbort / onStop ────────────────────────────────────────────
@@ -1088,6 +1260,7 @@ struct AmenoDimensionContinuousToolService
         diagnosticTrace #toolStart #("activeBefore=" + (active as string), "stageBefore=" + (stage as string))
         if not active do active = true
         updatePrompt()
+        try (startEnterMonitor()) catch ()
         diagnosticTrace #toolStartReady #("active=" + (active as string), "stage=" + (stage as string))
         true
     ),
@@ -1135,7 +1308,7 @@ struct AmenoDimensionContinuousToolService
         try
         (
             toolResult = startTool AmenoDimensionContinuousMouseTool \
-                prompt:"Ameno Cota Contínua: clique vértices · clique vazio posiciona · Esc cancela" snap:#3D
+                prompt:"Ameno Cota Contínua: clique vértices · clique viewport confirma · Enter fallback · Esc cancela" snap:#3D
             diagnosticTrace #startToolReturned #("toolResult=" + (toolResult as string), "lastIds=" + (lastSessionIds.count as string))
         )
         catch
@@ -1157,7 +1330,7 @@ AmenoDimensionContinuousTool = AmenoDimensionContinuousToolService()
 
 -- ── Mouse Tool block ──────────────────────────────────────────────────────────
 
-tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vértices · clique vazio posiciona · Esc cancela"
+tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vértices · clique viewport confirma · Enter fallback · Esc cancela"
 (
     on start do
     (

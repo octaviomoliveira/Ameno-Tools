@@ -89,6 +89,7 @@
     r1Ok "horizontal begin succeeds" (AmenoDimensionContinuousTool.begin())
     r1Eq "horizontal begins collecting" AmenoDimensionContinuousTool.stage #collecting
     r1Eq "HUD remains closed" AmenoDimensionContinuousTool.hudOpen false
+    r1Ok "onStart keeps HUD closed and starts Enter monitor" (AmenoDimensionContinuousTool.onStart() and AmenoDimensionContinuousTool.enterTimer != undefined)
     AmenoDimensionContinuousTool.activeMode = #vertical
     AmenoDimensionContinuousTool.previewOutputUnit = #millimeters
     AmenoDimensionContinuousTool.previewPrecision = 0
@@ -134,9 +135,10 @@
     r1Ok "success begin succeeds" (AmenoDimensionContinuousTool.begin())
     r1Eq "success add A" (addReference anchorA) #referenceAdded
     r1Eq "success add B" (addReference anchorB) #referenceAdded
-    local emptyClick = AmenoContinuousClickClassification kind:#empty worldPoint:[50,80,0]
-    local serviceOutcome = AmenoDimensionContinuousTool.handleClassifiedClick emptyClick commitNow:true
-    r1Eq "service reports committed" serviceOutcome #chainCommitted
+    AmenoDimensionContinuousTool.lastCursorPoint = [50,80,0]
+    r1Ok "Enter confirmation commits at cursor" (AmenoDimensionContinuousTool.confirmPoints())
+    r1Eq "Enter reaches finished" AmenoDimensionContinuousTool.stage #finished
+    local serviceOutcome = #chainCommitted
     r1Eq "success reaches finished" AmenoDimensionContinuousTool.stage #finished
     r1Eq "success records committed result" AmenoDimensionContinuousTool.lastResult #committed
     r1Eq "mouse border translates success to stop" (AmenoDimensionContinuousTool.mouseReturnForOutcome serviceOutcome) #stop
@@ -155,9 +157,23 @@
     r1Eq "second stop stays idle" AmenoDimensionContinuousTool.stage #idle
     r1Eq "second stop preserves permanent dimension" (AmenoDimensionGraphics.findControllers role:"interactive").count (baselineControllers + 1)
 
+    -- Um clique de viewport que não resolve vértice posiciona diretamente no plano XY.
+    resetTool()
+    AmenoDimensionContinuousTool.activeMode = #horizontal
+    r1Ok "viewport begin succeeds" (AmenoDimensionContinuousTool.begin())
+    r1Eq "viewport add A" (addReference anchorA) #referenceAdded
+    r1Eq "viewport add B" (addReference anchorB) #referenceAdded
+    local viewportOutcome = AmenoDimensionContinuousTool.handlePoint 1 [50,80,0]
+    r1Eq "viewport click returns stop after commit" viewportOutcome #stop
+    r1Eq "viewport click reaches finished" AmenoDimensionContinuousTool.stage #finished
+    r1Eq "viewport click creates one dimension" (AmenoDimensionGraphics.findControllers role:"interactive").count (baselineControllers + 2)
+    local viewportId = AmenoDimensionContinuousTool.lastSessionIds[1]
+    AmenoDimensionContinuousTool.onStop()
+
     with undo off
     (
         AmenoDimensionGraphics.deleteNodes (AmenoDimensionGraphics.findNodesForDimension committedId)
+        AmenoDimensionGraphics.deleteNodes (AmenoDimensionGraphics.findNodesForDimension viewportId)
     )
     r1Eq "test cleanup restores controller count" (AmenoDimensionGraphics.findControllers role:"interactive").count baselineControllers
 
