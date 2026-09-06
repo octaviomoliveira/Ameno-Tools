@@ -5,6 +5,7 @@ struct AmenoDiagnosticReport
 (
     generatedAt = "",
     rendererName = "",
+    rendererClassName = "",
     rendererSupport = "",
     totalDimensions = 0,
     healthyCount = 0,
@@ -29,7 +30,9 @@ struct AmenoDiagnosticReport
         s += "        AMENO TOOLS - RELATÓRIO DE DIAGNÓSTICO       \n"
         s += "=====================================================\n"
         s += "Data/Hora:        " + generatedAt + "\n"
-        s += "Renderer Ativo:   " + rendererName + " (" + rendererSupport + ")\n"
+        local rendererLabel = rendererName
+        if rendererClassName != "" do rendererLabel += " [" + rendererClassName + "]"
+        s += "Renderer Ativo:   " + rendererLabel + " (" + rendererSupport + ")\n"
         s += "-----------------------------------------------------\n"
         s += "TOTAL DE COTAS:   " + (totalDimensions as string) + "\n"
         s += "  Saudáveis:      " + (healthyCount as string) + "\n"
@@ -77,6 +80,7 @@ struct AmenoDiagnosticServiceDefinition
         (
             local info = ::AmenoRendererProbe.detect()
             r.rendererName = info.displayName
+            r.rendererClassName = info.className
             r.rendererSupport = info.statusLabel()
         )
 

@@ -44,15 +44,39 @@ struct AmenoCoronaRendererAdapterService
     -- Lista de nomes de propriedade de passes e noise em diferentes versões do Corona.
     PASSES_PROPS = #("imageSampler_passes", "rendererPasses", "maxPasses", "limit_passes"),
     NOISE_PROPS  = #("imageSampler_noiseLevel", "denoising_threshold", "noiseLevel", "limit_noise"),
+    ALPHA_PROPS  = #("affectAlpha", "visibleToAlpha", "visibleToAlphaChannel"),
+    DIRECT_PROPS = #("visibleDirect", "visibleInDirect"),
+    REFLECTION_PROPS = #("visibleRefl", "visibleInReflections"),
+    REFRACTION_PROPS = #("visibleRefract", "visibleInRefractions"),
+    EMIT_PROPS = #("emitLight", "emitOnBackfaces"),
+
+    fn setFirstProperty target propNames value required:false =
+    (
+        for propName in propNames do
+        (
+            if isProperty target propName do
+            (
+                try
+                (
+                    setProperty target propName value
+                    return true
+                )
+                catch ()
+            )
+        )
+        if required then throw ("Nenhuma propriedade compatível encontrada: " + (propNames as string))
+        false
+    ),
 
     fn validate request =
     (
         if request == undefined then throw "A solicitação de render das cotas está vazia."
 
         local info = AmenoRendererProbe.detect()
-        if info.family != #corona then
+        if info == undefined or info.family != #corona then
         (
-            throw ("Renderizar Cotas da E9 requer Corona ativo. Renderer atual: " + info.displayName + ".")
+            local rendererName = if info == undefined then "desconhecido" else info.displayName
+            throw ("Renderizar Cotas requer Corona ativo. Renderer atual: " + rendererName + ".")
         )
 
         if (toLower (getFilenameType request.outputPath)) != ".png" then
@@ -147,37 +171,42 @@ struct AmenoCoronaRendererAdapterService
     fn createAnnotationMaterial colorValue:(color 245 245 245) =
     (
         local annotationMaterial = undefined
-        try (annotationMaterial = execute "CoronaLightMtl()") catch ()
+        local constructorNames = #("CoronaLightMtl()", "CoronaLegacyMtl()", "CoronaMtl()")
+        for constructorName in constructorNames while annotationMaterial == undefined do
+            try (annotationMaterial = execute constructorName) catch ()
 
         if annotationMaterial == undefined then
         (
-            throw "CoronaLightMtl não está disponível nesta instalação do Corona."
+            throw "Nenhum material de anotação Corona compatível está disponível nesta instalação."
         )
 
         annotationMaterial.name = uniqueName "AMENO_CORONA_OVERLAY_MTL_"
-        annotationMaterial.color = colorValue
-        annotationMaterial.intensity = 1.0
-        annotationMaterial.emitLight = false
-        annotationMaterial.visibleDirect = true
-        annotationMaterial.affectAlpha = true
-        annotationMaterial.visibleRefl = false
-        annotationMaterial.visibleRefract = false
-        annotationMaterial.occludeOther = false
-        annotationMaterial.visibleInMasks = true
+        if not (setFirstProperty annotationMaterial #(#color, #emissionColor) colorValue required:true) do
+            throw "O material Corona não expõe uma propriedade de cor compatível."
+        try (annotationMaterial.intensity = 1.0) catch ()
+        setFirstProperty annotationMaterial EMIT_PROPS false
+        setFirstProperty annotationMaterial DIRECT_PROPS true
+        setFirstProperty annotationMaterial ALPHA_PROPS true
+        setFirstProperty annotationMaterial REFLECTION_PROPS false
+        setFirstProperty annotationMaterial REFRACTION_PROPS false
+        try (annotationMaterial.occludeOther = false) catch ()
+        try (annotationMaterial.visibleInMasks = true) catch ()
         try (annotationMaterial.twosidedEmission = true) catch ()
+
+        if ::AmenoLog != undefined do
+            try (::AmenoLog.info ("Material Corona de overlay criado: " + ((classOf annotationMaterial) as string))) catch ()
 
         annotationMaterial
     ),
 
-    fn renderOverlay request =
+    fn renderFrame request cameraNode:undefined =
     (
         local wasCancelled = false
         local renderedBitmap = undefined
-
-        try
+        if cameraNode != undefined and isValidNode cameraNode then
         (
             renderedBitmap = render \
-                camera:(if request.cameraNode != undefined and isValidNode request.cameraNode then request.cameraNode else undefined) \
+                camera:cameraNode \
                 frame:request.frame \
                 outputwidth:request.width \
                 outputheight:request.height \
@@ -196,6 +225,46 @@ struct AmenoCoronaRendererAdapterService
                 quiet:true \
                 missingExtFilesAction:#logmsg \
                 cancelled:&wasCancelled
+        )
+        else
+        (
+            -- Nunca passar camera:undefined ao MAXScript render(). Em algumas
+            -- combinações de renderer isso chega ao plugin nativo como ponteiro
+            -- nulo e pode derrubar o Max. Sem câmera, o Render Setup/viewport
+            -- ativo é a fonte oficial.
+            renderedBitmap = render \
+                frame:request.frame \
+                outputwidth:request.width \
+                outputheight:request.height \
+                pixelaspect:request.pixelAspect \
+                outputfile:request.outputPath \
+                outputHDRbitmap:false \
+                outputColorConversion:#automatic \
+                renderType:request.renderType \
+                renderhiddenobjects:false \
+                renderatmosphericeffects:false \
+                renderMultiPassEffects:false \
+                renderElements:false \
+                force2sided:true \
+                vfb:false \
+                progressbar:true \
+                quiet:true \
+                missingExtFilesAction:#logmsg \
+                cancelled:&wasCancelled
+        )
+        #(renderedBitmap, wasCancelled)
+    ),
+
+    fn renderOverlay request =
+    (
+        local wasCancelled = false
+        local renderedBitmap = undefined
+
+        try
+        (
+            local renderData = renderFrame request cameraNode:request.cameraNode
+            renderedBitmap = renderData[1]
+            wasCancelled = renderData[2]
         )
         catch
         (

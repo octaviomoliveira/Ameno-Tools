@@ -52,6 +52,8 @@ struct AmenoCotasEstilosTabDefinition
     sliderTextGap    = undefined,
     txtTextGap       = undefined,
     chkTextMask      = undefined,
+    btnAnnotationColor = undefined,
+    txtAnnotationColor = undefined,
 
     btnThin             = undefined,
     btnNorm             = undefined,
@@ -504,6 +506,11 @@ struct AmenoCotasEstilosTabDefinition
             "<TextBox x:Name='txtTextGap' Grid.Column='2' Text='60.0' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' HorizontalContentAlignment='Center' VerticalAlignment='Center' Margin='0,0,8,0' />" + \
             "<CheckBox x:Name='chkTextMask' Grid.Column='3' Content='Mascara' Foreground='#FFFFFF' VerticalAlignment='Center' ToolTip='Ocultar linhas sob o texto' />" + \
             "</Grid>" + \
+            "<Grid Margin='0,0,0,2'><Grid.ColumnDefinitions><ColumnDefinition Width='75'/><ColumnDefinition Width='*'/><ColumnDefinition Width='Auto'/></Grid.ColumnDefinitions>" + \
+            "<TextBlock Text='Cor render:' Foreground='#CCCCCC' VerticalAlignment='Center'/>" + \
+            "<TextBox x:Name='txtAnnotationColor' Grid.Column='1' Height='22' Background='#2D2D30' Foreground='#FFFFFF' BorderBrush='#3F3F46' IsReadOnly='True' Margin='0,0,6,0' ToolTip='RGB usado no material renderizavel da cota' />" + \
+            "<Button x:Name='btnAnnotationColor' Grid.Column='2' Content='Escolher cor' Width='92' Height='22' Background='#F5F5F5' Foreground='#111111' BorderBrush='#777777' ToolTip='Escolher a cor do material da cota no render' />" + \
+            "</Grid>" + \
             "</StackPanel>" + \
             "</Border>"
 
@@ -789,6 +796,7 @@ struct AmenoCotasEstilosTabDefinition
             if sliderTextGap != undefined do sliderTextGap.Value = rec.textGap
             if txtTextGap != undefined do txtTextGap.Text = (rec.textGap as string)
             if chkTextMask != undefined do chkTextMask.IsChecked = (dotNetObject "System.Nullable`1[System.Boolean]" rec.textMaskEnabled)
+            this.updateAnnotationColorUI()
 
             if sliderLineThickness != undefined do sliderLineThickness.Value = rec.lineThickness
             if txtLineThickness != undefined do txtLineThickness.Text = (rec.lineThickness as string)
@@ -845,8 +853,46 @@ struct AmenoCotasEstilosTabDefinition
         if isSyncing or currentDraft == undefined or currentDraft.styleRecord == undefined do return false
         setProperty currentDraft.styleRecord propName newVal
         currentDraft.markDirty()
+        if propName == #annotationColor do this.updateAnnotationColorUI()
         updateDirtyUI()
         updatePreview()
+    ),
+
+    fn onChooseAnnotationColor =
+    (
+        if currentDraft == undefined or currentDraft.styleRecord == undefined do return false
+        local dialog = undefined
+        try
+        (
+            dotNet.loadAssembly "System.Windows.Forms"
+            local colorDialogClass = dotNetClass "System.Windows.Forms.ColorDialog"
+            local dialogResultClass = dotNetClass "System.Windows.Forms.DialogResult"
+            local drawingColorClass = dotNetClass "System.Drawing.Color"
+            dialog = dotNetObject "System.Windows.Forms.ColorDialog"
+            dialog.AllowFullOpen = true
+            dialog.FullOpen = true
+
+            local currentColor = ::AmenoStyleService.colorFromString currentDraft.styleRecord.annotationColor
+            dialog.Color = drawingColorClass.FromArgb currentColor.r currentColor.g currentColor.b
+            local result = dialog.ShowDialog()
+            if result == dialogResultClass.OK do
+            (
+                local picked = dialog.Color
+                local rText = (picked.R as integer) as string
+                local gText = (picked.G as integer) as string
+                local bText = (picked.B as integer) as string
+                local rgbText = rText + "," + gText + "," + bText
+                this.onFieldChanged #annotationColor rgbText
+                this.updateAnnotationColorUI()
+            )
+            true
+        )
+        catch
+        (
+            if txtPreviewStatus != undefined do txtPreviewStatus.Text = "Nao foi possivel abrir o seletor de cor"
+            false
+        )
+        try (if dialog != undefined do dialog.Dispose()) catch ()
     ),
 
     -- -----------------------------------------------------------------
@@ -915,6 +961,18 @@ struct AmenoCotasEstilosTabDefinition
                 txtPreviewStatus.Text = "Erro ao salvar estilo"
             0
         )
+    ),
+
+    fn updateAnnotationColorUI =
+    (
+        if currentDraft == undefined or currentDraft.styleRecord == undefined do return false
+        local colorText = currentDraft.styleRecord.annotationColor
+        if txtAnnotationColor != undefined do txtAnnotationColor.Text = colorText
+        if btnAnnotationColor != undefined and ::AmenoPreviewRenderer != undefined do
+        (
+            try (btnAnnotationColor.Background = ::AmenoPreviewRenderer.createBrush colorText defaultHex:"#F5F5F5") catch ()
+        )
+        true
     ),
 
     -- Cancelar explicitamente descarta o draft sem tocar no estilo persistido.
@@ -1029,13 +1087,14 @@ struct AmenoCotasEstilosTabDefinition
                 msgText "Confirmar exclusao" msgBtnType.YesNo msgIconType.Warning
             if dlgResult == msgResType.Yes do
             (
-                -- Remover o estilo do servico
-                local allStyles = ::AmenoStyleService.listStyles()
-                local remaining = #()
+                -- Remover do escopo da cena e da biblioteca global.
                 local targetId = currentDraft.sourceStyleId
-                for s in allStyles where s.styleId != targetId do append remaining s
-                ::AmenoStyleService.styles = remaining
-                ::AmenoStyleService.saveToScene()
+                if not (::AmenoStyleService.removeStyle targetId) do
+                (
+                    if txtPreviewStatus != undefined do
+                        txtPreviewStatus.Text = "Nao foi possivel remover o estilo da biblioteca"
+                    return false
+                )
                 -- Selecionar primeiro estilo disponivel
                 local newStyles = ::AmenoStyleService.listStyles()
                 local newId = if newStyles.count > 0 then newStyles[1].styleId else "default"
@@ -1317,6 +1376,12 @@ struct AmenoCotasEstilosTabDefinition
                 try (if ::AmenoCotasEstilosTab != undefined do ::AmenoCotasEstilosTab.onFieldChanged #textMaskEnabled (s.IsChecked == true)) catch ()
             ))
 
+        if btnAnnotationColor != undefined do
+            dotNet.addEventHandler btnAnnotationColor "Click" (fn onEstiloTabColor s e =
+            (
+                try (if ::AmenoCotasEstilosTab != undefined do ::AmenoCotasEstilosTab.onChooseAnnotationColor()) catch ()
+            ))
+
         -- ComboBox de fonte
         if cbFontName != undefined do
             dotNet.addEventHandler cbFontName "SelectionChanged" (fn onEstiloTabFont s e =
@@ -1443,6 +1508,8 @@ struct AmenoCotasEstilosTabDefinition
         sliderTextGap    = findControl "sliderTextGap"
         txtTextGap       = findControl "txtTextGap"
         chkTextMask      = findControl "chkTextMask"
+        btnAnnotationColor = findControl "btnAnnotationColor"
+        txtAnnotationColor = findControl "txtAnnotationColor"
 
         btnThin             = findControl "btnThin"
         btnNorm             = findControl "btnNorm"

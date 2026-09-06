@@ -218,11 +218,11 @@ struct AmenoDimensionGraphicsService
         sceneState
     ),
 
-    fn createDimensionMaterial =
+    fn createDimensionMaterial colorValue:(color 245 245 245) =
     (
         local dimensionMaterial = standardMaterial name:(uniqueName "AMENO_DIMENSION_MTL_")
 
-        try (dimensionMaterial.diffuse = (color 245 245 245)) catch ()
+        try (dimensionMaterial.diffuse = colorValue) catch ()
         try (dimensionMaterial.selfIllumAmount = 100.0) catch ()
 
         dimensionMaterial
@@ -999,7 +999,10 @@ struct AmenoDimensionGraphicsService
             resolvedStyle = ::AmenoStyleService.getStyle sId
         )
 
-        local dimensionMaterial = createDimensionMaterial()
+        local dimensionColor = (color 245 245 245)
+        if resolvedStyle != undefined and ::AmenoStyleService != undefined do
+            dimensionColor = ::AmenoStyleService.colorFromString resolvedStyle.annotationColor defaultColor:dimensionColor
+        local dimensionMaterial = createDimensionMaterial colorValue:dimensionColor
         local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
         registerAllocation lineNode
         maybeInjectFailure #afterLine
@@ -1034,7 +1037,8 @@ struct AmenoDimensionGraphicsService
         -- 1º Órfã (Alerta vermelho 230, 70, 70)
         -- 2º Manual Válida (Âmbar 245, 166, 35)
         -- 3º Normal / Medida (Branco neutro 245, 245, 245)
-        -- O material renderizável permanece branco neutro independente do estado.
+        -- O wirecolor continua indicando estado no viewport; o material renderizável
+        -- usa a cor escolhida no estilo e é repassado ao adapter de render.
         if audit != undefined and audit.isOrphan then
         (
             try (lineNode.wirecolor = (color 230 70 70)) catch ()
@@ -1095,7 +1099,10 @@ struct AmenoDimensionGraphicsService
         (
             with undo off
             (
-                local dimensionMaterial = createDimensionMaterial()
+                local dimensionColor = (color 245 245 245)
+                if resolvedStyle != undefined and ::AmenoStyleService != undefined do
+                    dimensionColor = ::AmenoStyleService.colorFromString resolvedStyle.annotationColor defaultColor:dimensionColor
+                local dimensionMaterial = createDimensionMaterial colorValue:dimensionColor
                 local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
                 registerAllocation lineNode
                 local textNode = createTextNode measurement.text layout style:resolvedStyle material:dimensionMaterial

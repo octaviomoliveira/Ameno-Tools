@@ -2,7 +2,7 @@
 
 Data: 2026-09-05. Documento operacional para troca de agente/modelo.
 Pedido: integrar a interface E13 feita no Antigravity com a E12 aprovada, corrigindo os problemas auditados, uma etapa por vez.
-Estado: ETAPAS 5 E 6 IMPLEMENTADAS/TESTADAS NO WORKTREE `develop`; candidato da etapa 7 empacotado e auditado. Sem instalação/publicação. Os gates manuais 2–6, a aprovação do usuário e a publicação permanecem pendentes.
+Estado: ETAPAS 5 E 6 IMPLEMENTADAS/TESTADAS NO WORKTREE `develop`; correção posterior de perfis, cor do overlay e despacho seguro por renderer também testada e instalada no `ApplicationPlugins` após o Max fechar normalmente. Os gates manuais, V-Ray CPU real, aprovação do usuário e publicação permanecem pendentes.
 
 ## 1. Contexto que o executor precisa preservar
 
@@ -188,7 +188,7 @@ Arquivos: `ameno_cotas_render_tab.ms`, serviço render existente e adapters apen
 
 - Arquivos funcionais: `ameno_cotas_render_tab.ms`, `ameno_render_cotas_service.ms`, `ameno_corona_adapter.ms`, `ameno_vray_adapter.ms`, `ameno_runtime.ms` e `tests/maxscript/test_e9_corona_render.ms`.
 - `test_e13_stage6_render_restore.ms`: Batch exit 0; 19 verificações internas, 20 marcadores `[AMENO_TEST][PASS]` contando o resumo final e 0 `[AMENO_TEST][FAIL]`.
-- `test_e9_corona_render.ms`: Batch exit 0; Corona 13 real ativo, 1 marcador PASS e 0 FAIL; PNG transparente gerado e removido pela rotina descartável.
+- `test_e9_corona_render.ms`: Batch exit 0; Corona 15 Hotfix 1 real ativo, 1 marcador PASS e 0 FAIL; PNG transparente `D:\Ameno\_worktrees\develop\.test-output\e9_corona_real.png` gerado e visualmente conferido.
 - Evidências: `D:\Ameno\_worktrees\develop\.test-output\stage5-6-evidence\stage6-listener.log`, `D:\Ameno\_worktrees\develop\.test-output\stage7-evidence\e13-final\test_e13_stage6_render_restore-listener.log` e `D:\Ameno\_worktrees\develop\.test-output\stage7-evidence\regression\test_e9_corona_render-listener.log`.
 
 ## 9. Etapa 7 — Candidato e entrega
@@ -249,3 +249,17 @@ Próximo passo exato:
 - [ ] Validar visualmente dropdowns/diálogo e orientação no viewport com o usuário. Batch não substitui este gate.
 
 Continuidade: `plans/2026-09-06-e13-feedback-visual-handoff.md`. A instalação foi autorizada, mas aguarda fechamento do Max para atualizar. Não fechar a sessão do usuário, não executar testes destrutivos nela e não publicar/merge/push sem autorização.
+
+### Correção pós-feedback — perfis globais, cor de render e renderer identificado — 2026-09-06
+
+- [x] Confirmar o incidente real antes de alterar o fluxo: `C:\Users\octav\AppData\Local\AmenoTools\Logs\ameno-20260906-180520-144.log` registra `Renderer: Arnold · sem adapter` e `EXCEPTION_ACCESS_VIOLATION` durante `render`.
+- [x] Remover o fallback implícito para Corona quando o renderer ativo é desconhecido; adapters explícitos também são rejeitados se a família atual não corresponder.
+- [x] Mostrar `displayName [className]` no painel Render, no relatório de diagnóstico e no log de startup/render; revalidar o renderer no clique do botão e imediatamente antes da chamada nativa `render()`.
+- [x] Persistir perfis globais em `%LOCALAPPDATA%\AmenoTools\Profiles\styles.library`, preservar precedência scene-local e manter arquivos `.bak`/`.tmp` para recuperação best-effort.
+- [x] Encaminhar `annotationColor` do estilo para o material temporário do overlay; criar um material por RGB distinto e manter o estado de viewport separado do material de render.
+- [x] Reexecutar validações: bootstrap 1 PASS, E10.3 18 PASS, E13 global/cor 13 PASS, E13 estilos 25 PASS, E13 render/restauração 20 PASS, E13-E 9 PASS, E10.4 1 PASS, E11.5 1 PASS, E12-R0 1 PASS e Corona 15 real 1 PASS; todos exit 0 e zero FAIL.
+- [x] Revisar a cópia instalada antes da substituição: o hash instalado da aba Render diferia do worktree e não continha a guarda nova; a cópia foi preservada em `D:\Ameno\backups\AmenoTools-before-e13-render-guard-20260906`.
+- [x] Fechar o Max normalmente, validar/instalar o hotfix, conferir hashes e repetir o teste instalado: `tools/install-dev.ps1` passou; 41/41 arquivos de conteúdo e `PackageContents.xml` ficaram idênticos por SHA-256; `test_installed_package.ms` terminou com exit 0, 1 PASS e 0 FAIL. O log instalado mostra `Renderer: Arnold [Arnold] · sem adapter`.
+- [ ] Gate manual: banner com classe real, bloqueio de Arnold sem crash, render Corona 15, cor escolhida no PNG e perfil preservado após reinício. V-Ray CPU real continua pendente.
+
+Evidência detalhada e handoff: `plans/2026-09-06-e13-renderer-profile-handoff.md`. O hotfix já está instalado; não pedir reprodução do crash ao usuário antes do Max ser reaberto com a versão atual. Não pressionar Enter durante a cotação.

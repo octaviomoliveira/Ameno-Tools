@@ -1,6 +1,9 @@
 global AmenoRenderCotasService
 global AmenoRenderCotasRequest
 global AmenoRenderCotasResult
+global AmenoStyleService
+global AmenoDimensionCA
+global AmenoRendererProbe
 
 struct AmenoRenderCotasRequest
 (
@@ -202,6 +205,99 @@ struct AmenoRenderCotasServiceDefinition
         targetNodes
     ),
 
+    fn styleColorForDimension dimensionId =
+    (
+        local fallbackColor = color 245 245 245
+        if dimensionId == undefined or dimensionId == "" then return fallbackColor
+        if ::AmenoStyleService == undefined or ::AmenoDimensionGraphics == undefined then return fallbackColor
+
+        local styleId = "default"
+        for controller in (::AmenoDimensionGraphics.findControllers()) where isValidNode controller do
+        (
+            if (::AmenoDimensionGraphics.getDimensionId controller) == dimensionId do
+            (
+                if ::AmenoDimensionCA != undefined do
+                (
+                    local rec = ::AmenoDimensionCA.readCA controller
+                    if rec != undefined and rec.styleId != undefined and rec.styleId != "" do styleId = rec.styleId
+                )
+                if styleId == "default" do
+                (
+                    local propStyleId = ::AmenoDimensionGraphics.readTextProperty controller "Ameno.StyleId"
+                    if propStyleId != undefined and propStyleId != "" do styleId = propStyleId
+                )
+                exit
+            )
+        )
+
+        local styleRecord = ::AmenoStyleService.getStyle styleId
+        if styleRecord == undefined then fallbackColor
+        else ::AmenoStyleService.colorFromString styleRecord.annotationColor defaultColor:fallbackColor
+    ),
+
+    fn materialColorForNode nodeValue fallbackColor:(color 245 245 245) =
+    (
+        if nodeValue == undefined or not isValidNode nodeValue then return fallbackColor
+        local materialValue = undefined
+        try (materialValue = nodeValue.material) catch ()
+        if materialValue == undefined then return fallbackColor
+
+        local materialColor = undefined
+        try (if isProperty materialValue #diffuse do materialColor = materialValue.diffuse) catch ()
+        if materialColor == undefined do try (if isProperty materialValue #color do materialColor = materialValue.color) catch ()
+        if materialColor != undefined and (classOf materialColor == color) then materialColor else fallbackColor
+    ),
+
+    fn sourceColorForNode nodeValue =
+    (
+        local fallbackColor = color 245 245 245
+        if nodeValue == undefined or not isValidNode nodeValue then return fallbackColor
+        local dimensionId = AmenoDimensionGraphics.getDimensionId nodeValue
+        if dimensionId != "" then return styleColorForDimension dimensionId
+        materialColorForNode nodeValue fallbackColor:fallbackColor
+    ),
+
+    fn colorKey colorValue =
+    (
+        local rText = (colorValue.r as integer) as string
+        local gText = (colorValue.g as integer) as string
+        local bText = (colorValue.b as integer) as string
+        rText + "," + gText + "," + bText
+    ),
+
+    fn createAnnotationMaterials targetNodes adapterValue =
+    (
+        local materials = #()
+        for targetNode in targetNodes where isValidNode targetNode do
+        (
+            local colorValue = sourceColorForNode targetNode
+            local keyValue = colorKey colorValue
+            local found = 0
+            for i = 1 to materials.count do
+            (
+                if materials[i][1] == keyValue do
+                (
+                    found = i
+                    exit
+                )
+            )
+            if found == 0 do
+            (
+                local materialValue = adapterValue.createAnnotationMaterial colorValue:colorValue
+                if materialValue == undefined then throw ("O adapter não criou material para a cor " + keyValue)
+                append materials #(keyValue, colorValue, materialValue)
+            )
+        )
+        materials
+    ),
+
+    fn annotationMaterialForNode nodeValue materialEntries =
+    (
+        local keyValue = colorKey (sourceColorForNode nodeValue)
+        for entry in materialEntries where entry[1] == keyValue do return entry[3]
+        undefined
+    ),
+
     fn captureSceneState targetNodes =
     (
         local state = AmenoRenderSceneState currentLayer:LayerManager.current
@@ -240,7 +336,7 @@ struct AmenoRenderCotasServiceDefinition
         state
     ),
 
-    fn applyIsolation sceneState targetNodes annotationMaterial =
+    fn applyIsolation sceneState targetNodes annotationMaterials =
     (
         with undo off
         (
@@ -266,7 +362,12 @@ struct AmenoRenderCotasServiceDefinition
                 (
                     try (node.primaryVisibility = true) catch ()
                     try (node.isHidden = false) catch ()
-                    if nodeState.hasMaterial do node.material = annotationMaterial
+                    if nodeState.hasMaterial do
+                    (
+                        local annotationMaterial = annotationMaterialForNode node annotationMaterials
+                        if annotationMaterial == undefined then throw ("Não foi possível associar material à cota: " + node.name)
+                        node.material = annotationMaterial
+                    )
                 )
             )
         )
@@ -325,22 +426,64 @@ struct AmenoRenderCotasServiceDefinition
         true
     ),
 
+    fn detectRendererInfo =
+    (
+        if ::AmenoRendererProbe == undefined then undefined
+        else try (::AmenoRendererProbe.detect()) catch (undefined)
+    ),
+
+    fn rendererInfoLabel infoValue =
+    (
+        if infoValue == undefined then return "Renderer não identificado"
+
+        local displayText = "Renderer não identificado"
+        local classText = ""
+        try (displayText = infoValue.displayName as string) catch ()
+        try (classText = infoValue.className as string) catch ()
+        if displayText == "" then displayText = "Renderer não identificado"
+        if classText != "" then displayText += " [" + classText + "]"
+        displayText
+    ),
+
+    fn rendererCompatibilityError adapterValue =
+    (
+        if adapterValue == undefined then return "Nenhum adapter de renderização foi resolvido."
+
+        local adapterId = ""
+        try (adapterId = adapterValue.adapterId as string) catch ()
+        -- Adapters injetados pelos testes não possuem identidade de renderer;
+        -- nesse caso a validação continua sendo responsabilidade do teste.
+        if adapterId == "" then return ""
+
+        local info = detectRendererInfo()
+        local compatible = false
+        if adapterId == "corona-overlay-v1" then
+            compatible = (info != undefined and info.family == #corona)
+        else if adapterId == "vray-overlay-v1" then
+            compatible = (info != undefined and info.family == #vray)
+        else
+            return ""
+
+        if compatible then
+            ""
+        else
+            "O adapter '" + adapterId + "' não é compatível com o renderer ativo: " + (rendererInfoLabel info) + ". Selecione o renderer correspondente e tente novamente."
+    ),
+
     fn resolveDefaultAdapter =
     (
-        local info = if ::AmenoRendererProbe != undefined then ::AmenoRendererProbe.detect() else undefined
-        if info != undefined then
-        (
-            case info.family of
-            (
-                #corona: (if ::AmenoCoronaRendererAdapter != undefined then ::AmenoCoronaRendererAdapter else undefined)
-                #vray:   (if ::AmenoVRayRendererAdapter != undefined then ::AmenoVRayRendererAdapter else undefined)
-                default: (if ::AmenoCoronaRendererAdapter != undefined then ::AmenoCoronaRendererAdapter else undefined)
-            )
-        )
-        else
+        local info = detectRendererInfo()
+        if info == undefined then
+            undefined
+        else if info.family == #corona then
         (
             if ::AmenoCoronaRendererAdapter != undefined then ::AmenoCoronaRendererAdapter else undefined
         )
+        else if info.family == #vray then
+        (
+            if ::AmenoVRayRendererAdapter != undefined then ::AmenoVRayRendererAdapter else undefined
+        )
+        else undefined
     ),
 
     fn renderDimensions request adapter:undefined =
@@ -361,9 +504,22 @@ struct AmenoRenderCotasServiceDefinition
         local resolvedAdapter = if adapter != undefined then adapter else (resolveDefaultAdapter())
         if resolvedAdapter == undefined do
         (
-            return AmenoRenderCotasResult errorMessage:"Nenhum adapter de renderização compatível está disponível para o renderer ativo."
+            local rendererMessage = "Nenhum adapter de renderização compatível está disponível para o renderer ativo: " + (rendererInfoLabel (detectRendererInfo())) + ". Selecione Corona ou V-Ray antes de renderizar."
+            if ::AmenoLog != undefined do ::AmenoLog.warn rendererMessage
+            return AmenoRenderCotasResult errorMessage:rendererMessage
         )
+        local compatibilityError = rendererCompatibilityError resolvedAdapter
+        if compatibilityError != "" do
+        (
+            if ::AmenoLog != undefined do ::AmenoLog.warn compatibilityError
+            return AmenoRenderCotasResult errorMessage:compatibilityError
+        )
+        local resolvedRendererText = rendererInfoLabel (detectRendererInfo())
+        local adapterText = try (resolvedAdapter.adapterId as string) catch ("adapter-injetado")
+        if ::AmenoLog != undefined do
+            ::AmenoLog.info ("Render overlay iniciado · renderer=" + resolvedRendererText + " · adapter=" + adapterText)
         local targetNodes = #()
+        local annotationMaterials = #()
         local activeStage = "inicialização"
 
         isRendering = true
@@ -400,9 +556,15 @@ struct AmenoRenderCotasServiceDefinition
             activeStage = "configuração do PNG"
             resolvedAdapter.configureOutput request
             activeStage = "criação do material de anotação"
-            local annotationMaterial = resolvedAdapter.createAnnotationMaterial()
+            annotationMaterials = createAnnotationMaterials targetNodes resolvedAdapter
             activeStage = "isolamento temporário da cena"
-            applyIsolation sceneState targetNodes annotationMaterial
+            applyIsolation sceneState targetNodes annotationMaterials
+
+            activeStage = "validação final do renderer"
+            local finalCompatibilityError = rendererCompatibilityError resolvedAdapter
+            if finalCompatibilityError != "" then throw finalCompatibilityError
+            if ::AmenoLog != undefined do
+                ::AmenoLog.info ("Render overlay autorizado · renderer=" + (rendererInfoLabel (detectRendererInfo())) + " · adapter=" + adapterText)
 
             activeStage = "render"
             local adapterResult = resolvedAdapter.renderOverlay request

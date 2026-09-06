@@ -257,35 +257,55 @@ struct AmenoCotasRenderTabDefinition
         true
     ),
 
+    fn isSupportedRendererInfo infoValue =
+    (
+        infoValue != undefined and (infoValue.family == #corona or infoValue.family == #vray)
+    ),
+
+    fn rendererLabel infoValue =
+    (
+        if infoValue == undefined then return "Renderer não identificado"
+
+        local displayText = "Renderer não identificado"
+        local classText = ""
+        try (displayText = infoValue.displayName as string) catch ()
+        try (classText = infoValue.className as string) catch ()
+        if displayText == "" then displayText = "Renderer não identificado"
+        if classText != "" then displayText += " [" + classText + "]"
+        displayText
+    ),
+
+    fn updateRendererInfoUI infoValue =
+    (
+        local txtInfo = findControl "txtRendererInfo"
+        local btnRender = findControl "btnRenderCotas"
+        local canRender = isSupportedRendererInfo infoValue
+        if btnRender != undefined do btnRender.IsEnabled = canRender
+        if txtInfo == undefined then return canRender
+
+        if canRender then
+        (
+            if infoValue.family == #corona then
+                txtInfo.Text = (rendererLabel infoValue) + " · adapter pronto para PNG transparente"
+            else if infoValue.engine == #gpu then
+                txtInfo.Text = (rendererLabel infoValue) + " · experimental · adapter pronto para PNG transparente"
+            else
+                txtInfo.Text = (rendererLabel infoValue) + " · adapter pronto para PNG transparente"
+        )
+        else if infoValue != undefined then
+            txtInfo.Text = (rendererLabel infoValue) + " · sem adapter de render compatível"
+        else
+            txtInfo.Text = "Renderer não identificado · render desabilitado"
+        canRender
+    ),
+
     -- -----------------------------------------------------------------
     -- Atualiza informações de suporte do renderer ativo
     -- -----------------------------------------------------------------
     fn refreshRendererInfo =
     (
-        local txtInfo = findControl "txtRendererInfo"
-        local btnRender = findControl "btnRenderCotas"
-        if txtInfo == undefined do return false
-
         local info = if ::AmenoApp != undefined then (try (::AmenoApp.refreshRenderer()) catch (undefined)) else undefined
-        if info != undefined then
-        (
-            local canRender = (info.family == #corona or info.family == #vray)
-            if btnRender != undefined do btnRender.IsEnabled = canRender
-            if canRender then
-            (
-                if info.family == #corona then
-                    txtInfo.Text = "Corona Renderer · Pronto para passe transparente PNG"
-                else if info.engine == #gpu then
-                    txtInfo.Text = "V-Ray GPU (experimental) · Pronto para passe transparente PNG"
-                else
-                    txtInfo.Text = "V-Ray CPU · Pronto para passe transparente PNG"
-            )
-            else
-                txtInfo.Text = info.displayName + " sem adapter de render compativel"
-        )
-        else
-            txtInfo.Text = "Verificando compatibilidade de renderer..."
-        true
+        updateRendererInfoUI info
     ),
 
     -- -----------------------------------------------------------------
@@ -322,6 +342,19 @@ struct AmenoCotasRenderTabDefinition
         local txtOut = findControl "txtOutputPath"
         local rbSel = findControl "rbScopeSelected"
         local txtStatus = findControl "txtRenderStatus"
+
+        -- O renderer pode ter sido trocado no 3ds Max depois que a aba foi
+        -- aberta. Revalidar aqui evita usar um adapter antigo (ou chamar
+        -- render() com uma classe que o adapter não suporta).
+        local liveRendererInfo = try (::AmenoApp.refreshRenderer()) catch (undefined)
+        if not (updateRendererInfoUI liveRendererInfo) then
+        (
+            local rendererText = rendererLabel liveRendererInfo
+            local guardMessage = rendererText + " não possui adapter de render compatível. Selecione Corona ou V-Ray antes de renderizar."
+            if txtStatus != undefined do txtStatus.Text = "Falha: " + guardMessage
+            try (messageBox guardMessage title:"Ameno - Render de Cotas") catch ()
+            return false
+        )
 
         local outPath = if txtOut != undefined then txtOut.Text else ""
         local scope = if (rbSel != undefined and rbSel.IsChecked == true) then #selected else #all

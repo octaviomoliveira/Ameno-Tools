@@ -612,7 +612,7 @@ struct AmenoRuntime
         callbacks.addScript #postSceneReset "if AmenoApp != undefined do AmenoApp.onSceneReset()" id:#ameno_lifecycle
 
         AmenoLog.info (AmenoVersion.displayName() + " carregado.")
-        AmenoLog.info ("Renderer: " + rendererInfo.displayName + " · " + rendererInfo.statusLabel())
+        AmenoLog.info ("Renderer: " + rendererInfo.detailedLabel() + " · " + rendererInfo.statusLabel())
         true
     ),
 

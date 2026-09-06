@@ -131,6 +131,10 @@ attribID:#(0x4a123bc4, 0x19283746)
 struct AmenoStyleServiceDefinition
 (
     styles = #(),
+    -- Estilos salvos pelo usuário ficam fora da cena para sobreviverem a
+    -- reinício do Max. `styles` continua sendo a cópia scene-local e tem
+    -- precedência quando o mesmo styleId existe nos dois escopos.
+    globalStyles = #(),
     installedFontsCache = undefined,
     cachedSerialized = "",
 
@@ -152,6 +156,50 @@ struct AmenoStyleServiceDefinition
         s = substituteString s "\\s" ";"
         s = substituteString s "\\\\" "\\"
         s
+    ),
+
+    fn colorFromString colorText defaultColor:(color 245 245 245) =
+    (
+        local resolved = defaultColor
+        if colorText != undefined and colorText != "" do
+        (
+            local parts = filterString (colorText as string) ","
+            if parts.count == 3 do
+            (
+                try
+                (
+                    local r = parts[1] as integer
+                    local g = parts[2] as integer
+                    local b = parts[3] as integer
+                    r = amax 0 (amin 255 r)
+                    g = amax 0 (amin 255 g)
+                    b = amax 0 (amin 255 b)
+                    resolved = color r g b
+                )
+                catch ()
+            )
+        )
+        resolved
+    ),
+
+    fn globalLibraryPath createDirectory:true =
+    (
+        local environmentClass = dotNetClass "System.Environment"
+        local basePath = environmentClass.GetEnvironmentVariable "LOCALAPPDATA"
+        if basePath == undefined or basePath == "" do
+            try (basePath = getDir #plugcfg) catch (basePath = "")
+        if basePath == undefined or basePath == "" then return ""
+
+        local profileDirectory = pathConfig.normalizePath (pathConfig.appendPath basePath @"AmenoTools\Profiles")
+        if createDirectory do
+            try ((dotNetClass "System.IO.Directory").CreateDirectory profileDirectory) catch ()
+        pathConfig.normalizePath (pathConfig.appendPath profileDirectory "styles.library")
+    ),
+
+    fn globalLibraryBackupPath =
+    (
+        local libraryPath = globalLibraryPath createDirectory:false
+        if libraryPath == "" then "" else libraryPath + ".bak"
     ),
 
     fn hasRegistryCA node =
@@ -237,10 +285,10 @@ struct AmenoStyleServiceDefinition
                          previewScale:style.previewScale
     ),
 
-    fn serializeStyles =
+    fn serializeStyleList styleList =
     (
         local lines = #()
-        for s in styles do
+        for s in styleList do
         (
             local parts = #(
                 (escapeStr s.styleId),
@@ -281,11 +329,16 @@ struct AmenoStyleServiceDefinition
         result
     ),
 
-    fn deserializeStyles serializedStr =
+    fn serializeStyles =
     (
-        if serializedStr == undefined or serializedStr == "" then return false
+        serializeStyleList styles
+    ),
+
+    fn parseStyleList serializedStr =
+    (
+        if serializedStr == undefined or serializedStr == "" then return #()
         local styleEntries = filterString serializedStr ";;"
-        if styleEntries.count == 0 then return false
+        if styleEntries.count == 0 then return #()
 
         local loadedStyles = #()
         for entry in styleEntries do
@@ -329,11 +382,96 @@ struct AmenoStyleServiceDefinition
 
         if loadedStyles.count > 0 do
         (
-            styles = loadedStyles
-            cachedSerialized = serializedStr
-            return true
+            return loadedStyles
         )
-        false
+        #()
+    ),
+
+    fn deserializeStyles serializedStr =
+    (
+        local loadedStyles = parseStyleList serializedStr
+        if loadedStyles.count == 0 then return false
+        styles = loadedStyles
+        cachedSerialized = serializedStr
+        true
+    ),
+
+    fn loadGlobalLibrary =
+    (
+        globalStyles = #()
+        local libraryPath = globalLibraryPath createDirectory:false
+        if libraryPath == "" then return false
+        if not doesFileExist libraryPath then return false
+
+        try
+        (
+            local fileApi = dotNetClass "System.IO.File"
+            local serialized = fileApi.ReadAllText libraryPath
+            local loaded = parseStyleList serialized
+            if loaded.count > 0 do globalStyles = loaded
+            loaded.count > 0
+        )
+        catch
+        (
+            if ::AmenoLog != undefined do try (::AmenoLog.warn ("Biblioteca global de estilos não pôde ser lida: " + (getCurrentException() as string))) catch ()
+            globalStyles = #()
+            false
+        )
+    ),
+
+    fn saveGlobalLibrary =
+    (
+        local libraryPath = globalLibraryPath()
+        if libraryPath == "" then return false
+
+        local fileApi = dotNetClass "System.IO.File"
+        local directoryApi = dotNetClass "System.IO.Directory"
+        local tempPath = libraryPath + ".tmp"
+        local backupPath = libraryPath + ".bak"
+        try
+        (
+            local serialized = serializeStyleList globalStyles
+            directoryApi.CreateDirectory (getFilenamePath libraryPath)
+            fileApi.WriteAllText tempPath serialized
+            if doesFileExist libraryPath do
+            (
+                try (fileApi.Copy libraryPath backupPath true) catch ()
+            )
+            fileApi.Copy tempPath libraryPath true
+            try (fileApi.Delete tempPath) catch ()
+            true
+        )
+        catch
+        (
+            try (if doesFileExist tempPath do fileApi.Delete tempPath) catch ()
+            if ::AmenoLog != undefined do try (::AmenoLog.warn ("Biblioteca global de estilos não pôde ser salva: " + (getCurrentException() as string))) catch ()
+            false
+        )
+    ),
+
+    fn upsertStyleInList styleList styleRecord =
+    (
+        local result = #()
+        for existing in styleList do append result (cloneStyle existing)
+        local index = 0
+        for i = 1 to result.count do
+        (
+            if result[i].styleId == styleRecord.styleId do
+            (
+                index = i
+                exit
+            )
+        )
+        if index > 0 then result[index] = cloneStyle styleRecord
+        else append result (cloneStyle styleRecord)
+        result
+    ),
+
+    fn removeStyleFromList styleList styleId =
+    (
+        local result = #()
+        for s in styleList where s.styleId != styleId do append result (cloneStyle s)
+        result
     ),
 
     fn saveToScene =
@@ -348,6 +486,7 @@ struct AmenoStyleServiceDefinition
                 regNode.AmenoStyleRegistryData.stylesData = data
             )
             setUserPropVal rootNode "Ameno.Styles" data
+            try (setSaveRequired()) catch ()
             true
         )
         catch
@@ -371,6 +510,8 @@ struct AmenoStyleServiceDefinition
                 data = getUserPropVal rootNode "Ameno.Styles"
             )
 
+            loadGlobalLibrary()
+
             if data != undefined and data != "" then
             (
                 deserializeStyles data
@@ -386,6 +527,7 @@ struct AmenoStyleServiceDefinition
         (
             styles = createDefaultPresets()
             cachedSerialized = serializeStyles()
+            globalStyles = #()
             false
         )
     ),
@@ -444,42 +586,44 @@ struct AmenoStyleServiceDefinition
         checkSyncWithRegistry()
         if styleId == undefined or styleId == "" do styleId = "default"
         for s in styles where s.styleId == styleId do return (cloneStyle s)
+        for s in globalStyles where s.styleId == styleId do return (cloneStyle s)
         -- Fallback para default
         for s in styles where s.styleId == "default" do return (cloneStyle s)
+        for s in globalStyles where s.styleId == "default" do return (cloneStyle s)
         if styles.count > 0 then (cloneStyle styles[1]) else (cloneStyle (createDefaultPresets())[1])
     ),
 
     fn listStyles =
     (
         checkSyncWithRegistry()
-        for s in styles collect (cloneStyle s)
+        local result = for s in styles collect (cloneStyle s)
+        for globalStyle in globalStyles do
+        (
+            local alreadyPresent = false
+            for sceneStyle in styles where sceneStyle.styleId == globalStyle.styleId do
+            (
+                alreadyPresent = true
+                exit
+            )
+            if not alreadyPresent do append result (cloneStyle globalStyle)
+        )
+        result
     ),
 
     fn saveStyle styleRecord =
     (
         if styleRecord == undefined then return false
 
-        local index = 0
-        for i = 1 to styles.count do
-        (
-            if styles[i].styleId == styleRecord.styleId do
-            (
-                index = i
-                exit
-            )
-        )
+        styles = upsertStyleInList styles styleRecord
+        globalStyles = upsertStyleInList globalStyles styleRecord
 
-        if index > 0 then
+        local sceneSaved = saveToScene()
+        local globalSaved = saveGlobalLibrary()
+        if not sceneSaved or not globalSaved do
         (
-            styles[index] = cloneStyle styleRecord
+            if ::AmenoLog != undefined do try (::AmenoLog.warn "Estilo salvo parcialmente; verifique o arquivo da cena e a biblioteca global.") catch ()
         )
-        else
-        (
-            append styles (cloneStyle styleRecord)
-        )
-
-        saveToScene()
-        true
+        sceneSaved and globalSaved
     ),
 
     fn saveAsNewStyle newName baseRecord =
@@ -492,8 +636,19 @@ struct AmenoStyleServiceDefinition
         newRecord.name = newName
 
         append styles newRecord
-        saveToScene()
+        append globalStyles (cloneStyle newRecord)
+        local sceneSaved = saveToScene()
+        local globalSaved = saveGlobalLibrary()
+        if not sceneSaved or not globalSaved then throw "Não foi possível persistir o novo estilo na cena e na biblioteca global."
         cloneStyle newRecord
+    ),
+
+    fn removeStyle styleId =
+    (
+        if styleId == undefined or styleId == "" then return false
+        styles = removeStyleFromList styles styleId
+        globalStyles = removeStyleFromList globalStyles styleId
+        (saveToScene()) and (saveGlobalLibrary())
     ),
 
     fn countDimensionsUsingStyle styleId =
@@ -604,6 +759,8 @@ struct AmenoStyleServiceDefinition
             )
             if not found do append styles (this.cloneStyle styleRecord)
 
+            globalStyles = this.upsertStyleInList globalStyles styleRecord
+
             local dataStr = this.serializeStyles()
             cachedSerialized = dataStr
             if regNode != undefined and isValidNode regNode and (this.hasRegistryCA regNode) do
@@ -611,6 +768,9 @@ struct AmenoStyleServiceDefinition
                 regNode.AmenoStyleRegistryData.stylesData = dataStr
             )
             try (setUserPropVal rootNode "Ameno.Styles" dataStr) catch ()
+            try (setSaveRequired()) catch ()
+            if not (this.saveGlobalLibrary()) do
+                throw "Não foi possível persistir o estilo na biblioteca global."
 
             local controllers = ::AmenoDimensionGraphics.findControllers()
             for c in controllers where isValidNode c do

@@ -79,6 +79,7 @@ struct AmenoE9MockAdapter
     if coronaInfo.family != #corona or coronaInfo.supportState != #supported then throw "Classificação Corona inválida."
     if vrayCpuInfo.family != #vray or vrayCpuInfo.engine != #cpu or vrayCpuInfo.supportState != #supported then throw "Classificação V-Ray CPU inválida."
     if vrayGpuInfo.family != #vray or vrayGpuInfo.engine != #gpu or vrayGpuInfo.supportState != #experimental then throw "Classificação V-Ray GPU inválida."
+    if coronaInfo.detailedLabel() != "Corona [CoronaRenderer]" then throw "Identificação detalhada do renderer não foi preservada."
 
     local objectCountBeforeMath = objects.count
     local layoutPositive = AmenoDimensionMath.alignedLayout [0, 0, 0] [100, 0, 0] [0, 20, 0] millimetersPerSceneUnit:10.0
@@ -789,7 +790,11 @@ struct AmenoE9MockAdapter
     -- E10.3: V-Ray Renderer Adapter presente e registrado
     if AmenoVRayRendererAdapter == undefined then throw "E10.3: AmenoVRayRendererAdapter não foi definido pelo bootstrap."
     if AmenoVRayRendererAdapter.adapterId != "vray-overlay-v1" then throw "E10.3: adapterId inesperado para V-Ray."
-    if AmenoRenderCotasService.resolveDefaultAdapter() == undefined then throw "E10.3: resolveDefaultAdapter falhou em retornar um adapter válido."
+    local activeRendererInfo = AmenoRendererProbe.detect()
+    local resolvedDefaultAdapter = AmenoRenderCotasService.resolveDefaultAdapter()
+    if activeRendererInfo.family == #corona and (resolvedDefaultAdapter == undefined or resolvedDefaultAdapter.adapterId != "corona-overlay-v1") then throw "E10.3: despacho Corona inconsistente com o renderer ativo."
+    if activeRendererInfo.family == #vray and (resolvedDefaultAdapter == undefined or resolvedDefaultAdapter.adapterId != "vray-overlay-v1") then throw "E10.3: despacho V-Ray inconsistente com o renderer ativo."
+    if activeRendererInfo.family != #corona and activeRendererInfo.family != #vray and resolvedDefaultAdapter != undefined then throw "E10.3: renderer sem adapter não deveria receber fallback."
 
     fileIn macroPath quiet:true
 

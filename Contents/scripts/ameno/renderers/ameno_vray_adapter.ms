@@ -160,15 +160,14 @@ struct AmenoVRayRendererAdapterService
         annotationMaterial
     ),
 
-    fn renderOverlay request =
+    fn renderFrame request cameraNode:undefined =
     (
         local wasCancelled = false
         local renderedBitmap = undefined
-
-        try
+        if cameraNode != undefined and isValidNode cameraNode then
         (
             renderedBitmap = render \
-                camera:(if request.cameraNode != undefined and isValidNode request.cameraNode then request.cameraNode else undefined) \
+                camera:cameraNode \
                 frame:request.frame \
                 outputwidth:request.width \
                 outputheight:request.height \
@@ -187,6 +186,42 @@ struct AmenoVRayRendererAdapterService
                 quiet:true \
                 missingExtFilesAction:#logmsg \
                 cancelled:&wasCancelled
+        )
+        else
+        (
+            render \
+                frame:request.frame \
+                outputwidth:request.width \
+                outputheight:request.height \
+                pixelaspect:request.pixelAspect \
+                outputfile:request.outputPath \
+                outputHDRbitmap:false \
+                outputColorConversion:#automatic \
+                renderType:request.renderType \
+                renderhiddenobjects:false \
+                renderatmosphericeffects:false \
+                renderMultiPassEffects:false \
+                renderElements:false \
+                force2sided:true \
+                vfb:false \
+                progressbar:true \
+                quiet:true \
+                missingExtFilesAction:#logmsg \
+                cancelled:&wasCancelled
+        )
+        #(renderedBitmap, wasCancelled)
+    ),
+
+    fn renderOverlay request =
+    (
+        local wasCancelled = false
+        local renderedBitmap = undefined
+
+        try
+        (
+            local renderData = renderFrame request cameraNode:request.cameraNode
+            renderedBitmap = renderData[1]
+            wasCancelled = renderData[2]
         )
         catch
         (

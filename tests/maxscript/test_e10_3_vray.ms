@@ -9,8 +9,15 @@ global AmenoCoronaRendererAdapter
 global AmenoRenderCotasService
 global AmenoRenderCotasRequest
 global AmenoRendererProbe
+global AmenoRendererInfo
 
-if AmenoVRayRendererAdapter == undefined do
+struct AmenoE13UnknownRendererProbe
+(
+    fn detect = (AmenoRendererInfo family:#unknown engine:#unknown className:"ArnoldRenderer" displayName:"Arnold" supportState:#unsupported)
+)
+
+-- Sempre recarrega o bootstrap do worktree: o 3ds Max Batch pode
+-- carregar primeiro uma cópia instalada em ApplicationPlugins.
 (
     local testFile = getSourceFileName()
     local testPath = getFilenamePath testFile
@@ -108,7 +115,21 @@ if AmenoRenderCotasService != undefined do
 (
     expectTrue "possui resolveDefaultAdapter" (isProperty AmenoRenderCotasService #resolveDefaultAdapter)
     local resolved = AmenoRenderCotasService.resolveDefaultAdapter()
-    expectTrue "resolveDefaultAdapter retorna adapter valido" (resolved != undefined)
+    local rendererInfo = AmenoRendererProbe.detect()
+    local dispatchMatches = false
+    if rendererInfo.family == #vray then
+        dispatchMatches = (resolved != undefined and resolved.adapterId == "vray-overlay-v1")
+    else if rendererInfo.family == #corona then
+        dispatchMatches = (resolved != undefined and resolved.adapterId == "corona-overlay-v1")
+    else
+        dispatchMatches = (resolved == undefined)
+    expectTrue "resolveDefaultAdapter respeita renderer ativo" dispatchMatches
+
+    local previousProbe = AmenoRendererProbe
+    AmenoRendererProbe = AmenoE13UnknownRendererProbe()
+    local staleAdapterError = AmenoRenderCotasService.rendererCompatibilityError AmenoCoronaRendererAdapter
+    expectTrue "adapter conhecido rejeita renderer incompatível" (staleAdapterError != "")
+    AmenoRendererProbe = previousProbe
 )
 
 format "\n=== RESULTADO E10.3 ===\n"
