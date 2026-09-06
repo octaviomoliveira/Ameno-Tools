@@ -5,6 +5,7 @@
 */
 
 global AmenoCotasWindow
+global AmenoCotasCriarTab
 global AmenoCotasEstilosTab
 global AmenoCotasEditarTab
 global AmenoCotasRenderTab
@@ -20,7 +21,51 @@ struct AmenoCotasWindowDefinition
     -- -----------------------------------------------------------------
     fn isOpen =
     (
-        window != undefined and (try (window.IsLoaded) catch (false))
+        window != undefined and (try (window.IsLoaded and window.IsVisible) catch (false))
+    ),
+
+    fn suspendForInteractiveTool =
+    (
+        if window == undefined then return false
+        try
+        (
+            if window.IsLoaded and window.IsVisible then
+            (
+                window.Hide()
+                try (windows.setFocus (windows.getMAXHWND())) catch ()
+                true
+            )
+            else false
+        )
+        catch (false)
+    ),
+
+    fn resumeAfterInteractiveTool =
+    (
+        if window == undefined then return false
+        try
+        (
+            if not window.IsLoaded then return false
+            if not window.IsVisible do window.Show()
+            try (window.Activate()) catch ()
+            true
+        )
+        catch (false)
+    ),
+
+    fn registerSceneCountCallbacks =
+    (
+        try (callbacks.removeScripts id:#amenoCotasSceneCount) catch ()
+        local callbackText = "if ::AmenoCotasWindow != undefined and ::AmenoCotasWindow.isOpen() and ::AmenoCotasWindow.activeSection == 1 and ::AmenoCotasCriarTab != undefined do (try (::AmenoCotasCriarTab.updateCotaCount()) catch ())"
+        try (callbacks.addScript #sceneNodeAdded callbackText id:#amenoCotasSceneCount) catch ()
+        try (callbacks.addScript #sceneNodeDeleted callbackText id:#amenoCotasSceneCount) catch ()
+        true
+    ),
+
+    fn unregisterSceneCountCallbacks =
+    (
+        try (callbacks.removeScripts id:#amenoCotasSceneCount) catch ()
+        true
     ),
 
     fn findControl ctrlName =
@@ -375,6 +420,7 @@ struct AmenoCotasWindowDefinition
             (fn onWindowClosed s e =
             (
                 try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
+                try (AmenoCotasWindow.unregisterSceneCountCallbacks()) catch ()
                 try (AmenoCotasWindow.window = undefined) catch ()
             ))
 
@@ -501,6 +547,7 @@ struct AmenoCotasWindowDefinition
             callbacks.addScript #selectionSetChanged "if ::AmenoCotasWindow != undefined and ::AmenoCotasWindow.isOpen() and ::AmenoCotasWindow.activeSection == 3 and ::AmenoCotasEditarTab != undefined do (try (::AmenoCotasEditarTab.refresh()) catch ())" id:#amenoCotasWindowSelection
         )
         catch ()
+        try (AmenoCotasWindow.registerSceneCountCallbacks()) catch ()
         window
     ),
 
@@ -543,7 +590,9 @@ struct AmenoCotasWindowDefinition
     fn close =
     (
         try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
-        if isOpen() do
+        try (unregisterSceneCountCallbacks()) catch ()
+        local loaded = try (window != undefined and window.IsLoaded) catch (false)
+        if loaded do
         (
             try (window.Close()) catch ()
         )

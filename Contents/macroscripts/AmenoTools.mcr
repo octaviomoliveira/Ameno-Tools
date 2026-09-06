@@ -47,11 +47,15 @@ Icon:#("ameno/cota_individual", 1)
     on execute do
     (
         global AmenoApp
+        global AmenoCotasCriarTab
         if AmenoApp != undefined then
         (
             try
             (
-                AmenoApp.startDimensionTool()
+                if AmenoCotasCriarTab != undefined and isProperty AmenoCotasCriarTab #executeIndividualCommand then
+                    AmenoCotasCriarTab.executeIndividualCommand()
+                else
+                    AmenoApp.startDimensionTool()
             )
             catch
             (
@@ -75,14 +79,17 @@ Icon:#("ameno/cota_continua", 1)
     on execute do
     (
         global AmenoApp
+        global AmenoCotasCriarTab
         if AmenoApp != undefined then
         (
             try
             (
-                if isProperty AmenoApp #startContinuousDimensionTool then
+                if AmenoCotasCriarTab != undefined and isProperty AmenoCotasCriarTab #executeContinuousCommand then
+                    AmenoCotasCriarTab.executeContinuousCommand()
+                else if isProperty AmenoApp #startContinuousDimensionTool then
                     AmenoApp.startContinuousDimensionTool()
                 else
-                    messageBox "A ferramenta de cota contínua (E12) está em desenvolvimento." title:"Ameno Tools"
+                    messageBox "A ferramenta de cota contínua (E12) não foi carregada." title:"Ameno Tools"
             )
             catch
             (

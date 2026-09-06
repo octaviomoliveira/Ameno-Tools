@@ -7,6 +7,7 @@
 global AmenoCotasCriarTab
 global AmenoApp
 global AmenoDimensionTool
+global AmenoDimensionContinuousTool
 global AmenoStyleService
 global AmenoDimensionGraphics
 
@@ -160,12 +161,12 @@ struct AmenoCotasCriarTabDefinition
             "</Button>" + \
             "<Button x:Name='btnCotaContinua' Grid.Column='2'" + \
             " Style='{StaticResource ActionCardStyle}' Height='64'" + \
-            " ToolTip='Cota continua encadeada (em desenvolvimento)'>" + \
+            " ToolTip='Cota continua Horizontal/Vertical (clique vazio confirma)'>" + \
             "<StackPanel HorizontalAlignment='Center'>" + \
             "<TextBlock Text='--------' FontSize='14' HorizontalAlignment='Center' Foreground='#888888'/>" + \
             "<TextBlock Text='Cota Continua' FontSize='11' Foreground='#888888'" + \
             " HorizontalAlignment='Center' Margin='0,2,0,0'/>" + \
-            "<TextBlock Text='em breve' FontSize='9' Foreground='#555555' HorizontalAlignment='Center'/>" + \
+            "<TextBlock Text='cadeia H/V' FontSize='9' Foreground='#888888' HorizontalAlignment='Center'/>" + \
             "</StackPanel>" + \
             "</Button>" + \
             "</Grid>" + \
@@ -273,6 +274,206 @@ struct AmenoCotasCriarTabDefinition
         if hostControl == undefined then undefined else hostControl.FindName ctrlName
     ),
 
+    fn normalizedMode modeValue =
+    (
+        if modeValue == #horizontal or modeValue == "horizontal" then #horizontal
+        else if modeValue == #vertical or modeValue == "vertical" then #vertical
+        else #aligned
+    ),
+
+    fn normalizedUnit unitValue =
+    (
+        if unitValue == #centimeters or unitValue == "centimeters" or unitValue == "cm" then #centimeters
+        else if unitValue == #millimeters or unitValue == "millimeters" or unitValue == "mm" then #millimeters
+        else #meters
+    ),
+
+    fn normalizedPrecision precisionValue =
+    (
+        local result = try (precisionValue as integer) catch (2)
+        if result < 0 then result = 0
+        if result > 3 then result = 3
+        result
+    ),
+
+    fn modeName modeValue =
+    (
+        local mode = normalizedMode modeValue
+        if mode == #horizontal then "horizontal"
+        else if mode == #vertical then "vertical"
+        else "aligned"
+    ),
+
+    fn isInteractiveToolActive =
+    (
+        local individualActive = false
+        local continuousActive = false
+        if ::AmenoDimensionTool != undefined do
+            individualActive = try (::AmenoDimensionTool.active == true) catch (false)
+        if ::AmenoDimensionContinuousTool != undefined do
+            continuousActive = try (::AmenoDimensionContinuousTool.active == true) catch (false)
+        individualActive or continuousActive
+    ),
+
+    fn rejectConfigurationChange =
+    (
+        local message = "Finalize ou cancele a ferramenta ativa antes de alterar a configuração da cota."
+        if ::AmenoApp != undefined do
+            try (::AmenoApp.dimensionStatus = message) catch ()
+        try (displayTempPrompt message 1600) catch ()
+        try (this.syncFromServices()) catch ()
+        false
+    ),
+
+    fn getStyleIndex styleId =
+    (
+        local result = 0
+        if ::AmenoStyleService != undefined do
+        (
+            local styles = try (::AmenoStyleService.listStyles()) catch (#())
+            for i = 1 to styles.count do
+            (
+                try
+                (
+                    if styles[i].styleId == styleId do
+                    (
+                        result = i
+                        exit
+                    )
+                )
+                catch ()
+            )
+        )
+        result
+    ),
+
+    fn setActiveMode modeValue =
+    (
+        if isInteractiveToolActive() then return (rejectConfigurationChange())
+        local mode = normalizedMode modeValue
+        if ::AmenoDimensionTool != undefined do ::AmenoDimensionTool.activeMode = mode
+        if ::AmenoDimensionContinuousTool != undefined do ::AmenoDimensionContinuousTool.activeMode = mode
+        this.updateModoButtons mode
+        mode
+    ),
+
+    fn setActiveStyle styleValue =
+    (
+        if isInteractiveToolActive() then return (rejectConfigurationChange())
+        local styleId = if styleValue == undefined or styleValue == "" then "default" else styleValue
+        if ::AmenoDimensionTool != undefined do ::AmenoDimensionTool.activeStyleId = styleId
+        if ::AmenoDimensionContinuousTool != undefined do ::AmenoDimensionContinuousTool.activeStyleId = styleId
+        styleId
+    ),
+
+    fn setOutputUnit unitValue =
+    (
+        if isInteractiveToolActive() then return (rejectConfigurationChange())
+        local unit = normalizedUnit unitValue
+        if ::AmenoDimensionTool != undefined do ::AmenoDimensionTool.previewOutputUnit = unit
+        if ::AmenoDimensionContinuousTool != undefined do ::AmenoDimensionContinuousTool.previewOutputUnit = unit
+        unit
+    ),
+
+    fn setPrecision precisionValue =
+    (
+        if isInteractiveToolActive() then return (rejectConfigurationChange())
+        local precision = normalizedPrecision precisionValue
+        if ::AmenoDimensionTool != undefined do ::AmenoDimensionTool.previewPrecision = precision
+        if ::AmenoDimensionContinuousTool != undefined do ::AmenoDimensionContinuousTool.previewPrecision = precision
+        precision
+    ),
+
+    fn getSettings =
+    (
+        local source = ::AmenoDimensionTool
+        if source == undefined do source = ::AmenoDimensionContinuousTool
+
+        local mode = #aligned
+        local styleId = "default"
+        local unit = #meters
+        local precision = 2
+        if source != undefined do
+        (
+            mode = try (normalizedMode source.activeMode) catch (#aligned)
+            styleId = try (source.activeStyleId) catch ("default")
+            unit = try (normalizedUnit source.previewOutputUnit) catch (#meters)
+            precision = try (normalizedPrecision source.previewPrecision) catch (2)
+        )
+        if styleId == undefined or styleId == "" do styleId = "default"
+        #(mode, styleId, unit, precision)
+    ),
+
+    fn syncFromServices =
+    (
+        local settings = getSettings()
+        local mode = settings[1]
+        local styleId = settings[2]
+        local unit = settings[3]
+        local precision = settings[4]
+
+        -- O serviço individual é a fonte primária da aba. Em repouso, os dois
+        -- serviços recebem a mesma configuração; a sessão contínua usa seu
+        -- snapshot próprio e não é reinterpretada por esta sincronização.
+        if not isInteractiveToolActive() do
+        (
+            if ::AmenoDimensionTool != undefined do
+            (
+                ::AmenoDimensionTool.activeMode = mode
+                ::AmenoDimensionTool.activeStyleId = styleId
+                ::AmenoDimensionTool.previewOutputUnit = unit
+                ::AmenoDimensionTool.previewPrecision = precision
+            )
+            if ::AmenoDimensionContinuousTool != undefined do
+            (
+                ::AmenoDimensionContinuousTool.activeMode = mode
+                ::AmenoDimensionContinuousTool.activeStyleId = styleId
+                ::AmenoDimensionContinuousTool.previewOutputUnit = unit
+                ::AmenoDimensionContinuousTool.previewPrecision = precision
+            )
+        )
+
+        isSyncing = true
+        try
+        (
+            this.populateEstilos selectedStyleId:styleId
+            local cbUnd = findControl "cbUnidade"
+            if cbUnd != undefined do
+                cbUnd.SelectedIndex = case unit of
+                (
+                    #centimeters: 1
+                    #millimeters: 2
+                    default: 0
+                )
+            local cbPrec = findControl "cbPrecisao"
+            if cbPrec != undefined do cbPrec.SelectedIndex = precision
+            this.updateModoButtons mode
+        )
+        catch ()
+        isSyncing = false
+        true
+    ),
+
+    fn executeIndividualCommand =
+    (
+        this.syncFromServices()
+        local result = undefined
+        if ::AmenoApp != undefined do result = ::AmenoApp.startDimensionTool()
+        this.syncFromServices()
+        this.updateCotaCount()
+        result
+    ),
+
+    fn executeContinuousCommand =
+    (
+        this.syncFromServices()
+        local result = undefined
+        if ::AmenoApp != undefined do result = ::AmenoApp.startContinuousDimensionTool()
+        this.syncFromServices()
+        this.updateCotaCount()
+        result
+    ),
+
     fn updateModoButtons activeMode =
     (
         try
@@ -289,17 +490,19 @@ struct AmenoCotasCriarTabDefinition
 
             if styleActive == undefined or styleInactive == undefined do return false
 
+            local modeNameValue = modeName activeMode
+
             if btnAl != undefined do
-                btnAl.Style = (if activeMode == "aligned" then styleActive else styleInactive)
+                btnAl.Style = (if modeNameValue == "aligned" then styleActive else styleInactive)
             if btnHz != undefined do
-                btnHz.Style = (if activeMode == "horizontal" then styleActive else styleInactive)
+                btnHz.Style = (if modeNameValue == "horizontal" then styleActive else styleInactive)
             if btnVt != undefined do
-                btnVt.Style = (if activeMode == "vertical" then styleActive else styleInactive)
+                btnVt.Style = (if modeNameValue == "vertical" then styleActive else styleInactive)
         )
         catch ()
     ),
 
-    fn populateEstilos =
+    fn populateEstilos selectedStyleId:undefined =
     (
         local cb = findControl "cbEstiloAtivo"
         if cb == undefined do return false
@@ -314,7 +517,13 @@ struct AmenoCotasCriarTabDefinition
             for st in styles do
                 try (cb.Items.Add st.name) catch ()
         )
-        if cb.Items.Count > 0 do cb.SelectedIndex = 0
+        local selectedIndex = 0
+        if selectedStyleId != undefined do
+        (
+            local styleIndex = getStyleIndex selectedStyleId
+            if styleIndex > 0 do selectedIndex = styleIndex - 1
+        )
+        if cb.Items.Count > 0 do cb.SelectedIndex = selectedIndex
         true
     ),
 
@@ -353,10 +562,8 @@ struct AmenoCotasCriarTabDefinition
                 (
                     try
                     (
-                        if ::AmenoDimensionTool != undefined do
-                            ::AmenoDimensionTool.activeMode = #aligned
                         if ::AmenoCotasCriarTab != undefined do
-                            ::AmenoCotasCriarTab.updateModoButtons "aligned"
+                            ::AmenoCotasCriarTab.setActiveMode #aligned
                     )
                     catch ()
                 ))
@@ -367,10 +574,8 @@ struct AmenoCotasCriarTabDefinition
                 (
                     try
                     (
-                        if ::AmenoDimensionTool != undefined do
-                            ::AmenoDimensionTool.activeMode = #horizontal
                         if ::AmenoCotasCriarTab != undefined do
-                            ::AmenoCotasCriarTab.updateModoButtons "horizontal"
+                            ::AmenoCotasCriarTab.setActiveMode #horizontal
                     )
                     catch ()
                 ))
@@ -381,10 +586,8 @@ struct AmenoCotasCriarTabDefinition
                 (
                     try
                     (
-                        if ::AmenoDimensionTool != undefined do
-                            ::AmenoDimensionTool.activeMode = #vertical
                         if ::AmenoCotasCriarTab != undefined do
-                            ::AmenoCotasCriarTab.updateModoButtons "vertical"
+                            ::AmenoCotasCriarTab.setActiveMode #vertical
                     )
                     catch ()
                 ))
@@ -395,7 +598,8 @@ struct AmenoCotasCriarTabDefinition
                 (
                     try
                     (
-                        if ::AmenoApp != undefined do ::AmenoApp.startDimensionTool()
+                        if ::AmenoCotasCriarTab != undefined do
+                            ::AmenoCotasCriarTab.executeIndividualCommand()
                     )
                     catch ()
                 ))
@@ -406,8 +610,8 @@ struct AmenoCotasCriarTabDefinition
                 (
                     try
                     (
-                        -- TODO: cota continua em fase futura
-                        format "[Ameno][INFO] Cota Continua: em desenvolvimento.\n"
+                        if ::AmenoCotasCriarTab != undefined do
+                            ::AmenoCotasCriarTab.executeContinuousCommand()
                     )
                     catch ()
                 ))
@@ -504,11 +708,11 @@ struct AmenoCotasCriarTabDefinition
                         if ::AmenoCotasCriarTab != undefined and not ::AmenoCotasCriarTab.isSyncing do
                         (
                             local idx = s.SelectedIndex
-                            if idx >= 0 and ::AmenoStyleService != undefined and ::AmenoDimensionTool != undefined do
+                            if idx >= 0 and ::AmenoStyleService != undefined do
                             (
                                 local styles = try (::AmenoStyleService.listStyles()) catch (#())
                                 if (idx + 1) <= styles.count do
-                                    ::AmenoDimensionTool.activeStyleId = styles[idx + 1].styleId
+                                    ::AmenoCotasCriarTab.setActiveStyle styles[idx + 1].styleId
                             )
                         )
                     )
@@ -525,8 +729,8 @@ struct AmenoCotasCriarTabDefinition
                         (
                             local idx = s.SelectedIndex
                             local units = #(#meters, #centimeters, #millimeters)
-                            if idx >= 0 and idx < units.count and ::AmenoDimensionTool != undefined do
-                                ::AmenoDimensionTool.previewOutputUnit = units[idx + 1]
+                            if idx >= 0 and idx < units.count do
+                                ::AmenoCotasCriarTab.setOutputUnit units[idx + 1]
                         )
                     )
                     catch ()
@@ -541,8 +745,8 @@ struct AmenoCotasCriarTabDefinition
                         if ::AmenoCotasCriarTab != undefined and not ::AmenoCotasCriarTab.isSyncing do
                         (
                             local idx = s.SelectedIndex
-                            if idx >= 0 and ::AmenoDimensionTool != undefined do
-                                ::AmenoDimensionTool.previewPrecision = idx
+                            if idx >= 0 do
+                                ::AmenoCotasCriarTab.setPrecision idx
                         )
                     )
                     catch ()
@@ -560,18 +764,7 @@ struct AmenoCotasCriarTabDefinition
         local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
         hostControl = xamlReader.Parse xamlStr
 
-        isSyncing = true
-        try
-        (
-            local cbUnd = findControl "cbUnidade"
-            if cbUnd != undefined do cbUnd.SelectedIndex = 0
-            local cbPrec = findControl "cbPrecisao"
-            if cbPrec != undefined do cbPrec.SelectedIndex = 2
-        )
-        catch ()
-        isSyncing = false
-
-        populateEstilos()
+        syncFromServices()
         updateCotaCount()
         bindEvents()
 

@@ -15,6 +15,8 @@ global AmenoShowStyleEditor
 global AmenoStyleEditorRollout
 global AmenoAnchorService
 global AmenoRenderCotasService
+global AmenoCotasWindow
+global AmenoCotasCriarTab
 
 struct AmenoRuntime
 (
@@ -58,9 +60,31 @@ struct AmenoRuntime
     (
         if AmenoDimensionTool == undefined then throw "A ferramenta interativa Ameno não foi carregada."
 
-        lastInteractiveDimension = AmenoDimensionTool.start()
-        refreshScene()
-        refreshDimensions()
+        local panelSuspended = false
+        if ::AmenoCotasWindow != undefined do
+            panelSuspended = try (::AmenoCotasWindow.suspendForInteractiveTool()) catch (false)
+
+        local toolError = undefined
+        try
+        (
+            lastInteractiveDimension = AmenoDimensionTool.start()
+        )
+        catch
+        (
+            toolError = getCurrentException() as string
+        )
+
+        try (refreshScene()) catch ()
+        try (refreshDimensions()) catch ()
+        if panelSuspended and ::AmenoCotasWindow != undefined do
+            try (::AmenoCotasWindow.resumeAfterInteractiveTool()) catch ()
+        if ::AmenoCotasCriarTab != undefined do
+        (
+            try (::AmenoCotasCriarTab.syncFromServices()) catch ()
+            try (::AmenoCotasCriarTab.updateCotaCount()) catch ()
+        )
+
+        if toolError != undefined then throw toolError
         lastInteractiveDimension
     ),
 
@@ -69,9 +93,31 @@ struct AmenoRuntime
     (
         if ::AmenoDimensionContinuousTool == undefined then throw "A ferramenta de cotação contínua Ameno não foi carregada."
 
-        lastInteractiveDimension = ::AmenoDimensionContinuousTool.start()
-        refreshScene()
-        refreshDimensions()
+        local panelSuspended = false
+        if ::AmenoCotasWindow != undefined do
+            panelSuspended = try (::AmenoCotasWindow.suspendForInteractiveTool()) catch (false)
+
+        local toolError = undefined
+        try
+        (
+            lastInteractiveDimension = ::AmenoDimensionContinuousTool.start()
+        )
+        catch
+        (
+            toolError = getCurrentException() as string
+        )
+
+        try (refreshScene()) catch ()
+        try (refreshDimensions()) catch ()
+        if panelSuspended and ::AmenoCotasWindow != undefined do
+            try (::AmenoCotasWindow.resumeAfterInteractiveTool()) catch ()
+        if ::AmenoCotasCriarTab != undefined do
+        (
+            try (::AmenoCotasCriarTab.syncFromServices()) catch ()
+            try (::AmenoCotasCriarTab.updateCotaCount()) catch ()
+        )
+
+        if toolError != undefined then throw toolError
         lastInteractiveDimension
     ),
 

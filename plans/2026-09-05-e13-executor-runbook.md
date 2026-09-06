@@ -2,7 +2,7 @@
 
 Data: 2026-09-05. Documento operacional para troca de agente/modelo.
 Pedido: integrar a interface E13 feita no Antigravity com a E12 aprovada, corrigindo os problemas auditados, uma etapa por vez.
-Estado: ETAPA 1 OK NO WORKTREE `develop`; sem instalação/publicação. ETAPAS 2–7 permanecem pendentes.
+Estado: ETAPA 2 IMPLEMENTADA/TESTADA NO WORKTREE `develop`; sem instalação/publicação. O gate manual da etapa 2 e as etapas 3–7 permanecem pendentes.
 
 ## 1. Contexto que o executor precisa preservar
 
@@ -32,7 +32,7 @@ Estado: ETAPA 1 OK NO WORKTREE `develop`; sem instalação/publicação. ETAPAS 
 |---|---|---|---|
 | 0 — Plano e direcionamento | [x] | não se aplica | OK documental |
 | 1 — Base integrada | [x] | não exige instalação | OK — base E12/E13 integrada, pacote/bootstrap/regressões aprovados em Batch; sem instalação |
-| 2 — Criar e ciclo de vida | [ ] | [ ] | PENDENTE |
+| 2 — Criar e ciclo de vida | [x] | [ ] | IMPLEMENTADA/TESTADA |
 | 3 — Estilos e rascunho | [ ] | [ ] | PENDENTE |
 | 4 — Editar e reancorar | [ ] | [ ] | PENDENTE |
 | 5 — Terminais e transações | [ ] | [ ] | PENDENTE |
@@ -73,16 +73,26 @@ Gate da etapa 1: OK. A árvore `develop` está sem conflitos, os módulos estão
 
 Arquivos principais: `ameno_cotas_criar_tab.ms`, `ameno_runtime.ms`, `ameno_cotas_window.ms`, `Contents/macroscripts/AmenoTools.mcr`; consultar contrato de `ameno_dimension_continuous_tool.ms`.
 
-- [ ] Substituir TODO do handler onCotaContinua por chamada real ao runtime. Fazer botão e macro passarem pelo mesmo caminho.
-- [ ] Mapear modo/unidade/precisão/estilo para os campos existentes do motor. Conferir os nomes no código antes de criar qualquer propriedade nova.
-- [ ] Sincronizar controles a partir do serviço ao abrir/voltar à aba; retirar defaults visuais que discordem do estado ativo.
-- [ ] Respeitar modo congelado da sessão contínua E12. Mudança de controles durante sessão não deve reinterpretar pontos já coletados.
-- [ ] Manter rejeição explícita de cadeia oblíqua não implementada e funcionamento de alinhada individual.
-- [ ] Revisar foco após clique WPF, Esc/botão direito, término e reinício. Não reintroduzir duplo clique/temporização para confirmar.
-- [ ] Atualizar contagem da cena após criação/remoção/Undo sem apagar rascunhos de outras abas.
-- [ ] Criar teste de comportamento do comando compartilhado e sincronização de estado; presença da função não basta.
+- [x] Substituir TODO do handler onCotaContinua por chamada real ao runtime. Botão WPF e macro passam por `AmenoCotasCriarTab.executeContinuousCommand()`, com fallback somente quando a aba ainda não está carregada.
+- [x] Mapear modo/unidade/precisão/estilo para os campos existentes do motor: `activeMode`, `previewOutputUnit`, `previewPrecision` e `activeStyleId` nos serviços individual e contínuo; nenhuma propriedade de modelo nova foi criada.
+- [x] Sincronizar controles a partir do serviço ao abrir/voltar à aba; `build`/retorno usa `syncFromServices()` e não impõe os defaults visuais antigos.
+- [x] Respeitar modo congelado da sessão contínua E12. Alterações são rejeitadas enquanto `active` e a UI é restaurada ao estado do serviço; o snapshot `session*` do E12 permanece intocado.
+- [x] Manter rejeição explícita de cadeia oblíqua não implementada e funcionamento de alinhada individual; ambos foram exercitados na suíte dedicada.
+- [x] Revisar foco após clique WPF, Esc/botão direito, término e reinício: runtime oculta a janela antes de `startTool`, restaura em retorno normal/erro e não adiciona duplo clique/temporização.
+- [x] Atualizar contagem da cena após criação/remoção/Undo sem apagar rascunhos de outras abas: callbacks de nós ficam restritos à aba Criar e o runtime faz refresh estreito após a ferramenta.
+- [x] Criar teste de comportamento do comando compartilhado e sincronização de estado; `test_e13_stage2_create.ms` cobre botão, macro, runtime, estado, congelamento, foco e contagem, não apenas presença de funções.
 
 Manual futuro: criar H com 4 vértices; finalizar; criar V reutilizando vértice direito sob anotação; confirmar losangos, clique vazio e saída; Ctrl+Z remove cadeia inteira e Ctrl+Y restaura. Testar botão e macro, sem duplicação.
+
+### Evidências da etapa 2 em 2026-09-06
+
+- Alterações: `Contents/scripts/ameno/ui/ameno_cotas_criar_tab.ms`, `Contents/scripts/ameno/core/ameno_runtime.ms`, `Contents/scripts/ameno/ui/ameno_cotas_window.ms`, `Contents/macroscripts/AmenoTools.mcr` e `tests/maxscript/test_e13_stage2_create.ms`.
+- `tools/validate-package.ps1`: PASS — pacote válido para 3ds Max 2026.
+- `test_e13_stage2_create.ms`: Batch exit 0; 20 verificações internas, 21 marcadores `[AMENO_TEST][PASS]` contando o resumo final, 0 `[AMENO_TEST][FAIL]`.
+- Comportamento comprovado no Batch: comando compartilhado botão/macro; sincronização de modo, estilo, unidade e precisão; rejeição durante sessão ativa sem alterar o snapshot; cadeia alinhada rejeitada; alinhada individual disponível; hide/show do painel pelo runtime; contagem após criar/remover.
+- Regressão: `test_bootstrap.ms` 1 PASS; E13-A…H 8/8 suítes, 57 PASS agregados/0 FAIL na rodada de regressão, com E13-H repetido após o ajuste final; E12 chain commit/input/math/continuous/R0/R1/R2/R3/R4 9/9 suítes, 9 PASS/0 FAIL.
+- Logs identificados (listener e system) estão em `D:\Ameno\_worktrees\develop\.test-output\stage2-evidence-develop\`; os logs da suíte dedicada e de E13-H foram regravados após o ajuste final do macro. O runner exige exit code 0, ao menos um PASS e zero marcadores de FAIL.
+- Nenhuma instalação em `ApplicationPlugins`, publicação, push, merge na `main` ou teste destrutivo na cena interativa foi feito. O gate manual H/V, losangos e Undo/Redo continua pendente; a etapa 3 não foi iniciada.
 
 ## 5. Etapa 3 — Estilos, navegação e ciclo de cena
 
