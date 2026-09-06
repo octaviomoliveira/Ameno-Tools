@@ -6,6 +6,7 @@
 
 global AmenoCotasWindow
 global AmenoCotasEstilosTab
+global AmenoCotasEditarTab
 
 struct AmenoCotasWindowDefinition
 (
@@ -244,6 +245,18 @@ struct AmenoCotasWindowDefinition
                             contentBorder.Child = tabControl
                     )
                 )
+                3: -- Aba Editar (E13-D)
+                (
+                    if ::AmenoCotasEditarTab != undefined do
+                    (
+                        local tabControl = ::AmenoCotasEditarTab.build()
+                        if tabControl != undefined do
+                        (
+                            contentBorder.Child = tabControl
+                            ::AmenoCotasEditarTab.refresh()
+                        )
+                    )
+                )
                 default:
                 (
                     -- Outras abas: placeholder
@@ -304,6 +317,8 @@ struct AmenoCotasWindowDefinition
 
         -- Injectar conteudo da aba selecionada
         setTabContent sectionIndex
+        if sectionIndex == 3 and ::AmenoCotasEditarTab != undefined do
+            try (::AmenoCotasEditarTab.refresh()) catch ()
     ),
 
     -- -----------------------------------------------------------------
@@ -337,6 +352,7 @@ struct AmenoCotasWindowDefinition
         dotNet.addEventHandler window "Closed" \
             (fn onWindowClosed s e =
             (
+                try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
                 try (AmenoCotasWindow.window = undefined) catch ()
             ))
 
@@ -441,6 +457,12 @@ struct AmenoCotasWindowDefinition
 
         buildWindow()
         window.Show()
+        try
+        (
+            callbacks.removeScripts id:#amenoCotasWindowSelection
+            callbacks.addScript #selectionSetChanged "if ::AmenoCotasWindow != undefined and ::AmenoCotasWindow.isOpen() and ::AmenoCotasWindow.activeSection == 3 and ::AmenoCotasEditarTab != undefined do (try (::AmenoCotasEditarTab.refresh()) catch ())" id:#amenoCotasWindowSelection
+        )
+        catch ()
         window
     ),
 
@@ -449,6 +471,7 @@ struct AmenoCotasWindowDefinition
     -- -----------------------------------------------------------------
     fn close =
     (
+        try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
         if isOpen() do
         (
             try (window.Close()) catch ()
