@@ -49,6 +49,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E11.0–E11.5 implementadas e integradas na `main` em 2026-09-04: editor visual WPF .NET 8, `StyleDraft` transacional, preview vetorial 2D ao vivo, aplicação/persistência, fallback para o rollout legado e correção do tema escuro. O pacote estrutural foi aprovado e a instalação unificada E10.7 + E11 foi verificada por 22/22 arquivos idênticos por SHA-256.
 - E13 — etapa 1 concluída e validada em `develop`: a E13 auditada (`676e008`) foi integrada sobre a E12 publicada (`f131f08`) no merge `d1e9e22`, com os três conflitos previstos resolvidos preservando as transações, picking e input E12. O wrapper de compatibilidade `AmenoRuntime.startContinuousDimensionTool`, o fixture válido do diagnóstico R0 e a verificação estrita do runner foram registrados; pacote, bootstrap, auditoria, E13-A…H e E12 passaram em Batch isolado. Evidência: `plans/2026-09-05-e13-executor-runbook.md`, `plans/2026-09-06-e13-etapa-1-handoff.md` e `.test-output/stage1-evidence-develop/`.
 - E13 — etapa 2 implementada e testada em `develop`: a aba Criar agora usa os campos existentes dos serviços E12/E4, sincroniza modo/unidade/precisão/estilo, encaminha botão e macro pelo mesmo comando contínuo, congela alterações durante a sessão, preserva a rejeição de cadeia alinhada e mantém a contagem/foco do painel após o ciclo interativo. Evidência: `ameno_cotas_criar_tab.ms`, `ameno_runtime.ms`, `ameno_cotas_window.ms`, `Contents/macroscripts/AmenoTools.mcr`, `tests/maxscript/test_e13_stage2_create.ms`, pacote válido e logs em `.test-output/stage2-evidence-develop/`. O gate manual H/V e Undo/Redo continua pendente.
+- E13 — etapa 3 implementada e testada em `develop`: a aba Estilos preserva host e rascunho entre abas/refresh, separa refresh genérico de troca explícita, implementa salvar/descartar/cancelar, invalida rascunhos ao trocar de cena, revisa fechamento/callbacks e mantém persistência, presets, duplicação, exclusão protegida e aplicação com Undo/Redo. A suíte dedicada passou com 24 verificações internas, 25 marcadores PASS e 0 FAIL; pacote, bootstrap, E13-A…H, E11.1–E11.5 e E12 9/9 também passaram em Batch. Evidência: `plans/2026-09-05-e13-etapa-3-handoff.md` e `.test-output/stage3-evidence-develop/`. Sem instalação/publicação; gate manual da etapa 3 pendente.
 - Pacote instalado com E1 a E9 validado em Batch isolado e aprovado em sessão interativa no 3ds Max 2026.
 - Ação `Ameno Tools` e painel inicial registrados; bootstrap modular e validação de pacote incluídos.
 - Modelo de dados inicial para cotas, estilos, referências e valores medidos/arredondados/manuais documentado.
@@ -60,7 +61,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Prioridade atual — etapa 2 da integração E13 implementada/testada em `develop`:** no worktree `D:\Ameno\_worktrees\develop`, a aba Criar usa `AmenoCotasCriarTab.executeContinuousCommand()` para botão e macro, mapeia os campos existentes dos serviços individual/contínuo, restaura o painel ao terminar/cancelar/errar a ferramenta e atualiza a contagem sem refresh global que possa apagar rascunhos. A suíte dedicada passou com 20 verificações internas/21 marcadores PASS e 0 FAIL; E13-H passou com 13 PASS/0 FAIL; bootstrap e as regressões E13-A…G/E12 também passaram. Não instalar nem publicar. Gate manual H/V, Undo/Redo e a etapa 3 permanecem pendentes. Handoff: `plans/2026-09-05-e13-etapa-2-handoff.md`.
+- **Prioridade atual — etapa 3 da integração E13 implementada/testada em `develop`:** no worktree `D:\Ameno\_worktrees\develop`, a aba Estilos mantém `currentDraft`/host em cache, preserva alterações em navegação e refresh, pede salvar/descartar/cancelar nas transições, limpa o rascunho ao abrir/resetar cena e remove somente seus callbacks no fechamento. A suíte dedicada passou com 24 verificações internas/25 marcadores PASS e 0 FAIL; `validate-package.ps1`, bootstrap, E13-A…H, E11.1–E11.5 e as 9 suítes E12 passaram em Batch isolado. Não instalar nem publicar. O gate manual visual/funcional da etapa 3 permanece pendente; a etapa 4 não foi iniciada. Handoff: `plans/2026-09-05-e13-etapa-3-handoff.md`.
 
 - **Roteiro prioritário de recuperação:** `plans/2026-09-05-e12-executor-runbook.md` (R0–R6). R0–R6 estão concluídos para a E12-R; R4 foi aprovada em Batch, instalada e validada manualmente, R5 foi fechado como decisão de escopo e R6 foi aprovado com automação e gate manual. Handoff final: `plans/2026-09-05-e12-r6-handoff.md`.
 
@@ -79,7 +80,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Atual em 2026-09-06:** etapa 2 do roteiro E13 implementada/testada na branch `develop`. Manter instalação/publicação bloqueadas; o próximo passo de código é a etapa 3 somente após autorização explícita. O gate manual H/V com Undo/Redo permanece pendente para o candidato final. Roteiro e evidências: `plans/2026-09-05-e13-executor-runbook.md` e `plans/2026-09-05-e13-etapa-2-handoff.md`.
+- **Atual em 2026-09-06:** etapa 3 do roteiro E13 implementada/testada na branch `develop`, com commit funcional `1fe7039`. Manter instalação/publicação bloqueadas; o gate manual de estilos, navegação, preservação de rascunho e ciclo de cena permanece pendente. A etapa 4 só deve começar após autorização explícita. Roteiro e evidências: `plans/2026-09-05-e13-executor-runbook.md` e `plans/2026-09-05-e13-etapa-3-handoff.md`.
 
 **Para retomar a E12:** publicar os três commits locais com autorização explícita e, se desejado, preparar um merge revisado para `main`. Não fazer merge automático.
 
@@ -100,6 +101,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-06 — Seguir para a etapa 3 da integração E13:** em `develop`, a aba Estilos deixou de recriar o rascunho ao navegar; refresh genérico, troca explícita, salvar/descartar/cancelar, troca de cena, fechamento e callbacks foram separados e testados. A suíte dedicada passou com 24 verificações internas/25 marcadores PASS e 0 FAIL; pacote, bootstrap, E13-A…H, E11.1–E11.5 e E12 9/9 passaram. Commit funcional `1fe7039`; sem instalação, publicação ou etapa 4. Gate manual da etapa 3 pendente. Handoff: `plans/2026-09-05-e13-etapa-3-handoff.md`.
 
 - **2026-09-06 — Seguir para a etapa 2 da integração E13:** no `develop`, o comando contínuo da aba Criar e da macro foi unificado; os controles foram ligados aos campos existentes do E12/E4 e sincronizados sem defaults conflitantes; alterações foram bloqueadas durante sessão contínua; foco, retorno, contagem e callbacks de cena foram tratados; e o teste dedicado passou com 20 verificações internas/21 marcadores PASS e 0 FAIL. Bootstrap, E13-H, pacote e regressões E13/E12 passaram. Sem instalação, publicação ou etapa 3. Handoff: `plans/2026-09-05-e13-etapa-2-handoff.md`.
 

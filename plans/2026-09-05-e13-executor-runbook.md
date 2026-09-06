@@ -2,7 +2,7 @@
 
 Data: 2026-09-05. Documento operacional para troca de agente/modelo.
 Pedido: integrar a interface E13 feita no Antigravity com a E12 aprovada, corrigindo os problemas auditados, uma etapa por vez.
-Estado: ETAPA 2 IMPLEMENTADA/TESTADA NO WORKTREE `develop`; sem instalação/publicação. O gate manual da etapa 2 e as etapas 3–7 permanecem pendentes.
+Estado: ETAPA 3 IMPLEMENTADA/TESTADA NO WORKTREE `develop`; sem instalação/publicação. O gate manual da etapa 3 e as etapas 4–7 permanecem pendentes.
 
 ## 1. Contexto que o executor precisa preservar
 
@@ -33,7 +33,7 @@ Estado: ETAPA 2 IMPLEMENTADA/TESTADA NO WORKTREE `develop`; sem instalação/pub
 | 0 — Plano e direcionamento | [x] | não se aplica | OK documental |
 | 1 — Base integrada | [x] | não exige instalação | OK — base E12/E13 integrada, pacote/bootstrap/regressões aprovados em Batch; sem instalação |
 | 2 — Criar e ciclo de vida | [x] | [ ] | IMPLEMENTADA/TESTADA |
-| 3 — Estilos e rascunho | [ ] | [ ] | PENDENTE |
+| 3 — Estilos e rascunho | [x] | [ ] | IMPLEMENTADA/TESTADA |
 | 4 — Editar e reancorar | [ ] | [ ] | PENDENTE |
 | 5 — Terminais e transações | [ ] | [ ] | PENDENTE |
 | 6 — Render e restauração | [ ] | [ ] | PENDENTE |
@@ -55,7 +55,7 @@ Os gates manuais 2–6 podem ser executados juntos no candidato da etapa 7. Até
 - [x] Conferir desligamento/reload, chamadas ao painel antigo e referências globais por busca de consumidores; o shutdown fecha WPF e mantém guards dos rollouts legados.
 - [x] Validar pacote, bootstrap e suítes E12 existentes. Em `develop`, pacote passou; bootstrap passou com exit 0/PASS 1/FAIL 0; auditoria E13 passou com 8 PASS/0 FAIL; E13-A…H passou com 8/8 suítes e 57 PASS/0 FAIL; e as 9 suítes E12 passaram com 0 FAIL. Nenhuma instalação foi feita.
 
-Gate da etapa 1: OK. A árvore `develop` está sem conflitos, os módulos estão presentes, o bootstrap e a integração E13 funcionam, a E12 foi preservada, o runner rejeita FAIL mesmo quando há PASS e todos os lotes executados terminaram sem FAIL. O R0 passou com fixture corrigido para um modo aceito pela cadeia, e o entry point legado está coberto por wrapper e teste estrutural. Não foram executadas etapas 2–7, nem instalação ou publicação.
+Gate da etapa 1: OK. A árvore `develop` está sem conflitos, os módulos estão presentes, o bootstrap e a integração E13 funcionam, a E12 foi preservada, o runner rejeita FAIL mesmo quando há PASS e todos os lotes executados terminaram sem FAIL. O R0 passou com fixture corrigido para um modo aceito pela cadeia, e o entry point legado está coberto por wrapper e teste estrutural. Naquele ponto, as etapas 2–7 ainda não haviam sido executadas; as etapas 2 e 3 foram implementadas/testadas posteriormente em commits próprios. A etapa 4+ permanece fora do escopo desta execução, sem instalação ou publicação.
 
 ### Evidências da execução em 2026-09-06
 
@@ -92,21 +92,33 @@ Manual futuro: criar H com 4 vértices; finalizar; criar V reutilizando vértice
 - Comportamento comprovado no Batch: comando compartilhado botão/macro; sincronização de modo, estilo, unidade e precisão; rejeição durante sessão ativa sem alterar o snapshot; cadeia alinhada rejeitada; alinhada individual disponível; hide/show do painel pelo runtime; contagem após criar/remover.
 - Regressão: `test_bootstrap.ms` 1 PASS; E13-A…H 8/8 suítes, 57 PASS agregados/0 FAIL na rodada de regressão, com E13-H repetido após o ajuste final; E12 chain commit/input/math/continuous/R0/R1/R2/R3/R4 9/9 suítes, 9 PASS/0 FAIL.
 - Logs identificados (listener e system) estão em `D:\Ameno\_worktrees\develop\.test-output\stage2-evidence-develop\`; os logs da suíte dedicada e de E13-H foram regravados após o ajuste final do macro. O runner exige exit code 0, ao menos um PASS e zero marcadores de FAIL.
-- Nenhuma instalação em `ApplicationPlugins`, publicação, push, merge na `main` ou teste destrutivo na cena interativa foi feito. O gate manual H/V, losangos e Undo/Redo continua pendente; a etapa 3 não foi iniciada.
+- Nenhuma instalação em `ApplicationPlugins`, publicação, push, merge na `main` ou teste destrutivo na cena interativa foi feito. O gate manual H/V, losangos e Undo/Redo continua pendente; a etapa 3 foi implementada/testada posteriormente e a etapa 4 não foi iniciada.
 
 ## 5. Etapa 3 — Estilos, navegação e ciclo de cena
 
 Arquivos: `ameno_cotas_estilos_tab.ms`, `ameno_cotas_window.ms:setTabContent`, stub `ameno_main_panel.ms:AmenoRefreshMainPanel`, `ameno_style_editor_wpf.ms`, runtime/callbacks.
 
-- [ ] Corrigir build que recria currentDraft a partir de default em toda visita. Manter controles em cache OU manter modelo de estado independente deles, escolhendo uma abordagem única.
-- [ ] Refresh genérico não pode substituir rascunho editado. Separar refresh de contagem/seleção de troca explícita de estilo/cena.
-- [ ] Definir salvar/descartar/cancelar para troca de estilo e fechamento com rascunho sujo, reaproveitando contrato E11. Cancelar conserva tudo.
-- [ ] Ao reset/abrir cena, invalidar referências da cena anterior e recarregar estilos da nova; rascunho antigo não pode ser aplicado silenciosamente à nova cena.
-- [ ] Revisar salvar, duplicar, excluir estilo em uso, presets e aplicar à seleção; manter persistência e Undo existentes.
-- [ ] Revisar fechamento/reabertura/reload: remover callbacks/eventos próprios sem remover os de outras funcionalidades.
-- [ ] Testar rascunho alterado → outra aba → retorno com valores e dirty preservados; salvar e reabrir cena; cancelamento de descarte; aplicação + Undo/Redo.
+- [x] Corrigir build que recria currentDraft a partir de default em toda visita. `ameno_cotas_estilos_tab.ms` mantém o host WPF e o estado do rascunho em cache; a abordagem não recria o default a cada visita.
+- [x] Refresh genérico não pode substituir rascunho editado. `refresh()` preserva o rascunho; `requestStyleSwitch()` trata separadamente a troca explícita de estilo/cena.
+- [x] Definir salvar/descartar/cancelar para troca de estilo e fechamento com rascunho sujo, reaproveitando contrato E11. O prompt WPF usa Yes/No/Cancel; Cancelar conserva o rascunho e há `dirtyDecisionOverride` somente como seam do teste Batch.
+- [x] Ao reset/abrir cena, invalidar referências da cena anterior e recarregar estilos da nova; rascunho antigo não pode ser aplicado silenciosamente à nova cena. `AmenoApp.onSceneOpened/onSceneReset` chama a invalidação da aba depois de carregar a nova cena.
+- [x] Revisar salvar, duplicar, excluir estilo em uso, presets e aplicar à seleção; manter persistência e Undo existentes. Exclusão em uso é bloqueada; persistência E11 e Undo/Redo foram exercitados.
+- [x] Revisar fechamento/reabertura/reload: remover callbacks/eventos próprios sem remover os de outras funcionalidades. A aba usa o callback próprio `#amenoCotasStyleSelection` e o teste mantém um callback sentinela para verificar que ele não é removido.
+- [x] Testar rascunho alterado → outra aba → retorno com valores e dirty preservados; salvar e reabrir cena; cancelamento de descarte; aplicação + Undo/Redo. `test_e13_stage3_styles.ms` passou com 24 verificações internas, 25 marcadores PASS e 0 FAIL.
 
 OK manual: não perder trabalho ao navegar e não carregar dados da cena anterior.
+
+### Evidências da etapa 3 em 2026-09-06
+
+- Arquivos funcionais: `Contents/scripts/ameno/ui/ameno_cotas_estilos_tab.ms`, `ameno_cotas_window.ms`, `ameno_main_panel.ms`, `ameno_style_editor_wpf.ms` e `Contents/scripts/ameno/core/ameno_runtime.ms`. Teste dedicado: `tests/maxscript/test_e13_stage3_styles.ms`.
+- `tools/validate-package.ps1`: PASS — pacote válido para 3ds Max 2026.
+- `test_e13_stage3_styles.ms`: Batch exit 0; 24 verificações internas, 25 marcadores `[AMENO_TEST][PASS]` contando o resumo final e 0 `[AMENO_TEST][FAIL]`.
+- Regressões: bootstrap 1 PASS/0 FAIL; auditoria E13 8 PASS/0 FAIL; E13-A…H 8/8 suítes e 57 PASS agregados/0 FAIL; regressões E11.1–E11.5 passaram; E12 chain commit/input/math/continuous/R0/R1/R2/R3/R4 9/9 suítes, 9 PASS finais/0 FAIL.
+- O runner `tools/test-maxscript.ps1` foi usado com exit code obrigatório, pelo menos um PASS e zero marcadores de FAIL. Os logs listener/system estão em `D:\Ameno\_worktrees\develop\.test-output\stage3-evidence-develop\`, incluindo `stage3-dedicated-final.*` e `e12-*-final.*`.
+- Commit funcional: `1fe7039` (`feat: complete E13 stage 3 styles workflow`). A atualização documental e este handoff permanecem como alterações separadas até o commit documental.
+- Nenhuma instalação em `ApplicationPlugins`, publicação, push ou merge na `main` foi feita; nenhuma cena interativa do usuário foi alterada. Batch não substitui o gate visual/funcional manual.
+
+Gate manual da etapa 3: PENDENTE. A suíte cobre os contratos e o ciclo em Batch, mas ainda falta o usuário validar visualmente a navegação, preservação de trabalho e troca de cena no 3ds Max interativo. A etapa 4 não foi iniciada.
 
 ## 6. Etapa 4 — Editar, validar e reancorar
 
