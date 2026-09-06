@@ -571,6 +571,7 @@ struct AmenoRuntime
         try (destroyDialog AmenoMainPanelRollout) catch ()
         try (destroyDialog AmenoStyleEditorRollout) catch ()
         try (if ::AmenoStyleEditorWPF != undefined do ::AmenoStyleEditorWPF.close()) catch ()
+        try (if ::AmenoCotasWindow != undefined do ::AmenoCotasWindow.close()) catch ()
         started = false
         true
     )
