@@ -3,7 +3,7 @@
 Data: 2026-09-06  
 Branch/worktree: `develop` em `D:\Ameno\_worktrees\develop`  
 Commit funcional final: `5844730` (`feat: add explicit dimension-only render mode`)
-Estado: código e Batch concluídos; instalação e gate manual pendentes porque o 3ds Max interativo está aberto.
+Estado: código, Batch e instalação concluídos; gate manual pendente até o próximo reinício do 3ds Max.
 
 ## Incidente e diagnóstico
 
@@ -83,12 +83,17 @@ Próximo passo exato:
 
 1. aguardar o usuário fechar normalmente o 3ds Max;
 2. criar backup da instalação ativa e executar `tools/install-dev.ps1`;
-3. conferir todos os arquivos por SHA-256 e executar `test_installed_package.ms`;
+3. conferir todos os arquivos por SHA-256 e executar `test_installed_package.ms` — já concluído: 41/41 + manifesto, 1 PASS/0 FAIL;
 4. reabrir a cena e confirmar a caixa marcada `Renderizar somente as cotas (sem a
    planta)`;
 5. renderizar sem Isolate Selection e confirmar PNG, alpha, cor e restauração da
    cena;
 6. opcionalmente desmarcar a caixa para validar cena + cotas.
+
+A instalação substituiu a cópia ativa usando `tools/install-dev.ps1`; esse script
+não cria backup automático. Os backups históricos em `D:\Ameno\backups\` foram
+preservados e o estado instalável atual pode ser reconstruído pelo commit
+`5844730`.
 
 Não reproduzir o acesso inválido com a versão antiga na cena do usuário, não
 fechar o Max à força e não publicar/merge/push sem autorização.

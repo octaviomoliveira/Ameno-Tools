@@ -277,7 +277,7 @@ Evidência detalhada e handoff: `plans/2026-09-06-e13-renderer-profile-handoff.m
 - [x] Adicionar regressão transacional: detecção, ausência de chamadas ao adapter, preservação da cena/isolamento, modo somente-cotas e modo cena+cotas.
 - [x] Validar pacote e executar Batch: `test_bootstrap.ms` 1 PASS, `test_e13_stage6_render_restore.ms` 28 PASS, `test_e13e.ms` 11 PASS, `test_e13_ui_lifecycle.ms` 12 PASS e `test_e9_corona_render.ms` 1 PASS com Corona 15 Hotfix 1 real e PNG alpha; todos exit 0 e zero FAIL.
 - [x] Commit funcional final: `5844730` (`feat: add explicit dimension-only render mode`); a guarda de diagnóstico está no ancestral `888985e`.
-- [ ] Instalar com o Max fechado, conferir hashes e executar `test_installed_package.ms`.
-- [ ] Gate manual: com Isolate ativo, obter mensagem sem crash; após Alt+Q/End Isolate, gerar o PNG de cotas da cena real e confirmar cor/alpha.
+- [x] Instalar com o Max fechado, conferir hashes e executar `test_installed_package.ms`: 41/41 arquivos de conteúdo e `PackageContents.xml` iguais por SHA-256; smoke instalado exit 0, 1 PASS e 0 FAIL. A cópia ativa foi substituída; `tools/install-dev.ps1` não cria backup automático nesta execução.
+- [ ] Gate manual: confirmar que o render comum segue usando Isolate sem o Ameno; no Render, deixar Isolate desligado, manter `Renderizar somente as cotas (sem a planta)` marcado, gerar o PNG da cena real e confirmar cor/alpha/restauração; opcionalmente desmarcar para cena + cotas.
 
 Evidências automatizadas: `D:\Ameno\_worktrees\develop\.test-output\render-isolate-hotfix\`. Continuidade: `plans/2026-09-06-e13-render-isolate-hotfix-handoff.md`.
