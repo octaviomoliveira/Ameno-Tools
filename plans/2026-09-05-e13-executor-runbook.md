@@ -263,3 +263,19 @@ Continuidade: `plans/2026-09-06-e13-feedback-visual-handoff.md`. A instalação 
 - [ ] Gate manual: banner com classe real, bloqueio de Arnold sem crash, render Corona 15, cor escolhida no PNG e perfil preservado após reinício. V-Ray CPU real continua pendente.
 
 Evidência detalhada e handoff: `plans/2026-09-06-e13-renderer-profile-handoff.md`. O hotfix já está instalado; não pedir reprodução do crash ao usuário antes do Max ser reaberto com a versão atual. Não pressionar Enter durante a cotação.
+
+### Hotfix pós-gate — render com Isolate Selection ativo — 2026-09-06
+
+- [x] Cruzar as ocorrências reais: `ameno-20260906-180520-144.log`, `ameno-20260906-203536-650.log` e `ameno-20260906-213909-685.log` falham no estágio `render` com o mesmo `EXCEPTION_ACCESS_VIOLATION`/leitura no endereço `0x40`.
+- [x] Confirmar que o PNG de destino da tentativa mais recente não foi criado e que a exceção ocorreu dentro da chamada nativa, depois de renderer/adaptador/material serem aceitos.
+- [x] Confirmar no `Max.log` da sessão real `Corona version: 15 (Hotfix 1)` e o aviso `One or more objects are currently Isolated` antes da tentativa.
+- [x] Validar a API oficial `IsolateSelection.IsolateSelectionModeActive()` disponível no Max 2026.
+- [x] Bloquear o passe antes de qualquer mutação quando Isolate Selection estiver ativo; preservar o modo e orientar Alt+Q/End Isolate em vez de sair/reentrar automaticamente.
+- [x] Registrar preflight com câmera, render type, resolução, pixel aspect, estado de isolamento e caminho de saída.
+- [x] Adicionar regressão transacional: quatro verificações cobrem detecção, ausência de chamadas ao adapter, preservação da cena/isolamento e encerramento controlado do fixture.
+- [x] Validar pacote e executar Batch: `test_bootstrap.ms` 1 PASS, `test_e13_stage6_render_restore.ms` 24 PASS e `test_e9_corona_render.ms` 1 PASS com Corona 15 Hotfix 1 real e PNG alpha; todos exit 0 e zero FAIL.
+- [x] Commit funcional: `888985e` (`fix: guard render during isolate selection`).
+- [ ] Instalar com o Max fechado, conferir hashes e executar `test_installed_package.ms`.
+- [ ] Gate manual: com Isolate ativo, obter mensagem sem crash; após Alt+Q/End Isolate, gerar o PNG de cotas da cena real e confirmar cor/alpha.
+
+Evidências automatizadas: `D:\Ameno\_worktrees\develop\.test-output\render-isolate-hotfix\`. Continuidade: `plans/2026-09-06-e13-render-isolate-hotfix-handoff.md`.
