@@ -36,6 +36,11 @@ fn onAmenoRenderCopyPathClick s e =
     try (if ::AmenoCotasRenderTab != undefined do ::AmenoCotasRenderTab.copyOutputPath()) catch ()
 )
 
+fn onAmenoRenderDimensionsOnlyChanged s e =
+(
+    try (if ::AmenoCotasRenderTab != undefined do ::AmenoCotasRenderTab.refreshOutputMode()) catch ()
+)
+
 struct AmenoCotasRenderTabDefinition
 (
     hostControl = undefined,
@@ -184,14 +189,16 @@ struct AmenoCotasRenderTabDefinition
             "<RadioButton x:Name='rbScopeAll' Grid.Column='1' GroupName='renderScope' Content='Todas as cotas' IsChecked='True' Foreground='#CCCCCC' FontSize='11' Cursor='Hand'/>" + \
             "<RadioButton x:Name='rbScopeSelected' Grid.Column='2' GroupName='renderScope' Content='Selecionadas' Foreground='#CCCCCC' FontSize='11' Cursor='Hand'/>" + \
             "</Grid>" + \
+            "<CheckBox x:Name='chkDimensionsOnly' Content='Renderizar somente as cotas (sem a planta)' IsChecked='True' Foreground='#FFFFFF' FontSize='11' FontWeight='SemiBold' Cursor='Hand' Margin='65,0,0,7'/>" + \
             "<Grid Margin='0,0,0,4'>" + \
             "<Grid.ColumnDefinitions>" + \
             "<ColumnDefinition Width='65'/>" + \
             "<ColumnDefinition Width='*'/>" + \
             "</Grid.ColumnDefinitions>" + \
             "<TextBlock Text='Fundo:' Foreground='#AAAAAA' VerticalAlignment='Center' FontSize='11'/>" + \
-            "<TextBlock Grid.Column='1' Text='Transparente (canal alpha puro de 32-bits)' Foreground='#61AFEF' FontSize='11' VerticalAlignment='Center'/>" + \
+            "<TextBlock x:Name='txtOutputMode' Grid.Column='1' Text='PNG transparente; a planta será ocultada temporariamente.' Foreground='#61AFEF' FontSize='11' VerticalAlignment='Center'/>" + \
             "</Grid>" + \
+            "<TextBlock Text='Não é necessário usar o Isolate Selection do 3ds Max.' Foreground='#888888' FontSize='10' Margin='65,2,0,0'/>" + \
             "</StackPanel>" + \
             "</Border>"
 
@@ -308,6 +315,20 @@ struct AmenoCotasRenderTabDefinition
         updateRendererInfoUI info
     ),
 
+    fn refreshOutputMode =
+    (
+        local chkOnly = findControl "chkDimensionsOnly"
+        local txtMode = findControl "txtOutputMode"
+        if txtMode == undefined then return false
+
+        local dimensionsOnly = (chkOnly == undefined or chkOnly.IsChecked == true)
+        if dimensionsOnly then
+            txtMode.Text = "PNG transparente; a planta será ocultada temporariamente."
+        else
+            txtMode.Text = "Cena + cotas; fundo e alpha seguem o renderer."
+        true
+    ),
+
     -- -----------------------------------------------------------------
     -- Selecionar arquivo de saída
     -- -----------------------------------------------------------------
@@ -341,6 +362,7 @@ struct AmenoCotasRenderTabDefinition
         if ::AmenoApp == undefined do return false
         local txtOut = findControl "txtOutputPath"
         local rbSel = findControl "rbScopeSelected"
+        local chkOnly = findControl "chkDimensionsOnly"
         local txtStatus = findControl "txtRenderStatus"
 
         -- O renderer pode ter sido trocado no 3ds Max depois que a aba foi
@@ -358,6 +380,7 @@ struct AmenoCotasRenderTabDefinition
 
         local outPath = if txtOut != undefined then txtOut.Text else ""
         local scope = if (rbSel != undefined and rbSel.IsChecked == true) then #selected else #all
+        local dimensionsOnly = (chkOnly == undefined or chkOnly.IsChecked == true)
 
         if txtStatus != undefined do txtStatus.Text = "Renderizando cotas... Por favor aguarde."
 
@@ -384,7 +407,7 @@ struct AmenoCotasRenderTabDefinition
         local success = false
         try
         (
-            local result = ::AmenoApp.renderCotas outputPath:outPath selectionMode:scope cameraNode:selectedCamera
+            local result = ::AmenoApp.renderCotas outputPath:outPath selectionMode:scope cameraNode:selectedCamera dimensionsOnly:dimensionsOnly
             if result != undefined and result.success then
             (
                 if txtOut != undefined do txtOut.Text = result.outputPath
@@ -461,12 +484,18 @@ struct AmenoCotasRenderTabDefinition
         local btnRenderCotas = findControl "btnRenderCotas"
         local btnOpenFolder = findControl "btnOpenFolder"
         local btnCopyPath = findControl "btnCopyPath"
+        local chkDimensionsOnly = findControl "chkDimensionsOnly"
 
         if btnBrowse != undefined do dotNet.addEventHandler btnBrowse "Click" onAmenoRenderBrowseClick
         if btnAuto != undefined do dotNet.addEventHandler btnAuto "Click" onAmenoRenderResetClick
         if btnRenderCotas != undefined do dotNet.addEventHandler btnRenderCotas "Click" onAmenoRenderCotasClick
         if btnOpenFolder != undefined do dotNet.addEventHandler btnOpenFolder "Click" onAmenoRenderOpenFolderClick
         if btnCopyPath != undefined do dotNet.addEventHandler btnCopyPath "Click" onAmenoRenderCopyPathClick
+        if chkDimensionsOnly != undefined do
+        (
+            dotNet.addEventHandler chkDimensionsOnly "Checked" onAmenoRenderDimensionsOnlyChanged
+            dotNet.addEventHandler chkDimensionsOnly "Unchecked" onAmenoRenderDimensionsOnlyChanged
+        )
 
         true
     ),
@@ -495,6 +524,7 @@ struct AmenoCotasRenderTabDefinition
         resetOutput()
         refreshCameras()
         refreshRendererInfo()
+        refreshOutputMode()
         bindEvents()
 
         hostControl

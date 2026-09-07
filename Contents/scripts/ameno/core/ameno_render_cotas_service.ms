@@ -15,6 +15,9 @@ struct AmenoRenderCotasRequest
     height = 0,
     pixelAspect = 1.0,
     renderType = #normal,
+    -- true: cria o overlay independente e torna a planta não renderizável
+    -- apenas durante o passe. false: preserva a cena e adiciona as cotas.
+    dimensionsOnly = true,
     -- Quando preenchida, a câmera é passada diretamente ao comando render;
     -- a viewport ativa não precisa ser trocada para executar o passe.
     cameraNode = undefined
@@ -147,7 +150,7 @@ struct AmenoRenderCotasServiceDefinition
         )
     ),
 
-    fn createRequest outputPath:"" selectionMode:#all overwrite:false cameraNode:undefined =
+    fn createRequest outputPath:"" selectionMode:#all overwrite:false cameraNode:undefined dimensionsOnly:true =
     (
         local inheritedRenderType = #normal
         try (inheritedRenderType = normalizeRenderType (getRenderType())) catch ()
@@ -161,6 +164,7 @@ struct AmenoRenderCotasServiceDefinition
             height:renderHeight \
             pixelAspect:renderPixelAspect \
             renderType:inheritedRenderType \
+            dimensionsOnly:dimensionsOnly \
             cameraNode:cameraNode
     ),
 
@@ -336,7 +340,7 @@ struct AmenoRenderCotasServiceDefinition
         state
     ),
 
-    fn applyIsolation sceneState targetNodes annotationMaterials =
+    fn applyIsolation sceneState targetNodes annotationMaterials dimensionsOnly:true =
     (
         with undo off
         (
@@ -355,11 +359,23 @@ struct AmenoRenderCotasServiceDefinition
                 local node = nodeState.node
                 local isTarget = (findItem targetNodes node) > 0
 
-                try (node.renderByLayer = false) catch ()
-                try (node.renderable = isTarget) catch ()
+                -- Manter o caminho histórico do overlay byte a byte na ordem das
+                -- mutações: primeiro remover herança e definir renderabilidade de
+                -- todos os nós; depois preparar material/visibilidade dos alvos.
+                -- Alguns renderers avaliam notificações de cena entre setters.
+                if dimensionsOnly do
+                (
+                    try (node.renderByLayer = false) catch ()
+                    try (node.renderable = isTarget) catch ()
+                )
 
                 if isTarget do
                 (
+                    if not dimensionsOnly do
+                    (
+                        try (node.renderByLayer = false) catch ()
+                        try (node.renderable = true) catch ()
+                    )
                     try (node.primaryVisibility = true) catch ()
                     try (node.isHidden = false) catch ()
                     if nodeState.hasMaterial do
@@ -505,6 +521,7 @@ struct AmenoRenderCotasServiceDefinition
         " · renderType=" + (request.renderType as string) +
         " · resolução=" + (request.width as string) + "x" + (request.height as string) +
         " · pixelAspect=" + (request.pixelAspect as string) +
+        " · somenteCotas=" + (request.dimensionsOnly as string) +
         " · isolateSelection=" + (isolateActive as string) +
         " · saída=" + (request.outputPath as string)
     ),
@@ -520,9 +537,10 @@ struct AmenoRenderCotasServiceDefinition
         if request.selectionMode != #all and request.selectionMode != #selected do request.selectionMode = #all
 
         -- O Isolate Selection mantém estado nativo próprio, além de esconder nós.
-        -- Alterar manualmente renderable/isHidden enquanto esse estado está ativo
-        -- pode entregar ao Corona uma cena internamente inconsistente. No Corona 15
-        -- Hotfix 1 isso já produziu EXCEPTION_ACCESS_VIOLATION dentro de render().
+        -- O render comum pode usá-lo normalmente; o conflito aparece quando o Ameno
+        -- tenta aplicar por cima seu próprio passe transacional (renderable, layers,
+        -- visibilidade e materiais). No Corona 15 Hotfix 1 essa combinação já
+        -- produziu EXCEPTION_ACCESS_VIOLATION dentro de render().
         -- Sair e reentrar automaticamente também não é seguro: descartaria o estado
         -- original que o Max usa quando o usuário executa End Isolate.
         local isolateActive = isolateSelectionActive()
@@ -530,7 +548,7 @@ struct AmenoRenderCotasServiceDefinition
             ::AmenoLog.info ("Render overlay preflight · " + (renderRequestSummary request isolateActive:isolateActive))
         if isolateActive do
         (
-            local isolateMessage = "A cena está em Isolate Selection. Finalize o isolamento (Alt+Q / End Isolate) e tente renderizar novamente. O passe foi bloqueado antes de chamar o renderer para proteger a cena e o 3ds Max."
+            local isolateMessage = "A cena está em Isolate Selection. O render comum pode usar esse modo, mas o Ameno precisa controlar visibilidade e materiais durante seu próprio passe. Finalize o isolamento (Alt+Q / End Isolate) e use 'Renderizar somente as cotas (sem a planta)'; o Ameno ocultará a planta temporariamente e restaurará a cena."
             if ::AmenoLog != undefined do ::AmenoLog.warn isolateMessage
             return AmenoRenderCotasResult selectionMode:request.selectionMode errorMessage:isolateMessage
         )
@@ -597,7 +615,7 @@ struct AmenoRenderCotasServiceDefinition
             activeStage = "criação do material de anotação"
             annotationMaterials = createAnnotationMaterials targetNodes resolvedAdapter
             activeStage = "isolamento temporário da cena"
-            applyIsolation sceneState targetNodes annotationMaterials
+            applyIsolation sceneState targetNodes annotationMaterials dimensionsOnly:request.dimensionsOnly
 
             activeStage = "validação final do renderer"
             local finalCompatibilityError = rendererCompatibilityError resolvedAdapter

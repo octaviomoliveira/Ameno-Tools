@@ -18,6 +18,8 @@
     (
         mode = #success,
         seenCamera = undefined,
+        watchNode = undefined,
+        seenWatchRenderable = undefined,
         configureCount = 0,
         restoreCount = 0,
 
@@ -45,6 +47,8 @@
         fn renderOverlay request =
         (
             seenCamera = request.cameraNode
+            if watchNode != undefined and isValidNode watchNode do
+                try (seenWatchRenderable = watchNode.renderable) catch ()
             if mode == #renderFailure then throw "Falha simulada durante o render."
             AmenoAdapterRenderResult cancelled:(mode == #cancel)
         ),
@@ -172,6 +176,7 @@
     request.width = 320
     request.height = 180
     request.pixelAspect = 1.0
+    check "pedido usa somente cotas por padrão" (request.dimensionsOnly == true)
 
     -- Isolate Selection: o serviço deve bloquear antes de tocar no adapter ou
     -- na cena. Renderizar sobre esse estado causou acesso inválido no Corona 15.
@@ -189,12 +194,24 @@
     dimensionsLayer.on = false
     dimensionsLayer.ishidden = true
     dimensionsLayer.renderable = false
-    local successAdapter = AmenoE13Stage6Adapter mode:#success
+    local successAdapter = AmenoE13Stage6Adapter mode:#success watchNode:userNode
     local successResult = ::AmenoRenderCotasService.renderDimensions request adapter:successAdapter
     check "render bem sucedido retorna alpha e resolução" (successResult.success and not successResult.cancelled and successResult.hasAlpha and successResult.width == 320 and successResult.height == 180)
     check "câmera explícita é encaminhada sem trocar viewport" (successAdapter.seenCamera == cameraNode)
     check "sucesso restaura geometria, materiais e layer" (restoreCheck userNode originalUserRenderable originalUserHidden originalUserRenderByLayer originalUserMaterial dimensionsLayer false true false targetNodes targetMaterials and LayerManager.current == originalCurrentLayer)
     check "adapter é restaurado uma vez após sucesso" (successAdapter.restoreCount == 1 and successAdapter.configureCount == 1 and not ::AmenoRenderCotasService.isRendering)
+    check "modo somente cotas exclui a geometria comum durante o passe" (successAdapter.seenWatchRenderable == false)
+
+    -- Caixa desmarcada: preserva a geometria comum e adiciona as cotas.
+    request.dimensionsOnly = false
+    dimensionsLayer.on = false
+    dimensionsLayer.ishidden = true
+    dimensionsLayer.renderable = false
+    local sceneAdapter = AmenoE13Stage6Adapter mode:#success watchNode:userNode
+    local sceneResult = ::AmenoRenderCotasService.renderDimensions request adapter:sceneAdapter
+    check "modo cena mais cotas mantém geometria comum renderizável" (sceneResult.success and sceneAdapter.seenWatchRenderable == originalUserRenderable)
+    check "modo cena mais cotas também restaura cena e adapter" (restoreCheck userNode originalUserRenderable originalUserHidden originalUserRenderByLayer originalUserMaterial dimensionsLayer false true false targetNodes targetMaterials and sceneAdapter.restoreCount == 1)
+    request.dimensionsOnly = true
 
     -- Cancelamento: o resultado é explícito e também deixa a cena original.
     dimensionsLayer.on = false

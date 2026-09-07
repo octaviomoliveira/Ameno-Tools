@@ -141,7 +141,20 @@
         )
 
         if buildOk then
+        (
             logPass "AmenoCotasRenderTab.build() construiu UserControl WPF com sucesso"
+            local onlyDimensions = try (ctrl.FindName "chkDimensionsOnly") catch (undefined)
+            local outputMode = try (ctrl.FindName "txtOutputMode") catch (undefined)
+            if onlyDimensions != undefined and onlyDimensions.IsChecked == true then
+                logPass "Render inicia com Somente cotas marcado"
+            else
+                logFail "Checkbox Somente cotas ausente ou desmarcado por padrao"
+
+            if outputMode != undefined and (matchPattern outputMode.Text pattern:"*planta*ocultada*") then
+                logPass "Render explica que a planta sera ocultada temporariamente"
+            else
+                logFail "Texto explicativo do isolamento automatico nao foi encontrado"
+        )
         else
             logFail "AmenoCotasRenderTab.build() falhou ao construir UserControl WPF"
     )
