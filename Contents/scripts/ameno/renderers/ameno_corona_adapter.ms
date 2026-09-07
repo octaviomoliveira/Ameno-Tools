@@ -203,12 +203,12 @@ struct AmenoCoronaRendererAdapterService
     (
         local wasCancelled = false
         local renderedBitmap = undefined
-        -- Parâmetros mínimos seguros para o Corona 15 Hotfix 1.
-        -- outputColorConversion, missingExtFilesAction e outros parâmetros
-        -- não-universais foram removidos: em algumas versões do Corona, passá-los
-        -- sem câmera explícita leva a EXCEPTION_ACCESS_VIOLATION (leitura em 0x40)
-        -- porque o renderer tenta acessar um ponteiro de câmera que é nulo.
-        -- O Corona já gerencia colorimetria e arquivos ausentes internamente.
+        -- outputColorConversion removido: com camera:undefined passá-lo causa
+        -- EXCEPTION_ACCESS_VIOLATION (leitura em 0x40) no Corona 15 HF1.
+        -- vfb:true é necessário: com vfb:false o Corona 15 retorna undefined
+        -- de render() e não aciona o save via renderSaveFile, deixando o PNG
+        -- nunca criado. Com vfb:true o Corona usa seu pipeline normal de VFB
+        -- e salva o arquivo via renderOutputFilename + renderSaveFile.
         if cameraNode != undefined and isValidNode cameraNode then
         (
             renderedBitmap = render \
@@ -218,23 +218,43 @@ struct AmenoCoronaRendererAdapterService
                 outputheight:request.height \
                 pixelaspect:request.pixelAspect \
                 outputfile:request.outputPath \
-                vfb:false \
+                vfb:true \
+                quiet:true \
+                missingExtFilesAction:#logmsg \
                 cancelled:&wasCancelled
         )
         else
         (
-            -- Sem câmera explícita: o Render Setup / viewport ativo é a fonte.
-            -- Não passar camera:undefined — alguns internals do Corona tratam
-            -- isso como ponteiro nulo e travam o processo.
             renderedBitmap = render \
                 frame:request.frame \
                 outputwidth:request.width \
                 outputheight:request.height \
                 pixelaspect:request.pixelAspect \
                 outputfile:request.outputPath \
-                vfb:false \
+                vfb:true \
+                quiet:true \
+                missingExtFilesAction:#logmsg \
                 cancelled:&wasCancelled
         )
+
+        -- Salvar manualmente como fallback caso o Corona não salve via VFB.
+        -- Normalmente o renderSaveFile + renderOutputFilename já cobrem o save;
+        -- este bloco só executa se a VFB retornou um bitmap acessível.
+        if renderedBitmap != undefined and not wasCancelled and not (doesFileExist request.outputPath) then
+        (
+            local saveErr = ""
+            try
+            (
+                pngio.setAlpha true
+                pngio.setType #true24
+                pngio.setInterlaced false
+                renderedBitmap.filename = request.outputPath
+                save renderedBitmap
+            )
+            catch (saveErr = getCurrentException() as string)
+            if saveErr != "" then throw ("Falha ao salvar o PNG das cotas: " + saveErr)
+        )
+
         #(renderedBitmap, wasCancelled)
     ),
 
