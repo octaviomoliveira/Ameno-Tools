@@ -264,17 +264,19 @@ Continuidade: `plans/2026-09-06-e13-feedback-visual-handoff.md`. A instalação 
 
 Evidência detalhada e handoff: `plans/2026-09-06-e13-renderer-profile-handoff.md`. O hotfix já está instalado; não pedir reprodução do crash ao usuário antes do Max ser reaberto com a versão atual. Não pressionar Enter durante a cotação.
 
-### Hotfix pós-gate — render com Isolate Selection ativo — 2026-09-06
+### Hotfix pós-gate — render separado e Isolate Selection — 2026-09-06
 
 - [x] Cruzar as ocorrências reais: `ameno-20260906-180520-144.log`, `ameno-20260906-203536-650.log` e `ameno-20260906-213909-685.log` falham no estágio `render` com o mesmo `EXCEPTION_ACCESS_VIOLATION`/leitura no endereço `0x40`.
 - [x] Confirmar que o PNG de destino da tentativa mais recente não foi criado e que a exceção ocorreu dentro da chamada nativa, depois de renderer/adaptador/material serem aceitos.
 - [x] Confirmar no `Max.log` da sessão real `Corona version: 15 (Hotfix 1)` e o aviso `One or more objects are currently Isolated` antes da tentativa.
 - [x] Validar a API oficial `IsolateSelection.IsolateSelectionModeActive()` disponível no Max 2026.
+- [x] Confirmar a distinção: o Corona renderiza Isolate normalmente; o problema é combinar o estado nativo do Max com o isolamento transacional de visibilidade/layers/materiais do Ameno.
 - [x] Bloquear o passe antes de qualquer mutação quando Isolate Selection estiver ativo; preservar o modo e orientar Alt+Q/End Isolate em vez de sair/reentrar automaticamente.
+- [x] Expor a caixa `Renderizar somente as cotas (sem a planta)`, marcada por padrão; nesse modo o Ameno oculta a planta temporariamente e restaura a cena. Desmarcada, a cena comum permanece renderizável junto das cotas.
 - [x] Registrar preflight com câmera, render type, resolução, pixel aspect, estado de isolamento e caminho de saída.
-- [x] Adicionar regressão transacional: quatro verificações cobrem detecção, ausência de chamadas ao adapter, preservação da cena/isolamento e encerramento controlado do fixture.
-- [x] Validar pacote e executar Batch: `test_bootstrap.ms` 1 PASS, `test_e13_stage6_render_restore.ms` 24 PASS e `test_e9_corona_render.ms` 1 PASS com Corona 15 Hotfix 1 real e PNG alpha; todos exit 0 e zero FAIL.
-- [x] Commit funcional: `888985e` (`fix: guard render during isolate selection`).
+- [x] Adicionar regressão transacional: detecção, ausência de chamadas ao adapter, preservação da cena/isolamento, modo somente-cotas e modo cena+cotas.
+- [x] Validar pacote e executar Batch: `test_bootstrap.ms` 1 PASS, `test_e13_stage6_render_restore.ms` 28 PASS, `test_e13e.ms` 11 PASS, `test_e13_ui_lifecycle.ms` 12 PASS e `test_e9_corona_render.ms` 1 PASS com Corona 15 Hotfix 1 real e PNG alpha; todos exit 0 e zero FAIL.
+- [x] Commit funcional final: `5844730` (`feat: add explicit dimension-only render mode`); a guarda de diagnóstico está no ancestral `888985e`.
 - [ ] Instalar com o Max fechado, conferir hashes e executar `test_installed_package.ms`.
 - [ ] Gate manual: com Isolate ativo, obter mensagem sem crash; após Alt+Q/End Isolate, gerar o PNG de cotas da cena real e confirmar cor/alpha.
 
