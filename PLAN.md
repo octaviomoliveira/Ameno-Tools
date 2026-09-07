@@ -73,7 +73,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **Prioridade atual — concluir o gate manual do hotfix de render com segurança:** a versão atual já está instalada em `ApplicationPlugins` após o Max fechar normalmente; 41/41 arquivos de conteúdo e o manifesto conferem por SHA-256, e o teste instalado passou. Ao reabrir, confirmar que o painel mostra a classe real; em Arnold/outro renderer sem adapter o botão deve permanecer desabilitado e o serviço deve retornar erro explicável, sem chamar `render()`.
+- **Prioridade atual — instalar e validar o hotfix de lifecycle WPF:** a correção mantém uma única janela/instância por aba, substitui o ciclo reentrante `Hide → startTool → Show` por bloqueio temporário dos controles, torna a navegação transacional e registra falhas no logger. Pacote e dez suítes passaram com 142 PASS/0 FAIL. O Max interativo permaneceu aberto e intocado; instalação e gate manual continuam pendentes. Handoff: `plans/2026-09-06-e13-ui-lifecycle-fix-handoff.md`.
+
+- **Issues abertas no GitHub:** [#1 — preview visual das fontes](https://github.com/octaviomoliveira/Ameno-Tools/issues/1), [#2 — janela redimensionável/responsiva](https://github.com/octaviomoliveira/Ameno-Tools/issues/2) e [#3 — falha de fontes específicas como Fredoka](https://github.com/octaviomoliveira/Ameno-Tools/issues/3).
+
+- **Gate adicional — concluir o hotfix de render com segurança:** a versão atual já está instalada em `ApplicationPlugins` após o Max fechar normalmente; 41/41 arquivos de conteúdo e o manifesto conferem por SHA-256, e o teste instalado passou. Ao reabrir, confirmar que o painel mostra a classe real; em Arnold/outro renderer sem adapter o botão deve permanecer desabilitado e o serviço deve retornar erro explicável, sem chamar `render()`.
 
 - **Correção implementada — cor de render, biblioteca global e renderer:** o passe agora recebe `annotationColor` do estilo, a biblioteca global preserva perfis entre cenas/reinícios e a compatibilidade é validada por família/classe real imediatamente antes do render. A validação automatizada e a instalação/teste pelo `ApplicationPlugins` passaram; falta apenas o gate visual/manual. V-Ray CPU real e GPU continuam fora da evidência desta rodada.
 
@@ -94,7 +98,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Atual em 2026-09-06:** reabrir o Max com o hotfix já instalado e, em uma cena descartável, confirmar no banner `Corona [classe]` ou `V-Ray [classe]`, testar render de overlay Corona 15 e persistência de um perfil após reiniciar/reabrir. Em Arnold, apenas confirmar bloqueio informativo; não pressionar Enter durante a cotação e não usar teste destrutivo na cena do usuário. V-Ray CPU real, aprovação manual e publicação continuam pendentes. Ver `plans/2026-09-06-e13-renderer-profile-handoff.md`.
+- **Atual em 2026-09-06:** aguardar o usuário fechar o Max, instalar o hotfix WPF com backup/hashes e executar o gate real: cota individual e contínua, seguidas de pelo menos cinco ciclos Criar → Estilos → Editar → Render → Criar. Confirmar no logger que o painel foi desabilitado/reabilitado e que não houve falha de construção de aba. O Enter continua removido.
+
+- **Depois do gate WPF:** em uma cena descartável, confirmar no banner `Corona [classe]` ou `V-Ray [classe]`, testar render de overlay Corona 15 e persistência de um perfil após reiniciar/reabrir. Em Arnold, apenas confirmar bloqueio informativo; não pressionar Enter durante a cotação e não usar teste destrutivo na cena do usuário. V-Ray CPU real, aprovação manual e publicação continuam pendentes. Ver `plans/2026-09-06-e13-renderer-profile-handoff.md`.
 
 - **Pendências conhecidas:** gate manual do pacote atualizado; render V-Ray CPU real; confirmar comportamento visual do diálogo de cor, biblioteca global e bloqueio de Arnold no Max interativo. A compatibilidade com outras versões de Corona/V-Ray continua dependente das capacidades detectadas pelo adapter; não declarar universalidade sem esses gates.
 
@@ -117,6 +123,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-06 — Corrigir a interface que deixa de responder após usar cotas e listar issues abertas:** os logs provaram que o MouseTool concluía e o Max seguia responsivo; a falha estava no lifecycle síncrono Hide/startTool/Show, nos `catch ()` silenciosos e na reconstrução repetida de Criar/Render. O hotfix mantém a janela visível e temporariamente desabilitada, reutiliza controles, faz rollback da navegação e adiciona logs/teste de estresse. Dez suítes somaram 142 PASS/0 FAIL. As suítes que apagavam a biblioteca global real foram isoladas em `%TEMP%`; o perfil do usuário permaneceu intacto. Issues abertas confirmadas: #1, #2 e #3. Instalação pendente porque o Max está aberto. Handoff: `plans/2026-09-06-e13-ui-lifecycle-fix-handoff.md`.
 
 - **2026-09-06 — Analisar cotas invisíveis no render e perfis que somem após reinício:** confirmado que o material temporário do render é branco e que as cores do estilo ainda ficam restritas ao preview; confirmado também que a persistência atual é scene-local e depende do `.max` ser salvo. A suíte E13 etapa 3 cobre save/load de cena, não uma biblioteca global entre reinícios. Implementação da cor e decisão do escopo global/scene-local ainda pendentes.
 

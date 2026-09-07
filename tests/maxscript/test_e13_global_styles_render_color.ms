@@ -15,8 +15,13 @@
     local testPath = getFilenamePath testFile
     local worktreeRoot = pathConfig.normalizePath (pathConfig.appendPath testPath @"..\..")
     local bootstrapPath = pathConfig.normalizePath (pathConfig.appendPath worktreeRoot @"Contents\scripts\startup\ameno_bootstrap.ms")
-    local localAppData = (dotNetClass "System.Environment").GetEnvironmentVariable "LOCALAPPDATA"
-    local globalStylesPath = pathConfig.normalizePath (pathConfig.appendPath localAppData @"AmenoTools\Profiles\styles.library")
+    local environmentApi = dotNetClass "System.Environment"
+    local directoryApi = dotNetClass "System.IO.Directory"
+    local originalLocalAppData = environmentApi.GetEnvironmentVariable "LOCALAPPDATA"
+    local isolatedLocalAppData = pathConfig.normalizePath (pathConfig.appendPath (getDir #temp) ("AmenoTools-E13-global-styles-" + (timestamp() as string)))
+    directoryApi.CreateDirectory isolatedLocalAppData
+    environmentApi.SetEnvironmentVariable "LOCALAPPDATA" isolatedLocalAppData
+    local globalStylesPath = pathConfig.normalizePath (pathConfig.appendPath isolatedLocalAppData @"AmenoTools\Profiles\styles.library")
 
     -- Esta suíte precisa começar sem estado persistido de outra execução.
     deleteFile globalStylesPath
@@ -110,6 +115,8 @@
     deleteFile globalStylesPath
     deleteFile (globalStylesPath + ".bak")
     deleteFile (globalStylesPath + ".tmp")
+    environmentApi.SetEnvironmentVariable "LOCALAPPDATA" originalLocalAppData
+    try (directoryApi.Delete isolatedLocalAppData true) catch ()
 
     format "\n[AMENO_TEST] Resultado biblioteca/cor: % passou(aram), % falhou(aram)\n" passed failed
     if failed == 0 then

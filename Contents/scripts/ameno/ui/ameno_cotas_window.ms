@@ -16,29 +16,59 @@ struct AmenoCotasWindowDefinition
     btnClose      = undefined,
     activeSection = 0,
     closeApproved = false,
+    interactiveToolSuspended = false,
 
     -- -----------------------------------------------------------------
     -- Helpers
     -- -----------------------------------------------------------------
     fn isOpen =
     (
-        window != undefined and (try (window.IsLoaded and window.IsVisible) catch (false))
+        -- Uma janela carregada continua sendo o singleton mesmo quando estiver
+        -- temporariamente invisivel. Usar IsVisible aqui podia criar uma segunda
+        -- janela e deixar a primeira (com handlers vivos) orfa.
+        window != undefined and (try (window.IsLoaded) catch (false))
+    ),
+
+    fn logUi level message =
+    (
+        if ::AmenoLog != undefined do
+            try (::AmenoLog.write level ("UI WPF · " + message)) catch ()
+        true
     ),
 
     fn suspendForInteractiveTool =
     (
         if window == undefined then return false
+        local canSuspend = try (window.IsLoaded and window.IsVisible) catch (false)
+        if not canSuspend then return false
+
         try
         (
-            if window.IsLoaded and window.IsVisible then
+            -- Nao esconder/reexibir a janela dentro do mesmo callback WPF que
+            -- executa startTool. Esse ciclo deixava foco/captura inconsistentes
+            -- depois que o MouseTool devolvia o controle ao painel.
+            window.IsEnabled = false
+            interactiveToolSuspended = true
+            try
             (
-                window.Hide()
-                try (windows.setFocus (windows.getMAXHWND())) catch ()
-                true
+                windows.setFocus (windows.getMAXHWND())
             )
-            else false
+            catch
+            (
+                local focusError = try (getCurrentException() as string) catch ("erro desconhecido")
+                logUi #warn ("nao foi possivel transferir o foco ao Max · " + focusError)
+            )
+            logUi #info "painel desabilitado para ferramenta interativa"
+            true
         )
-        catch (false)
+        catch
+        (
+            local suspendError = try (getCurrentException() as string) catch ("erro desconhecido")
+            interactiveToolSuspended = false
+            try (window.IsEnabled = true) catch ()
+            logUi #error ("falha ao suspender painel · " + suspendError)
+            false
+        )
     ),
 
     fn resumeAfterInteractiveTool =
@@ -48,10 +78,19 @@ struct AmenoCotasWindowDefinition
         (
             if not window.IsLoaded then return false
             if not window.IsVisible do window.Show()
-            try (window.Activate()) catch ()
+            window.IsEnabled = true
+            interactiveToolSuspended = false
+            logUi #info "painel reabilitado apos ferramenta interativa"
             true
         )
-        catch (false)
+        catch
+        (
+            local resumeError = try (getCurrentException() as string) catch ("erro desconhecido")
+            interactiveToolSuspended = false
+            try (window.IsEnabled = true) catch ()
+            logUi #error ("falha ao reabilitar painel · " + resumeError)
+            false
+        )
     ),
 
     fn registerSceneCountCallbacks =
@@ -259,84 +298,64 @@ struct AmenoCotasWindowDefinition
     fn setTabContent sectionIndex =
     (
         local contentBorder = findControl "ContentArea"
-        if contentBorder == undefined do return false
-
-        try
+        if contentBorder == undefined do
         (
-            contentBorder.Child = undefined
+            logUi #error "ContentArea nao encontrado durante navegacao"
+            return false
         )
-        catch ()
 
         try
         (
+            local tabControl = undefined
             case sectionIndex of
             (
                 1: -- Aba Criar
                 (
-                    if ::AmenoCotasCriarTab != undefined do
-                    (
-                        local tabControl = ::AmenoCotasCriarTab.build()
-                        if tabControl != undefined do
-                        (
-                            contentBorder.Child = tabControl
-                            ::AmenoCotasCriarTab.updateCotaCount()
-                        )
-                    )
+                    if ::AmenoCotasCriarTab == undefined do throw "modulo Criar indisponivel"
+                    tabControl = ::AmenoCotasCriarTab.build()
                 )
                 2: -- Aba Estilos (E13-C)
                 (
-                    if ::AmenoCotasEstilosTab != undefined do
-                    (
-                        local tabControl = ::AmenoCotasEstilosTab.build()
-                        if tabControl != undefined do
-                        (
-                            contentBorder.Child = tabControl
-                            try (::AmenoCotasEstilosTab.refresh()) catch ()
-                        )
-                    )
+                    if ::AmenoCotasEstilosTab == undefined do throw "modulo Estilos indisponivel"
+                    tabControl = ::AmenoCotasEstilosTab.build()
                 )
                 3: -- Aba Editar (E13-D)
                 (
-                    if ::AmenoCotasEditarTab != undefined do
-                    (
-                        local tabControl = ::AmenoCotasEditarTab.build()
-                        if tabControl != undefined do
-                        (
-                            contentBorder.Child = tabControl
-                            ::AmenoCotasEditarTab.refresh()
-                        )
-                    )
+                    if ::AmenoCotasEditarTab == undefined do throw "modulo Editar indisponivel"
+                    tabControl = ::AmenoCotasEditarTab.build()
                 )
                 4: -- Aba Render (E13-E)
                 (
-                    if ::AmenoCotasRenderTab != undefined do
-                    (
-                        local tabControl = ::AmenoCotasRenderTab.build()
-                        if tabControl != undefined do
-                        (
-                            contentBorder.Child = tabControl
-                            ::AmenoCotasRenderTab.refreshCameras()
-                            ::AmenoCotasRenderTab.refreshRendererInfo()
-                        )
-                    )
+                    if ::AmenoCotasRenderTab == undefined do throw "modulo Render indisponivel"
+                    tabControl = ::AmenoCotasRenderTab.build()
                 )
                 default:
                 (
                     -- Outras abas: placeholder
                     local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
-                    local placeholder = xamlReader.Parse ("<Border xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>" + \
+                    tabControl = xamlReader.Parse ("<Border xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>" + \
                         "<StackPanel HorizontalAlignment='Center' VerticalAlignment='Center'>" + \
                         "<TextBlock Text='Em construcao' Foreground='#555555' FontSize='16' FontStyle='Italic' HorizontalAlignment='Center'/>" + \
                         "<TextBlock Text='(disponivel nas proximas fases)' Foreground='#3A3A3A' FontSize='11' HorizontalAlignment='Center' Margin='0,6,0,0'/>" + \
                         "</StackPanel>" + \
                         "</Border>")
-                    contentBorder.Child = placeholder
                 )
             )
-        )
-        catch ()
 
-        true
+            if tabControl == undefined do throw ("aba " + (sectionIndex as string) + " nao produziu conteudo")
+
+            -- A troca so ocorre depois que o novo controle foi construido e
+            -- atualizado. Em caso de erro, a aba anterior permanece intacta.
+            contentBorder.Child = tabControl
+            logUi #info ("conteudo da aba " + (sectionIndex as string) + " ativado")
+            true
+        )
+        catch
+        (
+            local tabError = try (getCurrentException() as string) catch ("erro desconhecido")
+            logUi #error ("falha ao construir aba " + (sectionIndex as string) + " · " + tabError)
+            false
+        )
     ),
 
     -- -----------------------------------------------------------------
@@ -352,6 +371,15 @@ struct AmenoCotasWindowDefinition
             "btnSectionConfig"
         )
 
+        if sectionIndex < 1 or sectionIndex > btnNames.count do
+        (
+            logUi #warn ("indice de aba invalido: " + (sectionIndex as string))
+            return false
+        )
+
+        -- Primeiro constroi a proxima aba. Somente um sucesso pode alterar o
+        -- estado visual/ativo; falhas preservam integralmente a aba corrente.
+        if not (setTabContent sectionIndex) do return false
         activeSection = sectionIndex
 
         local converter = try (dotNetObject "System.Windows.Media.BrushConverter") catch (undefined)
@@ -381,15 +409,7 @@ struct AmenoCotasWindowDefinition
             )
         )
 
-        -- Injectar conteudo da aba selecionada
-        setTabContent sectionIndex
-        if sectionIndex == 3 and ::AmenoCotasEditarTab != undefined do
-            try (::AmenoCotasEditarTab.refresh()) catch ()
-        if sectionIndex == 4 and ::AmenoCotasRenderTab != undefined do
-        (
-            try (::AmenoCotasRenderTab.refreshCameras()) catch ()
-            try (::AmenoCotasRenderTab.refreshRendererInfo()) catch ()
-        )
+        true
     ),
 
     -- -----------------------------------------------------------------
@@ -446,6 +466,7 @@ struct AmenoCotasWindowDefinition
                 try (::AmenoCotasEstilosTab.onPanelClosed()) catch ()
                 try (::AmenoCotasEditarTab.onPanelClosed()) catch ()
                 try (AmenoCotasWindow.closeApproved = false) catch ()
+                try (AmenoCotasWindow.interactiveToolSuspended = false) catch ()
                 try (AmenoCotasWindow.window = undefined) catch ()
             ))
 
@@ -518,6 +539,7 @@ struct AmenoCotasWindowDefinition
     -- -----------------------------------------------------------------
     fn buildWindow =
     (
+        interactiveToolSuspended = false
         local xamlStr    = getXAMLString()
         local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
         window = xamlReader.Parse xamlStr
@@ -559,12 +581,18 @@ struct AmenoCotasWindowDefinition
             -- Já aberta: restaurar e ativar
             try
             (
+                if not window.IsVisible do window.Show()
                 local minimized = dotNetClass "System.Windows.WindowState"
                 if window.WindowState == minimized.Minimized do
                     window.WindowState = minimized.Normal
+                if not interactiveToolSuspended do window.IsEnabled = true
             )
-            catch ()
-            try (window.Activate()) catch ()
+            catch
+            (
+                local showError = try (getCurrentException() as string) catch ("erro desconhecido")
+                logUi #error ("falha ao restaurar janela existente · " + showError)
+            )
+            if not interactiveToolSuspended do try (window.Activate()) catch ()
             return window
         )
 

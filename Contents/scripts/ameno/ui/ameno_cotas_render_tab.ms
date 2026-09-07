@@ -476,6 +476,18 @@ struct AmenoCotasRenderTabDefinition
     -- -----------------------------------------------------------------
     fn build =
     (
+        if hostControl != undefined do
+        (
+            local cachedControlOk = try (hostControl.FindName "btnRenderCotas" != undefined) catch (false)
+            if cachedControlOk do
+            (
+                refreshCameras()
+                refreshRendererInfo()
+                return hostControl
+            )
+            hostControl = undefined
+        )
+
         local xamlStr    = getXAMLString()
         local xamlReader = dotNetClass "System.Windows.Markup.XamlReader"
         hostControl = xamlReader.Parse xamlStr

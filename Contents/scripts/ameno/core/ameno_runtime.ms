@@ -30,6 +30,13 @@ struct AmenoRuntime
     lastRenderResult = undefined,
     started = false,
 
+    fn logRuntime level message =
+    (
+        if ::AmenoLog != undefined do
+            try (::AmenoLog.write level ("Runtime · " + message)) catch ()
+        true
+    ),
+
     fn refreshRenderer =
     (
         rendererInfo = AmenoRendererProbe.detect()
@@ -64,6 +71,7 @@ struct AmenoRuntime
         local panelSuspended = false
         if ::AmenoCotasWindow != undefined do
             panelSuspended = try (::AmenoCotasWindow.suspendForInteractiveTool()) catch (false)
+        logRuntime #info ("cota individual iniciada · painelSuspenso=" + (panelSuspended as string))
 
         local toolError = undefined
         try
@@ -73,12 +81,16 @@ struct AmenoRuntime
         catch
         (
             toolError = getCurrentException() as string
+            logRuntime #error ("cota individual interrompida · " + toolError)
         )
 
         try (refreshScene()) catch ()
         try (refreshDimensions()) catch ()
         if panelSuspended and ::AmenoCotasWindow != undefined do
-            try (::AmenoCotasWindow.resumeAfterInteractiveTool()) catch ()
+        (
+            local resumed = try (::AmenoCotasWindow.resumeAfterInteractiveTool()) catch (false)
+            if not resumed do logRuntime #error "painel nao foi reabilitado apos cota individual"
+        )
         if ::AmenoCotasCriarTab != undefined do
         (
             try (::AmenoCotasCriarTab.syncFromServices()) catch ()
@@ -86,6 +98,7 @@ struct AmenoRuntime
         )
 
         if toolError != undefined then throw toolError
+        logRuntime #info "cota individual encerrada"
         lastInteractiveDimension
     ),
 
@@ -97,6 +110,7 @@ struct AmenoRuntime
         local panelSuspended = false
         if ::AmenoCotasWindow != undefined do
             panelSuspended = try (::AmenoCotasWindow.suspendForInteractiveTool()) catch (false)
+        logRuntime #info ("cota continua iniciada · painelSuspenso=" + (panelSuspended as string))
 
         local toolError = undefined
         try
@@ -106,12 +120,16 @@ struct AmenoRuntime
         catch
         (
             toolError = getCurrentException() as string
+            logRuntime #error ("cota continua interrompida · " + toolError)
         )
 
         try (refreshScene()) catch ()
         try (refreshDimensions()) catch ()
         if panelSuspended and ::AmenoCotasWindow != undefined do
-            try (::AmenoCotasWindow.resumeAfterInteractiveTool()) catch ()
+        (
+            local resumed = try (::AmenoCotasWindow.resumeAfterInteractiveTool()) catch (false)
+            if not resumed do logRuntime #error "painel nao foi reabilitado apos cota continua"
+        )
         if ::AmenoCotasCriarTab != undefined do
         (
             try (::AmenoCotasCriarTab.syncFromServices()) catch ()
@@ -119,6 +137,7 @@ struct AmenoRuntime
         )
 
         if toolError != undefined then throw toolError
+        logRuntime #info "cota continua encerrada"
         lastInteractiveDimension
     ),
 

@@ -27,6 +27,7 @@ struct E13Stage2FakeWindowDefinition
 (
     IsLoaded = true,
     IsVisible = true,
+    IsEnabled = true,
     hideCalls = 0,
     showCalls = 0,
     activateCalls = 0,
@@ -100,6 +101,8 @@ struct E13Stage2FakeContinuousDefinition
 
     local tabControl = try (::AmenoCotasCriarTab.build()) catch (undefined)
     check "Tab Criar foi construida para a etapa 2" (tabControl != undefined)
+    local cachedCreateControl = try (::AmenoCotasCriarTab.build()) catch (undefined)
+    check "Tab Criar reutiliza o mesmo UserControl e seus handlers" (cachedCreateControl == tabControl)
 
     -- Botao, runtime e macro devem compartilhar o mesmo comando.
     local realApp = ::AmenoApp
@@ -202,19 +205,20 @@ struct E13Stage2FakeContinuousDefinition
     check "cadeia alinhada continua rejeitada explicitamente" rejectedContinuousAligned
     check "modo alinhado individual permanece disponivel" (::AmenoDimensionTool.activeMode == #aligned)
 
-    -- O helper de foco pode ser testado sem abrir uma janela real no batch.
+    -- O helper de foco mantem a janela carregada/visivel e apenas bloqueia seus
+    -- controles enquanto o MouseTool detem a interacao do Max.
     local previousWindow = ::AmenoCotasWindow.window
     local fakeWindow = E13Stage2FakeWindowDefinition()
     ::AmenoCotasWindow.window = fakeWindow
     local suspended = ::AmenoCotasWindow.suspendForInteractiveTool()
-    local hiddenAfterSuspend = (fakeWindow.hideCalls == 1 and fakeWindow.IsVisible == false)
+    local disabledAfterSuspend = (fakeWindow.IsEnabled == false and fakeWindow.IsVisible and fakeWindow.hideCalls == 0)
     local resumed = ::AmenoCotasWindow.resumeAfterInteractiveTool()
-    local visibleAfterResume = (fakeWindow.showCalls == 1 and fakeWindow.activateCalls == 1 and fakeWindow.IsVisible == true)
-    check "janela é suspensa antes do startTool" (suspended and hiddenAfterSuspend)
-    check "janela é restaurada depois do startTool" (resumed and visibleAfterResume)
+    local enabledAfterResume = (fakeWindow.IsEnabled and fakeWindow.IsVisible and fakeWindow.showCalls == 0 and fakeWindow.activateCalls == 0)
+    check "janela permanece visivel e e bloqueada antes do startTool" (suspended and disabledAfterSuspend)
+    check "janela e reabilitada sem Hide Show depois do startTool" (resumed and enabledAfterResume)
     ::AmenoCotasWindow.window = previousWindow
 
-    -- O runtime também precisa executar o ciclo hide -> startTool -> show,
+    -- O runtime também precisa executar o ciclo disable -> startTool -> enable,
     -- inclusive para o caminho chamado pela macro.
     local realContinuousTool = ::AmenoDimensionContinuousTool
     local runtimeFakeContinuous = E13Stage2FakeContinuousDefinition()
@@ -222,7 +226,7 @@ struct E13Stage2FakeContinuousDefinition
     ::AmenoDimensionContinuousTool = runtimeFakeContinuous
     ::AmenoCotasWindow.window = runtimeFakeWindow
     local runtimeResult = try (realApp.startContinuousDimensionTool()) catch (undefined)
-    check "runtime preserva retorno do startTool continuo e foco da janela" (runtimeResult == #fakeRuntimeContinuousResult and runtimeFakeWindow.hideCalls == 1 and runtimeFakeWindow.showCalls == 1 and runtimeFakeWindow.activateCalls == 1)
+    check "runtime preserva retorno e reabilita a janela sem Hide Show" (runtimeResult == #fakeRuntimeContinuousResult and runtimeFakeWindow.IsEnabled and runtimeFakeWindow.IsVisible and runtimeFakeWindow.hideCalls == 0 and runtimeFakeWindow.showCalls == 0 and runtimeFakeWindow.activateCalls == 0)
     ::AmenoDimensionContinuousTool = realContinuousTool
     ::AmenoCotasWindow.window = previousWindow
 
