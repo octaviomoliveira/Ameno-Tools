@@ -2,7 +2,7 @@
 
 Data: 2026-09-06  
 Branch/worktree: `develop` em `D:\Ameno\_worktrees\develop`  
-Estado: IMPLEMENTADA/TESTADA; instalação e gate interativo pendentes
+Estado: IMPLEMENTADA/TESTADA/INSTALADA; gate interativo pendente
 
 ## Relato e diagnóstico
 
@@ -68,9 +68,17 @@ O perfil real foi preservado:
 
 ## Instalação e próximo passo
 
-Nada foi instalado porque o 3ds Max interativo continua aberto. Nenhuma cena
-interativa foi alterada. Quando o usuário fechar o Max, instalar o worktree com
-backup recuperável e conferir hashes. Depois executar o gate manual:
+O usuário fechou o Max e a ausência de `3dsmax.exe`/`3dsmaxbatch.exe` foi
+confirmada antes da instalação. A versão anterior foi preservada em
+`D:\Ameno\backups\AmenoTools-before-ui-lifecycle-20260906-213520` (42 arquivos).
+O commit `dac0601` foi instalado em
+`C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`:
+
+- 42/42 arquivos correspondem ao worktree por SHA-256;
+- 0 ausentes, 0 divergentes e 0 extras;
+- `test_installed_package.ms`: exit 0, 1 PASS, 0 FAIL.
+
+Nenhuma cena interativa foi aberta ou alterada. Agora executar o gate manual:
 
 1. abrir Ameno Cotas;
 2. criar uma cota individual e uma contínua por clique na viewport;
