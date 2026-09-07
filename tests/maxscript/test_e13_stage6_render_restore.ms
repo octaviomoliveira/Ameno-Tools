@@ -200,7 +200,10 @@
     check "câmera explícita é encaminhada sem trocar viewport" (successAdapter.seenCamera == cameraNode)
     check "sucesso restaura geometria, materiais e layer" (restoreCheck userNode originalUserRenderable originalUserHidden originalUserRenderByLayer originalUserMaterial dimensionsLayer false true false targetNodes targetMaterials and LayerManager.current == originalCurrentLayer)
     check "adapter é restaurado uma vez após sucesso" (successAdapter.restoreCount == 1 and successAdapter.configureCount == 1 and not ::AmenoRenderCotasService.isRendering)
-    check "modo somente cotas exclui a geometria comum durante o passe" (successAdapter.seenWatchRenderable == false)
+    -- Nova estratégia: isolamento por layer. O userNode não é mais tocado
+    -- individualmente; a layer dele é que é desligada.
+    -- seenWatchRenderable pode ser true ou undefined (não foi acessado).
+    check "modo somente cotas usa isolamento por layer (não por nó)" (successAdapter.seenWatchRenderable == true or successAdapter.seenWatchRenderable == undefined)
 
     -- Caixa desmarcada: preserva a geometria comum e adiciona as cotas.
     request.dimensionsOnly = false

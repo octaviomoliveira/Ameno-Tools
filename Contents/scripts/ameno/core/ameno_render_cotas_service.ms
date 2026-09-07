@@ -302,11 +302,25 @@ struct AmenoRenderCotasServiceDefinition
         undefined
     ),
 
+    -- Captura o estado de renderização de todas as layers da cena
+    -- e apenas dos nós-alvo (cotas). Não itera objetos comuns da cena —
+    -- em cenas grandes (centenas de Plane objects) a iteração completa
+    -- dispara notificações excessivas ao renderer e pode travar o Corona.
     fn captureSceneState targetNodes =
     (
         local state = AmenoRenderSceneState currentLayer:LayerManager.current
+        local allLayers = #()
         local targetLayers = #()
 
+        -- Coletar todas as layers para controle de visibilidade por layer.
+        local layerCount = LayerManager.count
+        for i = 0 to (layerCount - 1) do
+        (
+            local layerValue = LayerManager.getLayer i
+            if layerValue != undefined do append allLayers layerValue
+        )
+
+        -- Identificar as layers dos nós-alvo (AMENO_COTAS e similares).
         for targetNode in targetNodes where isValidNode targetNode do
         (
             local targetLayer = undefined
@@ -314,19 +328,8 @@ struct AmenoRenderCotasServiceDefinition
             if targetLayer != undefined and (findItem targetLayers targetLayer) == 0 do append targetLayers targetLayer
         )
 
-        for node in objects where isValidNode node do
-        (
-            local nodeState = AmenoRenderNodeState node:node
-            try (nodeState.renderable = node.renderable) catch ()
-            try (nodeState.isHidden = node.isHidden) catch ()
-            try (nodeState.renderByLayer = node.renderByLayer) catch ()
-            try (nodeState.primaryVisibility = node.primaryVisibility) catch ()
-            nodeState.hasMaterial = isProperty node #material
-            if nodeState.hasMaterial do try (nodeState.material = node.material) catch ()
-            append state.nodes nodeState
-        )
-
-        for layer in targetLayers do
+        -- Salvar estado de TODAS as layers (para restaurar as que serão desligadas).
+        for layer in allLayers do
         (
             local layerState = AmenoRenderLayerState layer:layer
             try (layerState.layerOn = layer.on) catch ()
@@ -337,53 +340,77 @@ struct AmenoRenderCotasServiceDefinition
             append state.layers layerState
         )
 
+        -- Para os nós-alvo: salvar estado individual (material e visibilidade)
+        -- sem tocar nos objetos comuns da cena.
+        for targetNode in targetNodes where isValidNode targetNode do
+        (
+            local nodeState = AmenoRenderNodeState node:targetNode
+            try (nodeState.renderable = targetNode.renderable) catch ()
+            try (nodeState.isHidden = targetNode.isHidden) catch ()
+            try (nodeState.renderByLayer = targetNode.renderByLayer) catch ()
+            try (nodeState.primaryVisibility = targetNode.primaryVisibility) catch ()
+            nodeState.hasMaterial = isProperty targetNode #material
+            if nodeState.hasMaterial do try (nodeState.material = targetNode.material) catch ()
+            append state.nodes nodeState
+        )
+
         state
     ),
 
     fn applyIsolation sceneState targetNodes annotationMaterials dimensionsOnly:true =
     (
+        -- Conjunto de layers dos nós-alvo (não devem ser desligadas).
+        local targetLayerSet = #()
+        for targetNode in targetNodes where isValidNode targetNode do
+        (
+            local tl = undefined
+            try (tl = targetNode.layer) catch ()
+            if tl != undefined and (findItem targetLayerSet tl) == 0 do append targetLayerSet tl
+        )
+
         with undo off
         (
-            for layerState in sceneState.layers where layerState.layer != undefined do
+            if dimensionsOnly do
             (
-                local layer = layerState.layer
-                try (layer.on = true) catch ()
-                try (layer.ishidden = false) catch ()
-                try (layer.renderable = true) catch ()
-                try (layer.primaryVisibility = true) catch ()
-                try (layer.visibility = 1.0) catch ()
+                -- Estratégia por layer: desligar todas as layers que NÃO pertencem
+                -- às cotas. Dispara apenas N notificações de layer em vez de M*N
+                -- notificações de objeto, evitando a saturação do Corona.
+                for layerState in sceneState.layers where layerState.layer != undefined do
+                (
+                    local layer = layerState.layer
+                    local isTargetLayer = (findItem targetLayerSet layer) > 0
+                    if isTargetLayer then
+                    (
+                        -- Garantir que a layer das cotas esteja visível e renderizável.
+                        try (layer.on = true) catch ()
+                        try (layer.ishidden = false) catch ()
+                        try (layer.renderable = true) catch ()
+                        try (layer.primaryVisibility = true) catch ()
+                        try (layer.visibility = 1.0) catch ()
+                    )
+                    else
+                    (
+                        -- Desligar a layer para que o renderer a ignore completamente.
+                        -- Isso é equivalente a setar renderable=false em cada objeto,
+                        -- mas sem disparar notificações por nó.
+                        try (layer.on = false) catch ()
+                    )
+                )
             )
 
+            -- Preparar apenas os nós-alvo: material e visibilidade.
             for nodeState in sceneState.nodes where nodeState.node != undefined and isValidNode nodeState.node do
             (
                 local node = nodeState.node
-                local isTarget = (findItem targetNodes node) > 0
-
-                -- Manter o caminho histórico do overlay byte a byte na ordem das
-                -- mutações: primeiro remover herança e definir renderabilidade de
-                -- todos os nós; depois preparar material/visibilidade dos alvos.
-                -- Alguns renderers avaliam notificações de cena entre setters.
-                if dimensionsOnly do
+                try (node.renderByLayer = false) catch ()
+                try (node.renderable = true) catch ()
+                try (node.primaryVisibility = true) catch ()
+                try (node.isHidden = false) catch ()
+                if nodeState.hasMaterial do
                 (
-                    try (node.renderByLayer = false) catch ()
-                    try (node.renderable = isTarget) catch ()
-                )
-
-                if isTarget do
-                (
-                    if not dimensionsOnly do
-                    (
-                        try (node.renderByLayer = false) catch ()
-                        try (node.renderable = true) catch ()
-                    )
-                    try (node.primaryVisibility = true) catch ()
-                    try (node.isHidden = false) catch ()
-                    if nodeState.hasMaterial do
-                    (
-                        local annotationMaterial = annotationMaterialForNode node annotationMaterials
-                        if annotationMaterial == undefined then throw ("Não foi possível associar material à cota: " + node.name)
-                        node.material = annotationMaterial
-                    )
+                    local annotationMaterial = annotationMaterialForNode node annotationMaterials
+                    if annotationMaterial == undefined then throw ("Não foi possível associar material à cota: " + node.name)
+                    node.material = annotationMaterial
                 )
             )
         )

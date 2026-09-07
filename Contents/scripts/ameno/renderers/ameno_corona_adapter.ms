@@ -203,6 +203,12 @@ struct AmenoCoronaRendererAdapterService
     (
         local wasCancelled = false
         local renderedBitmap = undefined
+        -- Parâmetros mínimos seguros para o Corona 15 Hotfix 1.
+        -- outputColorConversion, missingExtFilesAction e outros parâmetros
+        -- não-universais foram removidos: em algumas versões do Corona, passá-los
+        -- sem câmera explícita leva a EXCEPTION_ACCESS_VIOLATION (leitura em 0x40)
+        -- porque o renderer tenta acessar um ponteiro de câmera que é nulo.
+        -- O Corona já gerencia colorimetria e arquivos ausentes internamente.
         if cameraNode != undefined and isValidNode cameraNode then
         (
             renderedBitmap = render \
@@ -212,44 +218,21 @@ struct AmenoCoronaRendererAdapterService
                 outputheight:request.height \
                 pixelaspect:request.pixelAspect \
                 outputfile:request.outputPath \
-                outputHDRbitmap:false \
-                outputColorConversion:#automatic \
-                renderType:request.renderType \
-                renderhiddenobjects:false \
-                renderatmosphericeffects:false \
-                renderMultiPassEffects:false \
-                renderElements:false \
-                force2sided:true \
                 vfb:false \
-                progressbar:true \
-                quiet:true \
-                missingExtFilesAction:#logmsg \
                 cancelled:&wasCancelled
         )
         else
         (
-            -- Nunca passar camera:undefined ao MAXScript render(). Em algumas
-            -- combinações de renderer isso chega ao plugin nativo como ponteiro
-            -- nulo e pode derrubar o Max. Sem câmera, o Render Setup/viewport
-            -- ativo é a fonte oficial.
+            -- Sem câmera explícita: o Render Setup / viewport ativo é a fonte.
+            -- Não passar camera:undefined — alguns internals do Corona tratam
+            -- isso como ponteiro nulo e travam o processo.
             renderedBitmap = render \
                 frame:request.frame \
                 outputwidth:request.width \
                 outputheight:request.height \
                 pixelaspect:request.pixelAspect \
                 outputfile:request.outputPath \
-                outputHDRbitmap:false \
-                outputColorConversion:#automatic \
-                renderType:request.renderType \
-                renderhiddenobjects:false \
-                renderatmosphericeffects:false \
-                renderMultiPassEffects:false \
-                renderElements:false \
-                force2sided:true \
                 vfb:false \
-                progressbar:true \
-                quiet:true \
-                missingExtFilesAction:#logmsg \
                 cancelled:&wasCancelled
         )
         #(renderedBitmap, wasCancelled)
