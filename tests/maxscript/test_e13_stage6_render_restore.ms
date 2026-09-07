@@ -173,6 +173,18 @@
     request.height = 180
     request.pixelAspect = 1.0
 
+    -- Isolate Selection: o serviço deve bloquear antes de tocar no adapter ou
+    -- na cena. Renderizar sobre esse estado causou acesso inválido no Corona 15.
+    select userNode
+    local enteredIsolate = try (IsolateSelection.EnterIsolateSelectionMode()) catch (false)
+    local isolateAdapter = AmenoE13Stage6Adapter mode:#success
+    local isolateResult = ::AmenoRenderCotasService.renderDimensions request adapter:isolateAdapter
+    check "preflight reconhece Isolate Selection ativo" (enteredIsolate and ::AmenoRenderCotasService.isolateSelectionActive())
+    check "Isolate Selection bloqueia render antes do adapter" (not isolateResult.success and (matchPattern isolateResult.errorMessage pattern:"*Isolate Selection*") and isolateAdapter.configureCount == 0 and isolateAdapter.restoreCount == 0 and not ::AmenoRenderCotasService.isRendering)
+    check "bloqueio preserva Isolate Selection e estado da cena" (::AmenoRenderCotasService.isolateSelectionActive() and nodeStateMatches userNode originalUserRenderable originalUserHidden originalUserRenderByLayer originalUserMaterial)
+    try (IsolateSelection.ExitIsolateSelectionMode()) catch ()
+    check "teste encerra Isolate Selection antes dos demais cenários" (not ::AmenoRenderCotasService.isolateSelectionActive())
+
     -- Sucesso: a câmera explícita chega ao adapter e o isolamento é totalmente desfeito.
     dimensionsLayer.on = false
     dimensionsLayer.ishidden = true

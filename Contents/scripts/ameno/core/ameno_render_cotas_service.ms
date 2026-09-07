@@ -486,6 +486,29 @@ struct AmenoRenderCotasServiceDefinition
         else undefined
     ),
 
+    fn isolateSelectionActive =
+    (
+        local active = false
+        try (active = IsolateSelection.IsolateSelectionModeActive()) catch ()
+        active == true
+    ),
+
+    fn renderRequestSummary request isolateActive:false =
+    (
+        if request == undefined then return "pedido=undefined"
+
+        local cameraText = "Render Setup/viewport"
+        if request.cameraNode != undefined and isValidNode request.cameraNode do
+            try (cameraText = request.cameraNode.name as string) catch ()
+
+        "camera=" + cameraText +
+        " · renderType=" + (request.renderType as string) +
+        " · resolução=" + (request.width as string) + "x" + (request.height as string) +
+        " · pixelAspect=" + (request.pixelAspect as string) +
+        " · isolateSelection=" + (isolateActive as string) +
+        " · saída=" + (request.outputPath as string)
+    ),
+
     fn renderDimensions request adapter:undefined =
     (
         if isRendering then
@@ -495,6 +518,22 @@ struct AmenoRenderCotasServiceDefinition
 
         if request == undefined do request = createRequest()
         if request.selectionMode != #all and request.selectionMode != #selected do request.selectionMode = #all
+
+        -- O Isolate Selection mantém estado nativo próprio, além de esconder nós.
+        -- Alterar manualmente renderable/isHidden enquanto esse estado está ativo
+        -- pode entregar ao Corona uma cena internamente inconsistente. No Corona 15
+        -- Hotfix 1 isso já produziu EXCEPTION_ACCESS_VIOLATION dentro de render().
+        -- Sair e reentrar automaticamente também não é seguro: descartaria o estado
+        -- original que o Max usa quando o usuário executa End Isolate.
+        local isolateActive = isolateSelectionActive()
+        if ::AmenoLog != undefined do
+            ::AmenoLog.info ("Render overlay preflight · " + (renderRequestSummary request isolateActive:isolateActive))
+        if isolateActive do
+        (
+            local isolateMessage = "A cena está em Isolate Selection. Finalize o isolamento (Alt+Q / End Isolate) e tente renderizar novamente. O passe foi bloqueado antes de chamar o renderer para proteger a cena e o 3ds Max."
+            if ::AmenoLog != undefined do ::AmenoLog.warn isolateMessage
+            return AmenoRenderCotasResult selectionMode:request.selectionMode errorMessage:isolateMessage
+        )
 
         local startedAt = timestamp()
         local result = AmenoRenderCotasResult selectionMode:request.selectionMode
