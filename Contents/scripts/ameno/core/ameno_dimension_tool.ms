@@ -16,6 +16,7 @@ global AmenoLog
 global AmenoRefreshMainPanel
 global AmenoDimensionAnchorHit
 global AmenoContinuousInputResolver
+global AmenoDimensionCA
 
 struct AmenoDimensionAnchorHit
 (
@@ -44,11 +45,37 @@ struct AmenoDimensionToolService
     anchorVertexIdB = -1,
     lastAnchorSummary = "",
 
+    fn isTechnicalAmenoNode nodeValue =
+    (
+        if nodeValue == undefined or not isValidNode nodeValue then return false
+        local kindValue = undefined
+        local previewValue = undefined
+        local dimensionIdValue = undefined
+        local dimensionRoleValue = undefined
+        local terminalValue = false
+        try (terminalValue = (getUserProp nodeValue "AMENO_TERMINAL") == true) catch ()
+        if ::AmenoDimensionGraphics != undefined do
+        (
+            try (kindValue = ::AmenoDimensionGraphics.readTextProperty nodeValue "Ameno.Kind") catch ()
+            try (previewValue = ::AmenoDimensionGraphics.readTextProperty nodeValue "Ameno.Preview") catch ()
+            try (dimensionIdValue = ::AmenoDimensionGraphics.readTextProperty nodeValue "Ameno.DimensionId") catch ()
+            try (dimensionRoleValue = ::AmenoDimensionGraphics.readTextProperty nodeValue "Ameno.DimensionRole") catch ()
+        )
+        if terminalValue then return true
+        if kindValue != undefined and kindValue != "" then return true
+        if previewValue != undefined and previewValue != "" then return true
+        if dimensionIdValue != undefined and dimensionIdValue != "" then return true
+        if dimensionRoleValue != undefined and dimensionRoleValue != "" then return true
+        false
+    ),
+
     fn isEligibleReferenceNode nodeValue =
     (
+        if nodeValue == undefined or not isValidNode nodeValue then return false
+        if isTechnicalAmenoNode nodeValue then return false
         if ::AmenoContinuousInputResolver != undefined then
             return ::AmenoContinuousInputResolver.isEligibleGeometryNode nodeValue
-        nodeValue != undefined and isValidNode nodeValue and not nodeValue.isHidden and not nodeValue.isFrozen
+        not nodeValue.isHidden and not nodeValue.isFrozen
     ),
 
     fn detectHitNode pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =

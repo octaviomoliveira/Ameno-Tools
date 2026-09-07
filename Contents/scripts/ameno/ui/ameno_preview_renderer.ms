@@ -255,6 +255,49 @@ struct AmenoPreviewRendererDefinition
                 canvasHost.Children.Add polyA
                 canvasHost.Children.Add polyB
             )
+            #diamond:
+            (
+                local halfLong = termSize * 0.5
+                local halfWide = termSize * 0.5
+                local polyA = dotNetObject "System.Windows.Shapes.Polygon"
+                local polyB = dotNetObject "System.Windows.Shapes.Polygon"
+                polyA.Fill = dimBrush
+                polyB.Fill = dimBrush
+
+                local ptClass = dotNetClass "System.Windows.Point"
+                local ptsA = dotNetObject "System.Windows.Media.PointCollection"
+                local ptsB = dotNetObject "System.Windows.Media.PointCollection"
+
+                if not isOutside then
+                (
+                    ptsA.Add (dotNetObject ptClass (xA - halfLong) yDim)
+                    ptsA.Add (dotNetObject ptClass xA (yDim - halfWide))
+                    ptsA.Add (dotNetObject ptClass (xA + halfLong) yDim)
+                    ptsA.Add (dotNetObject ptClass xA (yDim + halfWide))
+
+                    ptsB.Add (dotNetObject ptClass (xB - halfLong) yDim)
+                    ptsB.Add (dotNetObject ptClass xB (yDim - halfWide))
+                    ptsB.Add (dotNetObject ptClass (xB + halfLong) yDim)
+                    ptsB.Add (dotNetObject ptClass xB (yDim + halfWide))
+                )
+                else
+                (
+                    ptsA.Add (dotNetObject ptClass (xA - halfLong) yDim)
+                    ptsA.Add (dotNetObject ptClass xA (yDim - halfWide))
+                    ptsA.Add (dotNetObject ptClass (xA + halfLong) yDim)
+                    ptsA.Add (dotNetObject ptClass xA (yDim + halfWide))
+
+                    ptsB.Add (dotNetObject ptClass (xB - halfLong) yDim)
+                    ptsB.Add (dotNetObject ptClass xB (yDim - halfWide))
+                    ptsB.Add (dotNetObject ptClass (xB + halfLong) yDim)
+                    ptsB.Add (dotNetObject ptClass xB (yDim + halfWide))
+                )
+
+                polyA.Points = ptsA
+                polyB.Points = ptsB
+                canvasHost.Children.Add polyA
+                canvasHost.Children.Add polyB
+            )
             #arrowOpen:
             (
                 local halfW = termSize * 0.3

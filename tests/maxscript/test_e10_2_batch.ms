@@ -10,6 +10,7 @@ global AmenoDimensionRecord
 global AmenoDimensionMath
 global AmenoSceneSetup
 
+(
 local passed = 0
 local failed = 0
 local errors = #()
@@ -202,6 +203,13 @@ if failed > 0 do
 )
 
 if failed == 0 then
+(
     format "E10.2 PASS\n"
+    format "[AMENO_TEST][PASS] E10.2 batch and bake passed\n"
+)
 else
+(
     format "E10.2 FAIL\n"
+    format "[AMENO_TEST][FAIL] E10.2 batch and bake failed\n"
+)
+)

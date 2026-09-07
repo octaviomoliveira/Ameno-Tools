@@ -37,9 +37,7 @@ global AmenoRenderCotasService
     local originalBoxRenderable = userBox.renderable
     local originalLineMaterial = dim.lineNode.material
     select #(dim.lineNode, dim.textNode)
-    viewport.setCamera cameraNode
-
-    local request = AmenoRenderCotasService.createRequest outputPath:outputPath selectionMode:#all overwrite:true
+    local request = AmenoRenderCotasService.createRequest outputPath:outputPath selectionMode:#all overwrite:true cameraNode:cameraNode
     request.renderType = #normal
     local result = AmenoRenderCotasService.renderDimensions request
 

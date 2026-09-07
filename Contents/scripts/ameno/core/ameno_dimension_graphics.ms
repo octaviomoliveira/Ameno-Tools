@@ -12,6 +12,7 @@ global AmenoDimensionCA
 global AmenoDimensionRecord
 global AmenoStyleService
 global AmenoAnchorService
+global AmenoDimensionTerminalMesh
 
 struct AmenoDimensionAuditRecord
 (
@@ -41,7 +42,9 @@ struct AmenoGraphicDimensionRecord
     layout = undefined,
     displayText = "",
     audit = undefined,
-    style = undefined
+    style = undefined,
+    termNodeA = undefined,
+    termNodeB = undefined
 )
 
 struct AmenoDimensionGraphicsService
@@ -55,16 +58,37 @@ struct AmenoDimensionGraphicsService
     allocationRegistry = #(),
     allocationActive = false,
     failureInjection = "",
+    failureInjectionRemaining = 1,
+    textFollowsLine = true,
 
-    fn setFailureInjection stageName =
+    fn orientTextNode textNode layout followLine =
+    (
+        local angle = 0.0
+        if followLine do
+        (
+            angle = atan2 layout.direction.y layout.direction.x
+            if angle > 90.0 do angle -= 180.0
+            if angle <= -90.0 do angle += 180.0
+        )
+        textNode.rotation = quat angle [0,0,1]
+        true
+    ),
+
+    fn setFailureInjection stageName occurrence:1 =
     (
         failureInjection = if stageName == undefined then "" else (stageName as string)
+        failureInjectionRemaining = if occurrence == undefined or occurrence < 1 then 1 else occurrence
         true
     ),
 
     fn maybeInjectFailure stageName =
     (
-        if failureInjection == (stageName as string) then throw ("Falha injetada: " + (stageName as string))
+        if failureInjection == (stageName as string) do
+        (
+            if failureInjectionRemaining <= 1 then
+                throw ("Falha injetada: " + (stageName as string))
+            failureInjectionRemaining -= 1
+        )
         true
     ),
 
@@ -97,11 +121,13 @@ struct AmenoDimensionGraphicsService
         try (undoHolding = theHold.Holding()) catch ()
 
         -- Quando uma fábrica falha dentro de um `undo ... on` externo, não
-        -- suspenda o mesmo Hold novamente. A transação externa será abortada
-        -- pelo chamador e restaurará as alocações desta tentativa. O
-        -- `with undo off` fica reservado para rollback fora de uma transação.
+        -- suspenda o mesmo Hold novamente. Remover explicitamente os nós
+        -- alocados antes de propagar a exceção torna o rollback independente
+        -- do comportamento do chamador e ainda preserva o Hold externo.
         if undoHolding then
         (
+            for i = allocated.count to 1 by -1 do
+                if allocated[i] != undefined and isValidNode allocated[i] do delete allocated[i]
             allocationRegistry = #()
             allocationActive = false
         )
@@ -192,14 +218,215 @@ struct AmenoDimensionGraphicsService
         sceneState
     ),
 
-    fn createDimensionMaterial =
+    fn createDimensionMaterial colorValue:(color 245 245 245) =
     (
         local dimensionMaterial = standardMaterial name:(uniqueName "AMENO_DIMENSION_MTL_")
 
-        try (dimensionMaterial.diffuse = (color 245 245 245)) catch ()
+        try (dimensionMaterial.diffuse = colorValue) catch ()
         try (dimensionMaterial.selfIllumAmount = 100.0) catch ()
 
         dimensionMaterial
+    ),
+
+    fn isMeshTerminalType terminalType =
+    (
+        terminalType == #arrowClosed or terminalType == #diamond or terminalType == #dot
+    ),
+
+    fn layoutPlaneNormal layout =
+    (
+        if layout == undefined then return undefined
+
+        local planeNormal = undefined
+        try (planeNormal = layout.planeNormal) catch ()
+        if planeNormal == undefined or (try ((length planeNormal) < 0.00001) catch (true)) do
+        (
+            try (planeNormal = cross layout.direction layout.perpendicular) catch (planeNormal = undefined)
+        )
+
+        local normalLength = 0.0
+        try (normalLength = length planeNormal) catch (normalLength = 0.0)
+        if normalLength < 0.00001 then return undefined
+        normalize planeNormal
+    ),
+
+    fn terminalColour audit =
+    (
+        if audit != undefined and audit.isOrphan then (color 230 70 70)
+        else if audit != undefined and audit.isManual then (color 245 166 35)
+        else (color 245 245 245)
+    ),
+
+    fn terminalNodesForDimension dimensionId =
+    (
+        local matches = #()
+        if dimensionId == undefined or dimensionId == "" then return matches
+        if ::AmenoDimensionTerminalMesh == undefined then return matches
+
+        -- Este helper fica antes de findNodesForDimension na struct. Fazer a
+        -- varredura local evita uma chamada antecipada a um método ainda não
+        -- resolvido pelo runtime MaxScript.
+        for node in objects where isValidNode node do
+        (
+            if (getDimensionId node) == dimensionId do
+            (
+                local isTerminalNode = false
+                try (isTerminalNode = ::AmenoDimensionTerminalMesh.isTerminal node) catch ()
+                if isTerminalNode do append matches node
+            )
+        )
+        matches
+    ),
+
+    fn terminalSide nodeValue =
+    (
+        if ::AmenoDimensionTerminalMesh == undefined or nodeValue == undefined or not isValidNode nodeValue then ""
+        else (try (::AmenoDimensionTerminalMesh.terminalSideOf nodeValue) catch (""))
+    ),
+
+    fn terminalPairForDimension dimensionId layout =
+    (
+        local pair = #(undefined, undefined)
+        local candidates = terminalNodesForDimension dimensionId
+        for node in candidates do
+        (
+            local sideValue = terminalSide node
+            if sideValue == "A" and pair[1] == undefined then pair[1] = node
+            else if sideValue == "B" and pair[2] == undefined then pair[2] = node
+        )
+
+        local unassigned = for node in candidates where (findItem pair node) == 0 collect node
+        if pair[1] == undefined and unassigned.count > 0 do
+        (
+            pair[1] = unassigned[1]
+            deleteItem unassigned 1
+        )
+        if pair[2] == undefined and unassigned.count > 0 do pair[2] = unassigned[1]
+        pair
+    ),
+
+    fn decorateTerminalNode nodeValue dimensionId dimensionsLayer material preview:false side:"" =
+    (
+        if nodeValue == undefined or not isValidNode nodeValue then return false
+        if ::AmenoDimensionTerminalMesh != undefined and side != "" do
+            try (::AmenoDimensionTerminalMesh.setTerminalSide nodeValue side) catch ()
+
+        local roleValue = if preview then "preview-terminal" else "terminal"
+        -- Este helper precede decorateGraphicNode/configurePreviewNode na
+        -- struct; qualificar pelo serviço evita resolução antecipada de método.
+        ::AmenoDimensionGraphics.decorateGraphicNode nodeValue dimensionId roleValue dimensionsLayer
+        if material != undefined do nodeValue.material = material
+        if preview then
+        (
+            setTextProperty nodeValue "Ameno.Kind" "dimensionPreview"
+            setTextProperty nodeValue "Ameno.Preview" "1"
+            ::AmenoDimensionGraphics.configurePreviewNode nodeValue
+        )
+        true
+    ),
+
+    fn _syncTerminalNodesCore dimensionId layout audit style dimensionsLayer material:undefined preview:false =
+    (
+        if layout == undefined or not layout.valid then throw "Não foi possível sincronizar terminais: layout inválido."
+
+        local expectedType = #tick
+        local expectedSize = 80.0
+        if style != undefined do
+        (
+            expectedType = style.terminalType
+            expectedSize = style.terminalSize
+        )
+
+        local existingPair = terminalPairForDimension dimensionId layout
+        local currentA = existingPair[1]
+        local currentB = existingPair[2]
+        local expectedMesh = isMeshTerminalType expectedType
+
+        if not expectedMesh then
+        (
+            for node in (terminalNodesForDimension dimensionId) where isValidNode node do
+                try (::AmenoDimensionTerminalMesh.removeTerminal node) catch (delete node)
+            return #(undefined, undefined)
+        )
+
+        if ::AmenoDimensionTerminalMesh == undefined then
+            throw "O serviço de terminais mesh não está disponível; a cota não pode ser concluída."
+
+        local planeNormal = layoutPlaneNormal layout
+        if planeNormal == undefined then
+            throw "O layout não expõe um plano suportado para os terminais mesh."
+
+        local terminalSizeScene = toSceneUnits expectedSize
+        if terminalSizeScene <= 0.00001 then
+            throw "O tamanho do terminal mesh deve ser maior que zero."
+
+        local pairMatches = (currentA != undefined and currentB != undefined)
+        if pairMatches do
+        (
+            pairMatches = ((::AmenoDimensionTerminalMesh.terminalTypeOf currentA) == expectedType and \
+                           (::AmenoDimensionTerminalMesh.terminalTypeOf currentB) == expectedType)
+            if pairMatches and expectedType == #dot do
+            (
+                pairMatches = (getNumVerts currentA == 13 and getNumFaces currentA == 24 and \
+                               getNumVerts currentB == 13 and getNumFaces currentB == 24)
+            )
+        )
+
+        local newA = currentA
+        local newB = currentB
+        if not pairMatches then
+        (
+            -- Cria o par novo antes de remover o antigo. Se a segunda criação
+            -- falhar, a alocação corrente faz rollback sem deixar uma cota
+            -- incompleta nem apagar um par antigo ainda utilizável.
+            newA = ::AmenoDimensionTerminalMesh.createTerminal expectedType layout.linePointA (-layout.direction) terminalSizeScene (terminalColour audit) planeNormal:planeNormal dimensionId:dimensionId
+            registerAllocation newA
+            if newA == undefined or not isValidNode newA then throw "O terminal A obrigatório não foi criado."
+            maybeInjectFailure #afterTerminalA
+
+            newB = ::AmenoDimensionTerminalMesh.createTerminal expectedType layout.linePointB layout.direction terminalSizeScene (terminalColour audit) planeNormal:planeNormal dimensionId:dimensionId
+            registerAllocation newB
+            if newB == undefined or not isValidNode newB then throw "O terminal B obrigatório não foi criado."
+            maybeInjectFailure #afterTerminalB
+
+            if currentA != undefined and isValidNode currentA do try (::AmenoDimensionTerminalMesh.removeTerminal currentA) catch (delete currentA)
+            if currentB != undefined and isValidNode currentB do try (::AmenoDimensionTerminalMesh.removeTerminal currentB) catch (delete currentB)
+        )
+        else
+        (
+            if not (::AmenoDimensionTerminalMesh.updateTerminal currentA layout.linePointA (-layout.direction) size:terminalSizeScene planeNormal:planeNormal dimensionId:dimensionId) then
+                throw "O terminal A obrigatório não pôde ser atualizado."
+            if not (::AmenoDimensionTerminalMesh.updateTerminal currentB layout.linePointB layout.direction size:terminalSizeScene planeNormal:planeNormal dimensionId:dimensionId) then
+                throw "O terminal B obrigatório não pôde ser atualizado."
+            maybeInjectFailure #afterTerminalUpdate
+        )
+
+        decorateTerminalNode newA dimensionId dimensionsLayer material preview:preview side:"A"
+        decorateTerminalNode newB dimensionId dimensionsLayer material preview:preview side:"B"
+        newA.wirecolor = terminalColour audit
+        newB.wirecolor = terminalColour audit
+        #(newA, newB)
+    ),
+
+    fn syncTerminalNodes dimensionId layout audit style dimensionsLayer material:undefined preview:false =
+    (
+        -- Chamadas de atualização/previsão podem ocorrer fora de uma criação
+        -- transacional. Abrir um escopo local garante rollback também nesse
+        -- caminho; criação/rebuild continuam usando o escopo externo.
+        local ownsAllocation = not allocationActive
+        if ownsAllocation do beginAllocation()
+
+        try
+        (
+            local result = _syncTerminalNodesCore dimensionId layout audit style dimensionsLayer material:material preview:preview
+            if ownsAllocation do finishAllocation()
+            result
+        )
+        catch
+        (
+            if ownsAllocation do rollbackAllocation()
+            throw
+        )
     ),
 
     fn addLineSpline shapeNode pointA pointB =
@@ -234,15 +461,15 @@ struct AmenoDimensionGraphicsService
         (
             #arrowClosed:
             (
-                local arrowLen = terminalSize
-                local arrowHalfWidth = terminalSize * 0.25
-                local wingA1 = lineEndA + (layout.direction * arrowLen) + (layout.perpendicular * arrowHalfWidth)
-                local wingA2 = lineEndA + (layout.direction * arrowLen) - (layout.perpendicular * arrowHalfWidth)
-                addClosedPolygonSpline shapeNode #(lineEndA, wingA1, wingA2)
-
-                local wingB1 = lineEndB - (layout.direction * arrowLen) + (layout.perpendicular * arrowHalfWidth)
-                local wingB2 = lineEndB - (layout.direction * arrowLen) - (layout.perpendicular * arrowHalfWidth)
-                addClosedPolygonSpline shapeNode #(lineEndB, wingB1, wingB2)
+                -- Terminais mesh flat preenchidos sao criados como nos separados via AmenoDimensionTerminalMesh
+            )
+            #diamond:
+            (
+                -- Terminais mesh flat preenchidos sao criados como nos separados via AmenoDimensionTerminalMesh
+            )
+            #dot:
+            (
+                -- Terminais mesh flat preenchidos sao criados como nos separados via AmenoDimensionTerminalMesh
             )
             #arrowOpen:
             (
@@ -255,25 +482,6 @@ struct AmenoDimensionGraphicsService
                 local wingB1 = lineEndB - (layout.direction * arrowLen) + (layout.perpendicular * arrowHalfWidth)
                 local wingB2 = lineEndB - (layout.direction * arrowLen) - (layout.perpendicular * arrowHalfWidth)
                 addOpenPolylineSpline shapeNode #(wingB1, lineEndB, wingB2)
-            )
-            #dot:
-            (
-                local r = terminalSize * 0.35
-                local dotA = #(
-                    lineEndA + (layout.direction * r),
-                    lineEndA + (layout.perpendicular * r),
-                    lineEndA - (layout.direction * r),
-                    lineEndA - (layout.perpendicular * r)
-                )
-                addClosedPolygonSpline shapeNode dotA
-
-                local dotB = #(
-                    lineEndB + (layout.direction * r),
-                    lineEndB + (layout.perpendicular * r),
-                    lineEndB - (layout.direction * r),
-                    lineEndB - (layout.perpendicular * r)
-                )
-                addClosedPolygonSpline shapeNode dotB
             )
             #none:
             (
@@ -398,6 +606,12 @@ struct AmenoDimensionGraphicsService
 
         try
         (
+            -- TextPlus aplica a rotação sobre a transformação completa. Se a
+            -- rotação vier depois de pos, o ponto de inserção gira em torno da
+            -- origem mundial (ex.: [32,50] vira [-50,32]). Zerar, orientar e
+            -- só então posicionar mantém o rótulo preso à linha.
+            textNode.pos = [0,0,0]
+            orientTextNode textNode layout ((getUserProp textNode "Ameno.TextFollowsLine") == true)
             textNode.pos = textPosition
             textNode.size = resolvedHeightScene
             textNode.ResetString()
@@ -452,7 +666,7 @@ struct AmenoDimensionGraphicsService
         lineNode
     ),
 
-    fn createTextNode labelText layout style:undefined textHeight:140.0 textGap:60.0 fontName:"Arial" bold:false italic:false tracking:0.0 material:undefined =
+    fn createTextNode labelText layout style:undefined textHeight:140.0 textGap:60.0 fontName:"Arial" bold:false italic:false tracking:0.0 material:undefined followLine:undefined =
     (
         local resolvedHeight = textHeight
         local resolvedGap = textGap
@@ -483,7 +697,9 @@ struct AmenoDimensionGraphicsService
         local resolvedHeightScene = toSceneUnits resolvedHeight
         local extDir = if layout.signedOffsetSceneUnits >= 0.0 then layout.perpendicular else -layout.perpendicular
         local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (extDir * resolvedGapScene)
-        local textNode = TextPlus name:(uniqueName "AMENO_LABEL_") pos:textPosition
+        local textNode = TextPlus name:(uniqueName "AMENO_LABEL_") pos:[0,0,0]
+        local follow = if followLine == undefined then textFollowsLine else followLine
+        setUserProp textNode "Ameno.TextFollowsLine" follow
 
         textNode.layouttype = 0
         textNode.plane = 1
@@ -496,6 +712,11 @@ struct AmenoDimensionGraphicsService
         try (textNode.SetBold resolvedBold) catch ()
         try (textNode.SetItalic resolvedItalic) catch ()
         textNode.AppendString labelText
+
+        -- Posicionar depois da rotação evita que o pivot do TextPlus gire a
+        -- coordenada do rótulo em torno da origem da cena.
+        orientTextNode textNode layout follow
+        textNode.pos = textPosition
 
         try (textNode.renderable = true) catch ()
         if material != undefined do textNode.material = material
@@ -685,6 +906,7 @@ struct AmenoDimensionGraphicsService
     (
         local controller = Point name:(uniqueName "AMENO_DIM_CTRL_") size:5.0
         registerAllocation controller
+        setUserProp controller "Ameno.TextFollowsLine" textFollowsLine
         maybeInjectFailure #afterController
         local dimensionId = "dimension-" + (controller.handle as string)
 
@@ -777,14 +999,31 @@ struct AmenoDimensionGraphicsService
             resolvedStyle = ::AmenoStyleService.getStyle sId
         )
 
-        local dimensionMaterial = createDimensionMaterial()
+        local dimensionColor = (color 245 245 245)
+        if resolvedStyle != undefined and ::AmenoStyleService != undefined do
+            dimensionColor = ::AmenoStyleService.colorFromString resolvedStyle.annotationColor defaultColor:dimensionColor
+        local dimensionMaterial = createDimensionMaterial colorValue:dimensionColor
         local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
         registerAllocation lineNode
         maybeInjectFailure #afterLine
-        local textNode = createTextNode labelText layout style:resolvedStyle material:dimensionMaterial
+        local follow = (getUserProp controller "Ameno.TextFollowsLine") == true
+        local textNode = createTextNode labelText layout style:resolvedStyle material:dimensionMaterial followLine:follow
         registerAllocation textNode
         maybeInjectFailure #afterText
         local markerNode = undefined
+
+        local resolvedTerminalType = #tick
+        local resolvedTerminalSize = 80.0
+        if resolvedStyle != undefined do
+        (
+            resolvedTerminalType = resolvedStyle.terminalType
+            resolvedTerminalSize = resolvedStyle.terminalSize
+        )
+        local termNodeA = undefined
+        local termNodeB = undefined
+        local terminalPair = syncTerminalNodes dimensionId layout audit resolvedStyle dimensionsLayer material:dimensionMaterial
+        termNodeA = terminalPair[1]
+        termNodeB = terminalPair[2]
 
         if audit != undefined and audit.isManual then
         (
@@ -798,29 +1037,36 @@ struct AmenoDimensionGraphicsService
         -- 1º Órfã (Alerta vermelho 230, 70, 70)
         -- 2º Manual Válida (Âmbar 245, 166, 35)
         -- 3º Normal / Medida (Branco neutro 245, 245, 245)
-        -- O material renderizável permanece branco neutro independente do estado.
+        -- O wirecolor continua indicando estado no viewport; o material renderizável
+        -- usa a cor escolhida no estilo e é repassado ao adapter de render.
         if audit != undefined and audit.isOrphan then
         (
             try (lineNode.wirecolor = (color 230 70 70)) catch ()
             try (textNode.wirecolor = (color 230 70 70)) catch ()
             if markerNode != undefined do try (markerNode.wirecolor = (color 230 70 70)) catch ()
+            if termNodeA != undefined and isValidNode termNodeA do try (termNodeA.wirecolor = (color 230 70 70)) catch ()
+            if termNodeB != undefined and isValidNode termNodeB do try (termNodeB.wirecolor = (color 230 70 70)) catch ()
         )
         else if audit != undefined and audit.isManual then
         (
             try (lineNode.wirecolor = (color 245 166 35)) catch ()
             try (textNode.wirecolor = (color 245 166 35)) catch ()
             if markerNode != undefined do try (markerNode.wirecolor = (color 245 166 35)) catch ()
+            if termNodeA != undefined and isValidNode termNodeA do try (termNodeA.wirecolor = (color 245 166 35)) catch ()
+            if termNodeB != undefined and isValidNode termNodeB do try (termNodeB.wirecolor = (color 245 166 35)) catch ()
         )
         else
         (
             try (lineNode.wirecolor = (color 245 245 245)) catch ()
             try (textNode.wirecolor = (color 245 245 245)) catch ()
+            if termNodeA != undefined and isValidNode termNodeA do try (termNodeA.wirecolor = (color 245 245 245)) catch ()
+            if termNodeB != undefined and isValidNode termNodeB do try (termNodeB.wirecolor = (color 245 245 245)) catch ()
         )
 
         decorateGraphicNode lineNode dimensionId "lines" dimensionsLayer
         decorateGraphicNode textNode dimensionId "label" dimensionsLayer
 
-        AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode markerNode:markerNode layout:layout displayText:labelText audit:audit style:resolvedStyle
+        AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode markerNode:markerNode layout:layout displayText:labelText audit:audit style:resolvedStyle termNodeA:termNodeA termNodeB:termNodeB
     ),
 
     fn configurePreviewNode nodeValue =
@@ -852,26 +1098,31 @@ struct AmenoDimensionGraphicsService
         try
         (
             with undo off
-        (
-            local dimensionMaterial = createDimensionMaterial()
-        local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
-        registerAllocation lineNode
-        local textNode = createTextNode measurement.text layout style:resolvedStyle material:dimensionMaterial
-        registerAllocation textNode
-            local dimensionId = "preview-" + (lineNode.handle as string)
+            (
+                local dimensionColor = (color 245 245 245)
+                if resolvedStyle != undefined and ::AmenoStyleService != undefined do
+                    dimensionColor = ::AmenoStyleService.colorFromString resolvedStyle.annotationColor defaultColor:dimensionColor
+                local dimensionMaterial = createDimensionMaterial colorValue:dimensionColor
+                local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
+                registerAllocation lineNode
+                local textNode = createTextNode measurement.text layout style:resolvedStyle material:dimensionMaterial
+                registerAllocation textNode
+                local dimensionId = "preview-" + (lineNode.handle as string)
 
-            try (lineNode.isHidden = false) catch ()
-            try (textNode.isHidden = false) catch ()
-            decorateGraphicNode lineNode dimensionId "preview-lines" sceneState.dimensionsLayer
-            decorateGraphicNode textNode dimensionId "preview-label" sceneState.dimensionsLayer
-            setTextProperty lineNode "Ameno.Kind" "dimensionPreview"
-            setTextProperty textNode "Ameno.Kind" "dimensionPreview"
-            setTextProperty lineNode "Ameno.Preview" "1"
-            setTextProperty textNode "Ameno.Preview" "1"
-            configurePreviewNode lineNode
-            configurePreviewNode textNode
+                try (lineNode.isHidden = false) catch ()
+                try (textNode.isHidden = false) catch ()
+                decorateGraphicNode lineNode dimensionId "preview-lines" sceneState.dimensionsLayer
+                decorateGraphicNode textNode dimensionId "preview-label" sceneState.dimensionsLayer
+                setTextProperty lineNode "Ameno.Kind" "dimensionPreview"
+                setTextProperty textNode "Ameno.Kind" "dimensionPreview"
+                setTextProperty lineNode "Ameno.Preview" "1"
+                setTextProperty textNode "Ameno.Preview" "1"
+                configurePreviewNode lineNode
+                configurePreviewNode textNode
 
-            result = AmenoGraphicDimensionRecord dimensionId:dimensionId lineNode:lineNode textNode:textNode layout:layout displayText:measurement.text style:resolvedStyle
+                local terminalPair = syncTerminalNodes dimensionId layout undefined resolvedStyle sceneState.dimensionsLayer material:dimensionMaterial preview:true
+
+                result = AmenoGraphicDimensionRecord dimensionId:dimensionId lineNode:lineNode textNode:textNode layout:layout displayText:measurement.text style:resolvedStyle termNodeA:terminalPair[1] termNodeB:terminalPair[2]
             )
         )
         catch
@@ -899,8 +1150,12 @@ struct AmenoDimensionGraphicsService
         (
             updateLineSplinePoints preview.lineNode layout style:resolvedStyle
             updateTextNode preview.textNode measurement.text layout style:resolvedStyle
+            local terminalPair = syncTerminalNodes preview.dimensionId layout undefined resolvedStyle (AmenoSceneSetup.inspect()).dimensionsLayer material:(try (preview.lineNode.material) catch (undefined)) preview:true
             configurePreviewNode preview.lineNode
             configurePreviewNode preview.textNode
+
+            preview.termNodeA = terminalPair[1]
+            preview.termNodeB = terminalPair[2]
         )
 
         preview.layout = layout
@@ -916,6 +1171,8 @@ struct AmenoDimensionGraphicsService
         local nodes = #()
         if preview.lineNode != undefined and isValidNode preview.lineNode do append nodes preview.lineNode
         if preview.textNode != undefined and isValidNode preview.textNode do append nodes preview.textNode
+        if preview.termNodeA != undefined and isValidNode preview.termNodeA do append nodes preview.termNodeA
+        if preview.termNodeB != undefined and isValidNode preview.termNodeB do append nodes preview.termNodeB
 
         with undo off
         (
@@ -925,7 +1182,7 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
-    fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" \
+    fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" style:undefined \
         anchorType:"world" nodeA:undefined localPointA:undefined anchorVertexIdA:-1 anchorEdgeIdA:-1 anchorEdgeMidA:false \
         nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned useUndo:true =
     (
@@ -977,12 +1234,16 @@ struct AmenoDimensionGraphicsService
                             AmenoDimensionCA.applyCA controller rec
                         )
                     )
-                    result = createVisualNodes controller layout audit sceneState.dimensionsLayer
+                    result = createVisualNodes controller layout audit sceneState.dimensionsLayer style:style
                 )
             )
             else
             (
-                controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId \
+                local resolvedStyleId = styleId
+                if style != undefined and (resolvedStyleId == "default" or resolvedStyleId == undefined) and isProperty style #styleId do
+                    resolvedStyleId = style.styleId
+
+                controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:resolvedStyleId \
                     anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA anchorVertexIdA:anchorVertexIdA anchorEdgeIdA:anchorEdgeIdA anchorEdgeMidA:anchorEdgeMidA \
                     nodeB:nodeB localPointB:resolvedLocalB anchorVertexIdB:anchorVertexIdB anchorEdgeIdB:anchorEdgeIdB anchorEdgeMidB:anchorEdgeMidB dimensionMode:dimensionMode
                 local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
@@ -996,7 +1257,7 @@ struct AmenoDimensionGraphicsService
                         AmenoDimensionCA.applyCA controller rec
                     )
                 )
-            result = createVisualNodes controller layout audit sceneState.dimensionsLayer
+                result = createVisualNodes controller layout audit sceneState.dimensionsLayer style:style
             )
         )
         catch
@@ -1070,7 +1331,7 @@ struct AmenoDimensionGraphicsService
     (
         local nodes = #()
 
-        for node in (findNodesForDimension dimensionId) where (readTextProperty node "Ameno.Kind") == graphicKind do append nodes node
+        for node in (findNodesForDimension dimensionId) where ((readTextProperty node "Ameno.Kind") == graphicKind or (try ((getUserProp node "AMENO_TERMINAL") == true) catch (false))) do append nodes node
         deleteNodes nodes
     ),
 
@@ -1104,6 +1365,25 @@ struct AmenoDimensionGraphicsService
 
         if isManualExpected and not hasMarker then return #missing_marker
         if not isManualExpected and hasMarker then return #unexpected_marker
+
+        local terminalNodes = terminalNodesForDimension dimensionId
+        local expectedStyle = undefined
+        if record != undefined and ::AmenoStyleService != undefined do
+        (
+            local expectedStyleId = if record.styleId != undefined and record.styleId != "" then record.styleId else "default"
+            expectedStyle = ::AmenoStyleService.getStyle expectedStyleId
+        )
+        if expectedStyle != undefined do
+        (
+            if isMeshTerminalType expectedStyle.terminalType then
+            (
+                if ::AmenoDimensionTerminalMesh == undefined then return #missing_terminal
+                if terminalNodes.count != 2 then return #missing_terminal
+                for terminalNode in terminalNodes where (::AmenoDimensionTerminalMesh.terminalTypeOf terminalNode) != expectedStyle.terminalType do
+                    return #invalid_terminal
+            )
+            else if terminalNodes.count > 0 then return #unexpected_terminal
+        )
 
         if hasLines and hasLabel then #healthy
         else if hasLines or hasLabel then #partial
@@ -1212,8 +1492,33 @@ struct AmenoDimensionGraphicsService
             if n.isSelected do wasSelected = true
         )
 
-        removeVisualNodes dimensionId
-        local created = createVisualNodes controller layout audit sceneState.dimensionsLayer style:resolvedStyle
+        -- Rebuild transacional: cria os filhos novos antes de remover os
+        -- antigos. Assim uma falha de terminal, material ou TextPlus mantém
+        -- a cota anterior íntegra até o chamador abortar o Undo externo.
+        local oldVisualNodes = #()
+        for oldNode in oldNodes where isValidNode oldNode do
+        (
+            local oldIsGraphic = ((readTextProperty oldNode "Ameno.Kind") == graphicKind)
+            local oldIsTerminal = (try (::AmenoDimensionTerminalMesh.isTerminal oldNode) catch (false))
+            if oldIsGraphic or oldIsTerminal do append oldVisualNodes oldNode
+        )
+
+        beginAllocation()
+        local created = undefined
+        try
+        (
+            created = createVisualNodes controller layout audit sceneState.dimensionsLayer style:resolvedStyle
+            if created == undefined then throw "Ameno não conseguiu criar os visuais da cota."
+            for oldNode in oldVisualNodes where isValidNode oldNode do
+                if (findItem #(created.lineNode, created.textNode, created.markerNode, created.termNodeA, created.termNodeB) oldNode) == 0 do
+                    delete oldNode
+            finishAllocation()
+        )
+        catch
+        (
+            rollbackAllocation()
+            throw
+        )
 
         if wasSelected and created != undefined do
         (

@@ -89,6 +89,7 @@
     r1Ok "horizontal begin succeeds" (AmenoDimensionContinuousTool.begin())
     r1Eq "horizontal begins collecting" AmenoDimensionContinuousTool.stage #collecting
     r1Eq "HUD remains closed" AmenoDimensionContinuousTool.hudOpen false
+    r1Ok "onStart keeps HUD closed without keyboard monitor" (AmenoDimensionContinuousTool.onStart() and AmenoDimensionContinuousTool.hudOpen == false)
     AmenoDimensionContinuousTool.activeMode = #vertical
     AmenoDimensionContinuousTool.previewOutputUnit = #millimeters
     AmenoDimensionContinuousTool.previewPrecision = 0
@@ -97,6 +98,32 @@
     r1Eq "session precision remains two" (AmenoDimensionContinuousTool.effectivePrecision()) 2
     AmenoDimensionContinuousTool.cancel()
     r1Eq "cancel clears session mode" AmenoDimensionContinuousTool.sessionMode undefined
+
+    -- Um segundo ponto em eixo oposto ao modo ativo encerra a sessão em vez
+    -- de deixar o MouseTool preso em uma rejeição de estação duplicada.
+    resetTool()
+    AmenoDimensionContinuousTool.activeMode = #horizontal
+    r1Ok "mode mismatch begin succeeds" (AmenoDimensionContinuousTool.begin())
+    AmenoDimensionContinuousTool.points = #([10, 20, 0])
+    r1Eq "horizontal detects vertical candidate" (AmenoDimensionContinuousTool.modeMismatchForCandidate [10, 120, 0]) true
+    r1Eq "horizontal accepts horizontal candidate" (AmenoDimensionContinuousTool.modeMismatchForCandidate [110, 20, 0]) false
+    r1Eq "mode mismatch returns stop" (AmenoDimensionContinuousTool.mouseReturnForOutcome #modeMismatch) #stop
+    local mismatchClick = AmenoContinuousClickClassification kind:#reference worldPoint:[10, 120, 0]
+    r1Eq "mode mismatch cancels through click handler" (AmenoDimensionContinuousTool.handleClassifiedClick mismatchClick) #modeMismatch
+    r1Eq "mode mismatch leaves tool inactive" AmenoDimensionContinuousTool.active false
+
+    -- O Esc é armado apenas durante startTool e a preferência anterior é
+    -- restaurada depois.
+    local previousEscapeEnable = try (escapeEnable) catch (undefined)
+    if previousEscapeEnable != undefined do
+    (
+        escapeEnable = false
+        AmenoDimensionContinuousTool.armEscapeAbort()
+        r1Eq "escape abort is enabled during tool" escapeEnable true
+        AmenoDimensionContinuousTool.restoreEscapeAbort()
+        r1Eq "escape preference is restored" escapeEnable false
+        escapeEnable = previousEscapeEnable
+    )
 
     -- Abort com 0, 1 e 3 referências nunca cria cotas.
     for referenceCount in #(0,1,3) do
@@ -134,9 +161,10 @@
     r1Ok "success begin succeeds" (AmenoDimensionContinuousTool.begin())
     r1Eq "success add A" (addReference anchorA) #referenceAdded
     r1Eq "success add B" (addReference anchorB) #referenceAdded
-    local emptyClick = AmenoContinuousClickClassification kind:#empty worldPoint:[50,80,0]
-    local serviceOutcome = AmenoDimensionContinuousTool.handleClassifiedClick emptyClick commitNow:true
-    r1Eq "service reports committed" serviceOutcome #chainCommitted
+    AmenoDimensionContinuousTool.lastCursorPoint = [50,80,0]
+    r1Ok "programmatic confirmation commits at cursor" (AmenoDimensionContinuousTool.confirmPoints())
+    r1Eq "confirmation reaches finished" AmenoDimensionContinuousTool.stage #finished
+    local serviceOutcome = #chainCommitted
     r1Eq "success reaches finished" AmenoDimensionContinuousTool.stage #finished
     r1Eq "success records committed result" AmenoDimensionContinuousTool.lastResult #committed
     r1Eq "mouse border translates success to stop" (AmenoDimensionContinuousTool.mouseReturnForOutcome serviceOutcome) #stop
@@ -155,9 +183,23 @@
     r1Eq "second stop stays idle" AmenoDimensionContinuousTool.stage #idle
     r1Eq "second stop preserves permanent dimension" (AmenoDimensionGraphics.findControllers role:"interactive").count (baselineControllers + 1)
 
+    -- Um clique de viewport que não resolve vértice posiciona diretamente no plano XY.
+    resetTool()
+    AmenoDimensionContinuousTool.activeMode = #horizontal
+    r1Ok "viewport begin succeeds" (AmenoDimensionContinuousTool.begin())
+    r1Eq "viewport add A" (addReference anchorA) #referenceAdded
+    r1Eq "viewport add B" (addReference anchorB) #referenceAdded
+    local viewportOutcome = AmenoDimensionContinuousTool.handlePoint 1 [50,80,0]
+    r1Eq "viewport click returns stop after commit" viewportOutcome #stop
+    r1Eq "viewport click reaches finished" AmenoDimensionContinuousTool.stage #finished
+    r1Eq "viewport click creates one dimension" (AmenoDimensionGraphics.findControllers role:"interactive").count (baselineControllers + 2)
+    local viewportId = AmenoDimensionContinuousTool.lastSessionIds[1]
+    AmenoDimensionContinuousTool.onStop()
+
     with undo off
     (
         AmenoDimensionGraphics.deleteNodes (AmenoDimensionGraphics.findNodesForDimension committedId)
+        AmenoDimensionGraphics.deleteNodes (AmenoDimensionGraphics.findNodesForDimension viewportId)
     )
     r1Eq "test cleanup restores controller count" (AmenoDimensionGraphics.findControllers role:"interactive").count baselineControllers
 

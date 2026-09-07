@@ -4,15 +4,15 @@
     Fluxo de interação:
       1. Painel principal valida o modo e ativa o MouseTool.
       2. Usuário clica N referências de vértice (≥ 2).
-      3. O primeiro clique realmente vazio solicita o commit do conjunto.
+      3. Um clique na viewport posiciona a cadeia e conclui o commit.
       4. Layout e commit da cadeia são implementados nos gates E12-B/C.
 
     Gestos:
       - Clique em vértice           : adiciona referência
-      - Clique vazio                : solicita posicionamento/commit
+      - Clique na viewport          : posiciona e cria a cadeia
       - Esc / botão direito         : cancela toda a sessão
 
-    HUD nativo:
+    HUD nativo legado (não aberto neste fluxo):
       - Label com contagem de pontos e comprimento total acumulado
       - Botão "↩ Desfazer ponto"  : remove o último ponto acumulado
       - Botão "✕ Cancelar"        : fecha o HUD e cancela a sessão
@@ -125,6 +125,7 @@ struct AmenoDimensionContinuousToolService
     sessionPrecision   = undefined,
     lastResult         = #idle,
     cleanupInProgress  = false,
+    escapeEnableBeforeTool = undefined,
     inputSessionId     = "",
     lastError          = "",
     lastCursorPoint    = undefined,
@@ -166,6 +167,53 @@ struct AmenoDimensionContinuousToolService
     (
         if ::AmenoContinuousDiagnostics == undefined then return false
         try (::AmenoContinuousDiagnostics.trace eventName fields:fields throttleKey:throttleKey) catch false
+    ),
+
+    -- O log persistente é best-effort e nunca participa do resultado da
+    -- ferramenta. Eventos de alta frequência (mouseMove) continuam somente
+    -- no diagnóstico opt-in para não pesar a interação.
+    fn persistentLog level message =
+    (
+        try
+        (
+            if ::AmenoLog != undefined do ::AmenoLog.write level message
+        )
+        catch ()
+        true
+    ),
+
+    fn persistentInfo message =
+    (
+        persistentLog #info message
+    ),
+
+    fn persistentWarn message =
+    (
+        persistentLog #warn message
+    ),
+
+    fn persistentError message =
+    (
+        persistentLog #error message
+    ),
+
+    -- O startTool deve receber o Esc mesmo quando o Max estiver com o
+    -- escapeEnable global desligado por outra rotina. O valor anterior é
+    -- restaurado assim que a ferramenta termina, sem alterar a preferência
+    -- global do usuário.
+    fn armEscapeAbort =
+    (
+        escapeEnableBeforeTool = try (escapeEnable) catch (undefined)
+        try (escapeEnable = true) catch ()
+        true
+    ),
+
+    fn restoreEscapeAbort =
+    (
+        if escapeEnableBeforeTool != undefined do
+            try (escapeEnable = escapeEnableBeforeTool) catch ()
+        escapeEnableBeforeTool = undefined
+        true
     ),
 
     fn diagnosticNodeText nodeValue =
@@ -386,7 +434,7 @@ struct AmenoDimensionContinuousToolService
                 if n == 0 then
                     "Ameno Cota Contínua: clique o 1º ponto  (Esc cancela)"
                 else
-                    ("Ameno Cota Contínua: " + n as string + " referência(s) · clique vazio posiciona")
+                    ("Ameno Cota Contínua: " + n as string + " referência(s) · clique na viewport para confirmar")
             #committing:
                 "Ameno Cota Contínua: preparando a cadeia"
             default:
@@ -487,12 +535,13 @@ struct AmenoDimensionContinuousToolService
             if stage == #committing then
                 instrStr = "Preparando posicionamento da cadeia"
             else if segs > 0 then
-                instrStr = "Clique em outro vértice ou no vazio para posicionar"
+                instrStr = "Clique na viewport para confirmar"
             else
                 instrStr = "Continue clicando os pontos"
             ::AmenoContinuousHUDRlt.lblInstr.text = instrStr
 
-            -- Botão Finalizar
+            -- O HUD não é aberto durante a ferramenta; mantém o estado legado se
+            -- outra rotina o utilizar explicitamente.
             ::AmenoContinuousHUDRlt.btnConfirm.enabled = false
 
             -- Botão Undo
@@ -506,6 +555,51 @@ struct AmenoDimensionContinuousToolService
     (
         try (destroyDialog ::AmenoContinuousHUDRlt) catch ()
         hudOpen = false
+    ),
+
+    fn positionPointFromScreen screenPoint fallbackPoint:undefined =
+    (
+        local positionPoint = undefined
+        if screenPoint != undefined and ::AmenoContinuousInputResolver != undefined do
+        (
+            try
+            (
+                local rayValue = mapScreenToWorldRay screenPoint
+                positionPoint = ::AmenoContinuousInputResolver.intersectRayWithPlane rayValue targetZ:0.0
+            )
+            catch ()
+        )
+        if positionPoint == undefined do positionPoint = fallbackPoint
+        flattenPoint positionPoint
+    ),
+
+    fn currentPositionPoint =
+    (
+        local screenPoint = undefined
+        try (screenPoint = mouse.pos) catch ()
+        local positionPoint = positionPointFromScreen screenPoint fallbackPoint:lastCursorPoint
+        if positionPoint == undefined and lastCursorPoint != undefined do
+            positionPoint = flattenPoint lastCursorPoint
+        positionPoint
+    ),
+
+    fn handlePositionClick clickNumber pointValue screenPoint:undefined =
+    (
+        if not active or stage != #committing then return #ignored
+
+        local offsetPoint = positionPointFromScreen screenPoint fallbackPoint:pointValue
+        persistentInfo ("E12 posicionamento confirmado por clique · click=" + (clickNumber as string) + " · offset=" + (diagnosticPointText offsetPoint))
+        diagnosticTrace #positionClick #(
+            "clickNumber=" + (clickNumber as string),
+            "offset=" + (diagnosticPointText offsetPoint)
+        )
+        if offsetPoint == undefined then
+        (
+            displayTempPrompt "Ameno Cota Contínua: não foi possível obter o ponto de posicionamento." 1800
+            return #ambiguous
+        )
+
+        if commitChain offsetPoint then #chainCommitted else #commitFailed
     ),
 
 
@@ -680,7 +774,6 @@ struct AmenoDimensionContinuousToolService
             active          = true
             registerViewportOverlay()
             setStage #collecting
-            -- O HUD não abre automaticamente no R1; status/prompt conduzem a sessão.
             diagnosticTrace #beginReady #("stage=" + (stage as string), "mode=" + ((effectiveMode()) as string))
             true
         )
@@ -722,6 +815,42 @@ struct AmenoDimensionContinuousToolService
         clearSessionConfiguration()
         cleanupInProgress = false
         true
+    ),
+
+    -- Detecta o erro mais comum da cotação contínua: o usuário pretende uma
+    -- cadeia vertical, mas inicia a sessão com Horizontal (ou vice-versa).
+    -- A checagem ocorre antes de rejeitar a segunda referência como estação
+    -- duplicada, encerra a sessão e devolve o painel para a correção do modo.
+    fn modeMismatchForCandidate pointValue =
+    (
+        if points.count != 1 or pointValue == undefined then return false
+        local firstPoint = flattenPoint points[1]
+        local candidatePoint = flattenPoint pointValue
+        if firstPoint == undefined or candidatePoint == undefined then return false
+
+        local deltaX = abs (candidatePoint.x - firstPoint.x)
+        local deltaY = abs (candidatePoint.y - firstPoint.y)
+        local epsilon = 0.00001
+
+        if deltaX <= epsilon and deltaY > epsilon then
+            return (effectiveMode() == #horizontal)
+        if deltaY <= epsilon and deltaX > epsilon then
+            return (effectiveMode() == #vertical)
+
+        local dominantAxisRatio = 1.5
+        if effectiveMode() == #horizontal then
+            deltaY > (deltaX * dominantAxisRatio)
+        else if effectiveMode() == #vertical then
+            deltaX > (deltaY * dominantAxisRatio)
+        else
+            false
+    ),
+
+    fn modeMismatchMessage =
+    (
+        local activeModeText = if effectiveMode() == #horizontal then "Horizontal" else "Vertical"
+        local expectedModeText = if effectiveMode() == #horizontal then "Vertical" else "Horizontal"
+        "O modo " + activeModeText + " está ativo, mas os dois primeiros pontos parecem " + expectedModeText + "."
     ),
 
     fn cancel =
@@ -771,6 +900,7 @@ struct AmenoDimensionContinuousToolService
 
     fn commitChain offsetPoint failAtSegment:0 =
     (
+        persistentInfo ("E12 commit begin · stage=" + (stage as string) + " · mode=" + ((effectiveMode()) as string) + " · refs=" + (points.count as string) + " · offset=" + (diagnosticPointText offsetPoint))
         diagnosticTrace #commitBegin #(
             "stage=" + (stage as string),
             "mode=" + ((effectiveMode()) as string),
@@ -818,6 +948,7 @@ struct AmenoDimensionContinuousToolService
             (
                 for segmentIndex = 1 to chainLayout.segments.count do
                 (
+                    persistentInfo ("E12 segmento begin · segmento=" + (segmentIndex as string) + "/" + (chainLayout.segments.count as string))
                     diagnosticTrace #segmentCreateBegin #("segment=" + (segmentIndex as string))
                     if failAtSegment == segmentIndex do throw ("Falha injetada no segmento " + (segmentIndex as string))
                     local segmentLayout = chainLayout.segments[segmentIndex]
@@ -839,6 +970,7 @@ struct AmenoDimensionContinuousToolService
         (
             lastError = getCurrentException() as string
             lastResult = #failed
+            persistentError ("E12 commit exception · segmentosCriados=" + (createdIds.count as string) + " · " + lastError)
             diagnosticTrace #commitException #("error=" + lastError, "createdIds=" + (createdIds.count as string))
             rollbackCreatedDimensions createdIds
             setStage #collecting
@@ -868,19 +1000,39 @@ struct AmenoDimensionContinuousToolService
         setStage #finished
         if ::AmenoAnchorService != undefined do try (::AmenoAnchorService.rebuildIndex()) catch ()
         panelStatus ("E12-C: " + (createdIds.count as string) + " cota(s) criada(s).")
+        persistentInfo ("E12 commit success · cotas=" + (createdIds.count as string))
         diagnosticTrace #commitSuccess #("createdIds=" + (createdIds.count as string), "stage=" + (stage as string), "active=" + (active as string))
         true
     ),
 
     fn mouseReturnForOutcome outcome =
     (
-        if outcome == #chainCommitted then #stop else outcome
+        if outcome == #chainCommitted or outcome == #modeMismatch then #stop else outcome
     ),
 
     fn confirmPoints =
     (
-        displayTempPrompt "Ameno Cota Contínua: posicione com o primeiro clique vazio." 1400
-        false
+        if not active then return false
+        if stage != #collecting and stage != #committing then return false
+
+        persistentInfo ("E12 confirmação solicitada · stage=" + (stage as string) + " · refs=" + (points.count as string))
+        local offsetPoint = currentPositionPoint()
+        if offsetPoint == undefined then
+        (
+            persistentWarn "E12 confirmação sem posição reconhecida"
+            displayTempPrompt "Ameno Cota Contínua: a posição atual não foi reconhecida; mova o cursor e clique na viewport." 2200
+            return false
+        )
+
+        if stage == #collecting and not requestCommit() then return false
+        if stage != #committing then return false
+
+        if commitChain offsetPoint then
+        (
+            displayTempPrompt "Ameno Cota Contínua: cota confirmada." 1000
+            true
+        )
+        else false
     ),
 
     fn isDuplicateReference clickInfo tolerance:0.00001 =
@@ -950,14 +1102,24 @@ struct AmenoDimensionContinuousToolService
         (
             #reference:
             (
+                if modeMismatchForCandidate clickInfo.worldPoint do
+                (
+                    lastError = modeMismatchMessage()
+                    persistentWarn ("E12 modo incompatível · " + lastError)
+                    cancel()
+                    displayTempPrompt ("Ameno Cota Contínua: " + lastError + " Sessão cancelada; selecione o modo correto e tente novamente.") 3000
+                    return #modeMismatch
+                )
                 local appendOutcome = appendDraftReference clickInfo
                 if appendOutcome == #duplicateReference then
                 (
+                    persistentWarn "E12 referência duplicada rejeitada"
                     displayTempPrompt "Ameno Cota Contínua: esta referência já foi escolhida." 1400
                     return #duplicateReference
                 )
                 if appendOutcome == #duplicateStation then
                 (
+                    persistentWarn "E12 referência com estação duplicada rejeitada"
                     displayTempPrompt "Ameno Cota Contínua: escolha um vértice em outra estação da cadeia." 1700
                     panelStatus "E12: referência rejeitada — estação repetida."
                     return #duplicateStation
@@ -965,6 +1127,7 @@ struct AmenoDimensionContinuousToolService
                 if appendOutcome != #referenceAdded then return appendOutcome
                 setStage #collecting
                 updateHUD()
+                persistentInfo ("E12 referência adicionada · refs=" + (points.count as string) + " · ponto=" + (diagnosticPointText clickInfo.worldPoint))
                 #referenceAdded
             )
             #geometryWithoutReference:
@@ -1025,9 +1188,39 @@ struct AmenoDimensionContinuousToolService
             return #stop
         )
 
-        local clickInfo = classifyClick pointValue screenPoint:screenPoint snapNode:snapNode \
-            snapWorldPoint:snapWorldPoint snapHit:snapHit snapStatus:snapStatus clickNumber:clickNumber
-        local outcome = handleClassifiedClick clickInfo commitNow:true
+        local outcome = #ignored
+        if stage == #committing then
+            outcome = handlePositionClick clickNumber pointValue screenPoint:screenPoint
+        else
+        (
+            local clickInfo = classifyClick pointValue screenPoint:screenPoint snapNode:snapNode \
+                snapWorldPoint:snapWorldPoint snapHit:snapHit snapStatus:snapStatus clickNumber:clickNumber
+            local isReference = (clickInfo != undefined and clickInfo.kind == #reference)
+            if isReference or points.count < 2 then
+                outcome = handleClassifiedClick clickInfo commitNow:true
+            else
+            (
+                -- Depois de duas referências, qualquer clique que não seja um
+                -- vértice é uma tentativa de posicionamento. Isso permite
+                -- clicar sobre uma face, bloco ou objeto que não tenha um
+                -- vértice dentro da tolerância de picking.
+                local offsetPoint = positionPointFromScreen screenPoint fallbackPoint:pointValue
+                if offsetPoint == undefined then
+                (
+                    displayTempPrompt "Ameno Cota Contínua: clique não reconhecido; mova o cursor e clique novamente na viewport." 1800
+                    outcome = #needsPosition
+                )
+                else if requestCommit() then
+                (
+                    if commitChain offsetPoint then
+                        outcome = #chainCommitted
+                    else
+                        outcome = #commitFailed
+                )
+                else
+                    outcome = #ignored
+            )
+        )
         diagnosticTrace #handlePointEnd #(
             "outcome=" + (outcome as string),
             "stage=" + (stage as string),
@@ -1053,6 +1246,7 @@ struct AmenoDimensionContinuousToolService
 
         lastCursorPoint = sample.planePoint
         if stage == #collecting and points.count >= 2 do refreshChainPreview sample.planePoint
+        if stage == #committing and points.count >= 2 do refreshChainPreview sample.planePoint
         classification
     ),
 
@@ -1078,7 +1272,7 @@ struct AmenoDimensionContinuousToolService
             "references=" + (points.count as string),
             "point=" + (diagnosticPointText candidate)
         ) throttleKey:("move:" + (stage as string) + ":" + (points.count as string))
-        if stage == #collecting and points.count >= 2 then refreshChainPreview candidate else undefined
+        if (stage == #collecting or stage == #committing) and points.count >= 2 then refreshChainPreview candidate else undefined
     ),
 
     -- ── onStart / onAbort / onStop ────────────────────────────────────────────
@@ -1088,12 +1282,14 @@ struct AmenoDimensionContinuousToolService
         diagnosticTrace #toolStart #("activeBefore=" + (active as string), "stageBefore=" + (stage as string))
         if not active do active = true
         updatePrompt()
+        persistentInfo ("E12 MouseTool iniciado · modo=" + ((effectiveMode()) as string))
         diagnosticTrace #toolStartReady #("active=" + (active as string), "stage=" + (stage as string))
         true
     ),
 
     fn onAbort clickNumber =
     (
+        persistentWarn ("E12 MouseTool abortado · click=" + (clickNumber as string) + " · refs=" + (points.count as string))
         diagnosticTrace #toolAbort #("clickNumber=" + (clickNumber as string), "stage=" + (stage as string), "references=" + (points.count as string))
         cancel()
         displayTempPrompt "Ameno Cota Contínua: sessão cancelada." 1000
@@ -1102,6 +1298,7 @@ struct AmenoDimensionContinuousToolService
 
     fn onStop =
     (
+        persistentInfo ("E12 MouseTool parado · resultado=" + (lastResult as string) + " · refs=" + (points.count as string) + " · cotas=" + (lastSessionIds.count as string))
         diagnosticTrace #toolStopBegin #("stage=" + (stage as string), "active=" + (active as string), "references=" + (points.count as string), "lastIds=" + (lastSessionIds.count as string))
         local committed = (lastResult == #committed)
         cleanupSession clearDraft:true
@@ -1117,6 +1314,7 @@ struct AmenoDimensionContinuousToolService
 
     fn start =
     (
+        persistentInfo ("E12 start solicitado · modo=" + (activeMode as string))
         diagnosticTrace #startRequested #("mode=" + (activeMode as string))
         local began = false
         try (began = begin()) catch
@@ -1132,21 +1330,24 @@ struct AmenoDimensionContinuousToolService
         )
 
         local toolResult = #abort
+        armEscapeAbort()
         try
         (
             toolResult = startTool AmenoDimensionContinuousMouseTool \
-                prompt:"Ameno Cota Contínua: clique vértices · clique vazio posiciona · Esc cancela" snap:#3D
+                prompt:"Ameno Cota Contínua: clique vértices · clique viewport confirma · Esc cancela" snap:#3D
             diagnosticTrace #startToolReturned #("toolResult=" + (toolResult as string), "lastIds=" + (lastSessionIds.count as string))
         )
         catch
         (
             lastError = getCurrentException() as string
             lastResult = #failed
+            persistentError ("E12 falha ao iniciar ferramenta · " + lastError)
             diagnosticTrace #startException #("error=" + lastError)
             displayTempPrompt ("Ameno Cota Contínua: ferramenta interrompida — " + lastError) 2200
             cleanupSession clearDraft:true
             panelStatus ("E12: ferramenta interrompida — " + lastError)
         )
+        restoreEscapeAbort()
 
         if toolResult == #abort do removeAllPreviews()
         lastSessionIds
@@ -1157,7 +1358,7 @@ AmenoDimensionContinuousTool = AmenoDimensionContinuousToolService()
 
 -- ── Mouse Tool block ──────────────────────────────────────────────────────────
 
-tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vértices · clique vazio posiciona · Esc cancela"
+tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vértices · clique viewport confirma · Esc cancela"
 (
     on start do
     (
@@ -1283,7 +1484,14 @@ tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vér
                 "stage=" + (AmenoDimensionContinuousTool.stage as string),
                 "references=" + (AmenoDimensionContinuousTool.points.count as string)
             )
-        if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.onAbort clickNumber
+        try
+        (
+            if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.onAbort clickNumber
+        )
+        catch ()
+        -- Retorno explícito evita que um erro secundário no cleanup mantenha o
+        -- MouseTool ativo sem devolver o controle ao Max/painel.
+        #stop
     )
 
     on stop do

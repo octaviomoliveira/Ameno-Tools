@@ -79,6 +79,7 @@ struct AmenoE9MockAdapter
     if coronaInfo.family != #corona or coronaInfo.supportState != #supported then throw "Classificação Corona inválida."
     if vrayCpuInfo.family != #vray or vrayCpuInfo.engine != #cpu or vrayCpuInfo.supportState != #supported then throw "Classificação V-Ray CPU inválida."
     if vrayGpuInfo.family != #vray or vrayGpuInfo.engine != #gpu or vrayGpuInfo.supportState != #experimental then throw "Classificação V-Ray GPU inválida."
+    if coronaInfo.detailedLabel() != "Corona [CoronaRenderer]" then throw "Identificação detalhada do renderer não foi preservada."
 
     local objectCountBeforeMath = objects.count
     local layoutPositive = AmenoDimensionMath.alignedLayout [0, 0, 0] [100, 0, 0] [0, 20, 0] millimetersPerSceneUnit:10.0
@@ -415,9 +416,10 @@ struct AmenoE9MockAdapter
     local dimDot = AmenoDimensionGraphics.createDimension [0, 150, 0] [100, 150, 0] [0, 170, 0] styleId:"t_dot"
     local dimNone = AmenoDimensionGraphics.createDimension [0, 200, 0] [100, 200, 0] [0, 220, 0] styleId:"t_none"
 
-    if (numSplines dimArrowC.lineNode) < 5 then throw "E7: Spline com setas fechadas deveria possuir as splines dos terminais."
+    -- E13-F: #arrowClosed e #dot geram nós mesh preenchidos separados (termNodeA e termNodeB), mantendo 3 splines na linha base
+    if (numSplines dimArrowC.lineNode) != 3 or dimArrowC.termNodeA == undefined or dimArrowC.termNodeB == undefined then throw "E13-F: Cota com setas fechadas deveria possuir 3 splines de linha e nós mesh de terminais."
     if (numSplines dimArrowO.lineNode) < 5 then throw "E7: Spline com setas abertas deveria possuir as splines dos terminais."
-    if (numSplines dimDot.lineNode) < 5 then throw "E7: Spline com pontos em losango deveria possuir as splines dos terminais."
+    if (numSplines dimDot.lineNode) != 3 or dimDot.termNodeA == undefined or dimDot.termNodeB == undefined then throw "E13-F: Cota com pontos/losango deveria possuir 3 splines de linha e nós mesh de terminais."
     if (numSplines dimNone.lineNode) != 3 then throw "E7: Cota sem terminais (#none) deveria possuir exatamente 3 splines (extA, extB, cota)."
 
     -- 2. Propriedades de tipografia no TextPlus
@@ -788,7 +790,11 @@ struct AmenoE9MockAdapter
     -- E10.3: V-Ray Renderer Adapter presente e registrado
     if AmenoVRayRendererAdapter == undefined then throw "E10.3: AmenoVRayRendererAdapter não foi definido pelo bootstrap."
     if AmenoVRayRendererAdapter.adapterId != "vray-overlay-v1" then throw "E10.3: adapterId inesperado para V-Ray."
-    if AmenoRenderCotasService.resolveDefaultAdapter() == undefined then throw "E10.3: resolveDefaultAdapter falhou em retornar um adapter válido."
+    local activeRendererInfo = AmenoRendererProbe.detect()
+    local resolvedDefaultAdapter = AmenoRenderCotasService.resolveDefaultAdapter()
+    if activeRendererInfo.family == #corona and (resolvedDefaultAdapter == undefined or resolvedDefaultAdapter.adapterId != "corona-overlay-v1") then throw "E10.3: despacho Corona inconsistente com o renderer ativo."
+    if activeRendererInfo.family == #vray and (resolvedDefaultAdapter == undefined or resolvedDefaultAdapter.adapterId != "vray-overlay-v1") then throw "E10.3: despacho V-Ray inconsistente com o renderer ativo."
+    if activeRendererInfo.family != #corona and activeRendererInfo.family != #vray and resolvedDefaultAdapter != undefined then throw "E10.3: renderer sem adapter não deveria receber fallback."
 
     fileIn macroPath quiet:true
 

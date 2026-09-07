@@ -16,6 +16,13 @@ struct AmenoRendererInfo
             #experimental: "experimental"
             default: "sem adapter"
         )
+    ),
+
+    fn detailedLabel =
+    (
+        local nameText = if displayName == undefined or displayName == "" then "Renderer desconhecido" else displayName
+        local classText = if className == undefined then "" else className
+        if classText == "" then nameText else nameText + " [" + classText + "]"
     )
 )
 
@@ -36,7 +43,9 @@ struct AmenoRendererProbeService
 
     fn classify className =
     (
-        if containsRendererName className "*corona*" then
+        if className == undefined or className == "" then
+            AmenoRendererInfo()
+        else if containsRendererName className "*corona*" then
         (
             (AmenoRendererInfo family:#corona engine:#cpu className:className displayName:"Corona" supportState:#supported)
         )
@@ -54,7 +63,8 @@ struct AmenoRendererProbeService
 
     fn detect =
     (
-        local currentRenderer = renderers.current
+        local currentRenderer = undefined
+        try (currentRenderer = renderers.current) catch ()
 
         if currentRenderer == undefined then
         (
@@ -62,7 +72,8 @@ struct AmenoRendererProbeService
         )
         else
         (
-            local rendererClassName = (classOf currentRenderer) as string
+            local rendererClassName = ""
+            try (rendererClassName = (classOf currentRenderer) as string) catch ()
 
             classify rendererClassName
         )

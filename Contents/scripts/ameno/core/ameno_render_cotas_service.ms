@@ -1,6 +1,9 @@
 global AmenoRenderCotasService
 global AmenoRenderCotasRequest
 global AmenoRenderCotasResult
+global AmenoStyleService
+global AmenoDimensionCA
+global AmenoRendererProbe
 
 struct AmenoRenderCotasRequest
 (
@@ -11,7 +14,13 @@ struct AmenoRenderCotasRequest
     width = 0,
     height = 0,
     pixelAspect = 1.0,
-    renderType = #normal
+    renderType = #normal,
+    -- true: cria o overlay independente e torna a planta não renderizável
+    -- apenas durante o passe. false: preserva a cena e adiciona as cotas.
+    dimensionsOnly = true,
+    -- Quando preenchida, a câmera é passada diretamente ao comando render;
+    -- a viewport ativa não precisa ser trocada para executar o passe.
+    cameraNode = undefined
 )
 
 struct AmenoRenderCotasResult
@@ -141,7 +150,7 @@ struct AmenoRenderCotasServiceDefinition
         )
     ),
 
-    fn createRequest outputPath:"" selectionMode:#all overwrite:false =
+    fn createRequest outputPath:"" selectionMode:#all overwrite:false cameraNode:undefined dimensionsOnly:true =
     (
         local inheritedRenderType = #normal
         try (inheritedRenderType = normalizeRenderType (getRenderType())) catch ()
@@ -154,7 +163,9 @@ struct AmenoRenderCotasServiceDefinition
             width:renderWidth \
             height:renderHeight \
             pixelAspect:renderPixelAspect \
-            renderType:inheritedRenderType
+            renderType:inheritedRenderType \
+            dimensionsOnly:dimensionsOnly \
+            cameraNode:cameraNode
     ),
 
     fn collectDimensionIds selectionMode =
@@ -191,18 +202,125 @@ struct AmenoRenderCotasServiceDefinition
             for node in (AmenoDimensionGraphics.findNodesForDimension dimensionId) where isValidNode node do
             (
                 local graphicRole = AmenoDimensionGraphics.readTextProperty node "Ameno.GraphicRole"
-                if (graphicRole == "lines" or graphicRole == "label") and (findItem targetNodes node) == 0 do append targetNodes node
+                if (graphicRole == "lines" or graphicRole == "label" or graphicRole == "terminal") and (findItem targetNodes node) == 0 do append targetNodes node
             )
         )
 
         targetNodes
     ),
 
+    fn styleColorForDimension dimensionId =
+    (
+        local fallbackColor = color 245 245 245
+        if dimensionId == undefined or dimensionId == "" then return fallbackColor
+        if ::AmenoStyleService == undefined or ::AmenoDimensionGraphics == undefined then return fallbackColor
+
+        local styleId = "default"
+        for controller in (::AmenoDimensionGraphics.findControllers()) where isValidNode controller do
+        (
+            if (::AmenoDimensionGraphics.getDimensionId controller) == dimensionId do
+            (
+                if ::AmenoDimensionCA != undefined do
+                (
+                    local rec = ::AmenoDimensionCA.readCA controller
+                    if rec != undefined and rec.styleId != undefined and rec.styleId != "" do styleId = rec.styleId
+                )
+                if styleId == "default" do
+                (
+                    local propStyleId = ::AmenoDimensionGraphics.readTextProperty controller "Ameno.StyleId"
+                    if propStyleId != undefined and propStyleId != "" do styleId = propStyleId
+                )
+                exit
+            )
+        )
+
+        local styleRecord = ::AmenoStyleService.getStyle styleId
+        if styleRecord == undefined then fallbackColor
+        else ::AmenoStyleService.colorFromString styleRecord.annotationColor defaultColor:fallbackColor
+    ),
+
+    fn materialColorForNode nodeValue fallbackColor:(color 245 245 245) =
+    (
+        if nodeValue == undefined or not isValidNode nodeValue then return fallbackColor
+        local materialValue = undefined
+        try (materialValue = nodeValue.material) catch ()
+        if materialValue == undefined then return fallbackColor
+
+        local materialColor = undefined
+        try (if isProperty materialValue #diffuse do materialColor = materialValue.diffuse) catch ()
+        if materialColor == undefined do try (if isProperty materialValue #color do materialColor = materialValue.color) catch ()
+        if materialColor != undefined and (classOf materialColor == color) then materialColor else fallbackColor
+    ),
+
+    fn sourceColorForNode nodeValue =
+    (
+        local fallbackColor = color 245 245 245
+        if nodeValue == undefined or not isValidNode nodeValue then return fallbackColor
+        local dimensionId = AmenoDimensionGraphics.getDimensionId nodeValue
+        if dimensionId != "" then return styleColorForDimension dimensionId
+        materialColorForNode nodeValue fallbackColor:fallbackColor
+    ),
+
+    fn colorKey colorValue =
+    (
+        local rText = (colorValue.r as integer) as string
+        local gText = (colorValue.g as integer) as string
+        local bText = (colorValue.b as integer) as string
+        rText + "," + gText + "," + bText
+    ),
+
+    fn createAnnotationMaterials targetNodes adapterValue =
+    (
+        local materials = #()
+        for targetNode in targetNodes where isValidNode targetNode do
+        (
+            local colorValue = sourceColorForNode targetNode
+            local keyValue = colorKey colorValue
+            local found = 0
+            for i = 1 to materials.count do
+            (
+                if materials[i][1] == keyValue do
+                (
+                    found = i
+                    exit
+                )
+            )
+            if found == 0 do
+            (
+                local materialValue = adapterValue.createAnnotationMaterial colorValue:colorValue
+                if materialValue == undefined then throw ("O adapter não criou material para a cor " + keyValue)
+                append materials #(keyValue, colorValue, materialValue)
+            )
+        )
+        materials
+    ),
+
+    fn annotationMaterialForNode nodeValue materialEntries =
+    (
+        local keyValue = colorKey (sourceColorForNode nodeValue)
+        for entry in materialEntries where entry[1] == keyValue do return entry[3]
+        undefined
+    ),
+
+    -- Captura o estado de renderização de todas as layers da cena
+    -- e apenas dos nós-alvo (cotas). Não itera objetos comuns da cena —
+    -- em cenas grandes (centenas de Plane objects) a iteração completa
+    -- dispara notificações excessivas ao renderer e pode travar o Corona.
     fn captureSceneState targetNodes =
     (
         local state = AmenoRenderSceneState currentLayer:LayerManager.current
+        local allLayers = #()
         local targetLayers = #()
 
+        -- Coletar todas as layers para controle de visibilidade por layer.
+        local layerCount = LayerManager.count
+        for i = 0 to (layerCount - 1) do
+        (
+            local layerValue = LayerManager.getLayer i
+            if layerValue != undefined do append allLayers layerValue
+        )
+
+        -- Identificar as layers dos nós-alvo (AMENO_COTAS e similares).
         for targetNode in targetNodes where isValidNode targetNode do
         (
             local targetLayer = undefined
@@ -210,19 +328,8 @@ struct AmenoRenderCotasServiceDefinition
             if targetLayer != undefined and (findItem targetLayers targetLayer) == 0 do append targetLayers targetLayer
         )
 
-        for node in objects where isValidNode node do
-        (
-            local nodeState = AmenoRenderNodeState node:node
-            try (nodeState.renderable = node.renderable) catch ()
-            try (nodeState.isHidden = node.isHidden) catch ()
-            try (nodeState.renderByLayer = node.renderByLayer) catch ()
-            try (nodeState.primaryVisibility = node.primaryVisibility) catch ()
-            nodeState.hasMaterial = isProperty node #material
-            if nodeState.hasMaterial do try (nodeState.material = node.material) catch ()
-            append state.nodes nodeState
-        )
-
-        for layer in targetLayers do
+        -- Salvar estado de TODAS as layers (para restaurar as que serão desligadas).
+        for layer in allLayers do
         (
             local layerState = AmenoRenderLayerState layer:layer
             try (layerState.layerOn = layer.on) catch ()
@@ -233,36 +340,77 @@ struct AmenoRenderCotasServiceDefinition
             append state.layers layerState
         )
 
+        -- Para os nós-alvo: salvar estado individual (material e visibilidade)
+        -- sem tocar nos objetos comuns da cena.
+        for targetNode in targetNodes where isValidNode targetNode do
+        (
+            local nodeState = AmenoRenderNodeState node:targetNode
+            try (nodeState.renderable = targetNode.renderable) catch ()
+            try (nodeState.isHidden = targetNode.isHidden) catch ()
+            try (nodeState.renderByLayer = targetNode.renderByLayer) catch ()
+            try (nodeState.primaryVisibility = targetNode.primaryVisibility) catch ()
+            nodeState.hasMaterial = isProperty targetNode #material
+            if nodeState.hasMaterial do try (nodeState.material = targetNode.material) catch ()
+            append state.nodes nodeState
+        )
+
         state
     ),
 
-    fn applyIsolation sceneState targetNodes annotationMaterial =
+    fn applyIsolation sceneState targetNodes annotationMaterials dimensionsOnly:true =
     (
+        -- Conjunto de layers dos nós-alvo (não devem ser desligadas).
+        local targetLayerSet = #()
+        for targetNode in targetNodes where isValidNode targetNode do
+        (
+            local tl = undefined
+            try (tl = targetNode.layer) catch ()
+            if tl != undefined and (findItem targetLayerSet tl) == 0 do append targetLayerSet tl
+        )
+
         with undo off
         (
-            for layerState in sceneState.layers where layerState.layer != undefined do
+            if dimensionsOnly do
             (
-                local layer = layerState.layer
-                try (layer.on = true) catch ()
-                try (layer.ishidden = false) catch ()
-                try (layer.renderable = true) catch ()
-                try (layer.primaryVisibility = true) catch ()
-                try (layer.visibility = 1.0) catch ()
+                -- Estratégia por layer: desligar todas as layers que NÃO pertencem
+                -- às cotas. Dispara apenas N notificações de layer em vez de M*N
+                -- notificações de objeto, evitando a saturação do Corona.
+                for layerState in sceneState.layers where layerState.layer != undefined do
+                (
+                    local layer = layerState.layer
+                    local isTargetLayer = (findItem targetLayerSet layer) > 0
+                    if isTargetLayer then
+                    (
+                        -- Garantir que a layer das cotas esteja visível e renderizável.
+                        try (layer.on = true) catch ()
+                        try (layer.ishidden = false) catch ()
+                        try (layer.renderable = true) catch ()
+                        try (layer.primaryVisibility = true) catch ()
+                        try (layer.visibility = 1.0) catch ()
+                    )
+                    else
+                    (
+                        -- Desligar a layer para que o renderer a ignore completamente.
+                        -- Isso é equivalente a setar renderable=false em cada objeto,
+                        -- mas sem disparar notificações por nó.
+                        try (layer.on = false) catch ()
+                    )
+                )
             )
 
+            -- Preparar apenas os nós-alvo: material e visibilidade.
             for nodeState in sceneState.nodes where nodeState.node != undefined and isValidNode nodeState.node do
             (
                 local node = nodeState.node
-                local isTarget = (findItem targetNodes node) > 0
-
                 try (node.renderByLayer = false) catch ()
-                try (node.renderable = isTarget) catch ()
-
-                if isTarget do
+                try (node.renderable = true) catch ()
+                try (node.primaryVisibility = true) catch ()
+                try (node.isHidden = false) catch ()
+                if nodeState.hasMaterial do
                 (
-                    try (node.primaryVisibility = true) catch ()
-                    try (node.isHidden = false) catch ()
-                    if nodeState.hasMaterial do node.material = annotationMaterial
+                    local annotationMaterial = annotationMaterialForNode node annotationMaterials
+                    if annotationMaterial == undefined then throw ("Não foi possível associar material à cota: " + node.name)
+                    node.material = annotationMaterial
                 )
             )
         )
@@ -279,31 +427,35 @@ struct AmenoRenderCotasServiceDefinition
     (
         if sceneState == undefined then return true
 
+        local restoreErrors = #()
         with undo off
         (
             for nodeState in sceneState.nodes where nodeState.node != undefined and isValidNode nodeState.node do
             (
                 local node = nodeState.node
-                if nodeState.hasMaterial do try (node.material = nodeState.material) catch ()
-                try (node.isHidden = nodeState.isHidden) catch ()
-                try (node.primaryVisibility = nodeState.primaryVisibility) catch ()
-                try (node.renderable = nodeState.renderable) catch ()
-                try (node.renderByLayer = nodeState.renderByLayer) catch ()
+                if nodeState.hasMaterial do
+                    try (node.material = nodeState.material) catch (append restoreErrors ("material " + node.name + ": " + (getCurrentException() as string)))
+                try (node.isHidden = nodeState.isHidden) catch (append restoreErrors ("hidden " + node.name + ": " + (getCurrentException() as string)))
+                try (node.primaryVisibility = nodeState.primaryVisibility) catch (append restoreErrors ("primaryVisibility " + node.name + ": " + (getCurrentException() as string)))
+                try (node.renderable = nodeState.renderable) catch (append restoreErrors ("renderable " + node.name + ": " + (getCurrentException() as string)))
+                try (node.renderByLayer = nodeState.renderByLayer) catch (append restoreErrors ("renderByLayer " + node.name + ": " + (getCurrentException() as string)))
             )
 
             for layerState in sceneState.layers where layerState.layer != undefined do
             (
                 local layer = layerState.layer
-                try (layer.visibility = layerState.visibility) catch ()
-                try (layer.primaryVisibility = layerState.primaryVisibility) catch ()
-                try (layer.renderable = layerState.renderable) catch ()
-                try (layer.ishidden = layerState.isHidden) catch ()
-                try (layer.on = layerState.layerOn) catch ()
+                try (layer.visibility = layerState.visibility) catch (append restoreErrors ("visibility " + layer.name + ": " + (getCurrentException() as string)))
+                try (layer.primaryVisibility = layerState.primaryVisibility) catch (append restoreErrors ("primaryVisibility layer " + layer.name + ": " + (getCurrentException() as string)))
+                try (layer.renderable = layerState.renderable) catch (append restoreErrors ("renderable layer " + layer.name + ": " + (getCurrentException() as string)))
+                try (layer.ishidden = layerState.isHidden) catch (append restoreErrors ("hidden layer " + layer.name + ": " + (getCurrentException() as string)))
+                try (layer.on = layerState.layerOn) catch (append restoreErrors ("on layer " + layer.name + ": " + (getCurrentException() as string)))
             )
 
-            try (if sceneState.currentLayer != undefined do sceneState.currentLayer.current = true) catch ()
+            try (if sceneState.currentLayer != undefined do sceneState.currentLayer.current = true) catch (append restoreErrors ("current layer: " + (getCurrentException() as string)))
         )
 
+        if restoreErrors.count > 0 then
+            throw ("A restauração da cena falhou em " + (restoreErrors[1]))
         true
     ),
 
@@ -317,22 +469,88 @@ struct AmenoRenderCotasServiceDefinition
         true
     ),
 
+    fn detectRendererInfo =
+    (
+        if ::AmenoRendererProbe == undefined then undefined
+        else try (::AmenoRendererProbe.detect()) catch (undefined)
+    ),
+
+    fn rendererInfoLabel infoValue =
+    (
+        if infoValue == undefined then return "Renderer não identificado"
+
+        local displayText = "Renderer não identificado"
+        local classText = ""
+        try (displayText = infoValue.displayName as string) catch ()
+        try (classText = infoValue.className as string) catch ()
+        if displayText == "" then displayText = "Renderer não identificado"
+        if classText != "" then displayText += " [" + classText + "]"
+        displayText
+    ),
+
+    fn rendererCompatibilityError adapterValue =
+    (
+        if adapterValue == undefined then return "Nenhum adapter de renderização foi resolvido."
+
+        local adapterId = ""
+        try (adapterId = adapterValue.adapterId as string) catch ()
+        -- Adapters injetados pelos testes não possuem identidade de renderer;
+        -- nesse caso a validação continua sendo responsabilidade do teste.
+        if adapterId == "" then return ""
+
+        local info = detectRendererInfo()
+        local compatible = false
+        if adapterId == "corona-overlay-v1" then
+            compatible = (info != undefined and info.family == #corona)
+        else if adapterId == "vray-overlay-v1" then
+            compatible = (info != undefined and info.family == #vray)
+        else
+            return ""
+
+        if compatible then
+            ""
+        else
+            "O adapter '" + adapterId + "' não é compatível com o renderer ativo: " + (rendererInfoLabel info) + ". Selecione o renderer correspondente e tente novamente."
+    ),
+
     fn resolveDefaultAdapter =
     (
-        local info = if ::AmenoRendererProbe != undefined then ::AmenoRendererProbe.detect() else undefined
-        if info != undefined then
-        (
-            case info.family of
-            (
-                #corona: (if ::AmenoCoronaRendererAdapter != undefined then ::AmenoCoronaRendererAdapter else undefined)
-                #vray:   (if ::AmenoVRayRendererAdapter != undefined then ::AmenoVRayRendererAdapter else undefined)
-                default: (if ::AmenoCoronaRendererAdapter != undefined then ::AmenoCoronaRendererAdapter else undefined)
-            )
-        )
-        else
+        local info = detectRendererInfo()
+        if info == undefined then
+            undefined
+        else if info.family == #corona then
         (
             if ::AmenoCoronaRendererAdapter != undefined then ::AmenoCoronaRendererAdapter else undefined
         )
+        else if info.family == #vray then
+        (
+            if ::AmenoVRayRendererAdapter != undefined then ::AmenoVRayRendererAdapter else undefined
+        )
+        else undefined
+    ),
+
+    fn isolateSelectionActive =
+    (
+        local active = false
+        try (active = IsolateSelection.IsolateSelectionModeActive()) catch ()
+        active == true
+    ),
+
+    fn renderRequestSummary request isolateActive:false =
+    (
+        if request == undefined then return "pedido=undefined"
+
+        local cameraText = "Render Setup/viewport"
+        if request.cameraNode != undefined and isValidNode request.cameraNode do
+            try (cameraText = request.cameraNode.name as string) catch ()
+
+        "camera=" + cameraText +
+        " · renderType=" + (request.renderType as string) +
+        " · resolução=" + (request.width as string) + "x" + (request.height as string) +
+        " · pixelAspect=" + (request.pixelAspect as string) +
+        " · somenteCotas=" + (request.dimensionsOnly as string) +
+        " · isolateSelection=" + (isolateActive as string) +
+        " · saída=" + (request.outputPath as string)
     ),
 
     fn renderDimensions request adapter:undefined =
@@ -345,6 +563,23 @@ struct AmenoRenderCotasServiceDefinition
         if request == undefined do request = createRequest()
         if request.selectionMode != #all and request.selectionMode != #selected do request.selectionMode = #all
 
+        -- O Isolate Selection mantém estado nativo próprio, além de esconder nós.
+        -- O render comum pode usá-lo normalmente; o conflito aparece quando o Ameno
+        -- tenta aplicar por cima seu próprio passe transacional (renderable, layers,
+        -- visibilidade e materiais). No Corona 15 Hotfix 1 essa combinação já
+        -- produziu EXCEPTION_ACCESS_VIOLATION dentro de render().
+        -- Sair e reentrar automaticamente também não é seguro: descartaria o estado
+        -- original que o Max usa quando o usuário executa End Isolate.
+        local isolateActive = isolateSelectionActive()
+        if ::AmenoLog != undefined do
+            ::AmenoLog.info ("Render overlay preflight · " + (renderRequestSummary request isolateActive:isolateActive))
+        if isolateActive do
+        (
+            local isolateMessage = "A cena está em Isolate Selection. O render comum pode usar esse modo, mas o Ameno precisa controlar visibilidade e materiais durante seu próprio passe. Finalize o isolamento (Alt+Q / End Isolate) e use 'Renderizar somente as cotas (sem a planta)'; o Ameno ocultará a planta temporariamente e restaurará a cena."
+            if ::AmenoLog != undefined do ::AmenoLog.warn isolateMessage
+            return AmenoRenderCotasResult selectionMode:request.selectionMode errorMessage:isolateMessage
+        )
+
         local startedAt = timestamp()
         local result = AmenoRenderCotasResult selectionMode:request.selectionMode
         local sceneState = undefined
@@ -353,9 +588,22 @@ struct AmenoRenderCotasServiceDefinition
         local resolvedAdapter = if adapter != undefined then adapter else (resolveDefaultAdapter())
         if resolvedAdapter == undefined do
         (
-            return AmenoRenderCotasResult errorMessage:"Nenhum adapter de renderização compatível está disponível para o renderer ativo."
+            local rendererMessage = "Nenhum adapter de renderização compatível está disponível para o renderer ativo: " + (rendererInfoLabel (detectRendererInfo())) + ". Selecione Corona ou V-Ray antes de renderizar."
+            if ::AmenoLog != undefined do ::AmenoLog.warn rendererMessage
+            return AmenoRenderCotasResult errorMessage:rendererMessage
         )
+        local compatibilityError = rendererCompatibilityError resolvedAdapter
+        if compatibilityError != "" do
+        (
+            if ::AmenoLog != undefined do ::AmenoLog.warn compatibilityError
+            return AmenoRenderCotasResult errorMessage:compatibilityError
+        )
+        local resolvedRendererText = rendererInfoLabel (detectRendererInfo())
+        local adapterText = try (resolvedAdapter.adapterId as string) catch ("adapter-injetado")
+        if ::AmenoLog != undefined do
+            ::AmenoLog.info ("Render overlay iniciado · renderer=" + resolvedRendererText + " · adapter=" + adapterText)
         local targetNodes = #()
+        local annotationMaterials = #()
         local activeStage = "inicialização"
 
         isRendering = true
@@ -392,9 +640,15 @@ struct AmenoRenderCotasServiceDefinition
             activeStage = "configuração do PNG"
             resolvedAdapter.configureOutput request
             activeStage = "criação do material de anotação"
-            local annotationMaterial = resolvedAdapter.createAnnotationMaterial()
+            annotationMaterials = createAnnotationMaterials targetNodes resolvedAdapter
             activeStage = "isolamento temporário da cena"
-            applyIsolation sceneState targetNodes annotationMaterial
+            applyIsolation sceneState targetNodes annotationMaterials dimensionsOnly:request.dimensionsOnly
+
+            activeStage = "validação final do renderer"
+            local finalCompatibilityError = rendererCompatibilityError resolvedAdapter
+            if finalCompatibilityError != "" then throw finalCompatibilityError
+            if ::AmenoLog != undefined do
+                ::AmenoLog.info ("Render overlay autorizado · renderer=" + (rendererInfoLabel (detectRendererInfo())) + " · adapter=" + adapterText)
 
             activeStage = "render"
             local adapterResult = resolvedAdapter.renderOverlay request

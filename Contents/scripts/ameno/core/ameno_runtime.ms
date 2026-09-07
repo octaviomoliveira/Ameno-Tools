@@ -15,6 +15,9 @@ global AmenoShowStyleEditor
 global AmenoStyleEditorRollout
 global AmenoAnchorService
 global AmenoRenderCotasService
+global AmenoCotasWindow
+global AmenoCotasCriarTab
+global AmenoCotasEstilosTab
 
 struct AmenoRuntime
 (
@@ -26,6 +29,13 @@ struct AmenoRuntime
     lastInteractiveDimension = undefined,
     lastRenderResult = undefined,
     started = false,
+
+    fn logRuntime level message =
+    (
+        if ::AmenoLog != undefined do
+            try (::AmenoLog.write level ("Runtime · " + message)) catch ()
+        true
+    ),
 
     fn refreshRenderer =
     (
@@ -58,9 +68,76 @@ struct AmenoRuntime
     (
         if AmenoDimensionTool == undefined then throw "A ferramenta interativa Ameno não foi carregada."
 
-        lastInteractiveDimension = AmenoDimensionTool.start()
-        refreshScene()
-        refreshDimensions()
+        local panelSuspended = false
+        if ::AmenoCotasWindow != undefined do
+            panelSuspended = try (::AmenoCotasWindow.suspendForInteractiveTool()) catch (false)
+        logRuntime #info ("cota individual iniciada · painelSuspenso=" + (panelSuspended as string))
+
+        local toolError = undefined
+        try
+        (
+            lastInteractiveDimension = AmenoDimensionTool.start()
+        )
+        catch
+        (
+            toolError = getCurrentException() as string
+            logRuntime #error ("cota individual interrompida · " + toolError)
+        )
+
+        try (refreshScene()) catch ()
+        try (refreshDimensions()) catch ()
+        if panelSuspended and ::AmenoCotasWindow != undefined do
+        (
+            local resumed = try (::AmenoCotasWindow.resumeAfterInteractiveTool()) catch (false)
+            if not resumed do logRuntime #error "painel nao foi reabilitado apos cota individual"
+        )
+        if ::AmenoCotasCriarTab != undefined do
+        (
+            try (::AmenoCotasCriarTab.syncFromServices()) catch ()
+            try (::AmenoCotasCriarTab.updateCotaCount()) catch ()
+        )
+
+        if toolError != undefined then throw toolError
+        logRuntime #info "cota individual encerrada"
+        lastInteractiveDimension
+    ),
+
+    -- Compatibilidade com a macro legada da cotação contínua E12.
+    fn startContinuousDimensionTool =
+    (
+        if ::AmenoDimensionContinuousTool == undefined then throw "A ferramenta de cotação contínua Ameno não foi carregada."
+
+        local panelSuspended = false
+        if ::AmenoCotasWindow != undefined do
+            panelSuspended = try (::AmenoCotasWindow.suspendForInteractiveTool()) catch (false)
+        logRuntime #info ("cota continua iniciada · painelSuspenso=" + (panelSuspended as string))
+
+        local toolError = undefined
+        try
+        (
+            lastInteractiveDimension = ::AmenoDimensionContinuousTool.start()
+        )
+        catch
+        (
+            toolError = getCurrentException() as string
+            logRuntime #error ("cota continua interrompida · " + toolError)
+        )
+
+        try (refreshScene()) catch ()
+        try (refreshDimensions()) catch ()
+        if panelSuspended and ::AmenoCotasWindow != undefined do
+        (
+            local resumed = try (::AmenoCotasWindow.resumeAfterInteractiveTool()) catch (false)
+            if not resumed do logRuntime #error "painel nao foi reabilitado apos cota continua"
+        )
+        if ::AmenoCotasCriarTab != undefined do
+        (
+            try (::AmenoCotasCriarTab.syncFromServices()) catch ()
+            try (::AmenoCotasCriarTab.updateCotaCount()) catch ()
+        )
+
+        if toolError != undefined then throw toolError
+        logRuntime #info "cota continua encerrada"
         lastInteractiveDimension
     ),
 
@@ -130,10 +207,10 @@ struct AmenoRuntime
         res
     ),
 
-    fn reanchorDimension controller whichPoint targetNode targetWorldPoint =
+    fn reanchorDimension controller whichPoint targetNode targetWorldPoint anchorVertexId:-1 =
     (
         if ::AmenoAnchorService == undefined then return false
-        local res = ::AmenoAnchorService.reanchorDimension controller whichPoint targetNode targetWorldPoint
+        local res = ::AmenoAnchorService.reanchorDimension controller whichPoint targetNode targetWorldPoint anchorVertexId:anchorVertexId
         refreshDimensions()
         res
     ),
@@ -329,6 +406,132 @@ struct AmenoRuntime
         count
     ),
 
+    -- E13-B: remove cotas selecionadas (contagem por cota)
+    fn deletarSelecao =
+    (
+        if selection.count == 0 then return 0
+        local dimsRemoved = 0
+        undo "Ameno: deletar cotas selecionadas" on
+        (
+            local dimIdsToDelete = #()
+            local orphanNodesToDelete = #()
+
+            for obj in selection where isValidNode obj do
+            (
+                local dimId = try (AmenoDimensionGraphics.getDimensionId obj) catch ("")
+                if dimId != "" and dimId != undefined then
+                (
+                    if (findItem dimIdsToDelete dimId) == 0 do append dimIdsToDelete dimId
+                )
+                else if ::AmenoDimensionCA != undefined and (try (::AmenoDimensionCA.hasCA obj) catch (false)) then
+                (
+                    if (findItem orphanNodesToDelete obj) == 0 do append orphanNodesToDelete obj
+                )
+            )
+
+            for dimId in dimIdsToDelete do
+            (
+                local nodes = try (AmenoDimensionGraphics.findNodesForDimension dimId) catch (#())
+                for n in nodes where isValidNode n do
+                (
+                    try (delete n) catch ()
+                )
+                dimsRemoved += 1
+            )
+
+            for n in orphanNodesToDelete where isValidNode n do
+            (
+                try (delete n) catch ()
+                dimsRemoved += 1
+            )
+        )
+        if ::AmenoAnchorService != undefined do
+            try (::AmenoAnchorService.rebuildIndex()) catch ()
+        refreshScene()
+        refreshDimensions()
+        dimsRemoved
+    ),
+
+    -- E13-B: remove cotas cujas ancoras nao existem mais na cena (valida com AmenoDimensionCA.resolvePoints)
+    fn limparOrfas =
+    (
+        local removed = 0
+        undo "Ameno: limpar cotas orfas" on
+        (
+            if ::AmenoDimensionGraphics != undefined do
+            (
+                local controllers = try (::AmenoDimensionGraphics.findControllers()) catch (#())
+                for ctrl in controllers where isValidNode ctrl do
+                (
+                    local isOrphan = false
+                    if ::AmenoDimensionCA != undefined do
+                    (
+                        local rec = try (::AmenoDimensionCA.readCA ctrl) catch (undefined)
+                        if rec != undefined do
+                        (
+                            local resolved = try (::AmenoDimensionCA.resolvePoints rec) catch (undefined)
+                            if resolved != undefined and resolved.isOrphan do isOrphan = true
+                        )
+                    )
+                    if isOrphan do
+                    (
+                        try
+                        (
+                            local dimId = ::AmenoDimensionGraphics.getDimensionId ctrl
+                            local nodes = ::AmenoDimensionGraphics.findNodesForDimension dimId
+                            for n in nodes where isValidNode n do
+                            (
+                                try (delete n) catch ()
+                            )
+                            removed += 1
+                        )
+                        catch ()
+                    )
+                )
+            )
+        )
+        if ::AmenoAnchorService != undefined do
+            try (::AmenoAnchorService.rebuildIndex()) catch ()
+        refreshScene()
+        refreshDimensions()
+        removed
+    ),
+
+    -- E13-B: remove TODAS as cotas da cena (contagem por cota)
+    fn deletarTudo =
+    (
+        local removed = 0
+        undo "Ameno: deletar todas as cotas" on
+        (
+            if ::AmenoDimensionGraphics != undefined do
+            (
+                local controllers = try (::AmenoDimensionGraphics.findControllers()) catch (#())
+                for ctrl in controllers where isValidNode ctrl do
+                (
+                    try
+                    (
+                        local dimId = try (::AmenoDimensionGraphics.getDimensionId ctrl) catch ("")
+                        if dimId != "" and dimId != undefined do
+                        (
+                            local nodes = try (::AmenoDimensionGraphics.findNodesForDimension dimId) catch (#())
+                            for n in nodes where isValidNode n do
+                            (
+                                try (delete n) catch ()
+                            )
+                            removed += 1
+                        )
+                    )
+                    catch ()
+                )
+            )
+        )
+        if ::AmenoAnchorService != undefined do
+            try (::AmenoAnchorService.rebuildIndex()) catch ()
+        refreshScene()
+        refreshDimensions()
+        removed
+    ),
+
     fn openStyleEditor styleId:undefined useLegacy:false =
     (
         if not useLegacy and ::AmenoStyleEditorWPF != undefined then
@@ -369,11 +572,11 @@ struct AmenoRuntime
         if ::AmenoRenderCotasService == undefined then "" else ::AmenoRenderCotasService.defaultOutputPath()
     ),
 
-    fn renderCotas outputPath:"" selectionMode:#all =
+    fn renderCotas outputPath:"" selectionMode:#all cameraNode:undefined dimensionsOnly:true =
     (
         if ::AmenoRenderCotasService == undefined then throw "O serviço Renderizar Cotas não foi carregado."
 
-        local request = ::AmenoRenderCotasService.createRequest outputPath:outputPath selectionMode:selectionMode overwrite:false
+        local request = ::AmenoRenderCotasService.createRequest outputPath:outputPath selectionMode:selectionMode overwrite:false cameraNode:cameraNode dimensionsOnly:dimensionsOnly
         lastRenderResult = ::AmenoRenderCotasService.renderDimensions request
         lastRenderResult
     ),
@@ -382,6 +585,10 @@ struct AmenoRuntime
     (
         if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
         if ::AmenoAnchorService != undefined do ::AmenoAnchorService.init()
+        -- A aba unificada deve invalidar o draft da cena anterior antes de
+        -- qualquer refresh global. O novo draft só nasce do novo registro.
+        if ::AmenoCotasEstilosTab != undefined do
+            try (::AmenoCotasEstilosTab.onSceneReset()) catch ()
         if ::AmenoStyleEditorWPF != undefined and ::AmenoStyleEditorWPF.isOpen() do
         (
             try (::AmenoStyleEditorWPF.onSceneReset()) catch ()
@@ -396,6 +603,10 @@ struct AmenoRuntime
     (
         if ::AmenoStyleService != undefined do ::AmenoStyleService.loadFromScene()
         if ::AmenoAnchorService != undefined do ::AmenoAnchorService.init()
+        -- Nunca reaplicar silenciosamente um draft ou referências da cena
+        -- anterior após reset/new scene.
+        if ::AmenoCotasEstilosTab != undefined do
+            try (::AmenoCotasEstilosTab.onSceneReset()) catch ()
         if ::AmenoStyleEditorWPF != undefined and ::AmenoStyleEditorWPF.isOpen() do
         (
             try (::AmenoStyleEditorWPF.onSceneReset()) catch ()
@@ -420,7 +631,7 @@ struct AmenoRuntime
         callbacks.addScript #postSceneReset "if AmenoApp != undefined do AmenoApp.onSceneReset()" id:#ameno_lifecycle
 
         AmenoLog.info (AmenoVersion.displayName() + " carregado.")
-        AmenoLog.info ("Renderer: " + rendererInfo.displayName + " · " + rendererInfo.statusLabel())
+        AmenoLog.info ("Renderer: " + rendererInfo.detailedLabel() + " · " + rendererInfo.statusLabel())
         true
     ),
 
@@ -441,6 +652,7 @@ struct AmenoRuntime
         try (destroyDialog AmenoMainPanelRollout) catch ()
         try (destroyDialog AmenoStyleEditorRollout) catch ()
         try (if ::AmenoStyleEditorWPF != undefined do ::AmenoStyleEditorWPF.close()) catch ()
+        try (if ::AmenoCotasWindow != undefined do ::AmenoCotasWindow.close()) catch ()
         started = false
         true
     )
