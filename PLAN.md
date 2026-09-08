@@ -27,8 +27,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   `feature/e14-facade-planes`; `test_e14_plane_math.ms` passou 32/32,
   `test_e14_tools.ms` 31/31, `test_e14_graphics.ms`, bootstrap, E10.7, E12 e
   lifecycle WPF passaram com exit code 0/zero FAIL. E14.6 (gates completos) e
-  E14.7 (render, pacote e aceite manual) permanecem em andamento; a `main` e o
-  `ApplicationPlugins` não foram alterados nesta etapa.
+  E14.7 (render e aceite manual/publicação) permanecem em andamento; a `main`
+  continua intacta. Depois dos gates automatizados, o candidato foi instalado
+  localmente e conferido por 42/42 hashes; backup recuperável em
+  `D:\Ameno\backups\AmenoTools-before-e14-20260908-202208`.
 
 - Hotfix E12/E13 do crash no Enter (2026-09-06): o usuário reproduziu que pressionar Enter durante a cotação contínua derrubava o 3ds Max; o dump tinha exceção CLR 0xE0434352/E_FAIL. O caminho foi isolado ao DispatcherTimer que chamava MaxScript por callback assíncrono. Como o clique na viewport já funciona dentro das paredes, o monitor de Enter foi removido do fluxo interativo; a confirmação permanece por clique, Esc/botão direito cancelam e confirmPoints() fica somente programático/testável. O logger persistente foi concluído em %LOCALAPPDATA%\AmenoTools\Logs. Commit 2135b3b; pacote AmenoTools-0.0.1-e13-no-enter-20260906.zip; 239 PASS/0 FAIL nas regressões E13, E12 e logger, 42/42 hashes instalados e teste instalado aprovado. Handoff: plans/2026-09-06-e13-enter-crash-fix-handoff.md; validação manual pendente.
 
@@ -90,7 +92,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   orientação 3D, captura de fachada, snaps 3D preservados e baseline fixa na
   cadeia H/V. A E14.6 está parcialmente integrada na reatividade/rebuild; faltam
   seus gates completos de reancoragem, bake e órfãs. A E14.7 ainda precisa do
-  render real, regressão contra o pacote instalado, ZIP/SHA-256 e gate manual.
+  render real, aceite manual e publicação. O candidato local está instalado e
+  foi verificado por `test_installed_package.ms`; ZIP/SHA-256 já gerados.
   Plano detalhado: `plans/2026-09-08-e14-planos-de-cotacao-fachadas.md`.
 
 - **Prioridade atual — validar manualmente o hotfix de render/Isolate Selection:** o commit `5844730` está instalado em `ApplicationPlugins`; 41/41 arquivos de conteúdo e o manifesto conferem por SHA-256 e o smoke instalado passou com 1 PASS/0 FAIL. Reiniciar o Max, deixar o Isolate Selection desligado, confirmar a caixa `Renderizar somente as cotas (sem a planta)` e testar o PNG da cena real; o Ameno deverá ocultar a planta temporariamente e restaurar a cena.
@@ -123,8 +126,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - **E14:** executar os gates E14.6–E14.7 na branch `feature/e14-facade-planes`:
   repetir E10.1 contra o candidato instalado, validar reancoragem/bake/órfãs e
   Undo/Redo, testar Front/Back/Left/Right e câmera ortográfica rotacionada,
-  depois renderizar, gerar ZIP/SHA-256 e instalar. Manter `main` em `e406929`
-  até o aceite.
+  depois renderizar e registrar o aceite. O ZIP/SHA-256 já estão em
+  `dist/AmenoTools-0.0.1-e14-facade-20260908.zip` e o candidato está instalado
+  no perfil local; manter `main` em `e406929` até o aceite.
 
 - **Atual em 2026-09-06:** reabrir o Max com o hotfix WPF instalado e executar o gate real: cota individual e contínua, seguidas de pelo menos cinco ciclos Criar → Estilos → Editar → Render → Criar. Confirmar no logger que o painel foi desabilitado/reabilitado e que não houve falha de construção de aba. O Enter continua removido.
 
@@ -155,8 +159,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - **2026-09-08 — Implementar a nova função de cotação de fachadas:** a execução
   foi iniciada na branch `feature/e14-facade-planes`. E14.1–E14.5 foram
   implementadas e validadas em Batch; o plano E14 foi atualizado com evidências,
-  riscos resolvidos e gates restantes. A instalação do `ApplicationPlugins` e o
-  aceite manual aguardam a conclusão dos gates de render/regressão.
+  riscos resolvidos e gates restantes. O aceite manual e o gate de render ainda
+  aguardam conclusão. Candidato
+  `dist/AmenoTools-0.0.1-e14-facade-20260908.zip`, SHA-256
+  `EE0270622CCF1533DEE382D52C6B1E51745A6D48954C4771FFC0AD7EE2F6AB26`, instalado
+  localmente após backup recuperável.
 
 - **2026-09-08 — Detalhar preventivamente a implementação E14:** plano revisado com contratos U/V/N, câmera nivelada, origem no primeiro snap, preservação das âncoras 3D, baseline fixa de cadeias de fachada, migração v6, transações, lifecycle, render e matriz de evidências por subetapa. As sete subetapas permanecem; implementação não iniciada. Documento: `plans/2026-09-08-e14-planos-de-cotacao-fachadas.md`.
 

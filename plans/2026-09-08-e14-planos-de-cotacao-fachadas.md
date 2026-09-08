@@ -4,13 +4,15 @@
 
 **Alvo inicial:** 3ds Max 2026
 
-**Estado:** E14.1–E14.5 implementadas na branch `feature/e14-facade-planes`; E14.6 parcialmente integrada e E14.7 (render/aceite manual/pacote instalado) pendente
+**Estado:** E14.1–E14.5 implementadas na branch `feature/e14-facade-planes`; E14.6 parcialmente integrada; candidato local instalado e E14.7 (render/aceite manual/publicação) pendente
 
 **Quantidade de subetapas:** 7 (`E14.1` a `E14.7`)
 
 ## Progresso de implementação
 
-O núcleo executável foi implementado sem alterar a `main` ou o pacote instalado:
+O núcleo executável foi implementado sem alterar a `main`. Após os gates Batch,
+o candidato foi instalado no perfil local para validar o carregamento real do
+`ApplicationPlugins`.
 
 - **E14.1:** `AmenoDimensionPlane` com base U/V/N validada, conversão mundo↔plano,
   interseção raio/plano e matemática alinhada/H/V em XY, XZ, YZ e bases rotacionadas.
@@ -30,11 +32,14 @@ O núcleo executável foi implementado sem alterar a `main` ou o pacote instalad
   E10.1 e `test_installed_package.ms` passaram contra a cópia instalada após o
   backup `D:\Ameno\backups\AmenoTools-before-e14-20260908-202208`; a conferência
   encontrou 42/42 hashes iguais. `tools/validate-package.ps1` também passou.
+- **Candidato:** `dist/AmenoTools-0.0.1-e14-facade-20260908.zip` (48 entradas,
+  SHA-256 `EE0270622CCF1533DEE382D52C6B1E51745A6D48954C4771FFC0AD7EE2F6AB26`),
+  manifesto em `plans/2026-09-08-e14-candidate-manifest.sha256`.
 
 Ainda faltam o gate manual em Front/Back/Left/Right e câmera ortográfica rotacionada,
 render Corona/V-Ray, cenários completos de E14.6 (reancoragem, bake e órfãs),
-empacotamento e conferência pelo `ApplicationPlugins`. A instalação só ocorre após
-esses gates automatizados e com a autorização operacional do usuário.
+e a publicação/aceite final. A instalação de desenvolvimento já foi feita após
+os gates automatizados e pode ser revertida pelo backup indicado acima.
 
 ## Contexto
 
@@ -292,11 +297,11 @@ produção do usuário antes do gate correspondente.
 
 ## Próximo passo exato
 
-Executar os gates restantes da **E14.6–E14.7**: repetir E10.1 contra o pacote
-candidato instalado, validar reancoragem/bake/órfãs e Undo/Redo, fazer o gate manual
-das quatro vistas e da câmera ortográfica rotacionada, e só então testar render,
-gerar o ZIP com SHA-256 e instalar. A implementação corrente está na branch
-`feature/e14-facade-planes`; a `main` continua em `e406929`.
+Executar os gates restantes da **E14.6–E14.7** sobre o candidato já instalado:
+validar reancoragem/bake/órfãs e Undo/Redo, fazer o gate manual das quatro vistas
+e da câmera ortográfica rotacionada, testar render Corona/V-Ray e registrar o
+aceite. O ZIP e SHA-256 já estão gerados; a implementação está na branch
+`feature/e14-facade-planes` e a `main` continua em `e406929`.
 
 ## Roteiro preventivo obrigatório para o executor
 
