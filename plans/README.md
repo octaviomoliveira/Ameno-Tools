@@ -10,5 +10,6 @@ Arquivos atuais:
 - [Plano incremental do MVP](2026-09-03-mvp-incremental.md): etapas funcionais, gates no 3ds Max e ordem de implementação.
 - [E11 — Editor Visual e Preview ao Vivo](2026-09-04-e11-editor-visual-preview.md): editor moderno WPF com preview 2D transacional implementado, integrado e instalado; gate manual pendente.
 - [E10.7 — Âncoras por vértice](2026-09-04-e10-7-subobject-anchors.md): schema v5 e atualização reativa após edição de vértices em Editable Poly/Editable Mesh.
+- [E14 — Planos de cotação e fachadas](2026-09-08-e14-planos-de-cotacao-fachadas.md): generalização do núcleo para planos ortográficos, dividida em sete subetapas; implementação não iniciada.
 
 Ao abrir um marco novo, criar um arquivo datado (`AAAA-MM-DD-assunto.md`) e incluir o link no `PLAN.md` quando ele for relevante para continuidade.

@@ -1,7 +1,7 @@
 # Plano compartilhado — Ameno Tools
 
 > Fonte de continuidade do projeto para qualquer pessoa ou agente (incluindo Antigravity).
-> Atualizado: 2026-09-06
+> Atualizado: 2026-09-08
 
 ## Regra de trabalho
 
@@ -75,6 +75,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
+- **E14 — Planos de cotação e fachadas planejada:** o núcleo atual é restrito ao plano mundial XY; a nova etapa separa Plano (`Planta` ou `Fachada pela vista`) de Direção (`Alinhada`, `Horizontal` ou `Vertical`) e persiste uma base ortográfica U/V/N por cota. A execução foi dividida em sete subetapas, E14.1–E14.7. Implementação ainda não iniciada. Plano detalhado: `plans/2026-09-08-e14-planos-de-cotacao-fachadas.md`.
+
 - **Prioridade atual — validar manualmente o hotfix de render/Isolate Selection:** o commit `5844730` está instalado em `ApplicationPlugins`; 41/41 arquivos de conteúdo e o manifesto conferem por SHA-256 e o smoke instalado passou com 1 PASS/0 FAIL. Reiniciar o Max, deixar o Isolate Selection desligado, confirmar a caixa `Renderizar somente as cotas (sem a planta)` e testar o PNG da cena real; o Ameno deverá ocultar a planta temporariamente e restaurar a cena.
 
 - **Prioridade atual — validar manualmente o hotfix de lifecycle WPF instalado:** a correção mantém uma única janela/instância por aba, substitui o ciclo reentrante `Hide → startTool → Show` por bloqueio temporário dos controles, torna a navegação transacional e registra falhas no logger. Pacote e dez suítes passaram com 142 PASS/0 FAIL. O commit `dac0601` foi instalado com o Max fechado; 42/42 arquivos conferiram por SHA-256 e o teste instalado passou com 1 PASS/0 FAIL. Backup: `D:\Ameno\backups\AmenoTools-before-ui-lifecycle-20260906-213520`. Gate manual pendente. Handoff: `plans/2026-09-06-e13-ui-lifecycle-fix-handoff.md`.
@@ -101,6 +103,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E11 — Editor Visual e Preview ao Vivo: implementação mesclada da branch `feature/e11-visual-editor`, validada estruturalmente e instalada. Falta somente o gate visual e funcional do usuário no 3ds Max. Plano detalhado em `plans/2026-09-04-e11-editor-visual-preview.md`.
 
 ## Próximo passo executável
+
+- **E14:** iniciar a E14.1 em branch própria, caracterizando primeiro o comportamento XY existente e depois implementando/testando o contrato genérico de plano em XY, XZ, YZ e uma vista ortográfica rotacionada. Não alterar o pacote instalado durante esta subetapa.
 
 - **Atual em 2026-09-06:** reabrir o Max com o hotfix WPF instalado e executar o gate real: cota individual e contínua, seguidas de pelo menos cinco ciclos Criar → Estilos → Editar → Render → Criar. Confirmar no logger que o painel foi desabilitado/reabilitado e que não houve falha de construção de aba. O Enter continua removido.
 
