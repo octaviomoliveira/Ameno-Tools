@@ -5,6 +5,7 @@ global AmenoVersion
 global AmenoSceneSetup
 global AmenoUnitService
 global AmenoDimensionMath
+global AmenoDimensionPlaneService
 global AmenoDimensionCA
 global AmenoDimensionGraphics
 global AmenoDimensionTool
@@ -74,8 +75,21 @@ global AmenoPreviewModel
     if not AmenoAnchorService.isCallbackActive then throw "E8.1 instalado: Callback de âncoras inativo."
 
     local instDim = AmenoDimensionGraphics.createDimension [0, 0, 0] [100, 0, 0] [0, 20, 0]
-    if (AmenoDimensionGraphics.readTextProperty instDim.controller "Ameno.DataSchemaVersion") != "5" then throw "E8.1 instalado: DataSchemaVersion incorreto."
+    if (AmenoDimensionGraphics.readTextProperty instDim.controller "Ameno.DataSchemaVersion") != "6" then throw "E8.1 instalado: DataSchemaVersion incorreto."
     if (AmenoDimensionGraphics.readTextProperty instDim.lineNode "Ameno.GraphicSchemaVersion") != "1" then throw "E8.1 instalado: GraphicSchemaVersion incorreto."
+
+    -- E14: conferir que o pacote carregado pelo ApplicationPlugins contém o
+    -- contrato de fachada, e não apenas a cópia da worktree usada pelos testes.
+    if AmenoDimensionPlaneService == undefined then throw "E14 instalado: serviço de planos não foi carregado."
+    local installedFront = AmenoDimensionPlaneService.standardForViewType #view_front
+    if installedFront == undefined or not installedFront.valid then throw "E14 instalado: plano Front inválido."
+    local facadeDim = AmenoDimensionGraphics.createDimension [0, 0, 10] [100, 0, 40] [50, 0, 20] \
+        dimensionMode:#horizontal plane:installedFront useUndo:false
+    local facadeRecord = AmenoDimensionCA.readCA facadeDim.controller
+    if facadeRecord == undefined or facadeRecord.schemaVersion != 6 or facadeRecord.planeType != "viewPlane" then throw "E14 instalado: CA de fachada não persistiu."
+    local facadeAudit = AmenoDimensionGraphics.getDimensionAudit facadeDim.controller
+    if facadeAudit == undefined or not AmenoDimensionMath.nearlyEqual facadeAudit.measuredMillimeters (100.0 * AmenoUnitService.currentMillimetersPerSceneUnit()) then throw "E14 instalado: medida horizontal de fachada incorreta."
+    AmenoDimensionGraphics.removeDimension facadeDim.dimensionId
 
     local instStyle = AmenoStyleService.getStyle "default"
     instStyle.lineThickness = 999.0

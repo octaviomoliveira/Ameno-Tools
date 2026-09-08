@@ -37,6 +37,8 @@ global AmenoContinuousClickClassification
 global AmenoContinuousDiagnostics
 global AmenoContinuousInputResolver
 global AmenoContinuousViewportDraw
+global AmenoDimensionPlane
+global AmenoDimensionPlaneService
 
 try (unRegisterRedrawViewsCallback AmenoContinuousViewportDraw) catch ()
 fn AmenoContinuousViewportDraw =
@@ -117,12 +119,16 @@ struct AmenoDimensionContinuousToolService
     active             = false,
     activeStyleId      = "default",
     activeMode         = #aligned,
+    activePlaneMode    = #worldXY, -- E14: #worldXY | #viewPlane
+    activePlane        = undefined,
     previewOutputUnit  = #meters,
     previewPrecision   = 2,
     sessionStyleId     = undefined,
     sessionMode        = undefined,
     sessionOutputUnit  = undefined,
     sessionPrecision   = undefined,
+    sessionPlaneMode   = undefined,
+    sessionPlane       = undefined,
     lastResult         = #idle,
     cleanupInProgress  = false,
     escapeEnableBeforeTool = undefined,
@@ -161,6 +167,115 @@ struct AmenoDimensionContinuousToolService
     (
         if pointValue == undefined then return undefined
         [pointValue.x, pointValue.y, 0.0]
+    ),
+
+    fn setActivePlaneMode planeModeValue =
+    (
+        if active then return false
+        activePlaneMode = if planeModeValue == #viewPlane then #viewPlane else #worldXY
+        true
+    ),
+
+    fn capturePlane =
+    (
+        if activePlaneMode != #viewPlane then
+        (
+            activePlane = if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.worldXY() else AmenoDimensionPlane()
+            return activePlane
+        )
+        if ::AmenoDimensionPlaneService == undefined then
+        (
+            lastError = "O serviço de planos da fachada não está disponível."
+            return undefined
+        )
+        local captured = ::AmenoDimensionPlaneService.captureActive()
+        if captured == undefined or not captured.valid then
+        (
+            lastError = if captured != undefined then captured.errorMessage else "A vista ativa não pode ser usada para cotar a fachada."
+            displayTempPrompt ("Ameno Cota Contínua: " + lastError) 2600
+            return undefined
+        )
+        activePlane = captured
+        captured
+    ),
+
+    fn anchorPlaneAtFirstPoint pointValue =
+    (
+        if activePlaneMode != #viewPlane or activePlane == undefined or pointValue == undefined then return true
+        if ::AmenoDimensionPlaneService == undefined then return false
+        local projectedPoint = undefined
+        try (projectedPoint = ::AmenoDimensionPlaneService.project activePlane pointValue) catch ()
+        if projectedPoint == undefined then return false
+        local anchored = undefined
+        try
+        (
+            anchored = ::AmenoDimensionPlaneService.make projectedPoint activePlane.axisU activePlane.axisV activePlane.normal \
+                planeTypeValue:activePlane.planeType orientationLabelValue:activePlane.orientationLabel \
+                sourceViewportValue:activePlane.sourceViewport sourceCameraValue:activePlane.sourceCamera
+        )
+        catch ()
+        if anchored == undefined or not anchored.valid then return false
+        activePlane = anchored
+        -- O snapshot inicial congela estilo/modo; a origem só fica conhecida
+        -- no primeiro snap. Atualizar a cópia da sessão evita que o commit
+        -- volte silenciosamente para a origem da câmera.
+        if points.count == 0 do sessionPlane = activePlane
+        true
+    ),
+
+    fn planeContextStable =
+    (
+        local plane = if sessionPlane != undefined then sessionPlane \
+            else if activePlane != undefined then activePlane \
+            else if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.worldXY() \
+            else AmenoDimensionPlane()
+        local planeMode = if sessionPlaneMode == #viewPlane or activePlaneMode == #viewPlane then #viewPlane else #worldXY
+        if planeMode != #viewPlane or plane == undefined then return true
+        if ::AmenoDimensionPlaneService == undefined then return false
+        if plane.sourceViewport == undefined and plane.sourceCamera == undefined then return true
+
+        local currentViewport = undefined
+        try (currentViewport = viewport.activeViewport) catch ()
+        if plane.sourceViewport != undefined and currentViewport != undefined and currentViewport != plane.sourceViewport then return false
+
+        local currentCamera = undefined
+        try (currentCamera = viewport.getCamera()) catch ()
+        if plane.sourceCamera != undefined then
+        (
+            if currentCamera == undefined or currentCamera != plane.sourceCamera then return false
+        )
+        else if currentCamera != undefined then
+            return false
+
+        local currentPlane = undefined
+        try (currentPlane = ::AmenoDimensionPlaneService.captureActive()) catch ()
+        if currentPlane == undefined or not currentPlane.valid then return false
+        ::AmenoDimensionPlaneService.isSameBasis plane currentPlane tolerance:0.001
+    ),
+
+    fn abortIfPlaneContextChanged =
+    (
+        local planeMode = if sessionPlaneMode == #viewPlane or activePlaneMode == #viewPlane then #viewPlane else #worldXY
+        if planeMode != #viewPlane or not active then return false
+        if planeContextStable() then return false
+        lastError = "A vista da fachada mudou durante a captura; a cadeia foi cancelada para preservar o plano congelado."
+        cancel()
+        displayTempPrompt ("Ameno Cota Contínua: " + lastError) 2600
+        true
+    ),
+
+    fn effectivePlane =
+    (
+        if sessionPlane != undefined then sessionPlane
+        else if activePlane != undefined then activePlane
+        else if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.worldXY()
+        else AmenoDimensionPlane()
+    ),
+
+    fn canonicalPoint pointValue =
+    (
+        if pointValue == undefined then return undefined
+        if activePlaneMode == #viewPlane or sessionPlaneMode == #viewPlane then pointValue else flattenPoint pointValue
     ),
 
     fn diagnosticTrace eventName fields throttleKey:undefined =
@@ -248,12 +363,32 @@ struct AmenoDimensionContinuousToolService
         if sessionPrecision == undefined then previewPrecision else sessionPrecision
     ),
 
+    fn usesFixedPlaneBaseline =
+    (
+        activePlaneMode == #viewPlane or sessionPlaneMode == #viewPlane
+    ),
+
+    fn baselineCoordinateForPoint pointValue modeValue:undefined =
+    (
+        if pointValue == undefined then return undefined
+        local resolvedMode = if modeValue == undefined then effectiveMode() else modeValue
+        if not usesFixedPlaneBaseline() then return undefined
+        local coords = undefined
+        try (coords = ::AmenoDimensionPlaneService.coordinatesOf (effectivePlane()) pointValue) catch ()
+        if coords == undefined then return undefined
+        if resolvedMode == #horizontal then coords.y
+        else if resolvedMode == #vertical then coords.x
+        else undefined
+    ),
+
     fn clearSessionConfiguration =
     (
         sessionStyleId = undefined
         sessionMode = undefined
         sessionOutputUnit = undefined
         sessionPrecision = undefined
+        sessionPlaneMode = undefined
+        sessionPlane = undefined
         true
     ),
 
@@ -263,6 +398,8 @@ struct AmenoDimensionContinuousToolService
         sessionMode = activeMode
         sessionOutputUnit = previewOutputUnit
         sessionPrecision = previewPrecision
+        sessionPlaneMode = activePlaneMode
+        sessionPlane = activePlane
         true
     ),
 
@@ -413,7 +550,7 @@ struct AmenoDimensionContinuousToolService
         if ::AmenoContinuousInputResolver == undefined then
             return (AmenoContinuousClickClassification kind:#ambiguous reasonCode:#resolverUnavailable detail:"input resolver unavailable")
         local sample = ::AmenoContinuousInputResolver.acquireSample #mousePoint clickNumber screenPoint pointValue \
-            snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint snapStatus:snapStatus sessionId:inputSessionId
+            snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint snapStatus:snapStatus sessionId:inputSessionId plane:(effectivePlane())
         classifyInputSample sample
     ),
 
@@ -472,7 +609,7 @@ struct AmenoDimensionContinuousToolService
         (
             try
             (
-                local layout = AmenoDimensionMath.layoutForMode points[i] points[i + 1] (points[i] + [0, 100, 0]) mode:(effectiveMode())
+                local layout = AmenoDimensionMath.layoutForMode points[i] points[i + 1] (points[i] + [0, 100, 0]) mode:(effectiveMode()) plane:(effectivePlane())
                 if layout.valid do total += layout.measuredMillimeters
             )
             catch ()
@@ -565,12 +702,18 @@ struct AmenoDimensionContinuousToolService
             try
             (
                 local rayValue = mapScreenToWorldRay screenPoint
-                positionPoint = ::AmenoContinuousInputResolver.intersectRayWithPlane rayValue targetZ:0.0
+                 positionPoint = ::AmenoContinuousInputResolver.intersectRayWithPlane rayValue targetZ:0.0 plane:(effectivePlane())
             )
             catch ()
         )
         if positionPoint == undefined do positionPoint = fallbackPoint
-        flattenPoint positionPoint
+        if activePlaneMode == #viewPlane or sessionPlaneMode == #viewPlane then
+        (
+            local projectedPosition = undefined
+            try (projectedPosition = ::AmenoDimensionPlaneService.project (effectivePlane()) positionPoint) catch ()
+            if projectedPosition != undefined then projectedPosition else positionPoint
+        )
+        else flattenPoint positionPoint
     ),
 
     fn currentPositionPoint =
@@ -579,13 +722,14 @@ struct AmenoDimensionContinuousToolService
         try (screenPoint = mouse.pos) catch ()
         local positionPoint = positionPointFromScreen screenPoint fallbackPoint:lastCursorPoint
         if positionPoint == undefined and lastCursorPoint != undefined do
-            positionPoint = flattenPoint lastCursorPoint
+            positionPoint = canonicalPoint lastCursorPoint
         positionPoint
     ),
 
     fn handlePositionClick clickNumber pointValue screenPoint:undefined =
     (
         if not active or stage != #committing then return #ignored
+        if abortIfPlaneContextChanged() then return #modeMismatch
 
         local offsetPoint = positionPointFromScreen screenPoint fallbackPoint:pointValue
         persistentInfo ("E12 posicionamento confirmado por clique · click=" + (clickNumber as string) + " · offset=" + (diagnosticPointText offsetPoint))
@@ -634,7 +778,10 @@ struct AmenoDimensionContinuousToolService
     (
         local modeValue = effectiveMode()
         if modeValue != #horizontal and modeValue != #vertical then return undefined
-        AmenoDimensionChainMath.layout points offsetPoint mode:modeValue
+        local policyValue = if usesFixedPlaneBaseline() then "fixedPlaneBaseline" else "relative"
+        local baselineValue = baselineCoordinateForPoint offsetPoint modeValue:modeValue
+        AmenoDimensionChainMath.layout points offsetPoint mode:modeValue plane:(effectivePlane()) \
+            baselinePolicy:policyValue baselineCoordinate:baselineValue
     ),
 
     fn refreshChainPreview offsetPoint =
@@ -672,7 +819,7 @@ struct AmenoDimensionContinuousToolService
                 if segmentPreviews[segmentIndex] == undefined then
                 (
                     local createdPreview = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue chainLayout.offsetPoint \
-                        outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) mode:(effectiveMode())
+                        outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) mode:(effectiveMode()) plane:(effectivePlane())
                     if createdPreview == undefined then throw "preview creation returned undefined"
                     segmentPreviews[segmentIndex] = createdPreview
                 )
@@ -680,7 +827,8 @@ struct AmenoDimensionContinuousToolService
                 (
                     local previousPreview = segmentPreviews[segmentIndex]
                     local updatedPreview = AmenoDimensionGraphics.updatePreviewDimension previousPreview \
-                        pointAValue pointBValue chainLayout.offsetPoint outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) mode:(effectiveMode())
+                        pointAValue pointBValue chainLayout.offsetPoint outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) mode:(effectiveMode()) \
+                        plane:(effectivePlane())
                     if updatedPreview == undefined then throw "preview update returned undefined"
                     segmentPreviews[segmentIndex] = updatedPreview
                 )
@@ -691,6 +839,11 @@ struct AmenoDimensionContinuousToolService
         catch
         (
             lastError = getCurrentException() as string
+            -- Se qualquer segmento falhar, não preserve uma mistura de previews
+            -- novos e antigos. O próximo movimento recria o conjunto inteiro
+            -- a partir do mesmo plano congelado.
+            removeAllPreviews()
+            lastChainLayout = undefined
             format "[E12-C] Falha no preview: %\n" lastError
             false
         )
@@ -756,6 +909,13 @@ struct AmenoDimensionContinuousToolService
                 return false
             )
 
+            activePlane = capturePlane()
+            if activePlane == undefined then
+            (
+                lastResult = #rejected
+                return false
+            )
+
             removeAllPreviews()
             points          = #()
             anchorNodes     = #()
@@ -786,6 +946,7 @@ struct AmenoDimensionContinuousToolService
             removeAllPreviews()
             closeHUD()
             clearSessionConfiguration()
+            activePlane = undefined
             diagnosticTrace #beginRejected #("reason=exception", "error=" + lastError)
             false
         )
@@ -813,6 +974,7 @@ struct AmenoDimensionContinuousToolService
         try (popPrompt()) catch ()
         stage = #idle
         clearSessionConfiguration()
+        activePlane = undefined
         cleanupInProgress = false
         true
     ),
@@ -824,12 +986,26 @@ struct AmenoDimensionContinuousToolService
     fn modeMismatchForCandidate pointValue =
     (
         if points.count != 1 or pointValue == undefined then return false
-        local firstPoint = flattenPoint points[1]
-        local candidatePoint = flattenPoint pointValue
+        local firstPoint = points[1]
+        local candidatePoint = pointValue
+        if activePlaneMode != #viewPlane and sessionPlaneMode != #viewPlane do
+        (
+            firstPoint = flattenPoint firstPoint
+            candidatePoint = flattenPoint candidatePoint
+        )
         if firstPoint == undefined or candidatePoint == undefined then return false
 
-        local deltaX = abs (candidatePoint.x - firstPoint.x)
-        local deltaY = abs (candidatePoint.y - firstPoint.y)
+        local firstCoords = undefined
+        local candidateCoords = undefined
+        try
+        (
+            firstCoords = ::AmenoDimensionPlaneService.coordinatesOf (effectivePlane()) firstPoint
+            candidateCoords = ::AmenoDimensionPlaneService.coordinatesOf (effectivePlane()) candidatePoint
+        )
+        catch ()
+        if firstCoords == undefined or candidateCoords == undefined then return false
+        local deltaX = abs (candidateCoords.x - firstCoords.x)
+        local deltaY = abs (candidateCoords.y - firstCoords.y)
         local epsilon = 0.00001
 
         if deltaX <= epsilon and deltaY > epsilon then
@@ -837,7 +1013,9 @@ struct AmenoDimensionContinuousToolService
         if deltaY <= epsilon and deltaX > epsilon then
             return (effectiveMode() == #vertical)
 
-        local dominantAxisRatio = 1.5
+        -- Uma cadeia diagonal pode ser cotada em qualquer modo; só bloqueie
+        -- quando a intenção do usuário for inequivocamente o eixo oposto.
+        local dominantAxisRatio = 6.0
         if effectiveMode() == #horizontal then
             deltaY > (deltaX * dominantAxisRatio)
         else if effectiveMode() == #vertical then
@@ -958,7 +1136,8 @@ struct AmenoDimensionContinuousToolService
                         role:"interactive" outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) \
                         nodeA:anchorNodes[sourceA] anchorVertexIdA:anchorVertexIds[sourceA] \
                         nodeB:anchorNodes[sourceB] anchorVertexIdB:anchorVertexIds[sourceB] \
-                        dimensionMode:modeValue useUndo:false
+                        dimensionMode:modeValue plane:(effectivePlane()) \
+                        baselinePolicy:chainLayout.baselinePolicy baselineCoordinate:chainLayout.baselineCoordinate useUndo:false
                     if created == undefined do throw ("Segmento " + (segmentIndex as string) + " não foi criado.")
                     append createdIds created.dimensionId
                     diagnosticTrace #segmentCreateEnd #("segment=" + (segmentIndex as string), "dimensionId=" + created.dimensionId)
@@ -1043,7 +1222,14 @@ struct AmenoDimensionContinuousToolService
             local sameIdentity = false
             if clickInfo.node != undefined and i <= anchorNodes.count and anchorNodes[i] == clickInfo.node and \
                 i <= anchorVertexIds.count and anchorVertexIds[i] == clickInfo.vertexId do sameIdentity = true
-            if sameIdentity or (length ((flattenPoint clickInfo.worldPoint) - (flattenPoint points[i]))) <= tolerance do return true
+            local candidatePoint = clickInfo.worldPoint
+            local existingPoint = points[i]
+            if activePlaneMode != #viewPlane and sessionPlaneMode != #viewPlane do
+            (
+                candidatePoint = flattenPoint candidatePoint
+                existingPoint = flattenPoint existingPoint
+            )
+            if sameIdentity or (candidatePoint != undefined and existingPoint != undefined and (length (candidatePoint - existingPoint)) <= tolerance) do return true
         )
         false
     ),
@@ -1051,10 +1237,13 @@ struct AmenoDimensionContinuousToolService
     fn stationForPoint pointValue =
     (
         if pointValue == undefined then return undefined
+        local coords = undefined
+        try (coords = ::AmenoDimensionPlaneService.coordinatesOf (effectivePlane()) pointValue) catch ()
+        if coords == undefined then return undefined
         case (effectiveMode()) of
         (
-            #horizontal: pointValue.x
-            #vertical: pointValue.y
+            #horizontal: coords.x
+            #vertical: coords.y
             default: undefined
         )
     ),
@@ -1078,6 +1267,12 @@ struct AmenoDimensionContinuousToolService
         if isDuplicateReference clickInfo then return #duplicateReference
         if hasConflictingStation clickInfo.worldPoint then return #duplicateStation
 
+        if points.count == 0 and not (anchorPlaneAtFirstPoint clickInfo.worldPoint) then
+        (
+            lastError = "Não foi possível fixar a origem do plano da fachada no primeiro ponto."
+            return #ambiguous
+        )
+
         append points clickInfo.worldPoint
         append anchorNodes clickInfo.node
         append anchorVertexIds clickInfo.vertexId
@@ -1094,6 +1289,7 @@ struct AmenoDimensionContinuousToolService
     fn handleClassifiedClick clickInfo commitNow:false =
     (
         if not active then return #inactive
+        if abortIfPlaneContextChanged() then return #modeMismatch
         if stage != #collecting then return #ignored
         if clickInfo == undefined then return #ambiguous
         setHoverClassification undefined
@@ -1187,6 +1383,11 @@ struct AmenoDimensionContinuousToolService
             diagnosticTrace #handlePointEnd #("outcome=stop", "reason=inactive")
             return #stop
         )
+        if abortIfPlaneContextChanged() then
+        (
+            diagnosticTrace #handlePointEnd #("outcome=stop", "reason=plane-context-changed")
+            return #stop
+        )
 
         local outcome = #ignored
         if stage == #committing then
@@ -1253,15 +1454,16 @@ struct AmenoDimensionContinuousToolService
     fn handleMove clickNumber pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false snapStatus:#ok =
     (
         if not active then return undefined
+        if abortIfPlaneContextChanged() then return undefined
 
         if screenPoint != undefined and ::AmenoContinuousInputResolver != undefined then
         (
             local sample = ::AmenoContinuousInputResolver.acquireSample #mouseMove clickNumber screenPoint pointValue \
-                snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint snapStatus:snapStatus sessionId:inputSessionId
+                snapHit:snapHit snapNode:snapNode snapWorldPoint:snapWorldPoint snapStatus:snapStatus sessionId:inputSessionId plane:(effectivePlane())
             return handleHoverSample sample
         )
 
-        local candidate = flattenPoint pointValue
+        local candidate = canonicalPoint pointValue
         if candidate == undefined then return undefined
 
         setHoverClassification undefined

@@ -13,6 +13,8 @@ global AmenoDimensionCA
 global AmenoDimensionRecord
 global AmenoResolvedAnchorPoints
 global AmenoAnchorVertexHit
+global AmenoDimensionPlane
+global AmenoDimensionPlaneService
 
 struct AmenoAnchorVertexHit
 (
@@ -33,7 +35,7 @@ struct AmenoResolvedAnchorPoints
 
 struct AmenoDimensionRecord
 (
-    schemaVersion = 5,
+    schemaVersion = 6,
     dimensionId = "",
     dimensionRole = "user",
     dimensionMode = "aligned", -- E10.1: "aligned" | "horizontal" | "vertical"
@@ -63,16 +65,25 @@ struct AmenoDimensionRecord
     anchorEdgeIdB = -1,
     anchorEdgeMidB = false,
     isOrphan = false,
-    orphanReason = ""
+    orphanReason = "",
+    -- E14: base persistida da vista (anexada ao fim para preservar ParamIDs v5).
+    planeType = "worldXY",
+    planeOrigin = [0, 0, 0],
+    planeAxisU = [1, 0, 0],
+    planeAxisV = [0, 1, 0],
+    planeNormal = [0, 0, 1],
+    -- E14: política da linha compartilhada (relativa preserva o comportamento legado).
+    baselinePolicy = "relative",
+    baselineCoordinate = 0.0
 )
 
 AmenoDimensionCADef = attributes AmenoDimensionData
 attribID:#(0x414d454e, 0x44494d31) -- 'AMEN', 'DIM1'
-version:5
+version:6
 (
     parameters main
     (
-        schemaVersion type:#integer default:5
+        schemaVersion type:#integer default:6
         dimensionId type:#string default:""
         dimensionRole type:#string default:"user"
         dimensionMode type:#string default:"aligned"  -- E10.1: "aligned" | "horizontal" | "vertical"
@@ -104,13 +115,56 @@ version:5
         anchorEdgeIdB type:#integer default:-1
         anchorEdgeMidA type:#boolean default:false
         anchorEdgeMidB type:#boolean default:false
+        -- Campos v6 anexados ao fim para preservar os ParamIDs v5.
+        planeType type:#string default:"worldXY"
+        planeOrigin type:#point3 default:[0, 0, 0]
+        planeAxisU type:#point3 default:[1, 0, 0]
+        planeAxisV type:#point3 default:[0, 1, 0]
+        planeNormal type:#point3 default:[0, 0, 1]
+        baselinePolicy type:#string default:"relative"
+        baselineCoordinate type:#float default:0.0
     )
 )
 
 struct AmenoDimensionCAService
 (
     def = AmenoDimensionCADef,
-    schemaVersion = 5,
+    schemaVersion = 6,
+
+    fn recordPlane record =
+    (
+        if record == undefined then
+            return (if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.worldXY() else AmenoDimensionPlane())
+
+        -- Cenas v1–v5 não possuíam base persistida: somente nesses casos o
+        -- default XY é legítimo. Um registro v6 explicitamente inválido deve
+        -- continuar inválido para que auditoria/rebuild possam diagnosticá-lo,
+        -- nunca cair silenciosamente em Planta.
+        local recordVersion = 0
+        try (recordVersion = record.schemaVersion as integer) catch ()
+        if recordVersion < 6 then
+            return (if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.worldXY() else AmenoDimensionPlane())
+
+        local planeTypeValue = #worldXY
+        local originValue = [0, 0, 0]
+        local axisUValue = [1, 0, 0]
+        local axisVValue = [0, 1, 0]
+        local normalValue = [0, 0, 1]
+        try (planeTypeValue = record.planeType as name) catch ()
+        try (originValue = record.planeOrigin) catch ()
+        try (axisUValue = record.planeAxisU) catch ()
+        try (axisVValue = record.planeAxisV) catch ()
+        try (normalValue = record.planeNormal) catch ()
+
+        if ::AmenoDimensionPlaneService != undefined then
+        (
+            local resolved = ::AmenoDimensionPlaneService.make originValue axisUValue axisVValue normalValue planeTypeValue:planeTypeValue
+            if resolved.valid then return resolved
+            resolved
+        )
+        else
+            AmenoDimensionPlane planeType:planeTypeValue origin:originValue axisU:axisUValue axisV:axisVValue normal:normalValue valid:true
+    ),
 
     fn hasCA node =
     (
@@ -131,7 +185,7 @@ struct AmenoDimensionCAService
 
         if ca == undefined then return false
 
-        -- Qualquer gravação pelo código atual materializa o schema v5. A leitura
+        -- Qualquer gravação pelo código atual materializa o schema v6. A leitura
         -- continua aceitando v4 e só migra quando houver uma alteração real.
         ca.schemaVersion = schemaVersion
         ca.dimensionId = record.dimensionId
@@ -164,6 +218,13 @@ struct AmenoDimensionCAService
         if isProperty ca #anchorEdgeMidB and isProperty record #anchorEdgeMidB do ca.anchorEdgeMidB = record.anchorEdgeMidB
         if isProperty ca #isOrphan do ca.isOrphan = record.isOrphan
         if isProperty ca #orphanReason do ca.orphanReason = (record.orphanReason as string)
+        if isProperty ca #planeType and isProperty record #planeType do ca.planeType = (record.planeType as string)
+        if isProperty ca #planeOrigin and isProperty record #planeOrigin do ca.planeOrigin = record.planeOrigin
+        if isProperty ca #planeAxisU and isProperty record #planeAxisU do ca.planeAxisU = record.planeAxisU
+        if isProperty ca #planeAxisV and isProperty record #planeAxisV do ca.planeAxisV = record.planeAxisV
+        if isProperty ca #planeNormal and isProperty record #planeNormal do ca.planeNormal = record.planeNormal
+        if isProperty ca #baselinePolicy and isProperty record #baselinePolicy do ca.baselinePolicy = (record.baselinePolicy as string)
+        if isProperty ca #baselineCoordinate and isProperty record #baselineCoordinate do ca.baselineCoordinate = (record.baselineCoordinate as float)
 
         true
     ),
@@ -208,6 +269,13 @@ struct AmenoDimensionCAService
             if isProperty ca #anchorEdgeMidB do rec.anchorEdgeMidB = ca.anchorEdgeMidB
             if isProperty ca #isOrphan do rec.isOrphan = (ca.isOrphan as booleanClass)
             if isProperty ca #orphanReason do rec.orphanReason = ca.orphanReason
+            if isProperty ca #planeType do rec.planeType = ca.planeType
+            if isProperty ca #planeOrigin do rec.planeOrigin = ca.planeOrigin
+            if isProperty ca #planeAxisU do rec.planeAxisU = ca.planeAxisU
+            if isProperty ca #planeAxisV do rec.planeAxisV = ca.planeAxisV
+            if isProperty ca #planeNormal do rec.planeNormal = ca.planeNormal
+            if isProperty ca #baselinePolicy do rec.baselinePolicy = ca.baselinePolicy
+            if isProperty ca #baselineCoordinate do rec.baselineCoordinate = ca.baselineCoordinate
             return rec
         )
 
@@ -509,32 +577,51 @@ struct AmenoDimensionCAService
             -- Manter o afastamento perpendicular no modo correto da cota
             local mode = #aligned
             try (mode = record.dimensionMode as name) catch ()
-            local oldLayout = AmenoDimensionMath.layoutForMode record.pointA record.pointB record.offsetPoint mode:mode
+            local plane = recordPlane record
+            local oldLayout = AmenoDimensionMath.layoutForMode record.pointA record.pointB record.offsetPoint mode:mode plane:plane
             local offsetDist = if oldLayout.valid then oldLayout.signedOffsetSceneUnits else 20.0
 
-            -- Para horizontal: perpendicular fixo = Y; afastamento = deslocamento em Y
-            -- Para vertical:   perpendicular fixo = X; afastamento = deslocamento em X
+            local baselinePolicyValue = "relative"
+            local baselineCoordinateValue = undefined
+            try (baselinePolicyValue = record.baselinePolicy as string) catch ()
+            try (baselineCoordinateValue = record.baselineCoordinate as float) catch ()
+            local fixedBaseline = (baselinePolicyValue == "fixedPlaneBaseline" and baselineCoordinateValue != undefined)
+            if fixedBaseline do
+            (
+                local finiteBaseline = true
+                try (finiteBaseline = ::AmenoDimensionPlaneService.isFiniteNumber baselineCoordinateValue) catch ()
+                fixedBaseline = finiteBaseline
+            )
+
+            local coordsA = if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.coordinatesOf plane worldA else [worldA.x, worldA.y, worldA.z]
+            local coordsB = if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.coordinatesOf plane worldB else [worldB.x, worldB.y, worldB.z]
+            if coordsA == undefined or coordsB == undefined then return resolved
+
+            -- Para horizontal: perpendicular fixo = V; afastamento = deslocamento em V
+            -- Para vertical:   perpendicular fixo = U; afastamento = deslocamento em U
             -- Para aligned:    perpendicular derivado do novo vetor AB
             case mode of
             (
                 #horizontal:
                 (
-                    -- Y do offset em relação ao Y de A
-                    resolved.offsetPoint = [worldA.x, worldA.y + offsetDist, 0.0]
+                    local baselineV = if fixedBaseline then baselineCoordinateValue else (coordsA.y + offsetDist)
+                    resolved.offsetPoint = plane.origin + (plane.axisU * coordsA.x) + (plane.axisV * baselineV)
                 )
                 #vertical:
                 (
-                    -- X do offset em relação ao X de A
-                    resolved.offsetPoint = [worldA.x + offsetDist, worldA.y, 0.0]
+                    local baselineU = if fixedBaseline then baselineCoordinateValue else (coordsA.x + offsetDist)
+                    resolved.offsetPoint = plane.origin + (plane.axisU * baselineU) + (plane.axisV * coordsA.y)
                 )
                 default:
                 (
-                    local newVec = [worldB.x - worldA.x, worldB.y - worldA.y, 0.0]
+                    local projectedA = if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.project plane worldA else [worldA.x, worldA.y, 0.0]
+                    local projectedB = if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.project plane worldB else [worldB.x, worldB.y, 0.0]
+                    local newVec = projectedB - projectedA
                     if (length newVec) > 0.00001 then
                     (
                         local newDir = normalize newVec
-                        local newPerp = normalize (cross [0, 0, 1] newDir)
-                        resolved.offsetPoint = [worldA.x, worldA.y, 0.0] + (newPerp * offsetDist)
+                        local newPerp = normalize (cross plane.normal newDir)
+                        resolved.offsetPoint = projectedA + (newPerp * offsetDist)
                     )
                     else
                     (

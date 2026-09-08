@@ -17,6 +17,8 @@ global AmenoRefreshMainPanel
 global AmenoDimensionAnchorHit
 global AmenoContinuousInputResolver
 global AmenoDimensionCA
+global AmenoDimensionPlane
+global AmenoDimensionPlaneService
 
 struct AmenoDimensionAnchorHit
 (
@@ -39,6 +41,8 @@ struct AmenoDimensionToolService
     previewPrecision = 2,
     activeStyleId = "default",
     activeMode = #aligned, -- E10.1: #aligned | #horizontal | #vertical
+    activePlaneMode = #worldXY, -- E14: #worldXY | #viewPlane
+    activePlane = undefined,
     nodeA = undefined,
     nodeB = undefined,
     anchorVertexIdA = -1,
@@ -227,6 +231,105 @@ struct AmenoDimensionToolService
         [pointValue.x, pointValue.y, 0.0]
     ),
 
+    fn setActivePlaneMode planeModeValue =
+    (
+        if active then return false
+        local resolvedMode = planeModeValue
+        if resolvedMode != #viewPlane then resolvedMode = #worldXY
+        activePlaneMode = resolvedMode
+        true
+    ),
+
+    fn capturePlane =
+    (
+        if activePlaneMode != #viewPlane then
+        (
+            activePlane = if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.worldXY() else AmenoDimensionPlane()
+            return activePlane
+        )
+
+        if ::AmenoDimensionPlaneService == undefined then
+        (
+            lastError = "O serviço de planos da fachada não está disponível."
+            return undefined
+        )
+
+        local captured = ::AmenoDimensionPlaneService.captureActive()
+        if captured == undefined or not captured.valid then
+        (
+            lastError = if captured != undefined then captured.errorMessage else "A vista ativa não pode ser usada para cotar a fachada."
+            displayTempPrompt ("Ameno Dimensions: " + lastError) 2600
+            return undefined
+        )
+        activePlane = captured
+        captured
+    ),
+
+    fn anchorPlaneAtFirstPoint pointValue =
+    (
+        -- Planta mantém o contrato legado (origem mundial). Em fachada, a
+        -- orientação é capturada antes do clique e a origem passa a ser a
+        -- projeção do primeiro snap aceito; assim a anotação não fica presa à
+        -- posição da câmera nem a um plano paralelo deslocado.
+        if activePlaneMode != #viewPlane or activePlane == undefined or pointValue == undefined then return true
+        if ::AmenoDimensionPlaneService == undefined then return false
+        local projectedPoint = undefined
+        try (projectedPoint = ::AmenoDimensionPlaneService.project activePlane pointValue) catch ()
+        if projectedPoint == undefined then return false
+        local anchored = undefined
+        try
+        (
+            anchored = ::AmenoDimensionPlaneService.make projectedPoint activePlane.axisU activePlane.axisV activePlane.normal \
+                planeTypeValue:activePlane.planeType orientationLabelValue:activePlane.orientationLabel \
+                sourceViewportValue:activePlane.sourceViewport sourceCameraValue:activePlane.sourceCamera
+        )
+        catch ()
+        if anchored == undefined or not anchored.valid then return false
+        activePlane = anchored
+        true
+    ),
+
+    fn planeContextStable =
+    (
+        if activePlaneMode != #viewPlane or activePlane == undefined then return true
+        if ::AmenoDimensionPlaneService == undefined then return false
+        if activePlane.sourceViewport == undefined and activePlane.sourceCamera == undefined then return true
+
+        local currentViewport = undefined
+        try (currentViewport = viewport.activeViewport) catch ()
+        if activePlane.sourceViewport != undefined and currentViewport != undefined and currentViewport != activePlane.sourceViewport then return false
+
+        local currentCamera = undefined
+        try (currentCamera = viewport.getCamera()) catch ()
+        if activePlane.sourceCamera != undefined then
+        (
+            if currentCamera == undefined or currentCamera != activePlane.sourceCamera then return false
+        )
+        else if currentCamera != undefined then
+            return false
+
+        local currentPlane = undefined
+        try (currentPlane = ::AmenoDimensionPlaneService.captureActive()) catch ()
+        if currentPlane == undefined or not currentPlane.valid then return false
+        ::AmenoDimensionPlaneService.isSameBasis activePlane currentPlane tolerance:0.001
+    ),
+
+    fn abortIfPlaneContextChanged =
+    (
+        if activePlaneMode != #viewPlane or not active then return false
+        if planeContextStable() then return false
+        lastError = "A vista da fachada mudou durante a captura; a cota foi cancelada para preservar o plano congelado."
+        cancel()
+        displayTempPrompt ("Ameno Dimensions: " + lastError) 2600
+        true
+    ),
+
+    fn canonicalPoint pointValue =
+    (
+        if pointValue == undefined then return undefined
+        if activePlaneMode == #viewPlane then pointValue else flattenPoint pointValue
+    ),
+
     fn anchorSummaryPart label nodeValue vertexId =
     (
         if vertexId > 0 then
@@ -282,20 +385,45 @@ struct AmenoDimensionToolService
 
     fn defaultOffsetPoint pointAValue pointBValue =
     (
-        local measurementVector = [pointBValue.x - pointAValue.x, pointBValue.y - pointAValue.y, 0.0]
+        local planeValue = activePlane
+        if planeValue == undefined do planeValue = if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.worldXY() else AmenoDimensionPlane()
+        local projectedA = if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.project planeValue pointAValue else flattenPoint pointAValue
+        local projectedB = if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.project planeValue pointBValue else flattenPoint pointBValue
+        local measurementVector = projectedB - projectedA
         local measuredLength = length measurementVector
 
         if measuredLength <= 0.00001 then
         (
-            pointAValue + [0, 100.0, 0]
+            projectedA + (planeValue.axisV * 100.0)
         )
         else
         (
-            local direction = normalize measurementVector
-            local perpendicular = normalize (cross [0, 0, 1] direction)
+            local direction = undefined
+            local perpendicular = undefined
+            if activeMode == #horizontal then
+            (
+                local coordsA = ::AmenoDimensionPlaneService.coordinatesOf planeValue pointAValue
+                local coordsB = ::AmenoDimensionPlaneService.coordinatesOf planeValue pointBValue
+                direction = if coordsB.x >= coordsA.x then planeValue.axisU else -planeValue.axisU
+                perpendicular = planeValue.axisV
+                measuredLength = abs (coordsB.x - coordsA.x)
+            )
+            else if activeMode == #vertical then
+            (
+                local coordsA = ::AmenoDimensionPlaneService.coordinatesOf planeValue pointAValue
+                local coordsB = ::AmenoDimensionPlaneService.coordinatesOf planeValue pointBValue
+                direction = if coordsB.y >= coordsA.y then planeValue.axisV else -planeValue.axisV
+                perpendicular = planeValue.axisU
+                measuredLength = abs (coordsB.y - coordsA.y)
+            )
+            else
+            (
+                direction = normalize measurementVector
+                perpendicular = normalize (cross planeValue.normal direction)
+            )
             local offsetDistance = measuredLength * 0.2
             if offsetDistance < 10.0 do offsetDistance = 10.0
-            pointAValue + (perpendicular * offsetDistance)
+            projectedA + (perpendicular * offsetDistance)
         )
     ),
 
@@ -313,7 +441,7 @@ struct AmenoDimensionToolService
     fn updatePreview pointAValue pointBValue offsetPointValue =
     (
         local layout = undefined
-        try (layout = AmenoDimensionMath.layoutForMode pointAValue pointBValue offsetPointValue mode:activeMode) catch ()
+        try (layout = AmenoDimensionMath.layoutForMode pointAValue pointBValue offsetPointValue mode:activeMode plane:activePlane) catch ()
 
         if layout == undefined or not layout.valid then
         (
@@ -326,11 +454,11 @@ struct AmenoDimensionToolService
         (
             if preview == undefined then
             (
-                preview = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
+                preview = AmenoDimensionGraphics.createPreviewDimension pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode plane:activePlane
             )
             else
             (
-                preview = AmenoDimensionGraphics.updatePreviewDimension preview pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode
+                preview = AmenoDimensionGraphics.updatePreviewDimension preview pointAValue pointBValue offsetPointValue outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId mode:activeMode plane:activePlane
             )
 
             preview != undefined
@@ -367,6 +495,8 @@ struct AmenoDimensionToolService
         lastCommittedRecord = undefined
         lastError = ""
         lastAnchorSummary = ""
+        activePlane = capturePlane()
+        if activePlane == undefined then return false
         active = true
         setStage #pointA
         true
@@ -375,9 +505,10 @@ struct AmenoDimensionToolService
     fn handlePoint clickNumber pointValue screenPoint:undefined snapNode:undefined snapWorldPoint:undefined snapHit:false =
     (
         if not active then return #stop
+        if abortIfPlaneContextChanged() then return #stop
 
         local effectivePoint = if snapHit and snapWorldPoint != undefined then snapWorldPoint else pointValue
-        local candidate = flattenPoint effectivePoint
+        local candidate = canonicalPoint effectivePoint
         if candidate == undefined then return undefined
 
         case stage of
@@ -388,7 +519,14 @@ struct AmenoDimensionToolService
                 local hitA = detectHitNode effectivePoint screenPoint:screenPoint snapNode:snapNode snapWorldPoint:snapWorldPoint snapHit:snapHit
                 nodeA = hitA.node
                 anchorVertexIdA = hitA.vertexId
-                if hitA.vertexWorldPoint != undefined do pointA = flattenPoint hitA.vertexWorldPoint
+                if hitA.vertexWorldPoint != undefined do pointA = canonicalPoint hitA.vertexWorldPoint
+                if not (anchorPlaneAtFirstPoint pointA) then
+                (
+                    lastError = "Não foi possível fixar a origem do plano da fachada no primeiro ponto."
+                    cancel()
+                    displayTempPrompt ("Ameno Dimensions: " + lastError) 2200
+                    return #stop
+                )
                 setStage #pointB
                 undefined
             )
@@ -406,7 +544,7 @@ struct AmenoDimensionToolService
                 local hitB = detectHitNode effectivePoint screenPoint:screenPoint snapNode:snapNode snapWorldPoint:snapWorldPoint snapHit:snapHit
                 nodeB = hitB.node
                 anchorVertexIdB = hitB.vertexId
-                if hitB.vertexWorldPoint != undefined do pointB = flattenPoint hitB.vertexWorldPoint
+                if hitB.vertexWorldPoint != undefined do pointB = canonicalPoint hitB.vertexWorldPoint
                 offsetPoint = defaultOffsetPoint pointA pointB
                 updatePreview pointA pointB offsetPoint
                 setStage #offset
@@ -423,7 +561,7 @@ struct AmenoDimensionToolService
                 try
                 (
                     created = AmenoDimensionGraphics.createDimension pointA pointB offsetPoint role:"interactive" outputUnit:previewOutputUnit precision:previewPrecision styleId:activeStyleId \
-                        nodeA:nodeA anchorVertexIdA:anchorVertexIdA nodeB:nodeB anchorVertexIdB:anchorVertexIdB dimensionMode:activeMode
+                        nodeA:nodeA anchorVertexIdA:anchorVertexIdA nodeB:nodeB anchorVertexIdB:anchorVertexIdB dimensionMode:activeMode plane:activePlane
                     lastCommittedRecord = created
                     lastAnchorSummary = (anchorSummaryPart "A" nodeA anchorVertexIdA) + " · " + (anchorSummaryPart "B" nodeB anchorVertexIdB)
                     removePreview()
@@ -457,8 +595,9 @@ struct AmenoDimensionToolService
     fn handleMove clickNumber pointValue =
     (
         if not active then return undefined
+        if abortIfPlaneContextChanged() then return undefined
 
-        local candidate = flattenPoint pointValue
+        local candidate = canonicalPoint pointValue
         if candidate == undefined then return undefined
 
         case stage of
@@ -492,6 +631,7 @@ struct AmenoDimensionToolService
         anchorVertexIdB = -1
         active = false
         stage = #idle
+        activePlane = undefined
         panelStatus "E4: cota cancelada."
         true
     ),

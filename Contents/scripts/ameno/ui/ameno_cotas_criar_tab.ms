@@ -10,6 +10,7 @@ global AmenoDimensionTool
 global AmenoDimensionContinuousTool
 global AmenoStyleService
 global AmenoDimensionGraphics
+global AmenoDimensionPlaneService
 
 struct AmenoCotasCriarTabDefinition
 (
@@ -138,6 +139,18 @@ struct AmenoCotasCriarTabDefinition
             "</StackPanel>" + \
             "</Border>"
 
+        local planoSection = \
+            "<Border Background='#252526' CornerRadius='4' Padding='12,10' Margin='0,0,0,10'>" + \
+            "<StackPanel>" + \
+            "<TextBlock Text='PLANO DE COTA' Foreground='#61AFEF' FontWeight='Bold' FontSize='10' Margin='0,0,0,8'/>" + \
+            "<StackPanel Orientation='Horizontal' HorizontalAlignment='Center'>" + \
+            "<Button x:Name='btnPlanoPlanta' Style='{StaticResource PillActiveStyle}' Content='Planta XY' Margin='0,0,4,0' ToolTip='Projeta no plano XY, comportamento legado'/>" + \
+            "<Button x:Name='btnPlanoFachada' Style='{StaticResource PillInactiveStyle}' Content='Fachada / Vista' ToolTip='Usa a vista ortográfica ativa como plano U/V/N'/>" + \
+            "</StackPanel>" + \
+            "<TextBlock Text='Fachada exige vista ortografica nivelada; a orientacao e capturada ao iniciar.' Foreground='#888888' FontSize='9' Margin='0,7,0,0' TextWrapping='Wrap'/>" + \
+            "</StackPanel>" + \
+            "</Border>"
+
         local cardsSection = \
             "<Border Background='#252526' CornerRadius='4' Padding='12,10' Margin='0,0,0,10'>" + \
             "<StackPanel>" + \
@@ -256,6 +269,7 @@ struct AmenoCotasCriarTabDefinition
             resources + \
             "<ScrollViewer VerticalScrollBarVisibility='Auto' HorizontalScrollBarVisibility='Disabled'>" + \
             "<StackPanel Margin='12'>" + \
+            planoSection + \
             modoSection + \
             cardsSection + \
             estiloSection + \
@@ -282,6 +296,12 @@ struct AmenoCotasCriarTabDefinition
         else #aligned
     ),
 
+    fn normalizedPlaneMode planeValue =
+    (
+        if planeValue == #viewPlane or planeValue == "viewPlane" or planeValue == "fachada" or planeValue == "Fachada" then #viewPlane
+        else #worldXY
+    ),
+
     fn normalizedUnit unitValue =
     (
         if unitValue == #centimeters or unitValue == "centimeters" or unitValue == "cm" then #centimeters
@@ -303,6 +323,11 @@ struct AmenoCotasCriarTabDefinition
         if mode == #horizontal then "horizontal"
         else if mode == #vertical then "vertical"
         else "aligned"
+    ),
+
+    fn planeModeName planeValue =
+    (
+        if (normalizedPlaneMode planeValue) == #viewPlane then "viewPlane" else "worldXY"
     ),
 
     fn isInteractiveToolActive =
@@ -358,6 +383,18 @@ struct AmenoCotasCriarTabDefinition
         mode
     ),
 
+    fn setActivePlaneMode planeValue =
+    (
+        if isInteractiveToolActive() then return (rejectConfigurationChange())
+        local planeMode = normalizedPlaneMode planeValue
+        if ::AmenoDimensionTool != undefined do
+            try (::AmenoDimensionTool.setActivePlaneMode planeMode) catch (::AmenoDimensionTool.activePlaneMode = planeMode)
+        if ::AmenoDimensionContinuousTool != undefined do
+            try (::AmenoDimensionContinuousTool.setActivePlaneMode planeMode) catch (::AmenoDimensionContinuousTool.activePlaneMode = planeMode)
+        this.updatePlanoButtons planeMode
+        planeMode
+    ),
+
     fn setActiveStyle styleValue =
     (
         if isInteractiveToolActive() then return (rejectConfigurationChange())
@@ -394,15 +431,17 @@ struct AmenoCotasCriarTabDefinition
         local styleId = "default"
         local unit = #meters
         local precision = 2
+        local planeMode = #worldXY
         if source != undefined do
         (
             mode = try (normalizedMode source.activeMode) catch (#aligned)
             styleId = try (source.activeStyleId) catch ("default")
             unit = try (normalizedUnit source.previewOutputUnit) catch (#meters)
             precision = try (normalizedPrecision source.previewPrecision) catch (2)
+            planeMode = try (normalizedPlaneMode source.activePlaneMode) catch (#worldXY)
         )
         if styleId == undefined or styleId == "" do styleId = "default"
-        #(mode, styleId, unit, precision)
+        #(mode, styleId, unit, precision, planeMode)
     ),
 
     fn syncFromServices =
@@ -412,6 +451,7 @@ struct AmenoCotasCriarTabDefinition
         local styleId = settings[2]
         local unit = settings[3]
         local precision = settings[4]
+        local planeMode = if settings.count >= 5 then settings[5] else #worldXY
 
         -- O serviço individual é a fonte primária da aba. Em repouso, os dois
         -- serviços recebem a mesma configuração; a sessão contínua usa seu
@@ -424,6 +464,7 @@ struct AmenoCotasCriarTabDefinition
                 ::AmenoDimensionTool.activeStyleId = styleId
                 ::AmenoDimensionTool.previewOutputUnit = unit
                 ::AmenoDimensionTool.previewPrecision = precision
+                try (::AmenoDimensionTool.setActivePlaneMode planeMode) catch (::AmenoDimensionTool.activePlaneMode = planeMode)
             )
             if ::AmenoDimensionContinuousTool != undefined do
             (
@@ -431,6 +472,7 @@ struct AmenoCotasCriarTabDefinition
                 ::AmenoDimensionContinuousTool.activeStyleId = styleId
                 ::AmenoDimensionContinuousTool.previewOutputUnit = unit
                 ::AmenoDimensionContinuousTool.previewPrecision = precision
+                try (::AmenoDimensionContinuousTool.setActivePlaneMode planeMode) catch (::AmenoDimensionContinuousTool.activePlaneMode = planeMode)
             )
         )
 
@@ -452,6 +494,7 @@ struct AmenoCotasCriarTabDefinition
             local cbPrec = findControl "cbPrecisao"
             if cbPrec != undefined do cbPrec.SelectedIndex = precision
             this.updateModoButtons mode
+            this.updatePlanoButtons planeMode
         )
         catch (format "[Ameno][ERROR] Sincronizacao da aba Criar: %\n" (getCurrentException() as string))
         isSyncing = false
@@ -506,6 +549,24 @@ struct AmenoCotasCriarTabDefinition
         catch ()
     ),
 
+    fn updatePlanoButtons activePlaneMode =
+    (
+        try
+        (
+            local btnPlanta = findControl "btnPlanoPlanta"
+            local btnFachada = findControl "btnPlanoFachada"
+            if hostControl == undefined do return false
+            local rDict = hostControl.Resources
+            local styleActive = try (rDict.Item "PillActiveStyle") catch (undefined)
+            local styleInactive = try (rDict.Item "PillInactiveStyle") catch (undefined)
+            if styleActive == undefined or styleInactive == undefined do return false
+            local planeModeValue = normalizedPlaneMode activePlaneMode
+            if btnPlanta != undefined do btnPlanta.Style = (if planeModeValue == #worldXY then styleActive else styleInactive)
+            if btnFachada != undefined do btnFachada.Style = (if planeModeValue == #viewPlane then styleActive else styleInactive)
+        )
+        catch ()
+    ),
+
     fn populateEstilos selectedStyleId:undefined =
     (
         local cb = findControl "cbEstiloAtivo"
@@ -550,6 +611,8 @@ struct AmenoCotasCriarTabDefinition
         local btnAl    = findControl "btnModoAlinhada"
         local btnHz    = findControl "btnModoHorizontal"
         local btnVt    = findControl "btnModoVertical"
+        local btnPlanta = findControl "btnPlanoPlanta"
+        local btnFachada = findControl "btnPlanoFachada"
         local btnInd   = findControl "btnCotaIndividual"
         local btnCont  = findControl "btnCotaContinua"
         local btnRep   = findControl "btnRepararTudo"
@@ -559,6 +622,20 @@ struct AmenoCotasCriarTabDefinition
         local cbEstl   = findControl "cbEstiloAtivo"
         local cbUnd    = findControl "cbUnidade"
         local cbPrec   = findControl "cbPrecisao"
+
+        if btnPlanta != undefined do
+            dotNet.addEventHandler btnPlanta "Click" \
+                (fn onPlanoPlanta s e =
+                (
+                    try (if ::AmenoCotasCriarTab != undefined do ::AmenoCotasCriarTab.setActivePlaneMode #worldXY) catch ()
+                ))
+
+        if btnFachada != undefined do
+            dotNet.addEventHandler btnFachada "Click" \
+                (fn onPlanoFachada s e =
+                (
+                    try (if ::AmenoCotasCriarTab != undefined do ::AmenoCotasCriarTab.setActivePlaneMode #viewPlane) catch ()
+                ))
 
         if btnAl != undefined do
             dotNet.addEventHandler btnAl "Click" \

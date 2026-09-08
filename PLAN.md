@@ -20,6 +20,16 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Concluído
 
+- **E14.1–E14.5 implementadas em branch de entrega (2026-09-08):** criado o
+  contrato de plano ortonormal U/V/N, matemática de fachada, CA v6 aditivo,
+  gráficos 3D orientados, seletor Planta/Fachada, captura congelada e cadeia
+  contínua H/V com baseline absoluta. A implementação está em
+  `feature/e14-facade-planes`; `test_e14_plane_math.ms` passou 32/32,
+  `test_e14_tools.ms` 31/31, `test_e14_graphics.ms`, bootstrap, E10.7, E12 e
+  lifecycle WPF passaram com exit code 0/zero FAIL. E14.6 (gates completos) e
+  E14.7 (render, pacote e aceite manual) permanecem em andamento; a `main` e o
+  `ApplicationPlugins` não foram alterados nesta etapa.
+
 - Hotfix E12/E13 do crash no Enter (2026-09-06): o usuário reproduziu que pressionar Enter durante a cotação contínua derrubava o 3ds Max; o dump tinha exceção CLR 0xE0434352/E_FAIL. O caminho foi isolado ao DispatcherTimer que chamava MaxScript por callback assíncrono. Como o clique na viewport já funciona dentro das paredes, o monitor de Enter foi removido do fluxo interativo; a confirmação permanece por clique, Esc/botão direito cancelam e confirmPoints() fica somente programático/testável. O logger persistente foi concluído em %LOCALAPPDATA%\AmenoTools\Logs. Commit 2135b3b; pacote AmenoTools-0.0.1-e13-no-enter-20260906.zip; 239 PASS/0 FAIL nas regressões E13, E12 e logger, 42/42 hashes instalados e teste instalado aprovado. Handoff: plans/2026-09-06-e13-enter-crash-fix-handoff.md; validação manual pendente.
 
 - Hotfix E13 de recuperação após modo incorreto (2026-09-06): o fluxo contínuo agora identifica, no segundo ponto, quando a direção dominante contradiz o modo Horizontal/Vertical ativo; cancela a sessão, restaura o painel e exibe uma mensagem em vez de deixar a coleta presa. O `MouseTool` arma temporariamente `escapeEnable` durante a sessão, restaura a preferência anterior ao sair e retorna explicitamente `#stop` no `mouseAbort`, protegendo o cancelamento por Esc/botão direito mesmo se a limpeza falhar. Commit `5a31643`; `test_e12_r1_lifecycle.ms` passou com 70/70 verificações, e as regressões E12 contínua/picking e E13 etapa 2 terminaram com PASS/0 FAIL. Pacote `dist/AmenoTools-0.0.1-e13-mode-recovery-20260906.zip`, SHA-256 `D029DEC315250DBE8947C47A52128F9945FC051FBD9897BA312A7AC4C9940B3F`; instalação conferida (`SOURCE_FILES=41`, ausentes 0, divergências 0), teste pelo ApplicationPlugins exit 0 / 1 PASS / 0 FAIL. Backup recuperável: `D:\Ameno\backups\AmenoTools-before-mode-recovery-20260906-175430`. O gate manual após reiniciar o Max permanece pendente.
@@ -75,7 +85,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **E14 — Planos de cotação e fachadas planejada:** o núcleo atual é restrito ao plano mundial XY; a nova etapa separa Plano (`Planta` ou `Fachada pela vista`) de Direção (`Alinhada`, `Horizontal` ou `Vertical`) e persiste uma base ortográfica U/V/N por cota. A execução foi dividida em sete subetapas, E14.1–E14.7. Implementação ainda não iniciada. Plano detalhado: `plans/2026-09-08-e14-planos-de-cotacao-fachadas.md`.
+- **E14 — Planos de cotação e fachadas em validação:** E14.1–E14.5 foram
+  implementadas em `feature/e14-facade-planes`, com persistência CA v6,
+  orientação 3D, captura de fachada, snaps 3D preservados e baseline fixa na
+  cadeia H/V. A E14.6 está parcialmente integrada na reatividade/rebuild; faltam
+  seus gates completos de reancoragem, bake e órfãs. A E14.7 ainda precisa do
+  render real, regressão contra o pacote instalado, ZIP/SHA-256 e gate manual.
+  Plano detalhado: `plans/2026-09-08-e14-planos-de-cotacao-fachadas.md`.
 
 - **Prioridade atual — validar manualmente o hotfix de render/Isolate Selection:** o commit `5844730` está instalado em `ApplicationPlugins`; 41/41 arquivos de conteúdo e o manifesto conferem por SHA-256 e o smoke instalado passou com 1 PASS/0 FAIL. Reiniciar o Max, deixar o Isolate Selection desligado, confirmar a caixa `Renderizar somente as cotas (sem a planta)` e testar o PNG da cena real; o Ameno deverá ocultar a planta temporariamente e restaurar a cena.
 
@@ -104,7 +120,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **E14:** iniciar a E14.1 em branch própria, caracterizando primeiro o comportamento XY existente e depois implementando/testando o contrato genérico de plano em XY, XZ, YZ e uma vista ortográfica rotacionada. Não alterar o pacote instalado durante esta subetapa.
+- **E14:** executar os gates E14.6–E14.7 na branch `feature/e14-facade-planes`:
+  repetir E10.1 contra o candidato instalado, validar reancoragem/bake/órfãs e
+  Undo/Redo, testar Front/Back/Left/Right e câmera ortográfica rotacionada,
+  depois renderizar, gerar ZIP/SHA-256 e instalar. Manter `main` em `e406929`
+  até o aceite.
 
 - **Atual em 2026-09-06:** reabrir o Max com o hotfix WPF instalado e executar o gate real: cota individual e contínua, seguidas de pelo menos cinco ciclos Criar → Estilos → Editar → Render → Criar. Confirmar no logger que o painel foi desabilitado/reabilitado e que não houve falha de construção de aba. O Enter continua removido.
 
@@ -131,6 +151,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-08 — Implementar a nova função de cotação de fachadas:** a execução
+  foi iniciada na branch `feature/e14-facade-planes`. E14.1–E14.5 foram
+  implementadas e validadas em Batch; o plano E14 foi atualizado com evidências,
+  riscos resolvidos e gates restantes. A instalação do `ApplicationPlugins` e o
+  aceite manual aguardam a conclusão dos gates de render/regressão.
 
 - **2026-09-08 — Detalhar preventivamente a implementação E14:** plano revisado com contratos U/V/N, câmera nivelada, origem no primeiro snap, preservação das âncoras 3D, baseline fixa de cadeias de fachada, migração v6, transações, lifecycle, render e matriz de evidências por subetapa. As sete subetapas permanecem; implementação não iniciada. Documento: `plans/2026-09-08-e14-planos-de-cotacao-fachadas.md`.
 

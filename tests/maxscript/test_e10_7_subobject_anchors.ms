@@ -11,7 +11,7 @@ global AmenoAnchorService
 global AmenoDimensionTool
 
 -- Cria uma instancia real do schema anterior ANTES de carregar o schema v5.
--- Como o attribID e global, avaliar o bootstrap v5 migra a instancia existente.
+-- Como o attribID e global, avaliar o bootstrap v6 migra a instancia existente.
 AmenoLegacyDimensionCADefV4ForTest = attributes AmenoDimensionData
 attribID:#(0x414d454e, 0x44494d31)
 version:4
@@ -99,7 +99,7 @@ fn expectPointNear label actual expected tolerance:0.001 =
     expectTrue (label + " | esperado: " + (expected as string) + " | obtido: " + (actual as string)) ok
 )
 
-format "\n=== A1: migracao real CA v4 -> v5 ===\n"
+format "\n=== A1: migracao real CA v4 -> v6 ===\n"
 local migrated = AmenoDimensionCA.readCA legacyController
 expectTrue "registro v4 continua legivel" (migrated != undefined)
 if migrated != undefined do
@@ -138,7 +138,7 @@ local polyDim = AmenoDimensionGraphics.createDimension polyPointA polyPointB pol
     nodeA:polyNode anchorVertexIdA:polyVertexId dimensionMode:#horizontal
 local polyCtrl = polyDim.controller
 local polyRecord = AmenoDimensionCA.readCA polyCtrl
-expectEqual "nova cota usa schema v5" polyRecord.schemaVersion 5
+expectEqual "nova cota usa schema v6" polyRecord.schemaVersion 6
 expectEqual "vertex ID A persistido" polyRecord.anchorVertexIdA polyVertexId
 expectEqual "modo horizontal preservado" polyRecord.dimensionMode "horizontal"
 

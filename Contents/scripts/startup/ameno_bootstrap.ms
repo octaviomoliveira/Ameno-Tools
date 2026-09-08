@@ -12,6 +12,8 @@ global AmenoLog
 global AmenoRendererProbe
 global AmenoSceneSetup
 global AmenoUnitService
+global AmenoDimensionPlane
+global AmenoDimensionPlaneService
 global AmenoDimensionMath
 global AmenoDimensionChainMath
 global AmenoDimensionChainLayout
@@ -110,6 +112,7 @@ struct AmenoBootstrapService
             @"core\ameno_version.ms",
             @"core\ameno_logger.ms",
             @"core\ameno_scene_setup.ms",
+            @"core\ameno_dimension_plane.ms",
             @"core\ameno_dimensions_math.ms",
             @"core\ameno_dimension_chain_math.ms",
             @"core\ameno_dimension_ca.ms",

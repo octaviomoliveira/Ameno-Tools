@@ -11,7 +11,7 @@
 O **Ameno Tools** é um plugin de produtividade e cotagem técnica/arquitetônica para Autodesk 3ds Max. Ele foi concebido para atender escritórios de arquitetura, visualização 3D (ArchViz) e design de interiores, oferecendo:
 
 - **Cotas inteligentes e paramétricas:** criadas com snap 3D de alta precisão.
-- **Três modos de cotagem:** Alinhada, Horizontal (projeção em X) e Vertical (projeção em Y).
+- **Planos e modos de cotagem:** Planta XY ou Fachada pela vista, combinados com Alinhada, Horizontal e Vertical.
 - **Âncoras reativas em tempo real:** cotas que acompanham objetos quando eles são movidos ou transformados na cena.
 - **Estilos visuais padronizados:** presets Arquitetônico, Editorial e Técnico com controle vetorial de terminais (tick, setas, pontos).
 - **Sobrescrita manual auditável (`[M]`):** substituição de valores sem perder a medição real de engenharia.
@@ -48,6 +48,25 @@ O pacote é instalado como plugin modular padrão da Autodesk em:
 6. A cota permanente é gerada na layer gerenciada `AMENO_COTAS`. O status do painel
    informa a captura de cada ponta: `A=vN` / `B=vN` significa vértice persistido;
    `obj` significa apenas âncora por objeto; `mundo` significa ponto fixo.
+
+### 3.2 Cotar uma fachada
+1. Antes de iniciar, abra uma vista **Front**, **Back**, **Left** ou **Right**, ou uma
+   câmera ortográfica nivelada. No painel, em **Plano de Cota**, escolha **Fachada /
+   Vista**; **Planta XY** mantém o comportamento legado.
+2. Escolha **Horizontal** para largura no eixo U da vista ou **Vertical** para
+   altura no eixo V (alinhado ao Z mundial). **Alinhada** mede o vetor A–B dentro
+   do plano capturado.
+3. O plano U/V/N é congelado ao iniciar a ferramenta e a origem é fixada no
+   primeiro snap. Assim, pan e zoom são seguros, mas trocar câmera, Front/Back/
+   Left/Right ou inclinar/usar perspectiva cancela a sessão para evitar uma cota
+   em plano incorreto.
+4. Em **Fachada / Vista**, os pontos continuam sendo snaps 3D reais; somente a
+   medida e os gráficos são projetados no plano. A cota é salva com sua base e
+   continua correta mesmo depois de fechar e reabrir a cena.
+
+**Limites do MVP:** vistas em perspectiva, Top/Bottom e câmeras inclinadas ou com
+roll não são aceitas para fachada. A cotação contínua de fachada usa apenas
+**Horizontal** e **Vertical** e compartilha uma baseline fixa entre os segmentos.
 
 ---
 

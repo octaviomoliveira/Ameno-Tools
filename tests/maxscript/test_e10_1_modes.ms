@@ -154,10 +154,10 @@ if AmenoDimensionCA != undefined then
     -- Verificar que AmenoDimensionRecord tem o campo
     local rec = AmenoDimensionRecord()
     expect "record.dimensionMode default"    rec.dimensionMode  "aligned"
-    expect "record.schemaVersion default=5"  rec.schemaVersion  5
+    expect "record.schemaVersion default=6"  rec.schemaVersion  6
 
-    -- Verificar que a service tem schemaVersion 5
-    expect "CAService.schemaVersion = 5"  AmenoDimensionCA.schemaVersion  5
+    -- Verificar que a service tem schemaVersion 6
+    expect "CAService.schemaVersion = 6"  AmenoDimensionCA.schemaVersion  6
 )
 else
 (

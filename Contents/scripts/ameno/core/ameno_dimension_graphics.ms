@@ -13,6 +13,8 @@ global AmenoDimensionRecord
 global AmenoStyleService
 global AmenoAnchorService
 global AmenoDimensionTerminalMesh
+global AmenoDimensionPlane
+global AmenoDimensionPlaneService
 
 struct AmenoDimensionAuditRecord
 (
@@ -49,7 +51,7 @@ struct AmenoGraphicDimensionRecord
 
 struct AmenoDimensionGraphicsService
 (
-    dataSchemaVersion = 5,
+    dataSchemaVersion = 6,
     graphicSchemaVersion = 1,
     schemaVersion = 3, -- mantido para compatibilidade retroativa
     controllerKind = "dimension",
@@ -61,16 +63,68 @@ struct AmenoDimensionGraphicsService
     failureInjectionRemaining = 1,
     textFollowsLine = true,
 
+    fn resolvePlane planeValue:undefined layout:undefined =
+    (
+        if planeValue != undefined then return planeValue
+        if layout != undefined do
+        (
+            local layoutPlaneType = undefined
+            local layoutOrigin = undefined
+            local layoutU = undefined
+            local layoutV = undefined
+            local layoutN = undefined
+            try (layoutPlaneType = layout.planeType) catch ()
+            try (layoutOrigin = layout.planeOrigin) catch ()
+            try (layoutU = layout.planeAxisU) catch ()
+            try (layoutV = layout.planeAxisV) catch ()
+            try (layoutN = layout.planeNormal) catch ()
+            if layoutOrigin != undefined and layoutU != undefined and layoutV != undefined and layoutN != undefined do
+            (
+                if ::AmenoDimensionPlaneService != undefined do
+                (
+                    local layoutPlane = ::AmenoDimensionPlaneService.make layoutOrigin layoutU layoutV layoutN planeTypeValue:(if layoutPlaneType == undefined then #worldXY else layoutPlaneType)
+                    if layoutPlane.valid then return layoutPlane
+                )
+            )
+        )
+        if ::AmenoDimensionPlaneService != undefined then ::AmenoDimensionPlaneService.worldXY()
+        else AmenoDimensionPlane()
+    ),
+
     fn orientTextNode textNode layout followLine =
     (
-        local angle = 0.0
+        if textNode == undefined or layout == undefined then return false
+        local plane = resolvePlane layout:layout
+        local planeNormal = undefined
+        local planeU = undefined
+        local planeV = undefined
+        try (planeNormal = plane.normal) catch ()
+        try (planeU = plane.axisU) catch ()
+        try (planeV = plane.axisV) catch ()
+        if planeNormal == undefined or planeU == undefined or planeV == undefined then return false
+
+        local direction = planeU
         if followLine do
         (
-            angle = atan2 layout.direction.y layout.direction.x
-            if angle > 90.0 do angle -= 180.0
-            if angle <= -90.0 do angle += 180.0
+            try (direction = normalize layout.direction) catch (direction = planeU)
         )
-        textNode.rotation = quat angle [0,0,1]
+        local textUp = undefined
+        try (textUp = normalize (cross planeNormal direction)) catch (textUp = planeV)
+        -- O texto não deve aparecer de cabeça para baixo. Inverter o par de
+        -- eixos mantém a escrita legível sem perder a normal da fachada.
+        if (dot textUp planeV) < 0.0 do
+        (
+            direction = -direction
+            textUp = -textUp
+        )
+
+        local orientationTM = matrix3 direction textUp planeNormal [0,0,0]
+        try (textNode.transform = orientationTM) catch
+        (
+            -- Fallback para TextPlus/versões que não aceitam matriz direta.
+            local angle = atan2 (dot direction planeV) (dot direction planeU)
+            textNode.rotation = quat angle planeNormal
+        )
         true
     ),
 
@@ -902,7 +956,7 @@ struct AmenoDimensionGraphicsService
 
     fn createController pointA pointB offsetPoint systemLayer role:"test" outputUnit:#meters precision:2 styleId:"default" \
         anchorType:"world" nodeA:undefined localPointA:undefined anchorVertexIdA:-1 anchorEdgeIdA:-1 anchorEdgeMidA:false \
-        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned =
+        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned plane:undefined baselinePolicy:"relative" baselineCoordinate:0.0 =
     (
         local controller = Point name:(uniqueName "AMENO_DIM_CTRL_") size:5.0
         registerAllocation controller
@@ -914,10 +968,12 @@ struct AmenoDimensionGraphicsService
         try (controller.renderable = false) catch ()
         systemLayer.addNode controller
 
+        local resolvedPlane = resolvePlane planeValue:plane
+
         if AmenoDimensionCA != undefined do
         (
             local rec = AmenoDimensionRecord()
-            rec.schemaVersion = 5
+            rec.schemaVersion = 6
             rec.dimensionId = dimensionId
             rec.dimensionRole = (role as string)
             rec.dimensionMode = (dimensionMode as string)
@@ -949,6 +1005,13 @@ struct AmenoDimensionGraphicsService
             rec.anchorEdgeMidB = anchorEdgeMidB
             rec.isOrphan = false
             rec.orphanReason = ""
+            rec.planeType = (resolvedPlane.planeType as string)
+            rec.planeOrigin = resolvedPlane.origin
+            rec.planeAxisU = resolvedPlane.axisU
+            rec.planeAxisV = resolvedPlane.axisV
+            rec.planeNormal = resolvedPlane.normal
+            rec.baselinePolicy = baselinePolicy as string
+            rec.baselineCoordinate = baselineCoordinate as float
 
             AmenoDimensionCA.applyCA controller rec
         )
@@ -959,6 +1022,13 @@ struct AmenoDimensionGraphicsService
         setTextProperty controller "Ameno.DataSchemaVersion" (dataSchemaVersion as string)
         setTextProperty controller "Ameno.SchemaVersion" (dataSchemaVersion as string)
         setTextProperty controller "Ameno.StyleId" styleId
+        setTextProperty controller "Ameno.PlaneType" (resolvedPlane.planeType as string)
+        setTextProperty controller "Ameno.BaselinePolicy" (baselinePolicy as string)
+        setPointProperty controller "Ameno.PlaneOrigin" resolvedPlane.origin
+        setPointProperty controller "Ameno.PlaneAxisU" resolvedPlane.axisU
+        setPointProperty controller "Ameno.PlaneAxisV" resolvedPlane.axisV
+        setPointProperty controller "Ameno.PlaneNormal" resolvedPlane.normal
+        setPointProperty controller "Ameno.BaselineCoordinate" [baselineCoordinate, 0.0, 0.0]
         setPointProperty controller "Ameno.PointA" pointA
         setPointProperty controller "Ameno.PointB" pointB
         setPointProperty controller "Ameno.OffsetPoint" offsetPoint
@@ -1080,13 +1150,13 @@ struct AmenoDimensionGraphicsService
         true
     ),
 
-    fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned =
+    fn createPreviewDimension pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned plane:undefined =
     (
         local sceneState = ensureSceneReady()
 
         if sceneState.status != #ready then throw ("Ameno não conseguiu preparar a cena: " + sceneState.detail)
 
-        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:mode
+        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:mode plane:plane
         if not layout.valid then throw ("Não foi possível criar a prévia: " + layout.errorMessage)
 
         local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
@@ -1135,11 +1205,11 @@ struct AmenoDimensionGraphicsService
         result
     ),
 
-    fn updatePreviewDimension preview pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned =
+    fn updatePreviewDimension preview pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned plane:undefined =
     (
         if preview == undefined then return undefined
 
-        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:mode
+        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:mode plane:plane
         if not layout.valid then return undefined
 
         local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
@@ -1184,7 +1254,7 @@ struct AmenoDimensionGraphicsService
 
     fn createDimension pointA pointB offsetPoint role:"test" outputUnit:#meters precision:2 styleId:"default" style:undefined \
         anchorType:"world" nodeA:undefined localPointA:undefined anchorVertexIdA:-1 anchorEdgeIdA:-1 anchorEdgeMidA:false \
-        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned useUndo:true =
+        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false dimensionMode:#aligned plane:undefined baselinePolicy:"relative" baselineCoordinate:0.0 useUndo:true =
     (
         local sceneState = ensureSceneReady()
 
@@ -1207,7 +1277,7 @@ struct AmenoDimensionGraphicsService
         else if nodeA != undefined then resolvedAnchorType = "nodeA"
         else if nodeB != undefined then resolvedAnchorType = "nodeB"
 
-        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:dimensionMode
+        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:dimensionMode plane:plane
         if not layout.valid then throw ("Não foi possível criar a cota: " + layout.errorMessage)
 
         local controller = undefined
@@ -1222,7 +1292,8 @@ struct AmenoDimensionGraphicsService
                 (
                     controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:styleId \
                         anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA anchorVertexIdA:anchorVertexIdA anchorEdgeIdA:anchorEdgeIdA anchorEdgeMidA:anchorEdgeMidA \
-                        nodeB:nodeB localPointB:resolvedLocalB anchorVertexIdB:anchorVertexIdB anchorEdgeIdB:anchorEdgeIdB anchorEdgeMidB:anchorEdgeMidB dimensionMode:dimensionMode
+                        nodeB:nodeB localPointB:resolvedLocalB anchorVertexIdB:anchorVertexIdB anchorEdgeIdB:anchorEdgeIdB anchorEdgeMidB:anchorEdgeMidB dimensionMode:dimensionMode \
+                        plane:plane baselinePolicy:baselinePolicy baselineCoordinate:baselineCoordinate
                     local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
                     if AmenoDimensionCA != undefined do
                     (
@@ -1245,7 +1316,8 @@ struct AmenoDimensionGraphicsService
 
                 controller = createController pointA pointB offsetPoint sceneState.systemLayer role:role outputUnit:outputUnit precision:precision styleId:resolvedStyleId \
                     anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA anchorVertexIdA:anchorVertexIdA anchorEdgeIdA:anchorEdgeIdA anchorEdgeMidA:anchorEdgeMidA \
-                    nodeB:nodeB localPointB:resolvedLocalB anchorVertexIdB:anchorVertexIdB anchorEdgeIdB:anchorEdgeIdB anchorEdgeMidB:anchorEdgeMidB dimensionMode:dimensionMode
+                    nodeB:nodeB localPointB:resolvedLocalB anchorVertexIdB:anchorVertexIdB anchorEdgeIdB:anchorEdgeIdB anchorEdgeMidB:anchorEdgeMidB dimensionMode:dimensionMode \
+                    plane:plane baselinePolicy:baselinePolicy baselineCoordinate:baselineCoordinate
                 local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision
                 if AmenoDimensionCA != undefined do
                 (
@@ -1399,7 +1471,8 @@ struct AmenoDimensionGraphicsService
 
         local mode = #aligned
         try (mode = record.dimensionMode as name) catch ()
-        local layout = AmenoDimensionMath.layoutForMode record.pointA record.pointB record.offsetPoint mode:mode
+        local plane = if AmenoDimensionCA != undefined then AmenoDimensionCA.recordPlane record else resolvePlane()
+        local layout = AmenoDimensionMath.layoutForMode record.pointA record.pointB record.offsetPoint mode:mode plane:plane
         if not layout.valid then return undefined
 
         local outputUnit = #meters
@@ -1423,6 +1496,7 @@ struct AmenoDimensionGraphicsService
         local offsetPoint = undefined
         local outputUnit = #meters
         local precision = 2
+        local plane = undefined
 
         if record != undefined then
         (
@@ -1431,6 +1505,7 @@ struct AmenoDimensionGraphicsService
             offsetPoint = record.offsetPoint
             try (outputUnit = (record.outputUnit as name)) catch ()
             precision = record.precision
+            plane = if AmenoDimensionCA != undefined then AmenoDimensionCA.recordPlane record else undefined
 
             -- E8: Resolve âncoras para obter coordenadas mundiais atualizadas
             local resolved = AmenoDimensionCA.resolvePoints record
@@ -1461,7 +1536,8 @@ struct AmenoDimensionGraphicsService
 
         local mode = #aligned
         if record != undefined do try (mode = record.dimensionMode as name) catch ()
-        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:mode
+        if plane == undefined do plane = resolvePlane()
+        local layout = AmenoDimensionMath.layoutForMode pointA pointB offsetPoint mode:mode plane:plane
         if not layout.valid then throw ("Não foi possível reconstruir a cota: " + layout.errorMessage)
 
         local audit = calculateAudit controller layout outputUnit:outputUnit precision:precision

@@ -4,9 +4,37 @@
 
 **Alvo inicial:** 3ds Max 2026
 
-**Estado:** planejada; revisão preventiva de implementação incorporada em 2026-09-08; implementação não iniciada
+**Estado:** E14.1–E14.5 implementadas na branch `feature/e14-facade-planes`; E14.6 parcialmente integrada e E14.7 (render/aceite manual/pacote instalado) pendente
 
 **Quantidade de subetapas:** 7 (`E14.1` a `E14.7`)
+
+## Progresso de implementação
+
+O núcleo executável foi implementado sem alterar a `main` ou o pacote instalado:
+
+- **E14.1:** `AmenoDimensionPlane` com base U/V/N validada, conversão mundo↔plano,
+  interseção raio/plano e matemática alinhada/H/V em XY, XZ, YZ e bases rotacionadas.
+  `test_e14_plane_math.ms`: **32/32 PASS**; `test_e14_camera_plane.ms`: **5/5 PASS**
+  para câmera ortográfica nivelada, perspectiva e inclinação.
+- **E14.2–E14.3:** CA v6 aditivo, migração v1–v5 para XY, rejeição diagnóstica de
+  base v6 inválida, UserProps de diagnóstico, orientação 3D do TextPlus/terminais,
+  auditoria, rebuild e save/load. `test_e14_graphics.ms`: **PASS**.
+- **E14.4:** seletor Planta/Fachada na aba Criar, captura de vista ortográfica,
+  origem ancorada no primeiro snap, snaps 3D preservados e cancelamento quando a
+  identidade/orientação da vista muda.
+- **E14.5:** cadeia H/V com interseção no plano congelado, ordenação U/V, baseline
+  absoluta `fixedPlaneBaseline`, rollback e reatividade após mover referência.
+  `test_e14_tools.ms`: **31/31 PASS**.
+- **Regressão:** `test_bootstrap.ms`, E10.7, E12 (matemática, input, commit e
+  contínua) e `test_e13_ui_lifecycle.ms` passaram com exit code 0 e zero FAIL;
+  E10.1 e `test_installed_package.ms` passaram contra a cópia instalada após o
+  backup `D:\Ameno\backups\AmenoTools-before-e14-20260908-202208`; a conferência
+  encontrou 42/42 hashes iguais. `tools/validate-package.ps1` também passou.
+
+Ainda faltam o gate manual em Front/Back/Left/Right e câmera ortográfica rotacionada,
+render Corona/V-Ray, cenários completos de E14.6 (reancoragem, bake e órfãs),
+empacotamento e conferência pelo `ApplicationPlugins`. A instalação só ocorre após
+esses gates automatizados e com a autorização operacional do usuário.
 
 ## Contexto
 
@@ -264,15 +292,17 @@ produção do usuário antes do gate correspondente.
 
 ## Próximo passo exato
 
-Iniciar a **E14.1 — Núcleo de plano e matemática** em branch própria, primeiro
-caracterizando por testes o comportamento XY atual. Só depois introduzir a base
-U/V/N e comprovar que XY, XZ, YZ e plano rotacionado retornam layouts válidos.
+Executar os gates restantes da **E14.6–E14.7**: repetir E10.1 contra o pacote
+candidato instalado, validar reancoragem/bake/órfãs e Undo/Redo, fazer o gate manual
+das quatro vistas e da câmera ortográfica rotacionada, e só então testar render,
+gerar o ZIP com SHA-256 e instalar. A implementação corrente está na branch
+`feature/e14-facade-planes`; a `main` continua em `e406929`.
 
 ## Roteiro preventivo obrigatório para o executor
 
 As regras abaixo complementam as sete subetapas e prevalecem sobre frases
-genéricas anteriores. São decisões de implementação propostas para este MVP,
-não recursos já implementados nem prova de comportamento em runtime.
+genéricas anteriores. Elas são o contrato preventivo usado na implementação;
+onde houver indicação de gate pendente, ainda é necessária prova no Max interativo.
 
 ### 1. Fechar o contrato geométrico antes de editar consumidores — E14.1
 

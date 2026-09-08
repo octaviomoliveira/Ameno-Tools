@@ -12,6 +12,8 @@ global AmenoContinuousPickResult
 global AmenoContinuousInputResolver
 global AmenoDimensionGraphics
 global AmenoDimensionCA
+global AmenoDimensionPlane
+global AmenoDimensionPlaneService
 
 struct AmenoContinuousSurfaceHit
 (
@@ -50,7 +52,8 @@ struct AmenoContinuousInputSample
     shortlistNodes = #(),
     vertexProbes = #(),
     planePoint = undefined,
-    planeStatus = #pending
+    planeStatus = #pending,
+    planeBasis = undefined
 )
 
 struct AmenoContinuousPickResult
@@ -104,7 +107,7 @@ struct AmenoContinuousInputResolverService
         try ((superClassOf nodeValue) == GeometryClass) catch false
     ),
 
-    fn intersectRayWithPlane rayValue targetZ:0.0 =
+    fn intersectRayWithPlane rayValue targetZ:0.0 plane:undefined =
     (
         if rayValue == undefined then return undefined
         local originPoint = undefined
@@ -116,6 +119,18 @@ struct AmenoContinuousInputResolverService
         )
         catch (return undefined)
         if originPoint == undefined or directionValue == undefined then return undefined
+        if plane != undefined then
+        (
+            local planeNormal = plane.normal
+            local planeOrigin = plane.origin
+            local denominator = dot directionValue planeNormal
+            if not (isFiniteNumber denominator) or (abs denominator) <= planeEpsilon then return undefined
+            local parameter = dot (planeOrigin - originPoint) planeNormal / denominator
+            if not (isFiniteNumber parameter) then return undefined
+            local result = originPoint + (directionValue * parameter)
+            if not (isFiniteNumber result.x) or not (isFiniteNumber result.y) or not (isFiniteNumber result.z) then return undefined
+            return result
+        )
         if not (isFiniteNumber directionValue.z) or (abs directionValue.z) <= planeEpsilon then return undefined
         local parameter = (targetZ - originPoint.z) / directionValue.z
         if not (isFiniteNumber parameter) then return undefined
@@ -125,13 +140,14 @@ struct AmenoContinuousInputResolverService
     ),
 
     fn acquireSample eventTypeValue nativeClickNumberValue screenPointValue rawWorldPointValue \
-        snapHit:false snapNode:undefined snapWorldPoint:undefined snapStatus:#ok sessionId:"" =
+        snapHit:false snapNode:undefined snapWorldPoint:undefined snapStatus:#ok sessionId:"" plane:undefined =
     (
         sampleSequence += 1
         local sample = AmenoContinuousInputSample sessionId:sessionId sequence:sampleSequence \
             eventType:eventTypeValue nativeClickNumber:nativeClickNumberValue \
             screenPoint:screenPointValue rawWorldPoint:rawWorldPointValue snapHit:snapHit snapNode:snapNode \
             snapWorldPoint:snapWorldPoint snapStatus:snapStatus
+        sample.planeBasis = plane
         try (sample.viewportId = viewport.activeViewport) catch ()
         try
         (
@@ -147,7 +163,10 @@ struct AmenoContinuousInputResolverService
         )
         if sample.rayStatus == #ok do
         (
-            sample.planePoint = intersectRayWithPlane sample.rayValue targetZ:planeZ
+            if plane != undefined then
+                sample.planePoint = intersectRayWithPlane sample.rayValue plane:plane
+            else
+                sample.planePoint = intersectRayWithPlane sample.rayValue targetZ:planeZ
             sample.planeStatus = if sample.planePoint == undefined then #invalidPlane else #ok
         )
         sample
@@ -353,7 +372,7 @@ struct AmenoContinuousInputResolverService
         if sample.rayStatus != #ok then
             return (AmenoContinuousPickResult kind:#ambiguous reasonCode:#rayQueryFailed detail:"viewport ray unavailable")
         if sample.planeStatus != #ok then
-            return (AmenoContinuousPickResult kind:#ambiguous reasonCode:#invalidPlane detail:"viewport ray does not intersect the XY plane")
+            return (AmenoContinuousPickResult kind:#ambiguous reasonCode:#invalidPlane detail:"viewport ray não intersecta o plano ativo da cota")
 
         local queryOk = querySurfaceHits sample
         if not queryOk then

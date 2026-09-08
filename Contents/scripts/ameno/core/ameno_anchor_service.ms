@@ -14,6 +14,8 @@ global AmenoAnchorServiceDefinition
 global AmenoDimensionCA
 global AmenoDimensionGraphics
 global AmenoDimensionMath
+global AmenoDimensionPlane
+global AmenoDimensionPlaneService
 global AmenoStyleService
 global AmenoSceneSetup
 global AmenoRefreshMainPanel
@@ -189,7 +191,8 @@ struct AmenoAnchorServiceDefinition
 
         local mode = #aligned
         try (mode = rec.dimensionMode as name) catch ()
-        local layout = ::AmenoDimensionMath.layoutForMode rec.pointA rec.pointB rec.offsetPoint mode:mode
+        local plane = if ::AmenoDimensionCA != undefined then ::AmenoDimensionCA.recordPlane rec else undefined
+        local layout = ::AmenoDimensionMath.layoutForMode rec.pointA rec.pointB rec.offsetPoint mode:mode plane:plane
         if layout == undefined or not layout.valid then
         (
             return (::AmenoDimensionGraphics.rebuildDimension controller) != undefined
