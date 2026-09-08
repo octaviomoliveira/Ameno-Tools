@@ -83,7 +83,10 @@ struct AmenoDimensionGraphicsService
                 if ::AmenoDimensionPlaneService != undefined do
                 (
                     local layoutPlane = ::AmenoDimensionPlaneService.make layoutOrigin layoutU layoutV layoutN planeTypeValue:(if layoutPlaneType == undefined then #worldXY else layoutPlaneType)
-                    if layoutPlane.valid then return layoutPlane
+                    -- Metadados presentes são a fonte de verdade. Se a base
+                    -- persistida estiver corrompida, devolver o plano inválido
+                    -- mantém o diagnóstico e impede fallback silencioso para XY.
+                    if layoutPlane != undefined then return layoutPlane
                 )
             )
         )

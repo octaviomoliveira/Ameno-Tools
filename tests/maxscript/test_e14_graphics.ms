@@ -3,6 +3,7 @@
 global AmenoApp
 global AmenoDimensionPlaneService
 global AmenoDimensionGraphics
+global AmenoDimensionMath
 global AmenoDimensionCA
 global AmenoUnitService
 
@@ -23,6 +24,11 @@ global AmenoUnitService
     if created == undefined or created.controller == undefined then throw "E14 graphics: criação retornou vazio."
     if created.layout.planeType != #viewPlane then throw "E14 graphics: layout não preservou o tipo de plano."
     if created.layout.linePointA != [0,0,20] or created.layout.linePointB != [100,0,20] then throw "E14 graphics: linha horizontal não está no plano da fachada."
+
+    local invalidLayout = AmenoDimensionMath.layoutForMode [0,0,10] [100,0,10] [0,0,20] mode:#horizontal plane:facade
+    invalidLayout.planeAxisV = [1,0,0]
+    local invalidResolvedPlane = AmenoDimensionGraphics.resolvePlane layout:invalidLayout
+    if invalidResolvedPlane == undefined or invalidResolvedPlane.valid then throw "E14 graphics: base persistida inválida caiu silenciosamente em XY."
 
     local ca = AmenoDimensionCA.readCA created.controller
     if ca == undefined or ca.schemaVersion != 6 then throw "E14 graphics: schema v6 não foi gravado."

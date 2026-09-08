@@ -64,6 +64,11 @@ struct AmenoDimensionPlaneServiceDefinition
 
     fn make originValue axisUValue axisVValue normalValue planeTypeValue:#viewPlane orientationLabelValue:"Plano de vista" sourceViewportValue:undefined sourceCameraValue:undefined =
     (
+        -- O tipo faz parte do contrato persistido. Não aceitar um nome
+        -- arbitrário aqui evita que uma cena corrompida seja interpretada
+        -- como um plano válido e depois caia silenciosamente em Planta.
+        if planeTypeValue != #worldXY and planeTypeValue != #viewPlane then
+            return (invalidPlane #unsupportedPlaneType "O tipo de plano persistido não é suportado." planeTypeValue:planeTypeValue)
         if not (isFinitePoint originValue) then return (invalidPlane #invalidOrigin "A origem do plano não é finita." planeTypeValue:planeTypeValue)
         local u = safeNormalize axisUValue
         local v = safeNormalize axisVValue
@@ -200,7 +205,10 @@ struct AmenoDimensionPlaneServiceDefinition
         local vv = safeNormalize v
         local nn = safeNormalize n
         if uu == undefined or vv == undefined or nn == undefined then return (invalidPlane #cameraBasis "A base da câmera é degenerada.")
-        if (abs (dot vv [0,0,1])) < (1.0 - viewLevelTolerance) then
+        -- O eixo V precisa apontar para o Z mundial positivo. Usar abs aqui
+        -- aceitaria a câmera invertida (roll de 180 graus) como se estivesse
+        -- nivelada, invertendo a leitura do texto e a ordem vertical.
+        if (dot vv [0,0,1]) < (1.0 - viewLevelTolerance) then
             return (invalidPlane #cameraTilt "A câmera deve estar nivelada, com o eixo vertical alinhado ao Z mundial.")
         if (abs (dot uu [0,0,1])) > viewLevelTolerance or (abs (dot nn [0,0,1])) > viewLevelTolerance then
             return (invalidPlane #cameraRoll "A câmera não pode ter roll no MVP da fachada.")

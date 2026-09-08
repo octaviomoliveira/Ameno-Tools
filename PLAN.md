@@ -24,7 +24,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   contrato de plano ortonormal U/V/N, matemática de fachada, CA v6 aditivo,
   gráficos 3D orientados, seletor Planta/Fachada, captura congelada e cadeia
   contínua H/V com baseline absoluta. A implementação está em
-  `feature/e14-facade-planes`; `test_e14_plane_math.ms` passou 32/32,
+  `feature/e14-facade-planes`; `test_e14_plane_math.ms` passou 35/35,
   `test_e14_tools.ms` 31/31, `test_e14_graphics.ms`, bootstrap, E10.7, E12 e
   lifecycle WPF passaram com exit code 0/zero FAIL. E14.6 (gates completos) e
   E14.7 (render e aceite manual/publicação) permanecem em andamento; a `main`

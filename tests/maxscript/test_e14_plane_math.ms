@@ -122,6 +122,8 @@ global AmenoDimensionRecord
     expect "normal com sinal errado invalida" wrongNormal.errorCode #invalidHandedness
     local zeroAxis = AmenoDimensionPlaneService.make [0,0,0] [0,0,0] [0,1,0] [0,0,1]
     expect "eixo zero invalida" zeroAxis.errorCode #invalidBasis
+    local unknownType = AmenoDimensionPlaneService.make [0,0,0] [1,0,0] [0,1,0] [0,0,1] planeTypeValue:#unsupported
+    expect "tipo de plano desconhecido invalida" unknownType.errorCode #unsupportedPlaneType
     local invalidRecord = AmenoDimensionRecord schemaVersion:6 planeAxisU:[1,0,0] planeAxisV:[1,0,0] planeNormal:[0,0,1]
     expect "CA v6 inválido não cai em XY" (AmenoDimensionCA.recordPlane invalidRecord).errorCode #nonOrthonormalBasis
 

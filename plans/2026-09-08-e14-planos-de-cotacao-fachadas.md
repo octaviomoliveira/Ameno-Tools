@@ -16,7 +16,7 @@ o candidato foi instalado no perfil local para validar o carregamento real do
 
 - **E14.1:** `AmenoDimensionPlane` com base U/V/N validada, conversão mundo↔plano,
   interseção raio/plano e matemática alinhada/H/V em XY, XZ, YZ e bases rotacionadas.
-  `test_e14_plane_math.ms`: **32/32 PASS**; `test_e14_camera_plane.ms`: **5/5 PASS**
+  `test_e14_plane_math.ms`: **35/35 PASS**; `test_e14_camera_plane.ms`: **5/5 PASS**
   para câmera ortográfica nivelada, perspectiva e inclinação.
 - **E14.2–E14.3:** CA v6 aditivo, migração v1–v5 para XY, rejeição diagnóstica de
   base v6 inválida, UserProps de diagnóstico, orientação 3D do TextPlus/terminais,
@@ -35,6 +35,11 @@ o candidato foi instalado no perfil local para validar o carregamento real do
 - **Candidato:** `dist/AmenoTools-0.0.1-e14-facade-20260908.zip` (48 entradas,
   SHA-256 `EE0270622CCF1533DEE382D52C6B1E51745A6D48954C4771FFC0AD7EE2F6AB26`),
   manifesto em `plans/2026-09-08-e14-candidate-manifest.sha256`.
+
+Após a auditoria final do contrato, a validação passou a rejeitar tipos de plano
+desconhecidos, câmeras invertidas (roll de 180°) e bases persistidas inválidas sem
+fallback silencioso para XY. O teste de plano foi ampliado para 35 verificações;
+o candidato ZIP será regenerado após o commit desta proteção.
 
 Ainda faltam o gate manual em Front/Back/Left/Right e câmera ortográfica rotacionada,
 render Corona/V-Ray, cenários completos de E14.6 (reancoragem, bake e órfãs),
