@@ -9,6 +9,9 @@ global AmenoRuntime
 global AmenoStartupError
 global AmenoVersion
 global AmenoLog
+global AmenoAuthService
+global AmenoAuthResult
+global AmenoLoginWindow
 global AmenoRendererProbe
 global AmenoSceneSetup
 global AmenoUnitService
@@ -105,6 +108,39 @@ struct AmenoBootstrapService
     fn start =
     (
         AmenoStartupError = ""
+
+        -- Carregar servico de autenticacao antes de qualquer outro modulo.
+        -- Se o arquivo nao existir (ex: instalacao antiga), o plugin carrega
+        -- sem gate de auth para nao bloquear upgrades em andamento.
+        local authServicePath = resolveModulePath @"core\ameno_auth_service.ms"
+        local authWindowPath  = resolveModulePath @"ui\ameno_login_window.ms"
+        local authEnabled     = doesFileExist authServicePath
+
+        if authEnabled then
+        (
+            loadModule @"core\ameno_auth_service.ms"
+            loadModule @"ui\ameno_login_window.ms"
+
+            if not (AmenoAuthService.isAuthenticated()) then
+            (
+                -- Nenhuma sessao valida: exibir janela de login
+                local loginOk = false
+                if AmenoLoginWindow != undefined then
+                    loginOk = AmenoLoginWindow.show()
+
+                if not loginOk then
+                (
+                    AmenoStartupError = "Ameno Tools nao carregado: autenticacao necessaria."
+                    format "[Ameno] %\n" AmenoStartupError
+                    return false
+                )
+            )
+
+            -- Sessao valida: logar email do usuario (sem exibir token)
+            local sess = AmenoAuthService.getSession()
+            if AmenoLog != undefined and sess.ok do
+                try (AmenoLog.info ("Sessao ativa: " + sess.email + " [" + sess.plan + "]")) catch ()
+        )
 
         local moduleFiles = #(
             @"core\ameno_version.ms",
