@@ -30,16 +30,17 @@ o candidato foi instalado no perfil local para validar o carregamento real do
 - **Regressão:** `test_bootstrap.ms`, E10.7, E12 (matemática, input, commit e
   contínua) e `test_e13_ui_lifecycle.ms` passaram com exit code 0 e zero FAIL;
   E10.1 e `test_installed_package.ms` passaram contra a cópia instalada após o
-  backup `D:\Ameno\backups\AmenoTools-before-e14-20260908-202208`; a conferência
-  encontrou 42/42 hashes iguais. `tools/validate-package.ps1` também passou.
+  backup `D:\Ameno\backups\AmenoTools-before-e14-hardening-20260908-204556`; a
+  conferência encontrou 42/42 hashes de conteúdo iguais. `tools/validate-package.ps1`
+  também passou.
 - **Candidato:** `dist/AmenoTools-0.0.1-e14-facade-20260908.zip` (48 entradas,
-  SHA-256 `EE0270622CCF1533DEE382D52C6B1E51745A6D48954C4771FFC0AD7EE2F6AB26`),
+  SHA-256 `C8246D50AFC56B77A16941AE140D78226C7ADD9FFC180331847505B2A5E79405`),
   manifesto em `plans/2026-09-08-e14-candidate-manifest.sha256`.
 
 Após a auditoria final do contrato, a validação passou a rejeitar tipos de plano
 desconhecidos, câmeras invertidas (roll de 180°) e bases persistidas inválidas sem
 fallback silencioso para XY. O teste de plano foi ampliado para 35 verificações;
-o candidato ZIP será regenerado após o commit desta proteção.
+o ZIP foi regenerado com essas proteções.
 
 Ainda faltam o gate manual em Front/Back/Left/Right e câmera ortográfica rotacionada,
 render Corona/V-Ray, cenários completos de E14.6 (reancoragem, bake e órfãs),

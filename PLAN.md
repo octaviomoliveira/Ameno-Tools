@@ -29,8 +29,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   lifecycle WPF passaram com exit code 0/zero FAIL. E14.6 (gates completos) e
   E14.7 (render e aceite manual/publicação) permanecem em andamento; a `main`
   continua intacta. Depois dos gates automatizados, o candidato foi instalado
-  localmente e conferido por 42/42 hashes; backup recuperável em
-  `D:\Ameno\backups\AmenoTools-before-e14-20260908-202208`.
+  localmente e conferido por 42/42 hashes de conteúdo; backup recuperável em
+  `D:\Ameno\backups\AmenoTools-before-e14-hardening-20260908-204556`.
 
 - Hotfix E12/E13 do crash no Enter (2026-09-06): o usuário reproduziu que pressionar Enter durante a cotação contínua derrubava o 3ds Max; o dump tinha exceção CLR 0xE0434352/E_FAIL. O caminho foi isolado ao DispatcherTimer que chamava MaxScript por callback assíncrono. Como o clique na viewport já funciona dentro das paredes, o monitor de Enter foi removido do fluxo interativo; a confirmação permanece por clique, Esc/botão direito cancelam e confirmPoints() fica somente programático/testável. O logger persistente foi concluído em %LOCALAPPDATA%\AmenoTools\Logs. Commit 2135b3b; pacote AmenoTools-0.0.1-e13-no-enter-20260906.zip; 239 PASS/0 FAIL nas regressões E13, E12 e logger, 42/42 hashes instalados e teste instalado aprovado. Handoff: plans/2026-09-06-e13-enter-crash-fix-handoff.md; validação manual pendente.
 
@@ -162,8 +162,18 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   riscos resolvidos e gates restantes. O aceite manual e o gate de render ainda
   aguardam conclusão. Candidato
   `dist/AmenoTools-0.0.1-e14-facade-20260908.zip`, SHA-256
-  `EE0270622CCF1533DEE382D52C6B1E51745A6D48954C4771FFC0AD7EE2F6AB26`, instalado
+  `C8246D50AFC56B77A16941AE140D78226C7ADD9FFC180331847505B2A5E79405`, instalado
   localmente após backup recuperável.
+
+- **2026-09-08 — Endurecer o candidato E14 antes da entrega:** a auditoria
+  passou a rejeitar tipos de plano desconhecidos, câmeras ortográficas invertidas
+  e bases persistidas inválidas sem fallback silencioso para XY. O teste de plano
+  ficou em 35/35 e o teste gráfico ganhou cobertura do caminho de recuperação.
+  Commit `03346c5`; ZIP regenerado com SHA-256
+  `C8246D50AFC56B77A16941AE140D78226C7ADD9FFC180331847505B2A5E79405`, instalado
+  no `ApplicationPlugins` após backup
+  `D:\Ameno\backups\AmenoTools-before-e14-hardening-20260908-204556`; smoke
+  instalado PASS/0 FAIL.
 
 - **2026-09-08 — Detalhar preventivamente a implementação E14:** plano revisado com contratos U/V/N, câmera nivelada, origem no primeiro snap, preservação das âncoras 3D, baseline fixa de cadeias de fachada, migração v6, transações, lifecycle, render e matriz de evidências por subetapa. As sete subetapas permanecem; implementação não iniciada. Documento: `plans/2026-09-08-e14-planos-de-cotacao-fachadas.md`.
 
