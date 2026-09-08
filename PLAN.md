@@ -132,6 +132,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Histórico de solicitações
 
+- **2026-09-08 — Detalhar preventivamente a implementação E14:** plano revisado com contratos U/V/N, câmera nivelada, origem no primeiro snap, preservação das âncoras 3D, baseline fixa de cadeias de fachada, migração v6, transações, lifecycle, render e matriz de evidências por subetapa. As sete subetapas permanecem; implementação não iniciada. Documento: `plans/2026-09-08-e14-planos-de-cotacao-fachadas.md`.
+
 - **2026-09-06 — Instalar o hotfix de lifecycle WPF:** Max e Batch confirmados fechados; instalação anterior preservada em `D:\Ameno\backups\AmenoTools-before-ui-lifecycle-20260906-213520`; commit `dac0601` instalado no `ApplicationPlugins`. Conferência completa: 42 esperados/42 instalados, 0 ausentes, 0 divergentes e 0 extras. `test_installed_package.ms` terminou com exit 0, 1 PASS e 0 FAIL. Gate interativo pendente.
 
 - **2026-09-06 — Corrigir a interface que deixa de responder após usar cotas e listar issues abertas:** os logs provaram que o MouseTool concluía e o Max seguia responsivo; a falha estava no lifecycle síncrono Hide/startTool/Show, nos `catch ()` silenciosos e na reconstrução repetida de Criar/Render. O hotfix mantém a janela visível e temporariamente desabilitada, reutiliza controles, faz rollback da navegação e adiciona logs/teste de estresse. Dez suítes somaram 142 PASS/0 FAIL. As suítes que apagavam a biblioteca global real foram isoladas em `%TEMP%`; o perfil do usuário permaneceu intacto. Issues abertas confirmadas: #1, #2 e #3. Instalação pendente porque o Max está aberto. Handoff: `plans/2026-09-06-e13-ui-lifecycle-fix-handoff.md`.
