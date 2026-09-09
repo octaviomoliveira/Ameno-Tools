@@ -171,6 +171,16 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   depende de uma sessão gráfica real. O endpoint de autenticação e a otimização
   do núcleo de viewport permanecem fora deste corte.
 
+- **E16 — otimização da viewport planejada e pronta para execução (2026-09-09):**
+  o diagnóstico de ~2,6 s por segmento foi convertido em um runbook de 10
+  etapas/78 subetapas. O `mouseMove` contínuo passará a publicar um modelo
+  primitivo e o `gw` desenhará o preview sem nós; picking completo ficará apenas
+  no clique. Depois desse gate, o commit usará contexto preparado uma vez por
+  cadeia, um Undo e rollback integral. O plano inclui contratos de função,
+  sentinelas de cena, lifecycle de callback, metas, regressões, instalação e
+  critérios de parada. Implementação ainda não iniciada. Plano:
+  `plans/2026-09-09-e16-otimizacao-preview-commit-viewport.md`; ADR 0025.
+
 - **Gate de render adiado durante a E15:** o commit `5844730` permanece instalado
   e validado estruturalmente, mas o gate manual da tela WPF não é prioridade
   enquanto a apresentação é substituída.
@@ -202,17 +212,24 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Concluir o gate E15 no Max 2026:** abrir o Max com a instalação ativa,
-  validar Login → Criar e as páginas sem refresh implícito, repetir min/max/close,
-  executar uma cena descartável com cotas de planta e fachada, testar 20 sessões
-  de MouseTool e registrar o soak de viewport. Se houver falha, corrigir somente
-  a transição/bridge Qt; não reintroduzir WPF nem misturar otimização do núcleo.
-  O endpoint de autenticação real será conectado depois de seu contrato ser
-  fornecido. Max 2021/2024 e demais versões continuam adiados.
+- **Executar E16.0 e E16.1 sem alterar o produto:** abrir a branch
+  `feature/e16-gw-preview-performance` a partir do `develop` atual que contém o
+  plano (a base funcional inspecionada foi `b2ce56b`), congelar a baseline em
+  duas fixtures e criar sentinelas que provem mutação de cena e picking pesado
+  durante `mouseMove`. Depois executar o spike `gw` isolado da E16.2; só
+  integrar o MouseTool quando os gates do spike estiverem verdes.
+  Max Batch deve ser sequencial, o Max deve reiniciar após qualquer instalação,
+  e `main` permanece intacta. Runbook completo:
+  `plans/2026-09-09-e16-otimizacao-preview-commit-viewport.md`.
 
-- **E14 suspensa durante a E15:** os gates de fachada não serão retomados dentro
-  do WPF. Depois do corte Qt, serão repetidos pela interface nova; o trabalho de
-  peso da viewport/commit continuará em marco separado.
+- **Gate E15 preservado como regressão da E16:** validar Login → Criar,
+  navegação local, min/max/close e fechamento durante MouseTool dentro da matriz
+  E16.8/E16.9. Não alterar a UI Qt nem reintroduzir WPF neste marco. Endpoint de
+  autenticação e demais versões do Max continuam adiados.
+
+- **E14 suspensa durante a E16:** os gates funcionais finais de fachada serão
+  repetidos pela interface Qt como regressão da otimização, mas não haverá
+  expansão funcional até o preview/commit cumprir os gates da E16.
 
 - **E14:** executar os gates E14.6–E14.7 na branch `feature/e14-facade-planes`:
   repetir E10.1 contra o candidato instalado, validar reancoragem/bake/órfãs e
@@ -251,6 +268,14 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-09 — Criar plano extremamente detalhado para a otimização das
+  cotas:** criada a E16 em 10 etapas/78 subetapas, com diagnóstico do caminho
+  quente, separação formal entre hover leve e picking completo, arquitetura de
+  `OverlayModel`/`gw`, contexto preparado de commit, 15 guardrails, sentinelas,
+  métricas, matriz de regressão, rollout/rollback, critérios GO/STOP e prompt de
+  handoff. Somente documentação; implementação não iniciada. Evidências:
+  `plans/2026-09-09-e16-otimizacao-preview-commit-viewport.md` e ADR 0025.
 
 - **2026-09-09 — Renovar o plano com reescrita total da UI, Login e suporte
   2021–2027:** definida E15 com 10 etapas/72 subetapas. A apresentação será

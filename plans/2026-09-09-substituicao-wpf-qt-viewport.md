@@ -2,11 +2,13 @@
 
 Data: 2026-09-09
 
-Status: escopo ajustado; transição WPF → Qt é a prioridade exclusiva
+Status: histórico; transição executada na E15 e desempenho extraído para E16
 
 > Este plano misto foi substituído, para execução, por
-> `2026-09-09-e15-transicao-wpf-python-qt.md`. As seções S2/S4 permanecem aqui
-> apenas como backlog futuro de desempenho da viewport.
+> `2026-09-09-e15-transicao-wpf-python-qt.md`. As seções S2/S4 foram
+> posteriormente autorizadas e detalhadas para execução em
+> `2026-09-09-e16-otimizacao-preview-commit-viewport.md`. Para desempenho, a
+> E16 é a fonte de verdade; não executar S2/S4 diretamente deste documento.
 
 Escopo: substituir a interface WPF sem reescrever o núcleo de cotas E1–E14
 
@@ -245,10 +247,10 @@ memória estabilizada após repetir o fluxo; E14.6–E14.7 podem então ser reto
 - Não instalar a migração sobre a única cópia da cena de produção; usar cópia
   descartável e pacote/backup recuperável.
 
-## Ordem de entrega sugerida
+## Ordem de entrega sugerida — registro histórico
 
-No recorte atual, executar a parte de contrato/chave de recuperação de S1 e o
-shell Qt de S3; depois migrar as quatro telas de S5 e executar somente os gates
-de lifecycle/portabilidade de S6. S2 e S4 ficam explicitamente adiadas. Quando
-o usuário autorizar o trabalho de desempenho, S2 remove o preview com nós e S4
-trata a pausa longa no commit.
+A ordem abaixo foi cumprida parcialmente pela E15: contrato/bridge, shell Qt e
+telas foram reescritos para o Max 2026. O usuário autorizou depois o trabalho de
+desempenho. S2/S4 não devem ser retomadas por este resumo; foram expandidas com
+guardrails, testes e sequência própria na E16. Compatibilidade com outros hosts
+e modo seguro nativo continuam fora da execução atual.

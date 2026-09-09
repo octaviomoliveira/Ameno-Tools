@@ -13,5 +13,6 @@ Arquivos atuais:
 - [E14 — Planos de cotação e fachadas](2026-09-08-e14-planos-de-cotacao-fachadas.md): generalização do núcleo para planos ortográficos, dividida em sete subetapas; implementação não iniciada.
 - [Substituição do WPF e isolamento da viewport](2026-09-09-substituicao-wpf-qt-viewport.md): recomendação PySide6/Qt + overlay `gw`, modo seguro nativo e migração em seis etapas.
 - [E15 — Transição integral WPF → Python/Qt](2026-09-09-e15-transicao-wpf-python-qt.md): execução ativa da UI do zero, login por token e janela nativa, certificada primeiro apenas no Max 2026.
+- [E16 — Preview `gw` e commit previsível](2026-09-09-e16-otimizacao-preview-commit-viewport.md): plano executável em 10 etapas/78 subetapas para retirar toda mutação e picking pesado do `mouseMove`, desenhar o preview contínuo com `gw` e reduzir o commit sem quebrar âncoras, fachada, Undo ou render.
 
 Ao abrir um marco novo, criar um arquivo datado (`AAAA-MM-DD-assunto.md`) e incluir o link no `PLAN.md` quando ele for relevante para continuidade.
