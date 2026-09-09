@@ -138,6 +138,18 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   ZIP `dist/AmenoTools-0.0.1-stability-hotfix-20260908.zip`, SHA-256
   `75B4F0209B5CBB689F7D602D54FE8D19F50345B8D092DA7F6DA73F1DFBE60869`.
 
+- **Verificação de peso das cotas verticais (2026-09-08):** `verticalLayout()`
+  usa as mesmas três projeções, três coordenadas e operações vetoriais do
+  caminho horizontal; não há laço ou consulta de cena exclusivo do modo
+  Vertical. O benchmark isolado `tests/maxscript/test_vertical_performance.ms`
+  mediu 5.000 layouts e quatro atualizações de preview por modo, com diferença
+  inferior a 10% e custo absoluto de aproximadamente 0,3 ms por layout e 1 ms
+  por segmento no preview. Na cena real, o commit vertical de 2 segmentos levou
+  5,4 s (2,7 s/segmento), contra 18,1 s para 7 segmentos horizontais
+  (2,6 s/segmento). O gargalo confirmado é a criação/atualização de spline,
+  TextPlus, terminais e consultas de picking da viewport, comum aos dois modos;
+  não foi encontrado cálculo vertical pesado.
+
 - **Rearquitetura da interface em avaliação (2026-09-08):** a análise confirmou
   que a falha não está restrita ao shell WPF: `AmenoDimensionContinuousTool`
   chama `refreshChainPreview` em eventos de `mouseMove`, e o preview atualiza
