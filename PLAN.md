@@ -1,7 +1,7 @@
 # Plano compartilhado — Ameno Tools
 
 > Fonte de continuidade do projeto para qualquer pessoa ou agente (incluindo Antigravity).
-> Atualizado: 2026-09-08
+> Atualizado: 2026-09-09
 
 ## Regra de trabalho
 
@@ -150,17 +150,17 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   TextPlus, terminais e consultas de picking da viewport, comum aos dois modos;
   não foi encontrado cálculo vertical pesado.
 
-- **Rearquitetura da interface em avaliação (2026-09-08):** a análise confirmou
+- **Rearquitetura da interface recomendada (2026-09-09):** a análise confirmou
   que a falha não está restrita ao shell WPF: `AmenoDimensionContinuousTool`
   chama `refreshChainPreview` em eventos de `mouseMove`, e o preview atualiza
-  spline, `TextPlus` e terminais durante a interação. A proposta é separar
-  definitivamente UI, interação e representação: manter os serviços geométricos
-  e CA v6; substituir o shell WPF por um `rolloutFloater` nativo persistente
-  (controles criados uma vez, sem reparenting); e desenhar o preview transitório
-  apenas com `gw`/redraw callback, criando spline/Texto/mesh somente no commit.
-  Qt/PySide6 fica como alternativa de longo prazo, pois o ambiente já carrega
-  PySide6, mas exige um host e empacotamento próprios. A escolha ainda aguarda
-  aprovação; nenhuma implementação foi iniciada.
+  spline, `TextPlus` e terminais durante a interação. A rota recomendada passa a
+  ser PySide6/Qt como shell principal, `rollout` nativo como modo seguro e
+  preview transitório exclusivamente por `gw`/redraw callback. Os serviços
+  geométricos e CA v6 permanecem; spline/TextPlus/mesh só são criados no commit.
+  O log de 2026-09-09 mediu novamente ~2,6 s/segmento nos modos Vertical e
+  Horizontal, confirmando que trocar apenas a UI não resolve a viewport. Plano
+  completo: `plans/2026-09-09-substituicao-wpf-qt-viewport.md`. Nenhuma
+  implementação desta migração foi iniciada.
 
 - **Prioridade atual — validar manualmente o hotfix de render/Isolate Selection:** o commit `5844730` está instalado em `ApplicationPlugins`; 41/41 arquivos de conteúdo e o manifesto conferem por SHA-256 e o smoke instalado passou com 1 PASS/0 FAIL. Reiniciar o Max, deixar o Isolate Selection desligado, confirmar a caixa `Renderizar somente as cotas (sem a planta)` e testar o PNG da cena real; o Ameno deverá ocultar a planta temporariamente e restaurar a cena.
 
@@ -189,14 +189,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Estabilizar a interface antes de novos gates E14:** congelar o WPF atual para
-  não introduzir novas telas; prototipar primeiro a rota nativa com uma única
-  janela persistente e quatro grupos fixos, mantendo os mesmos comandos do
-  `AmenoApp`. Em paralelo, trocar o preview de alta frequência por marcadores e
-  linhas `gw` leves; o commit continua usando a representação persistente. Medir
-  `Responding`, memória e paginação em 1/10/50 movimentos e verificar cancelamento,
-  Undo e troca de cena antes de migrar Estilos/Editar/Render. Só depois decidir
-  se ainda vale investir em Qt/PySide6.
+- **Executar S1–S2 da substituição WPF antes de novos gates E14:** congelar o
+  WPF, criar a fachada `AmenoUiBridge` e o rollout de recuperação; depois ampliar
+  o overlay `gw` já existente para representar toda a cota sem criar nós durante
+  `mouseMove`. Só após o gate de 1.000 movimentos sem temporários iniciar o shell
+  PySide6/Qt (S3). O plano total possui 6 etapas e 23 subetapas; E14.6–E14.7 ficam
+  suspensas até a viewport e o lifecycle passarem os gates de soak.
 
 - **Antes de retomar o gate E14:** tratar o incidente acima em três frentes: (1)
   limpar/reparentar explicitamente o filho WPF antes de reutilizar uma aba em
@@ -233,12 +231,24 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Decisões que ainda exigem validação
 
+- Aprovação do corte arquitetural WPF → PySide6/Qt + preview `gw`, com rollout
+  nativo restrito ao modo de recuperação.
 - Versões mínimas de Corona e V-Ray disponíveis no ambiente real.
 - Se a interface inicial será somente em português ou já bilíngue.
 - Serviço/visibilidade do repositório Git remoto e política de acesso.
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-09 — Procurar uma substituição sustentável para o WPF após novo
+  travamento:** o log mais recente não registrou nova exceção de reparenting;
+  registrou commits Vertical e Horizontal com o mesmo custo de aproximadamente
+  2,6 s por segmento na thread principal. A documentação Autodesk e o ambiente
+  local confirmam PySide6/Qt como stack suportada. Foi recomendada a arquitetura
+  PySide6/Qt + overlay `gw`, com rollout seguro, criação de nós somente no commit
+  e migração em 6 etapas/23 subetapas. Somente planejamento; código e instalação
+  não foram alterados. Evidência:
+  `plans/2026-09-09-substituicao-wpf-qt-viewport.md`.
 
 - **2026-09-08 — Corrigir comando de reinício no Scripting Listener:** o bloco
   multilinha anterior foi rejeitado pelo parser do Listener (`at ), expected
