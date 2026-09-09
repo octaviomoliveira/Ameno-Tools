@@ -30,6 +30,9 @@ trabalho, polling ou bloqueios a esse caminho.
 - A navegação lateral é somente local: nenhum `show_page` chama `pymxs` ou
   MAXScript. Cada página possui atualização explícita; a primeira leitura da
   cena só ocorre depois de o token ser aceito.
+- A transição Login → App não consulta mais a cena de forma síncrona. Depois da
+  autenticação local, o shell aparece imediatamente; `refreshSnapshot` fica
+  restrito aos botões explícitos de atualização de cada página.
 - O pacote instalado e o ZIP alpha removem os sete módulos WPF e caches Python;
   o histórico Git e o backup anterior continuam sendo o rollback recuperável.
 - Os gates automatizados de Python 3.11/PySide6, MAXScript, bootstrap, fachada

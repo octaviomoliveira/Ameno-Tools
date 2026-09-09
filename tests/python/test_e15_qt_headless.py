@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+from types import SimpleNamespace
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -13,6 +14,7 @@ from PySide6.QtGui import QImage  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from ameno_ui.models import AuditSnapshot, CreateSnapshot, SceneSnapshot, StyleSnapshot  # noqa: E402
+from ameno_ui.application import AmenoApplication  # noqa: E402
 from ameno_ui.styles_page import PreviewWidget  # noqa: E402
 from ameno_ui.window import AmenoMainWindow  # noqa: E402
 
@@ -70,4 +72,43 @@ def test_preview_paints_without_scene_objects() -> None:
     image.fill(0)
     preview.render(image)
     assert not image.isNull()
+    app.processEvents()
+
+
+def test_login_enters_app_without_blocking_on_scene_refresh() -> None:
+    app = QApplication.instance() or QApplication([])
+
+    class GuardBridge:
+        def refresh(self):
+            raise AssertionError("login não pode atualizar a cena de forma síncrona")
+
+    class FakeStatus:
+        def __init__(self) -> None:
+            self.text = ""
+
+        def setText(self, value: str) -> None:  # noqa: N802 - Qt-like fake
+            self.text = value
+
+    class FakeWindow:
+        def __init__(self) -> None:
+            self.calls = []
+            self.shell = SimpleNamespace(pages={"create": SimpleNamespace(status=FakeStatus())})
+
+        def set_authenticating(self, busy: bool) -> None:
+            self.calls.append(("busy", busy))
+
+        def report_login(self, message: str, error: bool = False) -> None:
+            self.calls.append(("login", message, error))
+
+        def show_application(self, page: str) -> None:
+            self.calls.append(("show", page))
+
+    coordinator = AmenoApplication()
+    coordinator.bridge = GuardBridge()
+    coordinator.window = FakeWindow()
+    coordinator.authenticate("E15-TESTE")
+
+    assert coordinator.auth.authenticated
+    assert ("show", "create") in coordinator.window.calls
+    assert coordinator.window.shell.pages["create"].status.text.startswith("Sessão aberta")
     app.processEvents()

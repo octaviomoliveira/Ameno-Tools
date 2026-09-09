@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Optional
 
 from .auth import AuthSession, LocalTokenGateway
-from .bridge import BridgeError, UiBridge
+from .bridge import UiBridge
 from .qt_compat import QtWidgets
 from .window import AmenoMainWindow
 
@@ -39,15 +39,16 @@ class AmenoApplication:
         result = self.auth.authenticate(token, self.gateway)
         self.window.set_authenticating(False)
         if result.success:
-            self.window.report_login(result.message)
-            try:
-                snapshot = self.bridge.refresh()
-                self.window.shell.pages["create"].load_styles(snapshot["styles"])
-                self.window.shell.pages["create"].load_snapshot(snapshot)
-            except BridgeError as exc:
-                self.window.report_login("Sessão aberta; atualização pendente: %s" % exc.message, error=False)
             page = self._requested_page if self._requested_page not in ("", "login", "create-continuous") else "create"
+            # Trocar para o App antes de tocar na cena. Uma leitura síncrona de
+            # refreshSnapshot pode ser pesada ou aguardar o host; ela nunca
+            # pode impedir o usuário de sair da tela de Login. Cada página
+            # oferece sua própria atualização explícita depois que o shell
+            # está visível.
             self.window.show_application(page)
+            self.window.shell.pages["create"].status.setText(
+                "Sessão aberta. Atualize o estado da cena quando necessário."
+            )
         else:
             self.window.report_login(result.message, error=True)
 
