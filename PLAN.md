@@ -193,7 +193,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`.
   O aceite gráfico de resize/DPI/soak e o teste com profissional sem instrução
   permanecem como etapa manual; nenhuma promoção para `develop` ou `main` foi
-  feita. Plano: `plans/2026-09-09-e17-identidade-ux-qt.md`.
+  feita. Commit local de encerramento: `ae3e576`. Plano:
+  `plans/2026-09-09-e17-identidade-ux-qt.md`.
 
 - **Gate de render adiado durante a E15:** o commit `5844730` permanece instalado
   e validado estruturalmente, mas o gate manual da tela WPF não é prioridade

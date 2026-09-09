@@ -43,7 +43,7 @@ Estrutura: 11 etapas e 86 subetapas, executadas na ordem deste documento.
 | E17.6 — Cotar | concluído | draft local, uma chamada de settings no início e prompts operacionais; regressão E16 verde |
 | E17.7 — páginas auxiliares | concluído | bridge E15 e host Qt validam Criar/Estilos/Editar/Render/Configuração |
 | E17.8 — primeiro uso/erros | concluído | mensagens acionáveis em `common.py`, ajuda sem leitura da cena, diagnóstico sem token |
-| E17.9 — regressões | concluído | `work/e17-gates/summary.txt`: 18/18 MaxScript; `run-python-gates.py`: 17 testes; ZIP canary validado sem WPF/cache |
+| E17.9 — regressões | concluído | `work/e17-gates/summary.txt`: 18/18 MaxScript; `run-python-gates.py`: 17 testes; ZIP canary validado sem WPF/cache; commit `ae3e576` |
 | E17.10.1–E17.10.2 — canary | concluído | backup `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`; instalação com Max fechado |
 | E17.10.3–E17.10.6 — aceite humano | pendente | exige Max interativo, redimensionamento, DPI, cotação real e profissional sem instrução |
 | E17.10.7 — promoção | bloqueado por política | nenhuma alteração automática em `develop`/`main`; requer autorização explícita |
