@@ -251,6 +251,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   completo do Max para entrar em memória. Alterações locais estão na branch
   `feature/e14-facade-planes`; nenhuma publicação no GitHub foi executada.
 
+- **2026-09-08 — Verificação após o reinício:** o Max carregou a cena real e
+  permaneceu responsivo (`Responding=True`); o log do Ameno registrou a abertura
+  das abas Criar e Render sem exceção WPF. A carga da cena levou cerca de dois
+  minutos e elevou o processo para aproximadamente 15 GB, portanto a primeira
+  espera após abrir um arquivo grande não deve ser confundida com o travamento
+  do plugin.
+
 - **2026-09-08 — Orientar reinício do plugin pelo Scripting Listener:** para uma
   recarga dentro do 3ds Max, primeiro executar `AmenoApp.shutdown()` enquanto os
   objetos atuais ainda estão referenciados, depois `AmenoBootstrap.start()` e
