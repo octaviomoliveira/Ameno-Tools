@@ -14,5 +14,6 @@ Arquivos atuais:
 - [Substituição do WPF e isolamento da viewport](2026-09-09-substituicao-wpf-qt-viewport.md): recomendação PySide6/Qt + overlay `gw`, modo seguro nativo e migração em seis etapas.
 - [E15 — Transição integral WPF → Python/Qt](2026-09-09-e15-transicao-wpf-python-qt.md): execução ativa da UI do zero, login por token e janela nativa, certificada primeiro apenas no Max 2026.
 - [E16 — Preview `gw` e commit previsível](2026-09-09-e16-otimizacao-preview-commit-viewport.md): plano executável em 10 etapas/78 subetapas para retirar toda mutação e picking pesado do `mouseMove`, desenhar o preview contínuo com `gw` e reduzir o commit sem quebrar âncoras, fachada, Undo ou render.
+- [E17 — Identidade Ameno e experiência guiada Qt](2026-09-09-e17-identidade-ux-qt.md): plano executável em 11 etapas/86 subetapas para aplicar a identidade do site, reduzir a carga de botões, traduzir intenção profissional para parâmetros do Max e orientar o primeiro uso sem regredir o E16.
 
 Ao abrir um marco novo, criar um arquivo datado (`AAAA-MM-DD-assunto.md`) e incluir o link no `PLAN.md` quando ele for relevante para continuidade.

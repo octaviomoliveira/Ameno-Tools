@@ -656,13 +656,15 @@ struct AmenoDimensionContinuousToolService
         (
             #collecting:
                 if n == 0 then
-                    "Ameno Cota Contínua: clique o 1º ponto  (Esc cancela)"
+                    "Ameno Cotas · Passo 1: clique no primeiro vértice · S Snap · Esc cancela"
+                else if n == 1 then
+                    "Ameno Cotas · Passo 2: clique no próximo vértice · Esc cancela"
                 else
-                    ("Ameno Cota Contínua: " + n as string + " referência(s) · clique na viewport para confirmar")
+                    ("Ameno Cotas · " + n as string + " pontos · continue nos vértices ou clique no vazio para posicionar · Esc cancela")
             #committing:
-                "Ameno Cota Contínua: preparando a cadeia"
+                "Ameno Cotas · Criando a sequência…"
             default:
-                "Ameno Cota Contínua: pronto"
+                "Ameno Cotas · Pronto"
         )
     ),
 
@@ -1731,7 +1733,7 @@ struct AmenoDimensionContinuousToolService
         try
         (
             toolResult = startTool AmenoDimensionContinuousMouseTool \
-                prompt:"Ameno Cota Contínua: clique vértices · clique viewport confirma · Esc cancela" snap:#3D
+                prompt:"Ameno Cotas · Passo 1: clique no primeiro vértice · S Snap · Esc cancela" snap:#3D
             diagnosticTrace #startToolReturned #("toolResult=" + (toolResult as string), "lastIds=" + (lastSessionIds.count as string))
         )
         catch
@@ -1755,7 +1757,7 @@ AmenoDimensionContinuousTool = AmenoDimensionContinuousToolService()
 
 -- ── Mouse Tool block ──────────────────────────────────────────────────────────
 
-tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cota Contínua: clique vértices · clique viewport confirma · Esc cancela"
+tool AmenoDimensionContinuousMouseTool prompt:"Ameno Cotas · Passo 1: clique no primeiro vértice · S Snap · Esc cancela"
 (
     on start do
     (

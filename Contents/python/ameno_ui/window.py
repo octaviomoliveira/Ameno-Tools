@@ -5,49 +5,68 @@ from __future__ import annotations
 from typing import Callable, Dict, Optional
 
 from .bridge import BridgeError, UiBridge
-from .common import button, set_message
+from .assets import icon
+from .components import BrandImage
 from .config_page import ConfigPage
 from .create_page import CreatePage
 from .edit_page import EditPage
 from .login_page import LoginPage
 from .models import SceneSnapshot
+from .preferences import settings
 from .qt_compat import QtCore, QtGui, QtWidgets, max_parent
 from .render_page import RenderPage
 from .styles_page import StylesPage
+from .theme import apply_to
 
 
 class AppShell(QtWidgets.QWidget):
     def __init__(self, bridge: UiBridge, logout: Callable[[], None]) -> None:
         super().__init__()
+        self.setObjectName("AppShell")
         self.pages: Dict[str, QtWidgets.QWidget] = {}
         self.page_views: Dict[str, QtWidgets.QScrollArea] = {}
+        self._nav_by_key: Dict[str, QtWidgets.QPushButton] = {}
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         sidebar = QtWidgets.QFrame()
         sidebar.setObjectName("Sidebar")
-        sidebar.setMinimumWidth(170)
+        sidebar.setFixedWidth(184)
         side_layout = QtWidgets.QVBoxLayout(sidebar)
-        side_layout.setContentsMargins(14, 18, 14, 14)
-        brand = QtWidgets.QLabel("AMENO")
-        brand.setObjectName("SidebarBrand")
-        side_layout.addWidget(brand)
-        side_layout.addSpacing(12)
+        side_layout.setContentsMargins(13, 18, 13, 14)
+        brand = BrandImage("brand/ameno-symbol-red.png", 34, 34, fallback="O")
+        brand.setAccessibleName("Ameno")
+        side_layout.addWidget(brand, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
+        product = QtWidgets.QLabel("COTAS  /  MAX 2026")
+        product.setObjectName("Meta")
+        side_layout.addWidget(product)
+        side_layout.addSpacing(18)
         self.nav = QtWidgets.QButtonGroup(self)
         self.nav.setExclusive(True)
         content = QtWidgets.QStackedWidget()
         content.setObjectName("ContentStack")
         self.content = content
-        for key, label in (("create", "Criar"), ("styles", "Estilos"), ("edit", "Editar"), ("render", "Render"), ("config", "Configuração")):
+        for key, label in (("create", "Cotar"), ("styles", "Aparência"), ("edit", "Revisar"), ("render", "Exportar")):
             page_button = QtWidgets.QPushButton(label)
             page_button.setCheckable(True)
             page_button.setMinimumHeight(36)
+            page_button.setProperty("nav", True)
             self.nav.addButton(page_button)
+            self._nav_by_key[key] = page_button
             side_layout.addWidget(page_button)
             page_button.clicked.connect(lambda checked=False, name=key: self.show_page(name))
         side_layout.addStretch(1)
-        hint = QtWidgets.QLabel("Interface Qt\nMax 2026")
-        hint.setObjectName("Muted")
-        side_layout.addWidget(hint)
+        help_button = QtWidgets.QPushButton("?  Como começar")
+        help_button.setProperty("nav", True)
+        help_button.clicked.connect(self.show_help)
+        side_layout.addWidget(help_button)
+        config_button = QtWidgets.QPushButton("Configuração")
+        config_button.setCheckable(True)
+        config_button.setMinimumHeight(36)
+        config_button.setProperty("nav", True)
+        self.nav.addButton(config_button)
+        self._nav_by_key["config"] = config_button
+        config_button.clicked.connect(lambda checked=False: self.show_page("config"))
+        side_layout.addWidget(config_button)
         layout.addWidget(sidebar)
 
         self.pages["create"] = CreatePage(bridge)
@@ -76,12 +95,16 @@ class AppShell(QtWidgets.QWidget):
         page = self.pages.get(name, self.pages["create"])
         view = self.page_views.get(name, self.page_views["create"])
         self.content.setCurrentWidget(view)
-        for button_widget in self.nav.buttons():
-            button_widget.setChecked(button_widget.text().lower() == {"create": "criar", "styles": "estilos", "edit": "editar", "render": "render", "config": "configuração"}.get(name))
+        for key, button_widget in self._nav_by_key.items():
+            button_widget.setChecked(key == name)
         if refresh and hasattr(page, "refresh"):
             # Callers use this only after an explicit command/authentication;
             # sidebar navigation itself remains local and never touches Max.
             page.refresh()
+
+    def show_help(self) -> None:
+        self.show_page("create")
+        self.pages["create"].show_guide()
 
 
 class AmenoMainWindow(QtWidgets.QMainWindow):
@@ -96,6 +119,7 @@ class AmenoMainWindow(QtWidgets.QMainWindow):
         self.setWindowFlags(QtCore.Qt.WindowType.Window | QtCore.Qt.WindowType.WindowMinimizeButtonHint | QtCore.Qt.WindowType.WindowMaximizeButtonHint | QtCore.Qt.WindowType.WindowCloseButtonHint)
         self.setMinimumSize(780, 560)
         self.resize(980, 720)
+        self.setWindowIcon(icon("brand/ameno-symbol-red.png"))
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose, True)
         self._authenticate = authenticate
         self._logout_callback = logout
@@ -106,26 +130,29 @@ class AmenoMainWindow(QtWidgets.QMainWindow):
         self.stack.addWidget(self.shell)
         self.setCentralWidget(self.stack)
         self.stack.setCurrentWidget(self.login_page)
+        # Keep the host palette untouched: the stylesheet belongs only to
+        # this top-level Ameno window and its descendants.
+        apply_to(self)
         self._restore_geometry()
 
     def _restore_geometry(self) -> None:
-        settings = QtCore.QSettings("Ameno", "AmenoTools")
-        geometry = settings.value("window/geometry")
+        preferences = settings()
+        geometry = preferences.value("window/geometry")
         if geometry is not None:
             try:
                 self.restoreGeometry(geometry)
             except Exception:
                 pass
-        maximized = settings.value("window/maximized", False)
+        maximized = preferences.value("window/maximized", False)
         if isinstance(maximized, str):
             maximized = maximized.strip().lower() in ("1", "true", "yes", "on")
         if bool(maximized):
             self.setWindowState(self.windowState() | QtCore.Qt.WindowState.WindowMaximized)
 
     def _save_geometry(self) -> None:
-        settings = QtCore.QSettings("Ameno", "AmenoTools")
-        settings.setValue("window/geometry", self.saveGeometry())
-        settings.setValue("window/maximized", self.isMaximized())
+        preferences = settings()
+        preferences.setValue("window/geometry", self.saveGeometry())
+        preferences.setValue("window/maximized", self.isMaximized())
 
     def show_login(self, message: str = "") -> None:
         self.stack.setCurrentWidget(self.login_page)

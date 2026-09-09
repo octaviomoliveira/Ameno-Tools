@@ -356,10 +356,10 @@ struct AmenoDimensionToolService
         local promptText =
             case stage of
             (
-                #pointA: "Ameno Dimensions: clique o ponto A (Esc/botão direito cancela)"
-                #pointB: "Ameno Dimensions: clique o ponto B"
-                #offset: "Ameno Dimensions: clique para posicionar a linha de cota"
-                default: "Ameno Dimensions: pronto"
+                #pointA: "Ameno Cotas · Passo 1/3: clique no primeiro ponto · S Snap · Esc cancela"
+                #pointB: "Ameno Cotas · Passo 2/3: clique no segundo ponto · Esc cancela"
+                #offset: "Ameno Cotas · Passo 3/3: clique para posicionar a linha da cota · Esc cancela"
+                default: "Ameno Cotas · Pronto"
             )
 
         try (replacePrompt promptText) catch ()
@@ -670,7 +670,7 @@ struct AmenoDimensionToolService
         local toolResult = #abort
         try
         (
-            toolResult = startTool AmenoDimensionMouseTool prompt:"Ameno Dimensions: clique A, B e o afastamento" snap:#3D
+            toolResult = startTool AmenoDimensionMouseTool prompt:"Ameno Cotas · Passo 1/3: clique no primeiro ponto · S Snap · Esc cancela" snap:#3D
         )
         catch
         (
@@ -686,7 +686,7 @@ struct AmenoDimensionToolService
 
 AmenoDimensionTool = AmenoDimensionToolService()
 
-tool AmenoDimensionMouseTool prompt:"Ameno Dimensions: clique A, B e o afastamento"
+tool AmenoDimensionMouseTool prompt:"Ameno Cotas · Passo 1/3: clique no primeiro ponto · S Snap · Esc cancela"
 (
     on start do
     (

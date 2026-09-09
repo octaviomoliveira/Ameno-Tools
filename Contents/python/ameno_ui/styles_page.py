@@ -6,7 +6,8 @@ from dataclasses import replace
 from typing import Dict, List, Optional
 
 from .bridge import BridgeError, UiBridge
-from .common import button, group, message_label, scroll, set_message
+from .common import button, group, message_label, set_message
+from .components import Disclosure, PageHeader, SectionHeading
 from .models import StyleSnapshot
 from .qt_compat import QtCore, QtGui, QtWidgets
 
@@ -42,7 +43,7 @@ class PreviewWidget(QtWidgets.QWidget):
     def paintEvent(self, event) -> None:  # noqa: N802 - Qt API
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
-        bg = QtGui.QColor("#151922" if self._dark else "#f4f5f7")
+        bg = QtGui.QColor("#121212" if self._dark else "#E8E8E0")
         painter.fillRect(self.rect(), bg)
         style = self._style or StyleSnapshot("default", "Arquitetônico")
         fg = color_text_to_qcolor(style.annotation_color)
@@ -84,38 +85,54 @@ class PreviewWidget(QtWidgets.QWidget):
 class StylesPage(QtWidgets.QWidget):
     def __init__(self, bridge: UiBridge) -> None:
         super().__init__()
+        self.setObjectName("StylesPage")
         self.bridge = bridge
         self._styles: List[StyleSnapshot] = []
         self._current: Optional[StyleSnapshot] = None
         self._loading = False
 
         root = QtWidgets.QVBoxLayout(self)
-        root.setContentsMargins(22, 18, 22, 22)
-        title = QtWidgets.QLabel("Estilos")
-        title.setObjectName("PageTitle")
-        root.addWidget(title)
-        root.addWidget(QtWidgets.QLabel("O preview é desenhado em 2D pela própria interface e nunca toca a viewport."), 0)
+        root.setContentsMargins(30, 26, 30, 30)
+        root.setSpacing(14)
+        root.addWidget(
+            PageHeader(
+                "Aparência",
+                "Defina como as cotas serão lidas no desenho. A prévia é local e não toca a viewport.",
+                "ESTILOS",
+            )
+        )
 
         split = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         root.addWidget(split, 1)
 
-        left = QtWidgets.QWidget()
+        left = QtWidgets.QFrame()
+        left.setObjectName("Card")
         left_layout = QtWidgets.QVBoxLayout(left)
+        left_layout.addWidget(SectionHeading("Estilos salvos", "Selecione um estilo para editar."))
         self.list_widget = QtWidgets.QListWidget()
         self.list_widget.setMinimumWidth(190)
         self.list_widget.currentRowChanged.connect(self._select_row)
         left_layout.addWidget(self.list_widget, 1)
-        left_buttons = QtWidgets.QGridLayout()
-        left_buttons.addWidget(button("Novo", self.new_style), 0, 0)
-        left_buttons.addWidget(button("Duplicar", self.duplicate_style), 0, 1)
-        left_buttons.addWidget(button("Excluir", self.delete_style), 1, 0, 1, 2)
+        left_buttons = QtWidgets.QHBoxLayout()
+        self.new_button = button("Novo estilo", self.new_style)
+        self.style_more = QtWidgets.QToolButton()
+        self.style_more.setText("Mais  ···")
+        self.style_more.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.style_menu = QtWidgets.QMenu(self.style_more)
+        self.refresh_action = self.style_menu.addAction("Atualizar lista")
+        self.duplicate_action = self.style_menu.addAction("Duplicar estilo")
+        self.delete_action = self.style_menu.addAction("Excluir estilo…")
+        self.style_more.setMenu(self.style_menu)
+        self.refresh_action.triggered.connect(self.refresh)
+        self.duplicate_action.triggered.connect(self.duplicate_style)
+        self.delete_action.triggered.connect(self.delete_style)
+        left_buttons.addWidget(self.new_button, 1)
+        left_buttons.addWidget(self.style_more)
         left_layout.addLayout(left_buttons)
         split.addWidget(left)
 
         right = QtWidgets.QWidget()
         right_layout = QtWidgets.QVBoxLayout(right)
-        form_box = group("Propriedades")
-        form = QtWidgets.QFormLayout(form_box)
         self.name = QtWidgets.QLineEdit()
         self.font = QtWidgets.QFontComboBox()
         self.font_size = QtWidgets.QDoubleSpinBox()
@@ -152,25 +169,8 @@ class StylesPage(QtWidgets.QWidget):
         self.italic = QtWidgets.QCheckBox("Itálico")
         self.mask = QtWidgets.QCheckBox("Máscara de texto")
         self.annotation_color = button("Cor da cota", self.choose_color)
-        form.addRow("Nome", self.name)
-        form.addRow("Fonte", self.font)
-        form.addRow("Tamanho", self.font_size)
-        form.addRow("Tracking", self.tracking)
-        form.addRow("Afastamento", self.text_gap)
-        form.addRow("Espessura", self.line_thickness)
-        form.addRow("Prolongamento", self.overhang)
-        form.addRow("Recuo", self.extension_gap)
-        form.addRow("Terminal", self.terminal)
-        form.addRow("Tamanho terminal", self.terminal_size)
-        form.addRow("Posição terminal", self.placement)
-        form.addRow("Ângulo", self.terminal_angle)
-        form.addRow("Opções", self.bold)
-        form.addRow("", self.italic)
-        form.addRow("", self.mask)
-        form.addRow("Cor", self.annotation_color)
-        right_layout.addWidget(form_box)
 
-        preview_box = group("Preview 2D")
+        preview_box = group("Prévia 2D")
         preview_layout = QtWidgets.QVBoxLayout(preview_box)
         self.preview = PreviewWidget()
         preview_layout.addWidget(self.preview)
@@ -188,16 +188,59 @@ class StylesPage(QtWidgets.QWidget):
         preview_layout.addLayout(preview_controls)
         right_layout.addWidget(preview_box)
 
+        text_box = group("Texto")
+        text_form = QtWidgets.QFormLayout(text_box)
+        text_form.addRow("Nome do estilo", self.name)
+        text_form.addRow("Fonte", self.font)
+        text_form.addRow("Tamanho", self.font_size)
+        text_form.addRow("Espaçamento", self.tracking)
+        text_form.addRow("Distância da linha", self.text_gap)
+        text_form.addRow("Opções", self.bold)
+        text_form.addRow("", self.italic)
+        text_form.addRow("", self.mask)
+        text_form.addRow("Cor", self.annotation_color)
+        right_layout.addWidget(text_box)
+
+        advanced_host = QtWidgets.QWidget()
+        advanced_host.setObjectName("TransparentHost")
+        advanced_layout = QtWidgets.QHBoxLayout(advanced_host)
+        advanced_layout.setContentsMargins(0, 0, 0, 0)
+        line_box = group("Linhas")
+        line_form = QtWidgets.QFormLayout(line_box)
+        line_form.addRow("Espessura", self.line_thickness)
+        line_form.addRow("Prolongamento", self.overhang)
+        line_form.addRow("Recuo", self.extension_gap)
+        terminal_box = group("Terminais")
+        terminal_form = QtWidgets.QFormLayout(terminal_box)
+        terminal_form.addRow("Tipo", self.terminal)
+        terminal_form.addRow("Tamanho", self.terminal_size)
+        terminal_form.addRow("Posição", self.placement)
+        terminal_form.addRow("Ângulo", self.terminal_angle)
+        advanced_layout.addWidget(line_box, 1)
+        advanced_layout.addWidget(terminal_box, 1)
+        self.advanced = Disclosure("Ajustes de linha e terminais", advanced_host, expanded=False)
+        right_layout.addWidget(self.advanced)
+
         actions = QtWidgets.QHBoxLayout()
-        actions.addWidget(button("Atualizar lista", self.refresh))
-        actions.addWidget(button("Salvar estilo", self.save_style, primary=True))
-        actions.addWidget(button("Aplicar selecionadas", self.apply_selected))
-        actions.addWidget(button("Atualizar todas", self.apply_all))
+        self.save_button = button("Salvar alterações", self.save_style, primary=True)
+        self.apply_button = QtWidgets.QToolButton()
+        self.apply_button.setText("Aplicar estilo  ▾")
+        self.apply_button.setMinimumHeight(40)
+        self.apply_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.apply_menu = QtWidgets.QMenu(self.apply_button)
+        self.apply_selected_action = self.apply_menu.addAction("Aplicar às cotas selecionadas")
+        self.apply_all_action = self.apply_menu.addAction("Aplicar a todas as cotas")
+        self.apply_button.setMenu(self.apply_menu)
+        self.apply_selected_action.triggered.connect(self.apply_selected)
+        self.apply_all_action.triggered.connect(self.apply_all)
+        actions.addWidget(self.save_button, 1)
+        actions.addWidget(self.apply_button)
         right_layout.addLayout(actions)
         split.addWidget(right)
         split.setSizes([210, 600])
 
         self.status = message_label()
+        self.status.setText("Selecione um estilo ou atualize a lista para começar.")
         root.addWidget(self.status)
 
         self._connect_dirty_signals()

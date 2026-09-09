@@ -1,103 +1,175 @@
-"""Stable Create page: local controls plus explicit bridge commands only."""
+"""Guided quotation flow with local drafts and explicit scene commands."""
 
 from __future__ import annotations
 
 from typing import Callable, Dict, List, Optional
 
 from .bridge import BridgeError, UiBridge
-from .common import button, group, message_label, scroll, set_message
+from .common import button, group, message_label, set_message
+from .components import ChoiceGroup, Disclosure, PageHeader, SectionHeading, StatusPill
 from .models import CreateSnapshot, SceneSnapshot, StyleSnapshot
+from .preferences import settings
 from .qt_compat import QtCore, QtWidgets
 
 
 class CreatePage(QtWidgets.QWidget):
+    """The main flow: intent first, advanced formatting only on demand."""
+
     def __init__(self, bridge: UiBridge) -> None:
         super().__init__()
+        self.setObjectName("CreatePage")
         self.bridge = bridge
         self._styles: List[StyleSnapshot] = []
         self._pending_action: Optional[str] = None
+        self._preferences = settings()
 
         root = QtWidgets.QVBoxLayout(self)
-        root.setContentsMargins(22, 18, 22, 22)
-        title = QtWidgets.QLabel("Criar cotas")
-        title.setObjectName("PageTitle")
-        root.addWidget(title)
-        subtitle = QtWidgets.QLabel("Escolha o plano e o modo. A viewport só é consultada ao executar ou atualizar.")
-        subtitle.setObjectName("Muted")
-        subtitle.setWordWrap(True)
-        root.addWidget(subtitle)
+        root.setContentsMargins(30, 26, 30, 30)
+        root.setSpacing(14)
+        root.addWidget(
+            PageHeader(
+                "Cotar",
+                "Escolha o que você quer medir. O Ameno traduz isso para a viewport.",
+                "AMENO COTAS",
+            )
+        )
 
-        scene_box = group("Estado da cena")
-        scene_form = QtWidgets.QFormLayout(scene_box)
-        self.scene_status = QtWidgets.QLabel("Não carregado")
-        self.scene_detail = QtWidgets.QLabel()
-        self.scene_detail.setWordWrap(True)
-        self.count_label = QtWidgets.QLabel("0 cota(s)")
-        scene_form.addRow("Estado", self.scene_status)
-        scene_form.addRow("Detalhe", self.scene_detail)
-        scene_form.addRow("Contagem", self.count_label)
-        root.addWidget(scene_box)
+        self.guide = QtWidgets.QFrame()
+        self.guide.setObjectName("Card")
+        guide_layout = QtWidgets.QVBoxLayout(self.guide)
+        guide_layout.setSpacing(8)
+        guide_layout.addWidget(SectionHeading("Primeira cotação", "Você não precisa conhecer os comandos do 3ds Max."))
+        guide_text = QtWidgets.QLabel(
+            "1. Escolha Planta ou Fachada/Vista.  2. Escolha uma medida ou uma sequência.  "
+            "3. Clique em Iniciar cotação e siga a mensagem da viewport.\n"
+            "Dica: S liga/desliga o Snap · Esc cancela · Ctrl+Z desfaz."
+        )
+        guide_text.setWordWrap(True)
+        guide_layout.addWidget(guide_text)
+        dismiss = button("Entendi", self.hide_guide)
+        dismiss.setProperty("quiet", True)
+        guide_layout.addWidget(dismiss, 0, QtCore.Qt.AlignmentFlag.AlignRight)
+        root.addWidget(self.guide)
 
-        settings_box = group("Parâmetros")
-        form = QtWidgets.QFormLayout(settings_box)
-        self.plane = QtWidgets.QComboBox()
-        self.plane.addItem("Planta (XY)", "worldXY")
-        self.plane.addItem("Fachada / Vista", "viewPlane")
+        intent_box = group("O que você vai cotar?")
+        intent_layout = QtWidgets.QVBoxLayout(intent_box)
+        intent_layout.setSpacing(10)
+        intent_layout.addWidget(SectionHeading("Tipo de medição", "Você pode trocar esta escolha a qualquer momento."))
+        self.tool_choice = ChoiceGroup(
+            (
+                ("Uma medida", "Dois pontos e a posição do texto", "single"),
+                ("Várias medidas", "Uma sequência contínua de segmentos", "continuous"),
+            )
+        )
+        intent_layout.addWidget(self.tool_choice)
+        intent_layout.addSpacing(5)
+        intent_layout.addWidget(SectionHeading("Onde está o desenho?"))
+        self.plane_choice = ChoiceGroup(
+            (
+                ("Planta", "Medições no plano horizontal XY", "worldXY"),
+                ("Fachada ou vista", "Medições alinhadas à vista atual", "viewPlane"),
+            )
+        )
+        intent_layout.addWidget(self.plane_choice)
+        root.addWidget(intent_box)
+
+        details_box = group("")
+        details_form = QtWidgets.QFormLayout(details_box)
+        details_form.setFieldGrowthPolicy(QtWidgets.QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         self.mode = QtWidgets.QComboBox()
-        self.mode.addItem("Alinhada", "aligned")
-        self.mode.addItem("Horizontal", "horizontal")
-        self.mode.addItem("Vertical", "vertical")
+        self.mode.addItem("Direção automática", "aligned")
+        self.mode.addItem("Somente horizontal", "horizontal")
+        self.mode.addItem("Somente vertical", "vertical")
         self.style = QtWidgets.QComboBox()
         self.unit = QtWidgets.QComboBox()
-        for label, value in (("Milímetros", "millimeters"), ("Centímetros", "centimeters"), ("Metros", "meters"), ("Polegadas", "inches")):
+        for label, value in (
+            ("Milímetros", "millimeters"),
+            ("Centímetros", "centimeters"),
+            ("Metros", "meters"),
+            ("Polegadas", "inches"),
+        ):
             self.unit.addItem(label, value)
         self.precision = QtWidgets.QSpinBox()
         self.precision.setRange(0, 4)
         self.precision.setSuffix(" casas")
         self.follow_line = QtWidgets.QCheckBox("Texto acompanha a linha")
         self.follow_line.setChecked(True)
-        form.addRow("Plano", self.plane)
-        form.addRow("Modo", self.mode)
-        form.addRow("Estilo", self.style)
-        form.addRow("Unidade", self.unit)
-        form.addRow("Precisão", self.precision)
-        form.addRow("Orientação", self.follow_line)
-        root.addWidget(settings_box)
+        details_form.addRow("Direção", self.mode)
+        details_form.addRow("Aparência", self.style)
+        details_form.addRow("Unidade", self.unit)
+        details_form.addRow("Precisão", self.precision)
+        details_form.addRow("Texto", self.follow_line)
+        self.details = Disclosure("Ajustar detalhes", details_box, expanded=False)
+        root.addWidget(self.details)
 
-        tool_box = group("Ferramentas")
-        tool_layout = QtWidgets.QGridLayout(tool_box)
-        self.individual = button("Cota individual", self.start_individual, primary=True)
-        self.continuous = button("Cota contínua", self.start_continuous, primary=True)
-        self.prepare = button("Preparar cena", self.prepare_scene)
-        self.refresh_button = button("Atualizar estado", self.refresh)
-        tool_layout.addWidget(self.individual, 0, 0)
-        tool_layout.addWidget(self.continuous, 0, 1)
-        tool_layout.addWidget(self.prepare, 1, 0)
-        tool_layout.addWidget(self.refresh_button, 1, 1)
-        root.addWidget(tool_box)
+        action_box = QtWidgets.QFrame()
+        action_box.setObjectName("Card")
+        action_layout = QtWidgets.QVBoxLayout(action_box)
+        action_layout.setSpacing(10)
+        scene_row = QtWidgets.QHBoxLayout()
+        self.scene_status = StatusPill("Cena não verificada")
+        self.scene_detail = QtWidgets.QLabel("")
+        self.scene_detail.setObjectName("Muted")
+        self.scene_detail.setWordWrap(True)
+        self.count_label = QtWidgets.QLabel("0 cotas")
+        self.count_label.setObjectName("Meta")
+        scene_row.addWidget(self.scene_status)
+        scene_row.addWidget(self.scene_detail, 1)
+        scene_row.addWidget(self.count_label)
+        action_layout.addLayout(scene_row)
 
-        maintenance_box = group("Manutenção")
-        maintenance = QtWidgets.QGridLayout(maintenance_box)
-        self.repair = button("Reparar tudo", self.repair_all)
-        self.delete_selection = button("Deletar seleção", self.delete_selected)
-        self.clear_orphans = button("Limpar órfãs", self.clear_orphan_dimensions)
-        self.delete_all = button("Deletar todas", self.delete_all_dimensions)
-        maintenance.addWidget(self.repair, 0, 0)
-        maintenance.addWidget(self.delete_selection, 0, 1)
-        maintenance.addWidget(self.clear_orphans, 1, 0)
-        maintenance.addWidget(self.delete_all, 1, 1)
-        root.addWidget(maintenance_box)
+        button_row = QtWidgets.QHBoxLayout()
+        self.start_button = button("Iniciar cotação", self.start_selected, primary=True)
+        self.start_button.setMinimumWidth(260)
+        self.more_button = QtWidgets.QToolButton()
+        self.more_button.setText("Mais ações  ···")
+        self.more_button.setMinimumHeight(40)
+        self.more_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.more_menu = QtWidgets.QMenu(self.more_button)
+        self.refresh_action = self.more_menu.addAction("Atualizar estado da cena")
+        self.prepare_action = self.more_menu.addAction("Preparar cena")
+        self.more_menu.addSeparator()
+        self.repair_action = self.more_menu.addAction("Reparar todas as cotas")
+        self.delete_selection_action = self.more_menu.addAction("Excluir cotas selecionadas…")
+        self.clear_orphans_action = self.more_menu.addAction("Limpar cotas órfãs…")
+        self.delete_all_action = self.more_menu.addAction("Excluir todas as cotas…")
+        self.more_button.setMenu(self.more_menu)
+        button_row.addWidget(self.start_button, 1)
+        button_row.addWidget(self.more_button)
+        action_layout.addLayout(button_row)
+        root.addWidget(action_box)
 
         self.status = message_label()
+        self.status.setText("Pronto para começar. A cena só será consultada quando você iniciar ou atualizar.")
         root.addWidget(self.status)
         root.addStretch(1)
 
-        self.plane.currentIndexChanged.connect(self.apply_settings)
-        self.mode.currentIndexChanged.connect(self.apply_settings)
-        self.style.currentIndexChanged.connect(self.apply_settings)
-        self.unit.currentIndexChanged.connect(self.apply_settings)
-        self.precision.valueChanged.connect(self.apply_settings)
-        self.follow_line.toggled.connect(self.apply_settings)
+        self.refresh_action.triggered.connect(self.refresh)
+        self.prepare_action.triggered.connect(self.prepare_scene)
+        self.repair_action.triggered.connect(self.repair_all)
+        self.delete_selection_action.triggered.connect(self.delete_selected)
+        self.clear_orphans_action.triggered.connect(self.clear_orphan_dimensions)
+        self.delete_all_action.triggered.connect(self.delete_all_dimensions)
+        self.tool_choice.changed.connect(self._save_preferences)
+        self.plane_choice.changed.connect(self._save_preferences)
+        self.mode.currentIndexChanged.connect(self._save_preferences)
+        self.style.currentIndexChanged.connect(self._save_preferences)
+        self.unit.currentIndexChanged.connect(self._save_preferences)
+        self.precision.valueChanged.connect(self._save_preferences)
+        self.follow_line.toggled.connect(self._save_preferences)
+
+        # Compatibility aliases retained for callers from the functional E15
+        # surface. They are actions now, not duplicate visible buttons.
+        self.individual = self.start_button
+        self.continuous = self.start_button
+        self.prepare = self.prepare_action
+        self.refresh_button = self.refresh_action
+        self.repair = self.repair_action
+        self.delete_selection = self.delete_selection_action
+        self.clear_orphans = self.clear_orphans_action
+        self.delete_all = self.delete_all_action
+        self._restore_preferences()
+        self.guide.setVisible(not self._setting_bool("onboarding/seen", False))
 
     @property
     def pending_action(self) -> Optional[str]:
@@ -106,6 +178,41 @@ class CreatePage(QtWidgets.QWidget):
     @pending_action.setter
     def pending_action(self, value: Optional[str]) -> None:
         self._pending_action = value
+
+    def _setting_bool(self, key: str, default: bool) -> bool:
+        value = self._preferences.value(key, default)
+        if isinstance(value, str):
+            return value.strip().lower() in ("1", "true", "yes", "on")
+        return bool(value)
+
+    def show_guide(self) -> None:
+        self.guide.setVisible(True)
+        self.guide.setFocus()
+
+    def hide_guide(self) -> None:
+        self.guide.setVisible(False)
+        self._preferences.setValue("onboarding/seen", True)
+
+    def _restore_preferences(self) -> None:
+        self.tool_choice.set_value(str(self._preferences.value("create/tool", "single")))
+        self.plane_choice.set_value(str(self._preferences.value("create/plane", "worldXY")))
+        self._set_combo(self.mode, str(self._preferences.value("create/mode", "aligned")))
+        self._set_combo(self.unit, str(self._preferences.value("create/unit", "meters")))
+        try:
+            precision = int(self._preferences.value("create/precision", 2))
+        except Exception:
+            precision = 2
+        self.precision.setValue(max(0, min(4, precision)))
+        self.follow_line.setChecked(self._setting_bool("create/followLine", True))
+
+    def _save_preferences(self, *_args) -> None:
+        self._preferences.setValue("create/tool", self.tool_choice.value())
+        self._preferences.setValue("create/plane", self.plane_choice.value())
+        self._preferences.setValue("create/mode", str(self.mode.currentData() or "aligned"))
+        self._preferences.setValue("create/style", str(self.style.currentData() or "default"))
+        self._preferences.setValue("create/unit", str(self.unit.currentData() or "meters"))
+        self._preferences.setValue("create/precision", self.precision.value())
+        self._preferences.setValue("create/followLine", self.follow_line.isChecked())
 
     def _set_combo(self, combo: QtWidgets.QComboBox, value: str) -> None:
         index = combo.findData(value)
@@ -116,24 +223,23 @@ class CreatePage(QtWidgets.QWidget):
 
     def load_styles(self, styles: List[StyleSnapshot]) -> None:
         self._styles = list(styles)
-        current = self.style.currentData()
+        current = self.style.currentData() or self._preferences.value("create/style", "default")
         blocker = QtCore.QSignalBlocker(self.style)
         self.style.clear()
         for item in self._styles:
             self.style.addItem(item.name, item.style_id)
-        del blocker
-        if current:
-            self._set_combo(self.style, str(current))
         if self.style.count() == 0:
             self.style.addItem("Arquitetônico", "default")
+        del blocker
+        self._set_combo(self.style, str(current))
 
     def load_snapshot(self, snapshot: Dict) -> None:
         scene: SceneSnapshot = snapshot.get("scene", SceneSnapshot())
         create: CreateSnapshot = snapshot.get("create", CreateSnapshot())
         self.scene_status.setText(scene.status_label)
         self.scene_detail.setText(scene.detail)
-        self.count_label.setText("%d cota(s) ativa(s)" % scene.dimension_count)
-        self._set_combo(self.plane, create.plane)
+        self.count_label.setText("%d cota(s)" % scene.dimension_count)
+        self.plane_choice.set_value(create.plane)
         self._set_combo(self.mode, create.mode)
         self._set_combo(self.style, create.style_id)
         self._set_combo(self.unit, create.unit)
@@ -149,40 +255,58 @@ class CreatePage(QtWidgets.QWidget):
             snapshot = self.bridge.refresh()
             self.load_styles(snapshot["styles"])
             self.load_snapshot(snapshot)
-            set_message(self.status, "Estado atualizado.")
+            set_message(self.status, "Estado da cena atualizado.")
         except BridgeError as exc:
             set_message(self.status, exc.message, error=True)
 
-    def apply_settings(self) -> None:
-        if not self.isVisible() or self.style.currentData() is None:
-            return
+    def apply_settings(self) -> bool:
+        """Send exactly one consolidated draft immediately before a tool starts."""
+        if self.style.currentData() is None:
+            set_message(self.status, "Nenhuma aparência está disponível. Atualize o estado da cena.", error=True)
+            return False
         try:
-            self.bridge.set_create_settings(str(self.mode.currentData()), str(self.plane.currentData()), str(self.style.currentData()), str(self.unit.currentData()), self.precision.value(), self.follow_line.isChecked())
+            self.bridge.set_create_settings(
+                str(self.mode.currentData()),
+                self.plane_choice.value(),
+                str(self.style.currentData()),
+                str(self.unit.currentData()),
+                self.precision.value(),
+                self.follow_line.isChecked(),
+            )
+            self._save_preferences()
+            return True
         except BridgeError as exc:
             set_message(self.status, exc.message, error=True)
+            return False
+
+    def _set_busy(self, busy: bool) -> None:
+        for control in (self.start_button, self.more_button, self.tool_choice, self.plane_choice, self.details):
+            control.setEnabled(not busy)
 
     def _run_tool(self, continuous: bool) -> None:
-        controls = [self.individual, self.continuous, self.prepare, self.refresh_button, self.repair, self.delete_selection, self.clear_orphans, self.delete_all]
-        for control in controls:
-            control.setEnabled(False)
+        self._set_busy(True)
         QtWidgets.QApplication.processEvents()
         try:
             result = self.bridge.start_continuous() if continuous else self.bridge.start_individual()
             self.load_snapshot(result)
-            set_message(self.status, "Ferramenta encerrada; estado atualizado.")
+            set_message(self.status, "Cotação encerrada. Você pode iniciar outra ou continuar trabalhando na cena.")
         except BridgeError as exc:
             set_message(self.status, exc.message, error=True)
         finally:
-            for control in controls:
-                control.setEnabled(True)
+            self._set_busy(False)
+
+    def start_selected(self) -> None:
+        if not self.apply_settings():
+            return
+        self._run_tool(self.tool_choice.value() == "continuous")
 
     def start_individual(self) -> None:
-        self.apply_settings()
-        self._run_tool(False)
+        self.tool_choice.set_value("single")
+        self.start_selected()
 
     def start_continuous(self) -> None:
-        self.apply_settings()
-        self._run_tool(True)
+        self.tool_choice.set_value("continuous")
+        self.start_selected()
 
     def prepare_scene(self) -> None:
         try:
@@ -192,9 +316,14 @@ class CreatePage(QtWidgets.QWidget):
         except BridgeError as exc:
             set_message(self.status, exc.message, error=True)
 
-    def _maintenance(self, action: Callable[[], int], label: str, confirm: bool = False) -> None:
-        if confirm:
-            answer = QtWidgets.QMessageBox.question(self, "Confirmar", "Esta ação remove cotas da cena. Continuar?", QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+    def _maintenance(self, action: Callable[[], int], label: str, confirmation: str = "") -> None:
+        if confirmation:
+            answer = QtWidgets.QMessageBox.question(
+                self,
+                "Confirmar exclusão",
+                confirmation,
+                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+            )
             if answer != QtWidgets.QMessageBox.StandardButton.Yes:
                 return
         try:
@@ -208,10 +337,22 @@ class CreatePage(QtWidgets.QWidget):
         self._maintenance(self.bridge.repair_all, "Reparo concluído")
 
     def delete_selected(self) -> None:
-        self._maintenance(self.bridge.delete_selection, "Seleção removida", True)
+        self._maintenance(
+            self.bridge.delete_selection,
+            "Seleção removida",
+            "Excluir somente as cotas atualmente selecionadas? Esta ação pode ser desfeita com Ctrl+Z.",
+        )
 
     def clear_orphan_dimensions(self) -> None:
-        self._maintenance(self.bridge.clear_orphans, "Órfãs removidas", True)
+        self._maintenance(
+            self.bridge.clear_orphans,
+            "Órfãs removidas",
+            "Excluir as cotas cujas referências não existem mais? Esta ação pode ser desfeita com Ctrl+Z.",
+        )
 
     def delete_all_dimensions(self) -> None:
-        self._maintenance(self.bridge.delete_all, "Todas removidas", True)
+        self._maintenance(
+            self.bridge.delete_all,
+            "Todas removidas",
+            "Excluir todas as cotas Ameno desta cena? Esta ação pode ser desfeita com Ctrl+Z.",
+        )
