@@ -4,6 +4,10 @@ Data: 2026-09-09
 
 Status: escopo ajustado; transição WPF → Qt é a prioridade exclusiva
 
+> Este plano misto foi substituído, para execução, por
+> `2026-09-09-e15-transicao-wpf-python-qt.md`. As seções S2/S4 permanecem aqui
+> apenas como backlog futuro de desempenho da viewport.
+
 Escopo: substituir a interface WPF sem reescrever o núcleo de cotas E1–E14
 
 ## Resultado recomendado

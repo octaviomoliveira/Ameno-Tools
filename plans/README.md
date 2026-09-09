@@ -12,5 +12,6 @@ Arquivos atuais:
 - [E10.7 — Âncoras por vértice](2026-09-04-e10-7-subobject-anchors.md): schema v5 e atualização reativa após edição de vértices em Editable Poly/Editable Mesh.
 - [E14 — Planos de cotação e fachadas](2026-09-08-e14-planos-de-cotacao-fachadas.md): generalização do núcleo para planos ortográficos, dividida em sete subetapas; implementação não iniciada.
 - [Substituição do WPF e isolamento da viewport](2026-09-09-substituicao-wpf-qt-viewport.md): recomendação PySide6/Qt + overlay `gw`, modo seguro nativo e migração em seis etapas.
+- [E15 — Transição integral WPF → Python/Qt](2026-09-09-e15-transicao-wpf-python-qt.md): plano ativo de reescrita da UI do zero, login por token, janela nativa e compatibilidade Max 2021–2027.
 
 Ao abrir um marco novo, criar um arquivo datado (`AAAA-MM-DD-assunto.md`) e incluir o link no `PLAN.md` quando ele for relevante para continuidade.
