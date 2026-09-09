@@ -2,7 +2,7 @@
 
 Data: 2026-09-09
 
-Status: recomendação técnica pronta; implementação não iniciada
+Status: escopo ajustado; transição WPF → Qt é a prioridade exclusiva
 
 Escopo: substituir a interface WPF sem reescrever o núcleo de cotas E1–E14
 
@@ -23,6 +23,68 @@ Qt elimina a família de falhas observada no bridge WPF/.NET, mas não torna o
 3ds Max multithread. A garantia operacional vem principalmente de retirar do
 `mouseMove` toda criação/atualização de spline, `TextPlus`, terminal, material e
 Custom Attribute.
+
+## Recorte aprovado para a próxima implementação
+
+Por decisão do usuário em 2026-09-09, a próxima implementação tratará **somente
+a transição do WPF para Python/Qt**. A redução de peso do `mouseMove`, o preview
+`gw` completo e a otimização do commit permanecem documentados, mas não fazem
+parte deste primeiro recorte.
+
+O recorte de transição inclui:
+
+1. criar a camada de compatibilidade PySide2/PySide6;
+2. criar a fachada de comandos/DTOs entre Python e os serviços MAXScript;
+3. substituir a janela WPF por um único shell Qt;
+4. migrar Criar, Estilos, Editar e Render, preservando todas as funções atuais;
+5. validar lifecycle, docking, troca de cena e empacotamento em Max 2021 e 2026;
+6. manter rollback para o pacote anterior até a aceitação das duas versões.
+
+Consequência assumida: essa entrega elimina os defeitos específicos de WPF,
+XAML e reparenting, porém o bloqueio causado pelo pipeline pesado da viewport
+pode continuar até a etapa de desempenho ser autorizada.
+
+## Compatibilidade 3ds Max 2021–2026
+
+A interface é portável, mas não deve importar PySide6 diretamente. O pacote de
+compatibilidade deve detectar o host e expor uma API Qt única:
+
+```python
+try:
+    from PySide6 import QtCore, QtGui, QtWidgets
+    PYSIDE_MAJOR = 6
+except ImportError:
+    from PySide2 import QtCore, QtGui, QtWidgets
+    PYSIDE_MAJOR = 2
+```
+
+Contratos obrigatórios da camada:
+
+- todo o código Python deve ser sintaticamente compatível com Python 3.7;
+- evitar `match`, tipos `X | Y`, `list[str]` e recursos posteriores ao 3.7;
+- normalizar `QAction`, enums Qt, diálogos `exec/exec_` e diferenças de High DPI;
+- usar `qtmax.GetQMaxMainWindow()`/helper disponível no host, evitando wrapping
+  manual com `shiboken2` ou `shiboken6`;
+- construir widgets em Python ou carregar `.ui` em runtime; não versionar saída
+  gerada por um `pyside-uic` específico;
+- não instalar wheels Qt externas: usar PySide embarcado pela Autodesk;
+- manter uma única fonte Python e testes de compatibilidade específicos por host;
+- não ampliar `SeriesMin/SeriesMax` antes de o bootstrap e o smoke real passarem
+  no Max 2021.
+
+Ambiente confirmado nesta máquina:
+
+| Host | Python | Qt binding | Qt |
+| --- | --- | --- | --- |
+| 3ds Max 2021 | 3.7.6 | PySide2 | 5.12.5 |
+| 3ds Max 2026 | 3.11.12 | PySide6 | 6.5.3 |
+
+O pacote atual ainda não é instalável no Max 2021: `PackageContents.xml` declara
+`SeriesMin="2026"`/`SeriesMax="2026"`, e `AmenoVersion.targetMax` vale 2026.
+Esses valores só serão generalizados depois dos testes de API e de pacote. A
+portabilidade do shell Qt está confirmada; a compatibilidade integral do núcleo,
+renderers e arquivos `.max` precisa de uma matriz real nos dois hosts antes de
+ser declarada suportada.
 
 ## Evidência da decisão
 
@@ -181,7 +243,8 @@ memória estabilizada após repetir o fluxo; E14.6–E14.7 podem então ser reto
 
 ## Ordem de entrega sugerida
 
-O primeiro resultado utilizável não precisa esperar a paridade completa. S1 +
-S2 entregam o modo seguro e resolvem o travamento da viewport. S3 entrega a nova
-janela para cotar. S4 elimina a pausa longa no commit. S5 e S6 recuperam todo o
-acabamento visual e retiram o WPF com segurança.
+No recorte atual, executar a parte de contrato/chave de recuperação de S1 e o
+shell Qt de S3; depois migrar as quatro telas de S5 e executar somente os gates
+de lifecycle/portabilidade de S6. S2 e S4 ficam explicitamente adiadas. Quando
+o usuário autorizar o trabalho de desempenho, S2 remove o preview com nós e S4
+trata a pausa longa no commit.

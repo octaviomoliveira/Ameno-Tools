@@ -160,7 +160,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   O log de 2026-09-09 mediu novamente ~2,6 s/segmento nos modos Vertical e
   Horizontal, confirmando que trocar apenas a UI não resolve a viewport. Plano
   completo: `plans/2026-09-09-substituicao-wpf-qt-viewport.md`. Nenhuma
-  implementação desta migração foi iniciada.
+  implementação desta migração foi iniciada. O escopo seguinte foi reduzido por
+  decisão do usuário à transição WPF → Qt: S2 e S4 (peso da viewport/commit)
+  permanecem documentadas, mas adiadas.
 
 - **Prioridade atual — validar manualmente o hotfix de render/Isolate Selection:** o commit `5844730` está instalado em `ApplicationPlugins`; 41/41 arquivos de conteúdo e o manifesto conferem por SHA-256 e o smoke instalado passou com 1 PASS/0 FAIL. Reiniciar o Max, deixar o Isolate Selection desligado, confirmar a caixa `Renderizar somente as cotas (sem a planta)` e testar o PNG da cena real; o Ameno deverá ocultar a planta temporariamente e restaurar a cena.
 
@@ -189,12 +191,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Executar S1–S2 da substituição WPF antes de novos gates E14:** congelar o
-  WPF, criar a fachada `AmenoUiBridge` e o rollout de recuperação; depois ampliar
-  o overlay `gw` já existente para representar toda a cota sem criar nós durante
-  `mouseMove`. Só após o gate de 1.000 movimentos sem temporários iniciar o shell
-  PySide6/Qt (S3). O plano total possui 6 etapas e 23 subetapas; E14.6–E14.7 ficam
-  suspensas até a viewport e o lifecycle passarem os gates de soak.
+- **Executar somente a transição WPF → Qt, portátil entre Max 2021 e 2026:**
+  começar pela camada `qt_compat` PySide2/PySide6 e pela fachada `AmenoUiBridge`;
+  criar um único shell Qt e migrar Criar, Estilos, Editar e Render sem modificar
+  nesta rodada o preview/commit de viewport. Validar lifecycle e paridade nos dois
+  hosts antes de ampliar o manifesto, hoje restrito a 2026. O trabalho de peso da
+  viewport permanece adiado por decisão explícita do usuário.
 
 - **Antes de retomar o gate E14:** tratar o incidente acima em três frentes: (1)
   limpar/reparentar explicitamente o filho WPF antes de reutilizar uma aba em
@@ -239,6 +241,16 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-09 — Priorizar somente a transição WPF → Python/Qt e avaliar Max
+  2021:** a portabilidade da interface foi confirmada como viável. O ambiente
+  local possui Max 2021 com Python 3.7.6/PySide2 5.12.5 e Max 2026 com Python
+  3.11.12/PySide6 6.5.3; a implementação deverá usar uma camada de compatibilidade
+  e sintaxe Python 3.7. O pacote completo ainda não pode ser declarado compatível:
+  manifesto e `AmenoVersion` estão fixados em 2026, e núcleo/renderers exigem
+  smoke real no host antigo. S2/S4 foram adiadas; nenhuma mudança de código ou
+  instalação ocorreu. Evidência:
+  `plans/2026-09-09-substituicao-wpf-qt-viewport.md`.
 
 - **2026-09-09 — Procurar uma substituição sustentável para o WPF após novo
   travamento:** o log mais recente não registrou nova exceção de reparenting;
