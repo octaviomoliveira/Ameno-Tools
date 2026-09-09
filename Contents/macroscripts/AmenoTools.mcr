@@ -12,10 +12,10 @@ Icon:#("ameno/cotas_panel", 1)
 (
     on execute do
     (
-        global AmenoCotasWindow
+        global AmenoPythonUI
         global AmenoStartupError
 
-        if AmenoCotasWindow == undefined then
+        if AmenoPythonUI == undefined then
         (
             local startupDetail = ""
             try (startupDetail = AmenoStartupError) catch ()
@@ -27,7 +27,7 @@ Icon:#("ameno/cotas_panel", 1)
         (
             try
             (
-                AmenoCotasWindow.show()
+                AmenoPythonUI.show pageName:"login"
             )
             catch
             (
@@ -47,15 +47,12 @@ Icon:#("ameno/cota_individual", 1)
     on execute do
     (
         global AmenoApp
-        global AmenoCotasCriarTab
-        if AmenoApp != undefined then
+        global AmenoPythonUI
+        if AmenoApp != undefined and AmenoPythonUI != undefined then
         (
             try
             (
-                if AmenoCotasCriarTab != undefined and isProperty AmenoCotasCriarTab #executeIndividualCommand then
-                    AmenoCotasCriarTab.executeIndividualCommand()
-                else
-                    AmenoApp.startDimensionTool()
+                AmenoPythonUI.show pageName:"create"
             )
             catch
             (
@@ -79,17 +76,12 @@ Icon:#("ameno/cota_continua", 1)
     on execute do
     (
         global AmenoApp
-        global AmenoCotasCriarTab
-        if AmenoApp != undefined then
+        global AmenoPythonUI
+        if AmenoApp != undefined and AmenoPythonUI != undefined then
         (
             try
             (
-                if AmenoCotasCriarTab != undefined and isProperty AmenoCotasCriarTab #executeContinuousCommand then
-                    AmenoCotasCriarTab.executeContinuousCommand()
-                else if isProperty AmenoApp #startContinuousDimensionTool then
-                    AmenoApp.startContinuousDimensionTool()
-                else
-                    messageBox "A ferramenta de cota contínua (E12) não foi carregada." title:"Ameno Tools"
+                AmenoPythonUI.show pageName:"create-continuous"
             )
             catch
             (
@@ -112,12 +104,12 @@ Icon:#("ameno/editor_estilos", 1)
 (
     on execute do
     (
-        global AmenoCotasWindow
-        if AmenoCotasWindow != undefined then
+        global AmenoPythonUI
+        if AmenoPythonUI != undefined then
         (
             try
             (
-                AmenoCotasWindow.showTab "Estilos"
+                AmenoPythonUI.show pageName:"styles"
             )
             catch
             (
@@ -140,12 +132,12 @@ Icon:#("ameno/render_cotas", 1)
 (
     on execute do
     (
-        global AmenoCotasWindow
-        if AmenoCotasWindow != undefined then
+        global AmenoPythonUI
+        if AmenoPythonUI != undefined then
         (
             try
             (
-                AmenoCotasWindow.showTab "Render"
+                AmenoPythonUI.show pageName:"render"
             )
             catch
             (
@@ -168,12 +160,12 @@ Icon:#("ameno/cotas_panel", 1)
 (
     on execute do
     (
-        global AmenoCotasWindow
+        global AmenoPythonUI
         global AmenoApp
 
-        if AmenoCotasWindow != undefined then
+        if AmenoPythonUI != undefined then
         (
-            try (AmenoCotasWindow.show()) catch ()
+            try (AmenoPythonUI.show pageName:"login") catch ()
         )
         else if AmenoApp != undefined then
         (

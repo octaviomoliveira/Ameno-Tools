@@ -2,7 +2,7 @@
 
 Data: 2026-09-09
 
-Status: plano renovado; implementação não iniciada
+Status: execução iniciada; primeiro candidato limitado ao 3ds Max 2026
 
 Prioridade: exclusiva. Não otimizar neste marco o cálculo, preview ou commit das
 cotas; entregar primeiro uma interface nova, isolada e estável.
@@ -11,15 +11,34 @@ cotas; entregar primeiro uma interface nova, isolada e estável.
 
 Substituir integralmente a interface WPF do Ameno por uma interface Python/Qt
 escrita do zero, preservando o comportamento necessário de Criar, Estilos,
-Editar, Render e Configuração. A nova janela deve funcionar por contrato do 3ds
-Max 2021 ao 2027, começar sempre na página de login/token e oferecer minimizar,
-maximizar/restaurar e fechar.
+Editar, Render e Configuração. O primeiro candidato deve funcionar e ser
+certificado exclusivamente no 3ds Max 2026, começar sempre na página de
+login/token e oferecer minimizar, maximizar/restaurar e fechar. Portabilidade e
+certificação nas demais versões só começam depois do aceite estável do 2026.
 
 Este marco combate os travamentos originados pela interface: XAML, bridge
 `mxsdotNet`, cache/reparenting de controles, handlers duplicados, janelas de
 gerações antigas e lifecycle reentrante. Ele não afirma resolver o custo já
 existente no núcleo de viewport; apenas garante que a UI nova não acrescente
 trabalho, polling ou bloqueios a esse caminho.
+
+### Estado da execução (2026-09-09)
+
+- A fundação Python/Qt, o launcher MAXScript, a fachada de snapshots primitivos,
+  a página Login/token, a janela nativa e as páginas Criar/Estilos/Editar/Render/
+  Configuração já estão implementados no candidato do Max 2026.
+- A navegação lateral é somente local: nenhum `show_page` chama `pymxs` ou
+  MAXScript. Cada página possui atualização explícita; a primeira leitura da
+  cena só ocorre depois de o token ser aceito.
+- O pacote instalado e o ZIP alpha removem os sete módulos WPF e caches Python;
+  o histórico Git e o backup anterior continuam sendo o rollback recuperável.
+- Os gates automatizados de Python 3.11/PySide6, MAXScript, bootstrap, fachada
+  e pacote instalado passaram. O gate visual/interativo no Max 2026 ainda é
+  pendente porque requer uma sessão gráfica real do usuário.
+- O endpoint de autenticação não foi fornecido. Até existir contrato, o
+  `LocalTokenGateway` aceita apenas token não vazio, mantém o valor em memória e
+  não simula validação remota. `QNetworkAccessManager`, timeout e expiração
+  entram na etapa de autenticação real, não devem ser inventados nesta entrega.
 
 ## 2. Decisão de reescrita
 
@@ -51,40 +70,38 @@ trabalho, polling ou bloqueios a esse caminho.
   `pip`.
 - Não fazer reload do plugin no mesmo processo do Max.
 
-## 3. Compatibilidade 3ds Max 2021–2027
+## 3. Alvo desta execução: 3ds Max 2026
 
-### 3.1 Matriz-alvo
+### 3.1 Matriz de execução
 
 | Max | Python | Binding Qt | Qt | Situação de teste |
 | --- | --- | --- | --- | --- |
-| 2021 | 3.7.6 | PySide2 | 5.12.5 | instalado localmente |
-| 2022 | 3.7.9+ | PySide2 | 5.15.1 | compatível por contrato; ambiente pendente |
-| 2023 | 3.9.7 | PySide2 | 5.15.1 | compatível por contrato; ambiente pendente |
-| 2024 | 3.10.8 | PySide2 | 5.15.1 | instalado localmente |
-| 2025 | 3.11.x | PySide6 | 6.5.3 | compatível por contrato; ambiente pendente |
-| 2026 | 3.11.x | PySide6 | 6.5.3 | instalado localmente |
-| 2027 | 3.13.9 | PySide6 | 6.8.3 | documentação disponível; instalação completa pendente |
+| 2021 | 3.7.6 | PySide2 | 5.12.5 | adiado até o aceite do 2026 |
+| 2022 | 3.7.9+ | PySide2 | 5.15.1 | adiado; ambiente indisponível |
+| 2023 | 3.9.7 | PySide2 | 5.15.1 | adiado; ambiente indisponível |
+| 2024 | 3.10.8 | PySide2 | 5.15.1 | adiado até o aceite do 2026 |
+| 2025 | 3.11.x | PySide6 | 6.5.3 | adiado; ambiente indisponível |
+| 2026 | 3.11.x | PySide6 | 6.5.3 | único alvo de implementação e certificação atual |
+| 2027 | 3.13.9 | PySide6 | 6.8.3 | adiado; ambiente indisponível |
 
-“Compatível por contrato” não equivale a “certificado”. Só uma versão executada
-com os gates deste plano poderá constar como suportada na release.
+Nenhuma compatibilidade fora do Max 2026 será presumida ou anunciada nesta
+entrega. Ter uma instalação local do 2021 ou 2024 não os inclui no gate atual.
 
-### 3.2 Base comum obrigatória
+### 3.2 Base obrigatória do candidato 2026
 
-- Sintaxe Python limitada ao Python 3.7: sem `match`, `X | Y`, `list[str]`,
-  `zoneinfo` ou outros recursos posteriores.
-- Uma única camada `qt_compat.py` importa PySide6 quando disponível e cai para
-  PySide2; o restante do projeto nunca importa PySide diretamente.
-- `qt_compat` normaliza enums, `QAction`, `exec/exec_`, High DPI,
-  `QScreen.availableGeometry`, sinais e diferenças Qt5/Qt6 usadas pelo Ameno.
+- Usar o Python 3.11 e PySide6 6.5.3 embarcados no Max 2026.
+- Uma única camada `qt_compat.py` centraliza os imports PySide6; o restante do
+  projeto não importa o binding diretamente. A adaptação para PySide2 será uma
+  etapa posterior, feita sobre uma interface 2026 já aceita.
+- Evitar gratuitamente sintaxe desnecessariamente nova, mas não aumentar o
+  risco desta entrega mantendo dois bindings Qt ainda não certificados.
 - Usar apenas o `QApplication` já criado pelo 3ds Max; nunca instanciar outro.
 - Obter o parent pelo `qtmax.GetQMaxMainWindow()` disponível no host; não usar
   wrapping manual com `shiboken2`/`shiboken6`.
 - Construir os widgets em Python. Não usar código gerado por `pyside-uic` de uma
   versão específica.
 - O bootstrap distribuído continua sendo MAXScript e chama
-  `python.Init()`/`python.ExecuteFile()`, rota disponível desde o Max 2021. Isso
-  evita depender do suporte a `.py` direto no `PackageContents.xml`, adicionado
-  apenas em versões posteriores.
+  `python.Init()`/`python.ExecuteFile()` no Max 2026.
 - A detecção de recursos prevalece sobre condicionais pelo número da versão.
 
 ## 4. Arquitetura da nova interface
@@ -155,9 +172,11 @@ LOGGED_OUT → VALIDATING → AUTHENTICATED → APPLICATION
   Credential Manager/DPAPI.
 - Logs podem guardar apenas resultado, código HTTP, duração e os últimos quatro
   caracteres de um identificador não secreto fornecido pelo servidor.
-- A validação usa `QNetworkAccessManager`, assíncrono no event loop Qt, com
-  timeout e cancelamento; não usa `requests`, thread Python ou `pymxs` fora da
-  thread principal.
+- Quando o endpoint real for definido, a validação deverá usar
+  `QNetworkAccessManager`, assíncrono no event loop Qt, com timeout e
+  cancelamento; não usar `requests`, thread Python ou `pymxs` fora da thread
+  principal. O candidato atual usa deliberadamente um gateway local síncrono e
+  curto, sem rede, para não bloquear nem inventar um contrato de autenticação.
 - URL, headers e formato da resposta pertencem a `AuthGateway`; widgets não
   conhecem o backend.
 - O endpoint e o contrato real de autenticação são dependência pendente. Até sua
@@ -258,7 +277,7 @@ diretório WPF.
 ### E15.1 — Fundação Python/Qt do zero (7 subetapas)
 
 1. Criar `Contents/python/ameno_ui/` sem copiar arquivos existentes.
-2. Implementar `qt_compat.py` e testes PySide2/PySide6.
+2. Implementar `qt_compat.py` sobre PySide6 e testes no runtime do Max 2026.
 3. Implementar `host_info.py` por feature detection.
 4. Implementar `entrypoint.py` e singleton `AmenoApplication`.
 5. Criar launcher MAXScript mínimo com `python.Init/ExecuteFile` e erro legível.
@@ -266,7 +285,7 @@ diretório WPF.
 7. Proibir import de `System.Windows`, XAML, WinForms, PyQt e wheels externos por
    teste estático do pacote.
 
-Gate: o mesmo “Olá Ameno” abre e fecha no Max 2021, 2024 e 2026 sem duplicar
+Gate: o mesmo “Olá Ameno” abre e fecha no Max 2026 sem duplicar
 `QApplication`, janela, handler ou callback.
 
 ### E15.2 — Login e autenticação (8 subetapas)
@@ -320,7 +339,7 @@ Max entre eventos Qt.
    confirmações adequadas.
 7. Durante MouseTool, manter janela viva e desabilitar somente ações conflitantes.
 
-Gate: paridade funcional da aba Criar em 2021/2024/2026 e nenhum evento de UI
+Gate: paridade funcional da aba Criar no Max 2026 e nenhum evento de UI
 adicional registrado em `mouseMove`.
 
 ### E15.6 — Página Estilos e preview 2D (8 subetapas)
@@ -366,20 +385,37 @@ logout não deixa render, callback ou estado de cena pendente.
 
 ### E15.9 — Certificação, corte e rollback (8 subetapas)
 
-1. Rodar testes Python puros com o interpretador de cada Max disponível.
-2. Rodar bootstrap, login falso, lifecycle e páginas no Max 2021.
-3. Repetir a matriz no Max 2024.
-4. Repetir a matriz no Max 2026.
+1. Rodar testes Python puros com o interpretador embarcado no Max 2026.
+2. Rodar bootstrap, login local, lifecycle e páginas no Max 2026 Batch.
+3. Rodar a matriz funcional em cena descartável no Max 2026 interativo.
+4. Repetir abertura limpa do Max 2026 com o candidato empacotado.
 5. Executar soak com UI aberta: orbit/pan/zoom, seleção, 20 MouseTools, troca de
    páginas, min/max e open/close; comparar com a baseline sem regressão da UI.
-6. Obter ambientes 2022/2023/2025/2027 ou marcar cada versão honestamente como
-   não certificada; nenhum suporte será presumido.
-7. Gerar pacote sem WPF, backup recuperável e manifesto correspondente somente
-   às versões certificadas.
+6. Registrar 2021/2022/2023/2024/2025/2027 como adiados e não certificados;
+   nenhuma adaptação multiversão entra antes do aceite do 2026.
+7. Gerar pacote sem WPF, backup recuperável e manifesto restrito ao Max 2026.
 8. Instalar com todos os Max fechados, validar hashes, smoke instalado e rollback.
 
 Gate: zero carga de `System.Windows`, zero reparenting, zero janela/callback
 órfão, zero segredo persistido e zero regressão de viewport causada pela UI.
+
+### Quadro de execução atual
+
+| Etapa | Subetapas implementadas | Situação | Próxima prova |
+| --- | ---: | --- | --- |
+| E15.0 Contrato/baseline | 4/5 | endpoint e baseline gráfica pendentes | registrar baseline interativa |
+| E15.1 Fundação | 6/7 | logger Python dedicado ainda pendente | auditoria de redaction |
+| E15.2 Login | 6/8 | gateway local; rede/timeout pendentes | contrato real + teste offline |
+| E15.3 Shell | 7/7 | chrome nativo e navegação local implementados | min/max/close no Max 2026 |
+| E15.4 Bridge | 6/7 | estados avançados/fakes adicionais pendentes | teste de reentrância interativo |
+| E15.5 Criar | 7/7 | controles e comandos explícitos implementados | matriz funcional na cena descartável |
+| E15.6 Estilos | 7/8 | proteção de rascunho sujo pendente | edição/preview no Max 2026 |
+| E15.7 Editar | 5/7 | validações e seletor de estilo pendentes | matriz de seleção/âncoras |
+| E15.8 Render/Config | 5/8 | cancelamento/progresso e logs UI pendentes | render real + restauração |
+| E15.9 Certificação | 5/8 | gates gráficos/soak pendentes | aceite visual e rollback |
+
+Os números acima são o estado do candidato desta madrugada, não um aceite
+final. Não marcar E15 como concluída até o gate interativo e o soak passarem.
 
 ## 9. Matriz preventiva de bugs
 
@@ -388,8 +424,8 @@ Gate: zero carga de `System.Windows`, zero reparenting, zero janela/callback
 | Repetir reparenting do WPF | uma janela, um parent, `QStackedWidget` fixo | 500 navegações |
 | Duas gerações da UI | singleton + recusa de reload em processo | 100 chamadas da macro |
 | Criar outro QApplication | usar `QApplication.instance()` | assert por host |
-| Qt5/Qt6 divergirem | somente `qt_compat` importa PySide | teste estático + três hosts |
-| Código não rodar no Python 3.7 | sintaxe/base stdlib 3.7 | compile no Python do Max 2021 |
+| Mudança futura Qt5/Qt6 contaminar a entrega | imports centralizados, mas somente PySide6 agora | teste estático no 2026 |
+| Generalizar cedo e criar bugs sem host | nenhuma adaptação multiversão nesta fase | manifesto e matriz apenas 2026 |
 | Token vazar | memória apenas + redaction | busca em logs/arquivos/tracebacks |
 | Login congelar Max | `QNetworkAccessManager` assíncrono + timeout | offline/timeout/cancelar |
 | Signals duplicados | conexão única e teardown idempotente | abrir/fechar repetido |
@@ -410,9 +446,10 @@ Gate: zero carga de `System.Windows`, zero reparenting, zero janela/callback
 - Abrir, navegar, minimizar, maximizar e fechar não executam comandos de cena.
 - A UI permanece uma única instância após repetição e troca de cenas.
 - Token não persiste nem aparece em logs.
-- Max 2021, 2024 e 2026 passam integralmente antes de instalar o primeiro
-  candidato sobre o pacote ativo do usuário.
-- Max 2022, 2023, 2025 e 2027 só entram na lista pública após execução real.
+- O Max 2026 passa integralmente antes de instalar o primeiro candidato sobre o
+  pacote ativo do usuário.
+- Max 2021–2025 e 2027 ficam fora desta release e só entram depois do aceite do
+  2026 e de execução real em cada host disponível.
 - O peso preexistente da cotação fica registrado separadamente e não pode ser
   atribuído à interface nova sem comparação com a baseline.
 

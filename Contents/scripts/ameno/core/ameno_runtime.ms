@@ -18,6 +18,7 @@ global AmenoRenderCotasService
 global AmenoCotasWindow
 global AmenoCotasCriarTab
 global AmenoCotasEstilosTab
+global AmenoPythonUI
 
 struct AmenoRuntime
 (
@@ -534,22 +535,8 @@ struct AmenoRuntime
 
     fn openStyleEditor styleId:undefined useLegacy:false =
     (
-        if not useLegacy and ::AmenoStyleEditorWPF != undefined then
-        (
-            try
-            (
-                return ::AmenoStyleEditorWPF.open styleId:styleId
-            )
-            catch
-            (
-                local exc = getCurrentException() as string
-                if ::AmenoLog != undefined do
-                    ::AmenoLog.error ("Falha ao abrir editor visual WPF: " + exc + ". Acionando fallback para editor legado.")
-                format "[Ameno][ERROR] Falha ao abrir editor visual WPF: %. Acionando fallback para editor legado.\n" exc
-            )
-        )
-
-        if ::AmenoShowStyleEditor != undefined do ::AmenoShowStyleEditor()
+        if ::AmenoPythonUI == undefined then throw "A interface Python/Qt não foi carregada."
+        ::AmenoPythonUI.show pageName:"styles"
     ),
 
     fn generateDiagnosticReport =
@@ -637,7 +624,20 @@ struct AmenoRuntime
 
     fn openMainPanel =
     (
-        AmenoShowMainPanel()
+        if ::AmenoPythonUI == undefined then throw "A interface Python/Qt não foi carregada."
+        ::AmenoPythonUI.show pageName:"login"
+    ),
+
+    fn cancelInteractiveTools =
+    (
+        -- Fechar a janela Qt nunca pode deixar um MouseTool do Max apontando
+        -- para uma interface destruída. O cancelamento é idempotente e não
+        -- tenta reconstruir a cena.
+        try (if ::AmenoDimensionTool != undefined do ::AmenoDimensionTool.cancel()) catch ()
+        try (if ::AmenoDimensionContinuousTool != undefined do ::AmenoDimensionContinuousTool.cancel()) catch ()
+        try (stopTool AmenoDimensionMouseTool) catch ()
+        try (stopTool AmenoDimensionContinuousMouseTool) catch ()
+        true
     ),
 
     fn shutdown =
@@ -651,8 +651,7 @@ struct AmenoRuntime
         try (if AmenoDimensionContinuousTool != undefined do AmenoDimensionContinuousTool.cancel()) catch ()
         try (destroyDialog AmenoMainPanelRollout) catch ()
         try (destroyDialog AmenoStyleEditorRollout) catch ()
-        try (if ::AmenoStyleEditorWPF != undefined do ::AmenoStyleEditorWPF.close()) catch ()
-        try (if ::AmenoCotasWindow != undefined do ::AmenoCotasWindow.close()) catch ()
+        try (if ::AmenoPythonUI != undefined do ::AmenoPythonUI.close()) catch ()
         started = false
         true
     )

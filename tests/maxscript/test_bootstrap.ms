@@ -21,6 +21,7 @@ global AmenoRenderCotasRequest
 global AmenoRenderCotasResult
 global AmenoAdapterRenderResult
 global AmenoOutputVerification
+global AmenoUiBridge
 
 struct AmenoE9MockAdapter
 (
@@ -484,21 +485,19 @@ struct AmenoE9MockAdapter
     local loadedCustom = AmenoStyleService.getStyle customSavedStyle.styleId
     if loadedCustom == undefined or loadedCustom.name != "Persistido_Max" then throw "E7: Estilo customizado não persistiu no arquivo .max."
 
-    -- 5. Testar abertura do editor visual e sincronização de UI
-    AmenoShowStyleEditor()
-    if AmenoStyleEditorRollout == undefined or not AmenoStyleEditorRollout.open then throw "E7: Editor de Estilos não abriu corretamente."
+    -- 5. O editor antigo não participa mais do bootstrap. Validar a fachada
+    -- primitiva que a nova interface Python/Qt consumirá, sem criar qualquer
+    -- janela ou controle no processo Batch.
+    if AmenoUiBridge == undefined then throw "E15: Fachada Python/Qt não foi carregada."
+    local styleWire = AmenoUiBridge.stylesSnapshot()
+    if styleWire == undefined or styleWire.count < 3 then throw "E15: Snapshot de estilos incompleto."
+    for wireStyle in styleWire do
+    (
+        if wireStyle == undefined or wireStyle.count < 20 then throw "E15: Registro primitivo de estilo incompleto."
+    )
 
-    -- Testar sincronização automática de estilo pela seleção
-    AmenoStyleEditorRollout.syncToStyleId "editorial"
-    if AmenoStyleEditorRollout.ddlStyles.selection == 0 then throw "E7: syncToStyleId falhou."
-
-    -- Testar aplicação de UI ao vivo
-    AmenoStyleEditorRollout.spnFontSize.value = 32.0
-    AmenoStyleEditorRollout.applyCurrentUIToScene autoRebuild:true
     local editedArch = AmenoStyleService.getStyle "editorial"
-    if editedArch.fontSize != 32.0 then throw "E7: applyCurrentUIToScene não atualizou fontSize."
-
-    destroyDialog AmenoStyleEditorRollout
+    if editedArch == undefined then throw "E7: Estilo editorial não está disponível após persistência."
 
     -- 6. Testar aplicação de estilo à seleção e diretamente ao controlador
     local dimSelTest = AmenoDimensionGraphics.createDimension [0, 0, 0] [150, 0, 0] [0, 30, 0] styleId:"default"

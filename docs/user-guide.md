@@ -1,7 +1,7 @@
 # Guia de Uso — Ameno Tools (Cotas Paramétricas)
 
 **Versão:** 0.0.1 (MVP)  
-**Compatibilidade:** 3ds Max 2026+ (Corona 13+ / V-Ray CPU 7+)  
+**Compatibilidade:** 3ds Max 2026 nesta entrega (Corona 13+ / V-Ray CPU 7+)
 **Idioma:** Português (Brasil)
 
 ---
@@ -30,7 +30,14 @@ O pacote é instalado como plugin modular padrão da Autodesk em:
 1. No menu principal do 3ds Max, abra **Customize** -> **Customize User Interface**.
 2. Na aba **Toolbars** ou **Quads**, filtre pela categoria **Ameno Tools**.
 3. Arraste a ação **Ameno Tools** para sua toolbar favorita.
-4. Clique no botão para abrir o painel flutuante compacto.
+4. Clique no botão para abrir a janela Qt nativa (com minimizar, maximizar e
+   fechar). A primeira tela é o Login; informe um token não vazio para abrir as
+   ferramentas. Nesta versão o gateway é local e mantém o token somente em
+   memória, até o endpoint de autenticação ser definido.
+
+As páginas não atualizam a cena ao navegar. Use **Atualizar estado** (ou o
+botão de comando da própria página) quando quiser consultar explicitamente o
+Max; isso mantém a viewport sem polling da interface.
 
 ---
 

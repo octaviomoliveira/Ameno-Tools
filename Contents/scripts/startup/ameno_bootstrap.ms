@@ -64,6 +64,8 @@ global AmenoCotasCriarTab
 global AmenoCotasEstilosTab
 global AmenoCotasEditarTab
 global AmenoCotasRenderTab
+global AmenoPythonUI
+global AmenoUiBridge
 
 struct AmenoBootstrapService
 (
@@ -177,15 +179,8 @@ struct AmenoBootstrapService
             @"core\ameno_render_cotas_service.ms",
             @"core\ameno_diagnostic_service.ms",
             @"core\ameno_runtime.ms",
-            @"ui\ameno_style_editor.ms",
-            @"ui\ameno_preview_renderer.ms",
-            @"ui\ameno_style_editor_wpf.ms",
-            @"ui\ameno_cotas_criar_tab.ms",
-            @"ui\ameno_cotas_estilos_tab.ms",
-            @"ui\ameno_cotas_editar_tab.ms",
-            @"ui\ameno_cotas_render_tab.ms",
-            @"ui\ameno_cotas_window.ms",
-            @"ui\ameno_main_panel.ms"
+            @"ui\ameno_ui_bridge.ms",
+            @"ui\ameno_python_ui.ms"
         )
 
         for moduleFile in moduleFiles do

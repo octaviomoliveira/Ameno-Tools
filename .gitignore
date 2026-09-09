@@ -12,6 +12,8 @@
 /dist/
 /.test-output/
 *.zip
+__pycache__/
+*.pyc
 
 # Editors and operating system
 .idea/

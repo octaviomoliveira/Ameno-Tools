@@ -43,7 +43,32 @@ try {
     Copy-Item -Path (Join-Path $repoRoot "PackageContents.xml") -Destination $targetAppFolder -Force
     Copy-Item -Path (Join-Path $repoRoot "Contents") -Destination $targetAppFolder -Recurse -Force
     Copy-Item -Path (Join-Path $repoRoot "README.md") -Destination $targetAppFolder -Force
-    
+
+    # O candidato E15 usa a interface Python/Qt no Max 2026. Os módulos WPF
+    # antigos permanecem no repositório para histórico/rollback, mas não podem
+    # entrar no pacote executável e ser carregados acidentalmente.
+    $legacyWpfFiles = @(
+        "Contents\scripts\ameno\ui\ameno_style_editor_wpf.ms",
+        "Contents\scripts\ameno\ui\ameno_cotas_criar_tab.ms",
+        "Contents\scripts\ameno\ui\ameno_cotas_estilos_tab.ms",
+        "Contents\scripts\ameno\ui\ameno_cotas_editar_tab.ms",
+        "Contents\scripts\ameno\ui\ameno_cotas_render_tab.ms",
+        "Contents\scripts\ameno\ui\ameno_cotas_window.ms",
+        "Contents\scripts\ameno\ui\ameno_main_panel.ms"
+    )
+    foreach ($legacyWpfFile in $legacyWpfFiles) {
+        $stagedLegacyFile = Join-Path $targetAppFolder $legacyWpfFile
+        if (Test-Path -LiteralPath $stagedLegacyFile) {
+            Remove-Item -LiteralPath $stagedLegacyFile -Force
+        }
+    }
+
+    # Cache bytecode é artefato de teste local e não faz parte do pacote.
+    $pythonCacheDir = Join-Path $targetAppFolder "Contents\python\ameno_ui\__pycache__"
+    if (Test-Path -LiteralPath $pythonCacheDir) {
+        Remove-Item -LiteralPath $pythonCacheDir -Recurse -Force
+    }
+
     $docsDir = Join-Path $targetAppFolder "docs"
     New-Item -ItemType Directory -Path $docsDir -Force | Out-Null
     Copy-Item -Path (Join-Path $repoRoot "docs\user-guide.md") -Destination $docsDir -Force

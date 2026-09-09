@@ -153,11 +153,23 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - **E15 — transição WPF → Python/Qt decidida (2026-09-09):** o plano misto de
   UI e desempenho foi substituído por uma reescrita integral da apresentação,
   do zero e sem copiar/importar WPF. A UI nova terá Login obrigatório, chrome
-  nativo, Criar/Estilos/Editar/Render/Config e compatibilidade por contrato do
-  Max 2021 ao 2027. Serviços de domínio permanecem atrás de um bridge novo. A
+  nativo e Criar/Estilos/Editar/Render/Config. O primeiro candidato fica
+  restrito ao Max 2026; serviços de domínio permanecem atrás de um bridge novo. A
   otimização do preview/commit fica em backlog separado; a E15 deverá provar que
   navegação, lifecycle e autenticação não acrescentam bloqueios à viewport.
   Plano ativo: `plans/2026-09-09-e15-transicao-wpf-python-qt.md`; ADR 0024.
+
+- **E15 — candidato Python/Qt implementado e instalado (2026-09-09):** criada a
+  interface do zero em `Contents/python/ameno_ui/`, com Login/token em memória,
+  janela Qt nativa (minimizar/maximizar/fechar), navegação local sem refresh
+  implícito e páginas Criar/Estilos/Editar/Render/Configuração. O
+  `AmenoUiBridge` troca apenas snapshots primitivos com os serviços MAXScript;
+  fechamento cancela uma coleta interativa antes do teardown. O bootstrap não
+  carrega os módulos de apresentação WPF e os scripts de instalação/empacotamento
+  os excluem do candidato. Python 3.11/PySide6, suíte MAXScript, smoke da ponte,
+  smoke instalado e pacote alpha passaram; o gate visual/soak no Max 2026 ainda
+  depende de uma sessão gráfica real. O endpoint de autenticação e a otimização
+  do núcleo de viewport permanecem fora deste corte.
 
 - **Gate de render adiado durante a E15:** o commit `5844730` permanece instalado
   e validado estruturalmente, mas o gate manual da tela WPF não é prioridade
@@ -190,14 +202,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Executar a E15 — transição integral WPF → Python/Qt:** seguir as 10 etapas e
-  72 subetapas do plano renovado. Começar pelo contrato/baseline e pela fundação
-  `qt_compat`; depois Login, shell nativo, bridge, Criar, Estilos, Editar,
-  Render/Config e certificação. A UI será nova, sem XAML ou código WPF, e terá
-  minimizar, maximizar/restaurar e fechar. Certificar primeiro Max 2021/2024/2026;
-  2022/2023/2025/2027 ficam compatíveis por contrato até haver execução real.
-  Nesta E15, estabilidade de viewport significa provar zero regressão adicionada
-  pela UI; a otimização do núcleo continua fora do escopo.
+- **Concluir o gate E15 no Max 2026:** abrir o Max com a instalação ativa,
+  validar Login → Criar e as páginas sem refresh implícito, repetir min/max/close,
+  executar uma cena descartável com cotas de planta e fachada, testar 20 sessões
+  de MouseTool e registrar o soak de viewport. Se houver falha, corrigir somente
+  a transição/bridge Qt; não reintroduzir WPF nem misturar otimização do núcleo.
+  O endpoint de autenticação real será conectado depois de seu contrato ser
+  fornecido. Max 2021/2024 e demais versões continuam adiados.
 
 - **E14 suspensa durante a E15:** os gates de fachada não serão retomados dentro
   do WPF. Depois do corte Qt, serão repetidos pela interface nova; o trabalho de
@@ -232,7 +243,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 ## Decisões que ainda exigem validação
 
 - Endpoint, protocolo, expiração e política offline do token de Login da E15.
-- Ambientes executáveis para certificar Max 2022, 2023, 2025 e 2027.
+- Portabilidade e ambientes para Max 2021–2025 e 2027, somente depois do aceite
+  estável do candidato 2026.
 - Versões mínimas de Corona e V-Ray disponíveis no ambiente real.
 - Se a interface inicial será somente em português ou já bilíngue.
 - Serviço/visibilidade do repositório Git remoto e política de acesso.
@@ -443,6 +455,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 | 2026-09-05 | Fechar o R5 da recuperação E12. | O caso foi definido como reuso do vértice da geometria original entre cadeias H/V; a ponta de anotação não vira âncora nesta E12-R. R5 documental concluído; R6 é o próximo gate. | `docs/decisions/0021-e12-reference-reuse-scope.md`; `plans/2026-09-05-e12-r5-handoff.md`; R2 aprovado |
 | 2026-09-05 | Executar a automação do R6 e corrigir o fixture E12-A obsoleto. | `validate-package.ps1` passou; 11/11 suítes do lote + R2 repetida passaram. E12-A foi ajustada para declarar Horizontal, preservando o contrato de estação H/V. Gate manual final permanece pendente. | `tests/maxscript/test_e12_chain_input.ms`; `work/r6-test-logs`; Batch 3ds Max 2026.3 |
 | 2026-09-05 | Aprovar manualmente a aceitação final da E12-R. | Usuário abriu o Max, repetiu Horizontal→Vertical com o mesmo vértice da geometria original e confirmou “tudo funcionando”; encerramento, cancelamento e Undo/Redo foram aceitos. E12-R R6 concluído; publicação dos commits locais pendente de autorização. | `plans/2026-09-05-e12-r6-handoff.md`; confirmação do usuário |
+| 2026-09-09 | Executar o primeiro candidato da transição WPF → Python/Qt, priorizando somente o Max 2026. | Fundação Python 3.11/PySide6, Login/token em memória, janela Qt nativa, páginas funcionais, bridge de snapshots primitivos, cancelamento seguro no fechamento e exclusão dos módulos WPF do pacote foram implementados do zero. `validate-package.ps1`, compilação/import do Python embarcado, smoke MAXScript completo, smoke E15 e `test_installed_package.ms` passaram; ZIP `dist/AmenoTools-0.0.1-e15-alpha.zip` gerado (SHA-256 `40D47D5CFA0C7D2D45D4872730F723C5E5B81909DB892D8C79E6445078EDC33F`) e instalação ativa atualizada. Gate visual/soak ainda pendente por exigir Max gráfico. | `plans/2026-09-09-e15-transicao-wpf-python-qt.md`; `docs/decisions/0024-e15-python-qt-interface.md`; `Contents/python/ameno_ui/`; backup `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools.backup-before-e15-20260909-020548` |
 
 ## Como retomar sem contexto
 

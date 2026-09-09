@@ -8,10 +8,10 @@ Arquivos atuais:
 
 - [Fundação de 2026-09-03](2026-09-03-foundation.md): estado técnico entregue, decisões e ponto de retomada.
 - [Plano incremental do MVP](2026-09-03-mvp-incremental.md): etapas funcionais, gates no 3ds Max e ordem de implementação.
-- [E11 — Editor Visual e Preview ao Vivo](2026-09-04-e11-editor-visual-preview.md): editor moderno WPF com preview 2D transacional implementado, integrado e instalado; gate manual pendente.
+- [E11 — Editor Visual e Preview ao Vivo](2026-09-04-e11-editor-visual-preview.md): inventário histórico do editor WPF; a apresentação distribuída foi supersedida pela reescrita Python/Qt da E15.
 - [E10.7 — Âncoras por vértice](2026-09-04-e10-7-subobject-anchors.md): schema v5 e atualização reativa após edição de vértices em Editable Poly/Editable Mesh.
 - [E14 — Planos de cotação e fachadas](2026-09-08-e14-planos-de-cotacao-fachadas.md): generalização do núcleo para planos ortográficos, dividida em sete subetapas; implementação não iniciada.
 - [Substituição do WPF e isolamento da viewport](2026-09-09-substituicao-wpf-qt-viewport.md): recomendação PySide6/Qt + overlay `gw`, modo seguro nativo e migração em seis etapas.
-- [E15 — Transição integral WPF → Python/Qt](2026-09-09-e15-transicao-wpf-python-qt.md): plano ativo de reescrita da UI do zero, login por token, janela nativa e compatibilidade Max 2021–2027.
+- [E15 — Transição integral WPF → Python/Qt](2026-09-09-e15-transicao-wpf-python-qt.md): execução ativa da UI do zero, login por token e janela nativa, certificada primeiro apenas no Max 2026.
 
 Ao abrir um marco novo, criar um arquivo datado (`AAAA-MM-DD-assunto.md`) e incluir o link no `PLAN.md` quando ele for relevante para continuidade.

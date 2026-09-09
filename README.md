@@ -4,7 +4,7 @@ Suíte modular de ferramentas para 3ds Max. O primeiro módulo, **Ameno Dimensio
 
 ## Estado
 
-Fundação técnica `0.0.1` executável no 3ds Max 2026. As etapas E1 a E8.1 foram concluídas e aprovadas interativamente: infraestrutura de cena idempotente (`AMENO_COTAS`), construtor gráfico de cotas com ferramenta de três cliques, persistência atômica via Custom Attributes versionados, medições auditáveis com overrides manuais, editor visual de estilos com tipografia TextPlus e terminais vetoriais, e âncoras associativas com reatividade contínua em tempo real e resiliência a cotas órfãs. A E9 está implementada, aprovada em testes automatizados e instalada para o gate manual: o rollout `Render Separado de Cotas` gera um PNG transparente independente no Corona sem modificar Beauty, LightMix ou Render Elements.
+Fundação técnica `0.0.1` executável no 3ds Max 2026. As etapas E1 a E8.1 foram concluídas e aprovadas interativamente: infraestrutura de cena idempotente (`AMENO_COTAS`), construtor gráfico de cotas com ferramenta de três cliques, persistência atômica via Custom Attributes versionados, medições auditáveis com overrides manuais, estilos com tipografia TextPlus e terminais vetoriais, e âncoras associativas com reatividade contínua em tempo real e resiliência a cotas órfãs. A E15 substitui a apresentação WPF por uma interface Python/Qt escrita do zero, com Login/token, janela nativa e páginas separadas; o primeiro candidato está instalado para gate gráfico no Max 2026. A otimização do núcleo de viewport e a autenticação remota continuam pendentes por contrato separado.
 
 
 Decisões já tomadas:
@@ -49,6 +49,7 @@ Decisões pendentes:
 - [Roadmap](ROADMAP.md)
 - [Plano compartilhado de execução](PLAN.md)
 - [Histórico de planos e handoffs](plans/README.md)
+- [E15 — Transição Python/Qt para Max 2026](plans/2026-09-09-e15-transicao-wpf-python-qt.md)
 - [ADR 0001 — MAXScript primeiro](docs/decisions/0001-maxscript-first.md)
 - [ADR 0002 — Layer e saídas de render](docs/decisions/0002-layer-and-render-output.md)
 - [ADR 0003 — Render separado no MVP](docs/decisions/0003-separate-overlay-render-mvp.md)
@@ -56,6 +57,7 @@ Decisões pendentes:
 - [ADR 0005 — Max 2026 primeiro](docs/decisions/0005-max-2026-first.md)
 - [ADR 0006 — Corona primeiro, V-Ray compatível](docs/decisions/0006-corona-primary-vray-secondary.md)
 - [ADR 0013 — Overlay separado de cotas no Corona](docs/decisions/0013-e9-corona-separate-overlay.md)
+- [ADR 0024 — Interface Python/Qt reescrita do zero](docs/decisions/0024-e15-python-qt-interface.md)
 
 ## Princípios
 

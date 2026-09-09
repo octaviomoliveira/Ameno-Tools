@@ -14,9 +14,9 @@ global AmenoAnchorService
 global AmenoCoronaRendererAdapter
 global AmenoRenderCotasService
 global AmenoPreviewRenderer
+global AmenoUiBridge
+global AmenoPythonUI
 global AmenoStyleEditorWPF
-global AmenoStyleDraft
-global AmenoPreviewModel
 
 (
     if AmenoApp == undefined then throw "O pacote instalado não criou AmenoApp."
@@ -106,29 +106,23 @@ global AmenoPreviewModel
     if installedE9Targets.count < 2 then throw "E9 instalado: Serviço não encontrou linhas e texto da cota."
     AmenoDimensionGraphics.removeDimension installedE9Dim.dimensionId
 
-    -- E11: Editor visual de estilos e preview ao vivo no pacote instalado
-    if AmenoPreviewRenderer == undefined then throw "E11 instalado: AmenoPreviewRenderer não foi carregado."
-    if AmenoStyleEditorWPF == undefined then throw "E11 instalado: AmenoStyleEditorWPF não foi carregado."
-    if AmenoPreviewModel == undefined or AmenoStyleDraft == undefined then throw "E11 instalado: Structs de rascunho ausentes."
+    -- E15: a interface Python/Qt substitui integralmente a apresentação WPF.
+    -- O teste Batch valida somente a fachada/launcher e garante que os
+    -- módulos de apresentação antigos não foram carregados.
+    if AmenoUiBridge == undefined then throw "E15 instalado: AmenoUiBridge não foi carregado."
+    if AmenoPythonUI == undefined then throw "E15 instalado: launcher Python/Qt não foi carregado."
+    if AmenoPythonUI.scriptPath == undefined or AmenoPythonUI.scriptPath == "" then throw "E15 instalado: entrypoint Python vazio."
+    if not doesFileExist AmenoPythonUI.scriptPath then throw ("E15 instalado: entrypoint Python ausente: " + AmenoPythonUI.scriptPath)
+    local installedStylesWire = AmenoUiBridge.stylesSnapshot()
+    if installedStylesWire == undefined or installedStylesWire.count < 3 then throw "E15 instalado: snapshot de estilos incompleto."
+    for installedStyleWire in installedStylesWire do
+        if installedStyleWire == undefined or installedStyleWire.count < 20 then throw "E15 instalado: registro de estilo incompleto."
+    if AmenoPreviewRenderer != undefined or AmenoStyleEditorWPF != undefined then throw "E15 instalado: módulo WPF antigo foi carregado."
 
     -- Verificar independência de caminhos (deve carregar do ApplicationPlugins)
     local instRoot = AmenoBootstrap.rootPath
     if (matchPattern instRoot pattern:"*\\_worktrees\\*") or (matchPattern instRoot pattern:"*\\_tools\\*") then
         throw ("E11 instalado: O pacote está apontando para o repositório em vez do ApplicationPlugins: " + instRoot)
 
-    -- Testar ciclo de abertura e fechamento do editor WPF via AmenoApp
-    local instWin = AmenoApp.openStyleEditor()
-    if instWin == undefined or not AmenoStyleEditorWPF.isOpen() then
-        throw "E11 instalado: Falha ao abrir AmenoStyleEditorWPF através de AmenoApp.openStyleEditor()."
-
-    -- Verificar rascunho inicial
-    if AmenoStyleEditorWPF.currentDraft == undefined or AmenoStyleEditorWPF.currentDraft.sourceStyleId != "default" then
-        throw "E11 instalado: Draft inicial incorreto no editor WPF."
-
-    -- Fechar editor instalado
-    AmenoStyleEditorWPF.close()
-    if AmenoStyleEditorWPF.isOpen() then
-        throw "E11 instalado: AmenoStyleEditorWPF não fechou corretamente."
-
-    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1-E10 e E11 Visual Editor.\n" AmenoVersion.appVersion
+    format "[AMENO_INSTALLED_TEST][PASS] Pacote % carregado via ApplicationPlugins com E1-E14 e E15 Python/Qt.\n" AmenoVersion.appVersion
 )
