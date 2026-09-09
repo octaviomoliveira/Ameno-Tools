@@ -681,6 +681,35 @@ struct AmenoDimensionGraphicsService
         )
     ),
 
+    -- Reposiciona o TextPlus sem reescrever a string. Durante o mouseMove a
+    -- medida normalmente nao muda; ResetString/AppendString, ao contrario,
+    -- pode invalidar a malha do TextPlus e consumir muito tempo em cenas
+    -- grandes. A reconstrucao completa continua sendo usada quando o texto
+    -- ou a tipografia realmente mudam.
+    fn updateTextNodePosition textNode layout style:undefined textGap:60.0 =
+    (
+        if textNode == undefined or not isValidNode textNode then return false
+        if layout == undefined or not layout.valid then return false
+
+        local resolvedGap = textGap
+        if style != undefined do resolvedGap = style.textGap
+        local resolvedGapScene = toSceneUnits resolvedGap
+        local extDir = if layout.signedOffsetSceneUnits >= 0.0 then layout.perpendicular else -layout.perpendicular
+        local textPosition = ((layout.linePointA + layout.linePointB) * 0.5) + (extDir * resolvedGapScene)
+
+        try
+        (
+            textNode.pos = [0,0,0]
+            orientTextNode textNode layout ((getUserProp textNode "Ameno.TextFollowsLine") == true)
+            textNode.pos = textPosition
+            true
+        )
+        catch
+        (
+            false
+        )
+    ),
+
     fn createLineNode layout style:undefined lineThickness:1.5 terminalType:#tick terminalSize:100.0 extensionOverhang:80.0 extensionGap:0.0 material:undefined =
     (
         local resolvedThickness = lineThickness
@@ -1208,7 +1237,7 @@ struct AmenoDimensionGraphicsService
         result
     ),
 
-    fn updatePreviewDimension preview pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned plane:undefined =
+    fn updatePreviewDimension preview pointA pointB offsetPoint outputUnit:#meters precision:2 styleId:"default" mode:#aligned plane:undefined styleOverride:undefined dimensionsLayer:undefined =
     (
         if preview == undefined then return undefined
 
@@ -1216,14 +1245,33 @@ struct AmenoDimensionGraphicsService
         if not layout.valid then return undefined
 
         local measurement = AmenoUnitService.formatMillimeters layout.measuredMillimeters outputUnit:outputUnit precision:precision decimalSeparator:#comma
-        local resolvedStyle = undefined
-        if ::AmenoStyleService != undefined do resolvedStyle = ::AmenoStyleService.getStyle styleId
+        local resolvedStyle = styleOverride
+        if resolvedStyle == undefined and ::AmenoStyleService != undefined do resolvedStyle = ::AmenoStyleService.getStyle styleId
+
+        local resolvedDimensionsLayer = dimensionsLayer
+        if resolvedDimensionsLayer == undefined do
+        (
+            local sceneState = try (AmenoSceneSetup.inspect()) catch (undefined)
+            if sceneState != undefined do resolvedDimensionsLayer = sceneState.dimensionsLayer
+        )
 
         with undo off
         (
             updateLineSplinePoints preview.lineNode layout style:resolvedStyle
-            updateTextNode preview.textNode measurement.text layout style:resolvedStyle
-            local terminalPair = syncTerminalNodes preview.dimensionId layout undefined resolvedStyle (AmenoSceneSetup.inspect()).dimensionsLayer material:(try (preview.lineNode.material) catch (undefined)) preview:true
+            local textNeedsRebuild = (preview.displayText != measurement.text)
+            if not textNeedsRebuild and preview.style != undefined and resolvedStyle != undefined do
+            (
+                textNeedsRebuild = (preview.style.fontName != resolvedStyle.fontName or \
+                    preview.style.fontSize != resolvedStyle.fontSize or \
+                    preview.style.bold != resolvedStyle.bold or \
+                    preview.style.italic != resolvedStyle.italic or \
+                    preview.style.tracking != resolvedStyle.tracking)
+            )
+            if textNeedsRebuild then
+                updateTextNode preview.textNode measurement.text layout style:resolvedStyle
+            else
+                updateTextNodePosition preview.textNode layout style:resolvedStyle
+            local terminalPair = syncTerminalNodes preview.dimensionId layout undefined resolvedStyle resolvedDimensionsLayer material:(try (preview.lineNode.material) catch (undefined)) preview:true
             configurePreviewNode preview.lineNode
             configurePreviewNode preview.textNode
 

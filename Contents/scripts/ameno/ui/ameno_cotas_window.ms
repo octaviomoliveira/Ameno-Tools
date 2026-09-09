@@ -17,6 +17,7 @@ struct AmenoCotasWindowDefinition
     activeSection = 0,
     closeApproved = false,
     interactiveToolSuspended = false,
+    isNavigating = false,
 
     -- -----------------------------------------------------------------
     -- Helpers
@@ -111,6 +112,62 @@ struct AmenoCotasWindowDefinition
     fn findControl ctrlName =
     (
         if window == undefined then undefined else window.FindName ctrlName
+    ),
+
+    -- Um UserControl WPF so pode ter um pai por vez. As abas mantem cache
+    -- para preservar o estado dos campos, portanto ao fechar/reabrir a janela
+    -- o controle pode ainda apontar para o ContentArea da janela anterior.
+    -- Desconecta esse pai antigo de forma best-effort antes de reutilizar o
+    -- controle; nunca deixa uma excecao de reparenting escapar para o Max.
+    fn detachControlFromParent controlValue =
+    (
+        if controlValue == undefined then return true
+
+        local parentValue = try (controlValue.Parent) catch (undefined)
+        if parentValue == undefined then return true
+
+        local detached = false
+        try
+        (
+            local parentChild = try (parentValue.Child) catch (undefined)
+            if parentChild != undefined and parentChild == controlValue do
+            (
+                try (parentValue.Child = undefined; detached = true) catch ()
+            )
+        )
+        catch ()
+
+        if not detached do
+            try
+            (
+                local parentContent = try (parentValue.Content) catch (undefined)
+                if parentContent != undefined and parentContent == controlValue do
+                (
+                    try (parentValue.Content = undefined; detached = true) catch ()
+                )
+            )
+            catch ()
+
+        if not detached do
+            try
+            (
+                local children = try (parentValue.Children) catch (undefined)
+                if children != undefined do
+                (
+                    try
+                    (
+                        if children.Contains controlValue do
+                        (
+                            children.Remove controlValue
+                            detached = true
+                        )
+                    )
+                    catch ()
+                )
+            )
+            catch ()
+
+        detached or (try (controlValue.Parent == undefined) catch (true))
     ),
 
     -- -----------------------------------------------------------------
@@ -346,6 +403,13 @@ struct AmenoCotasWindowDefinition
 
             -- A troca so ocorre depois que o novo controle foi construido e
             -- atualizado. Em caso de erro, a aba anterior permanece intacta.
+            -- Primeiro solte o filho atual e qualquer pai de uma janela antiga;
+            -- isso elimina o erro WPF "already the logical child".
+            local previousChild = try (contentBorder.Child) catch (undefined)
+            if previousChild != undefined and previousChild != tabControl do
+                try (contentBorder.Child = undefined) catch ()
+            if previousChild != tabControl do
+                detachControlFromParent tabControl
             contentBorder.Child = tabControl
             logUi #info ("conteudo da aba " + (sectionIndex as string) + " ativado")
             true
@@ -363,6 +427,12 @@ struct AmenoCotasWindowDefinition
     -- -----------------------------------------------------------------
     fn setActiveSection sectionIndex =
     (
+        if isNavigating do
+        (
+            logUi #warn ("navegacao ignorada durante troca da aba " + (sectionIndex as string))
+            return false
+        )
+
         local btnNames = #(
             "btnSectionCriar",
             "btnSectionEstilos",
@@ -379,7 +449,18 @@ struct AmenoCotasWindowDefinition
 
         -- Primeiro constroi a proxima aba. Somente um sucesso pode alterar o
         -- estado visual/ativo; falhas preservam integralmente a aba corrente.
-        if not (setTabContent sectionIndex) do return false
+        -- A guarda tambem evita cliques/callbacks reentrantes durante o Parse
+        -- XAML e a troca do filho WPF.
+        isNavigating = true
+        local contentResult = false
+        try (contentResult = setTabContent sectionIndex) catch
+        (
+            local navigationError = try (getCurrentException() as string) catch ("erro desconhecido")
+            logUi #error ("falha na troca de aba " + (sectionIndex as string) + " · " + navigationError)
+            contentResult = false
+        )
+        isNavigating = false
+        if not contentResult do return false
         activeSection = sectionIndex
 
         local converter = try (dotNetObject "System.Windows.Media.BrushConverter") catch (undefined)
@@ -463,10 +544,22 @@ struct AmenoCotasWindowDefinition
             (
                 try (callbacks.removeScripts id:#amenoCotasWindowSelection) catch ()
                 try (AmenoCotasWindow.unregisterSceneCountCallbacks()) catch ()
+                -- Soltar primeiro o filho do shell; em seguida cada aba libera
+                -- seus controles cached. Assim uma reabertura nunca tenta
+                -- reparentar um UserControl que ainda pertence a esta janela.
+                try
+                (
+                    local closedContent = AmenoCotasWindow.findControl "ContentArea"
+                    if closedContent != undefined do closedContent.Child = undefined
+                )
+                catch ()
                 try (::AmenoCotasEstilosTab.onPanelClosed()) catch ()
                 try (::AmenoCotasEditarTab.onPanelClosed()) catch ()
+                try (::AmenoCotasCriarTab.onPanelClosed()) catch ()
+                try (::AmenoCotasRenderTab.onPanelClosed()) catch ()
                 try (AmenoCotasWindow.closeApproved = false) catch ()
                 try (AmenoCotasWindow.interactiveToolSuspended = false) catch ()
+                try (AmenoCotasWindow.isNavigating = false) catch ()
                 try (AmenoCotasWindow.window = undefined) catch ()
             ))
 

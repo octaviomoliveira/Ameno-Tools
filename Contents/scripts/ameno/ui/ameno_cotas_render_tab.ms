@@ -500,6 +500,15 @@ struct AmenoCotasRenderTabDefinition
         true
     ),
 
+    -- Libera referencias aos controles WPF quando o shell fecha. A lista de
+    -- cameras sera reconstruida na proxima abertura.
+    fn onPanelClosed =
+    (
+        hostControl = undefined
+        cameraList = #()
+        true
+    ),
+
     -- -----------------------------------------------------------------
     -- Construir e retornar UserControl WPF
     -- -----------------------------------------------------------------

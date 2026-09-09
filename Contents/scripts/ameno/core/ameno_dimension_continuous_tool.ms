@@ -155,6 +155,14 @@ struct AmenoDimensionContinuousToolService
     hoverClassification = undefined,
     viewportCallbackRegistered = false,
 
+    -- O Max envia dezenas/centenas de mouseMove por segundo. Cada amostra
+    -- pode consultar a cena e, depois de dois pontos, atualizar spline,
+    -- TextPlus e terminais. Limitar somente a entrada interativa mantém o
+    -- preview responsivo sem executar trabalho pesado em todas as mensagens;
+    -- chamadas programáticas a refreshChainPreview continuam sem throttle.
+    interactiveMoveIntervalMs = 40,
+    lastInteractiveMoveTick = 0,
+
     -- IDs das cotas criadas nesta sessão
     lastSessionIds  = #(),
 
@@ -341,6 +349,22 @@ struct AmenoDimensionContinuousToolService
     (
         if ::AmenoContinuousDiagnostics == undefined then return "<diagnostics-unavailable>"
         try (::AmenoContinuousDiagnostics.pointText pointValue) catch "<diagnostics-error>"
+    ),
+
+    fn resetInteractiveMoveThrottle =
+    (
+        lastInteractiveMoveTick = 0
+        true
+    ),
+
+    fn shouldProcessInteractiveMove =
+    (
+        local nowTick = try (timeStamp()) catch (0)
+        if nowTick == 0 then return true
+        if lastInteractiveMoveTick > 0 and (nowTick - lastInteractiveMoveTick) < interactiveMoveIntervalMs then
+            return false
+        lastInteractiveMoveTick = nowTick
+        true
     ),
 
     fn effectiveMode =
@@ -809,6 +833,14 @@ struct AmenoDimensionContinuousToolService
 
         try
         (
+            -- Resolver uma vez por movimento reduz O(N) varreduras de objetos
+            -- e clones de estilo quando a cadeia possui muitos segmentos.
+            local previewStyle = undefined
+            if ::AmenoStyleService != undefined do
+                try (previewStyle = ::AmenoStyleService.getStyle (effectiveStyleId())) catch ()
+            local previewSceneState = try (AmenoSceneSetup.inspect()) catch (undefined)
+            local previewDimensionsLayer = if previewSceneState != undefined then previewSceneState.dimensionsLayer else undefined
+
             for segmentIndex = 1 to chainLayout.segments.count do
             (
                 local segmentLayout = chainLayout.segments[segmentIndex]
@@ -828,7 +860,7 @@ struct AmenoDimensionContinuousToolService
                     local previousPreview = segmentPreviews[segmentIndex]
                     local updatedPreview = AmenoDimensionGraphics.updatePreviewDimension previousPreview \
                         pointAValue pointBValue chainLayout.offsetPoint outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) mode:(effectiveMode()) \
-                        plane:(effectivePlane())
+                        plane:(effectivePlane()) styleOverride:previewStyle dimensionsLayer:previewDimensionsLayer
                     if updatedPreview == undefined then throw "preview update returned undefined"
                     segmentPreviews[segmentIndex] = updatedPreview
                 )
@@ -929,6 +961,7 @@ struct AmenoDimensionContinuousToolService
             lastCommittedLayout = undefined
             lastResult      = #collecting
             cleanupInProgress = false
+            resetInteractiveMoveThrottle()
             inputSessionId = (timeStamp()) as string
             snapshotSessionConfiguration()
             active          = true
@@ -970,6 +1003,7 @@ struct AmenoDimensionContinuousToolService
             lastCursorPoint = undefined
             lastChainLayout = undefined
         )
+        resetInteractiveMoveThrottle()
         closeHUD()
         try (popPrompt()) catch ()
         stage = #idle
@@ -1455,6 +1489,12 @@ struct AmenoDimensionContinuousToolService
     (
         if not active then return undefined
         if abortIfPlaneContextChanged() then return undefined
+
+        -- Nao consultar a cena nem reconstruir a pre-visualizacao para cada
+        -- evento do mouse. O proximo evento apos a janela de 40 ms usa sempre
+        -- o ponto mais recente fornecido pelo MouseTool.
+        if screenPoint != undefined and not (shouldProcessInteractiveMove()) do
+            return hoverClassification
 
         if screenPoint != undefined and ::AmenoContinuousInputResolver != undefined then
         (

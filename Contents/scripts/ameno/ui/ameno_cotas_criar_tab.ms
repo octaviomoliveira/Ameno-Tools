@@ -836,6 +836,16 @@ struct AmenoCotasCriarTabDefinition
         true
     ),
 
+    -- Libera a arvore WPF ao fechar o shell. O estado operacional (modo,
+    -- unidade e precisao) continua nos servicos; somente referencias de
+    -- controles visuais sao descartadas para evitar reparenting em reabertura.
+    fn onPanelClosed =
+    (
+        hostControl = undefined
+        isSyncing = false
+        true
+    ),
+
     -- -----------------------------------------------------------------
     -- Construir e retornar o UserControl WPF
     -- -----------------------------------------------------------------

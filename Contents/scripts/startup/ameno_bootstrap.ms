@@ -4,6 +4,7 @@
 */
 
 global AmenoBootstrap
+global AmenoBootstrapState
 global AmenoApp
 global AmenoRuntime
 global AmenoStartupError
@@ -106,6 +107,52 @@ struct AmenoBootstrapService
 
     fn start =
     (
+        -- O bootstrap e carregado pelo 3ds Max durante o startup. Reexecutar
+        -- este arquivo dentro do mesmo processo recompila os structs enquanto
+        -- janelas WPF, handlers DotNet e MouseTools da geracao anterior ainda
+        -- existem. Isso deixa objetos de duas geracoes vivos e pode derrubar o
+        -- bridge mxsdotNet. Um restart completo do Max e o unico teardown
+        -- confiavel; portanto a segunda chamada e deliberadamente recusada.
+        local currentState = try (AmenoBootstrapState) catch (undefined)
+        if currentState == undefined do currentState = #idle
+
+        if currentState == #starting then
+        (
+            local message = "Bootstrap ignorado: inicializacao ja esta em andamento."
+            if AmenoLog != undefined do try (AmenoLog.warn message) catch ()
+            format "[Ameno][WARN] %\n" message
+            return false
+        )
+
+        if currentState == #started then
+        (
+            local message = "Bootstrap ignorado: Ameno ja esta carregado. Feche e reabra o 3ds Max para recarregar."
+            if AmenoLog != undefined do try (AmenoLog.warn message) catch ()
+            format "[Ameno][WARN] %\n" message
+            return false
+        )
+
+        if currentState == #failed then
+        (
+            local message = "Bootstrap bloqueado apos falha anterior. Feche e reabra o 3ds Max antes de tentar novamente."
+            if AmenoLog != undefined do try (AmenoLog.error message) catch ()
+            format "[Ameno][ERROR] %\n" message
+            return false
+        )
+
+        -- Mesmo sem o marcador de estado (por exemplo, apos uma versao
+        -- antiga), a existencia de AmenoApp indica que este processo ja teve
+        -- uma geracao do plugin. Nao substituir structs/handlers em voo.
+        if AmenoApp != undefined then
+        (
+            local message = "Bootstrap bloqueado: AmenoApp ja existe neste processo. Feche e reabra o 3ds Max para recarregar."
+            if AmenoLog != undefined do try (AmenoLog.warn message) catch ()
+            format "[Ameno][WARN] %\n" message
+            AmenoBootstrapState = #started
+            return false
+        )
+
+        AmenoBootstrapState = #starting
         AmenoStartupError = ""
 
         local moduleFiles = #(
@@ -143,16 +190,28 @@ struct AmenoBootstrapService
 
         for moduleFile in moduleFiles do
         (
-            if not (loadModule moduleFile) then return false
+            if not (loadModule moduleFile) then
+            (
+                AmenoBootstrapState = #failed
+                return false
+            )
         )
 
-        if AmenoApp != undefined do
+        try
         (
-            try (AmenoApp.shutdown()) catch ()
+            AmenoApp = AmenoRuntime rootPath:rootPath
+            local startResult = AmenoApp.start()
+            AmenoBootstrapState = if startResult then #started else #failed
+            startResult
         )
-
-        AmenoApp = AmenoRuntime rootPath:rootPath
-        AmenoApp.start()
+        catch
+        (
+            AmenoStartupError = "Falha ao iniciar Ameno: " + (getCurrentException() as string)
+            AmenoBootstrapState = #failed
+            if AmenoLog != undefined do try (AmenoLog.error AmenoStartupError) catch ()
+            format "[Ameno][ERROR] %\n" AmenoStartupError
+            false
+        )
     )
 )
 
@@ -161,6 +220,19 @@ struct AmenoBootstrapService
     local startupPath = getFilenamePath bootstrapFile
     local modulesPath = pathConfig.normalizePath (pathConfig.appendPath startupPath @"..\ameno")
 
-    AmenoBootstrap = AmenoBootstrapService rootPath:modulesPath
-    AmenoBootstrap.start()
+    local existingApp = try (AmenoApp) catch (undefined)
+    local currentState = try (AmenoBootstrapState) catch (undefined)
+    if currentState == undefined do currentState = #idle
+
+    if existingApp != undefined or currentState != #idle then
+    (
+        local message = "Bootstrap ignorado: ja existe uma geracao do Ameno neste processo. Feche e reabra o 3ds Max para recarregar."
+        if AmenoLog != undefined do try (AmenoLog.warn message) catch ()
+        format "[Ameno][WARN] %\n" message
+    )
+    else
+    (
+        AmenoBootstrap = AmenoBootstrapService rootPath:modulesPath
+        AmenoBootstrap.start()
+    )
 )

@@ -5,6 +5,9 @@
     falha e suspensao sem Hide/Show.
 */
 
+global AmenoBootstrap
+global AmenoBootstrapState
+
 struct E13UiFailureTabDefinition
 (
     fn build =
@@ -20,6 +23,13 @@ struct E13UiFailureTabDefinition
     local bootstrapPath = pathConfig.normalizePath (pathConfig.appendPath worktreeRoot @"Contents\scripts\startup\ameno_bootstrap.ms")
 
     resetMaxFile #noPrompt
+    -- O Batch pode carregar uma copia do ApplicationPlugins antes deste
+    -- teste. Como nao ha janela aberta neste ponto, limpar apenas as
+    -- referencias globais permite exercitar o bootstrap da worktree sem
+    -- misturar a versao instalada com a versao sob teste.
+    AmenoApp = undefined
+    AmenoBootstrap = undefined
+    AmenoBootstrapState = undefined
     if doesFileExist bootstrapPath then
         fileIn bootstrapPath quiet:true
     else
@@ -104,7 +114,17 @@ struct E13UiFailureTabDefinition
     check "janela carregada e oculta continua sendo o singleton" \
         (hiddenStillOpen and restoredWindow == originalWindow and originalWindow.IsVisible)
 
+    local firstWindow = ::AmenoCotasWindow.window
     try (::AmenoCotasWindow.close()) catch ()
+
+    local reopenedWindow = try (::AmenoCotasWindow.show()) catch (undefined)
+    check "reabertura cria uma nova arvore WPF sem reparenting" \
+        (reopenedWindow != undefined and ::AmenoCotasWindow.isOpen() and reopenedWindow != firstWindow)
+    try (::AmenoCotasWindow.close()) catch ()
+
+    local bootstrapRetry = try (::AmenoBootstrap.start()) catch (undefined)
+    check "segunda inicializacao do bootstrap e bloqueada" \
+        (bootstrapRetry == false and ::AmenoApp != undefined and ::AmenoApp.started and ::AmenoBootstrapState == #started)
 
     format "\n[AMENO_TEST] Resultado lifecycle WPF: % passou(aram), % falhou(aram)\n" passed failed
     if failed == 0 then

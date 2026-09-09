@@ -299,6 +299,56 @@ struct AmenoCotasEstilosTabDefinition
     (
         this.unregisterCallbacks()
         this.discardCurrentDraft()
+        -- Os controles sao filhos da janela WPF fechada. Soltar todas as
+        -- referencias evita manter a arvore viva e elimina reparenting invalido
+        -- na proxima abertura do painel.
+        hostControl = undefined
+        cbStyleSelect = undefined
+        txtInUseCount = undefined
+        txtDirtyMark = undefined
+        btnPresetArch = undefined
+        btnPresetEdit = undefined
+        btnPresetTech = undefined
+        btnSaveAsNew = undefined
+        btnNewStyle = undefined
+        btnDuplicateStyle = undefined
+        btnDeleteStyle = undefined
+        btnZoom50 = undefined
+        btnZoom100 = undefined
+        btnZoom200 = undefined
+        btnToggleBg = undefined
+        pnlPreviewHost = undefined
+        previewCanvas = undefined
+        txtPreviewStatus = undefined
+        cbFontName = undefined
+        sliderFontSize = undefined
+        txtFontSize = undefined
+        chkBold = undefined
+        chkItalic = undefined
+        sliderTracking = undefined
+        txtTracking = undefined
+        sliderTextGap = undefined
+        txtTextGap = undefined
+        chkTextMask = undefined
+        btnAnnotationColor = undefined
+        txtAnnotationColor = undefined
+        btnThin = undefined
+        btnNorm = undefined
+        btnThick = undefined
+        sliderLineThickness = undefined
+        txtLineThickness = undefined
+        sliderOverhang = undefined
+        txtOverhang = undefined
+        sliderExtensionGap = undefined
+        txtExtensionGap = undefined
+        cbTerminalType = undefined
+        sliderTerminalSize = undefined
+        txtTerminalSize = undefined
+        cbTerminalPlacement = undefined
+        txtTerminalAngle = undefined
+        btnApplySelection = undefined
+        btnApplyAll = undefined
+        btnSaveStyle = undefined
         true
     ),
 

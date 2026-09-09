@@ -96,6 +96,60 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   foi verificado por `test_installed_package.ms`; ZIP/SHA-256 já gerados.
   Plano detalhado: `plans/2026-09-08-e14-planos-de-cotacao-fachadas.md`.
 
+- **Incidente E14 — crash nativo e lentidão recorrente (2026-09-08):** o WER
+  registrou `0xc0000005` em `3dsmax.exe` (módulo desconhecido, RIP `0xC`) às
+  21:09:52, um segundo após o evento do Windows de memória virtual mínima baixa;
+  o dump não permite atribuir a falha a E14, Corona ou GPU. Na nova sessão, a
+  cadeia contínua concluiu 3 cotas, mas o Max ficou temporariamente
+  `Responding=False` com mais de 90 mil páginas/s e pressão de commit, impedindo
+  a navegação. O mesmo log registrou falhas WPF de reparenting
+  ("element already the logical child" / "Visual is not a child") ao alternar
+  abas, no `contentBorder.Child = tabControl`; isso é uma falha independente de
+  ciclo de vida da UI que precisa de detach explícito dos controles em cache.
+  Também existem dois diretórios de backup descobertos como pacotes em
+  `ApplicationPlugins`, um risco ambiental ainda não causalmente confirmado.
+  Não houve novo crash no segundo episódio; o Max encerrou normalmente. E14 fica
+  bloqueada para o gate manual até corrigir o reparenting WPF, reduzir o pico de
+  memória/paginação e repetir o teste em cena descartável com telemetria.
+
+- **Novo incidente — recarga em processo provocou exceção do mxsdotNet (2026-09-08):**
+  após a orientação de reinício pelo Listener, o mesmo PID do Max carregou todos
+  os scripts Ameno às 21:48:20 e novamente às 21:48:30; dois novos logs de sessão
+  foram abertos e, às 21:48:39, o Max escreveu `3dsmax_minidump.dmp` com exceção
+  C++ `0xe06d7363` cujo contexto aponta para `mxsdotNet.dlx`. O serviço
+  `ADPClientService.exe` também falhou às 21:48:37, mas é um processo separado e
+  não explica o minidump do Max. A recarga via `AmenoBootstrap.start()` em
+  processo vivo fica proibida até existir um teardown determinístico da janela,
+  handlers e objetos .NET; o procedimento seguro passa a ser fechar o Max
+  normalmente e reabrir sem repetir `fileIn`/bootstrap.
+
+- **Hotfix de contenção do travamento (2026-09-08):** o bootstrap passou a ter
+  estado de geração (`#starting/#started/#failed`) e recusa qualquer segunda
+  inicialização no mesmo processo; a janela WPF ganhou guarda contra navegação
+  reentrante, detach explícito do `ContentArea` e liberação dos hosts de todas
+  as abas ao fechar. O preview contínuo limita a entrada interativa a 25 Hz e
+  reposiciona o TextPlus sem `ResetString/AppendString` quando a etiqueta não
+  mudou. A suíte `test_e13_ui_lifecycle.ms` passou com 13/13 PASS, incluindo
+  fechar/reabrir e tentativa de bootstrap duplicado. As sete cópias alteradas
+  foram instaladas no `ApplicationPlugins` com o Max aberto somente para o
+  próximo processo; a sessão já carregada continua com os scripts antigos até
+  ser encerrada. Backup recuperável em
+  `D:\Ameno\backups\AmenoTools-before-stability-hotfix-20260908-220807`;
+  ZIP `dist/AmenoTools-0.0.1-stability-hotfix-20260908.zip`, SHA-256
+  `75B4F0209B5CBB689F7D602D54FE8D19F50345B8D092DA7F6DA73F1DFBE60869`.
+
+- **Rearquitetura da interface em avaliação (2026-09-08):** a análise confirmou
+  que a falha não está restrita ao shell WPF: `AmenoDimensionContinuousTool`
+  chama `refreshChainPreview` em eventos de `mouseMove`, e o preview atualiza
+  spline, `TextPlus` e terminais durante a interação. A proposta é separar
+  definitivamente UI, interação e representação: manter os serviços geométricos
+  e CA v6; substituir o shell WPF por um `rolloutFloater` nativo persistente
+  (controles criados uma vez, sem reparenting); e desenhar o preview transitório
+  apenas com `gw`/redraw callback, criando spline/Texto/mesh somente no commit.
+  Qt/PySide6 fica como alternativa de longo prazo, pois o ambiente já carrega
+  PySide6, mas exige um host e empacotamento próprios. A escolha ainda aguarda
+  aprovação; nenhuma implementação foi iniciada.
+
 - **Prioridade atual — validar manualmente o hotfix de render/Isolate Selection:** o commit `5844730` está instalado em `ApplicationPlugins`; 41/41 arquivos de conteúdo e o manifesto conferem por SHA-256 e o smoke instalado passou com 1 PASS/0 FAIL. Reiniciar o Max, deixar o Isolate Selection desligado, confirmar a caixa `Renderizar somente as cotas (sem a planta)` e testar o PNG da cena real; o Ameno deverá ocultar a planta temporariamente e restaurar a cena.
 
 - **Prioridade atual — validar manualmente o hotfix de lifecycle WPF instalado:** a correção mantém uma única janela/instância por aba, substitui o ciclo reentrante `Hide → startTool → Show` por bloqueio temporário dos controles, torna a navegação transacional e registra falhas no logger. Pacote e dez suítes passaram com 142 PASS/0 FAIL. O commit `dac0601` foi instalado com o Max fechado; 42/42 arquivos conferiram por SHA-256 e o teste instalado passou com 1 PASS/0 FAIL. Backup: `D:\Ameno\backups\AmenoTools-before-ui-lifecycle-20260906-213520`. Gate manual pendente. Handoff: `plans/2026-09-06-e13-ui-lifecycle-fix-handoff.md`.
@@ -122,6 +176,24 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - E11 — Editor Visual e Preview ao Vivo: implementação mesclada da branch `feature/e11-visual-editor`, validada estruturalmente e instalada. Falta somente o gate visual e funcional do usuário no 3ds Max. Plano detalhado em `plans/2026-09-04-e11-editor-visual-preview.md`.
 
 ## Próximo passo executável
+
+- **Estabilizar a interface antes de novos gates E14:** congelar o WPF atual para
+  não introduzir novas telas; prototipar primeiro a rota nativa com uma única
+  janela persistente e quatro grupos fixos, mantendo os mesmos comandos do
+  `AmenoApp`. Em paralelo, trocar o preview de alta frequência por marcadores e
+  linhas `gw` leves; o commit continua usando a representação persistente. Medir
+  `Responding`, memória e paginação em 1/10/50 movimentos e verificar cancelamento,
+  Undo e troca de cena antes de migrar Estilos/Editar/Render. Só depois decidir
+  se ainda vale investir em Qt/PySide6.
+
+- **Antes de retomar o gate E14:** tratar o incidente acima em três frentes: (1)
+  limpar/reparentar explicitamente o filho WPF antes de reutilizar uma aba em
+  `ContentArea`, com guarda contra navegação reentrante; (2) impor um budget de
+  memória para preview/commit e liberar temporários entre sessões; (3) mover os
+  diretórios `AmenoTools.backup-*` para fora de `ApplicationPlugins` após
+  autorização. Reabrir o Max somente depois de a memória estabilizar, usar cópia
+  descartável da cena e validar primeiro uma cota individual, depois uma cadeia
+  curta, monitorando `Responding`, commit e paginação. Só então repetir E14.6–E14.7.
 
 - **E14:** executar os gates E14.6–E14.7 na branch `feature/e14-facade-planes`:
   repetir E10.1 contra o candidato instalado, validar reancoragem/bake/órfãs e
@@ -155,6 +227,55 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-08 — Corrigir comando de reinício no Scripting Listener:** o bloco
+  multilinha anterior foi rejeitado pelo parser do Listener (`at ), expected
+  <factor>`). A orientação foi simplificada para três expressões independentes:
+  `AmenoApp.shutdown()`, `AmenoBootstrap.start()` e
+  `AmenoApp.openMainPanel()`, executadas nessa ordem; isso preserva a ordem de
+  descarte antes da recarga e evita o erro de parsing.
+
+- **2026-09-08 — Revogar a recarga em processo após novo crash:** a sequência
+  `shutdown → AmenoBootstrap.start()` não é segura para o shell WPF atual porque
+  o bootstrap recompila/substitui os singletons antes de conseguir descartar
+  integralmente a janela anterior. O log comprovou duas cargas consecutivas e
+  um minidump `mxsdotNet.dlx`; até a re-arquitetura, usar somente reinício completo
+  do 3ds Max, com a cena salva/copiada.
+
+- **2026-09-08 — Aplicar hotfix de estabilidade após travamento recorrente:**
+  implementadas a barreira de geração do bootstrap, a navegação WPF não
+  reentrante, o detach/limpeza dos hosts ao fechar e a redução de custo do
+  preview contínuo durante `mouseMove`. O Batch `test_e13_ui_lifecycle.ms`
+  terminou com exit code 0 e 13 PASS/0 FAIL; a etapa de terminais terminou com
+  40 PASS/0 FAIL. A cópia ativa foi atualizada após backup, mas exige reinício
+  completo do Max para entrar em memória. Alterações locais estão na branch
+  `feature/e14-facade-planes`; nenhuma publicação no GitHub foi executada.
+
+- **2026-09-08 — Orientar reinício do plugin pelo Scripting Listener:** para uma
+  recarga dentro do 3ds Max, primeiro executar `AmenoApp.shutdown()` enquanto os
+  objetos atuais ainda estão referenciados, depois `AmenoBootstrap.start()` e
+  reabrir o painel. Recarregar somente os módulos ou o bootstrap sem o shutdown
+  pode deixar handlers/uma janela WPF antiga vivos. Essa recarga reinicia scripts
+  e UI, mas não substitui fechar/reabrir o Max quando houver pressão de memória.
+
+- **2026-09-08 — Avaliar outra forma de refazer a interface da fachada:** após
+  nova lentidão recorrente, a inspeção encontrou duas camadas independentes de
+  risco: reparenting de controles WPF em cache e atualização de geometria pesada
+  em cada `mouseMove`. Foram comparadas três rotas (rollout nativo persistente,
+  Qt/PySide6 e híbrida UI nativa + preview `gw`). A recomendação provisória é a
+  rota híbrida com shell nativo, preservando os serviços/CA e adiando a criação de
+  nós para o commit; decisão e implementação permanecem pendentes.
+
+- **2026-09-08 — Analisar a lentidão e o novo travamento da fachada:** o
+  diagnóstico cruzou o log persistente do Ameno, `Max.log`, WER, dump e eventos
+  do Windows. A lentidão foi reproduzida como pressão severa de memória e
+  paginação durante a sessão (não há evidência de erro de GPU, disco ou
+  renderer); o crash anterior é uma violação de acesso nativa correlacionada ao
+  evento de memória virtual baixa, com módulo exato desconhecido. Após uma
+  cadeia concluída, a navegação passou a falhar com exceções WPF de reparenting
+  dos controles em cache. Nenhum código foi alterado nesta análise; o próximo
+  gate exige correção explícita do detach WPF, budget de memória e teste
+  instrumentado em cena descartável.
 
 - **2026-09-08 — Implementar a nova função de cotação de fachadas:** a execução
   foi iniciada na branch `feature/e14-facade-planes`. E14.1–E14.5 foram
