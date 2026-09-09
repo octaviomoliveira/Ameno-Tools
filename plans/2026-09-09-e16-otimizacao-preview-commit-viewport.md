@@ -2,7 +2,9 @@
 
 Data: 2026-09-09
 
-Status: plano validado; pronto para execução; implementação não iniciada
+Status: implementação automatizada concluída na branch
+`feature/e16-gw-preview-performance`; gate visual/manual E16.9 pendente em um
+processo novo do 3ds Max 2026.
 
 Escopo certificado nesta rodada: 3ds Max 2026, branch derivada de `develop`
 
@@ -13,6 +15,13 @@ fazer checkout destacado da base funcional e perder a documentação E16.
 Contagem de execução: **10 etapas, 78 subetapas numeradas**
 
 Decisão arquitetural: `docs/decisions/0025-e16-preview-gw-e-commit-preparado.md`
+
+Execução desta rodada: o caminho `gw`, o modelo transitório, o hover leve, o
+contexto de commit preparado, o rollback e a suíte automatizada estão verdes.
+O soak humano (câmeras, DPI, resize, 20 sessões e a cena problemática) foi
+deixado como último passo porque o Max interativo já aberto não podia ser
+encerrado com segurança sem risco de perder uma cena não salva. O roteiro e a
+coleta estão em `tests/maxscript/manual_e16_viewport_soak.ms`.
 
 ## 1. Resultado que esta etapa precisa entregar
 
@@ -1138,6 +1147,24 @@ Parar, preservar evidência e não improvisar se ocorrer:
 
 Nesses casos: fechar o Max normalmente se possível, preservar logs, restaurar o
 último pacote aprovado e retomar do último gate verde.
+
+## 16. Registro de execução E16 (2026-09-09)
+
+| Etapa | Estado | Evidência / observação |
+| --- | --- | --- |
+| E16.0 | parcial documentada | ambiente e diagnóstico registrados em `work/e16-baseline/`; a medição histórica de 5,28 s/18,15 s foi preservada, mas não foi repetida cinco vezes para não recarregar o Max interativo aberto |
+| E16.1 | automatizada | sentinelas de 1.000 moves, snapshot de cena e controle positivo R2 executados; o caminho E16 removeu o resolve completo do hover |
+| E16.2 | integrada | primitivas `gw`, callback único, terminais e contadores implementados; inspeção visual de câmeras/DPI fica no gate manual |
+| E16.3 | concluída | `test_e16_overlay_model.ms` — 27/27 PASS |
+| E16.4 | concluída | `test_e16_mousemove_no_scene.ms` — 13/13 PASS, zero nós/full resolve/mutação |
+| E16.5 | automatizada | `test_e16_callback_lifecycle.ms` — 6/6 PASS; rollback e teardown cobertos pelos testes de cadeia |
+| E16.6 | concluída | contexto compartilhado, layout reutilizado, `with redraw off`, Undo único e rollback integral |
+| E16.7 | concluída | commit de 7 segmentos em 181 ms (média 25,86 ms), prepare 1 ms, material 1 ms; nenhum segmento acima de 1 s |
+| E16.8 | concluída | matriz E12–E15/E14, pacote instalado e smoke Qt executados em série, todos com exit 0/PASS/zero FAIL |
+| E16.9 | canário preparado | backup/hash, instalação única, ZIP/SHA e assistente manual prontos; soak gráfico humano ainda pendente |
+
+A implementação não deve ser promovida para `develop` ou `main` sem autorização
+explícita e sem fechar o gate manual pendente.
 
 ## 16. Referências oficiais que governam a implementação
 

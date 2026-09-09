@@ -4,6 +4,7 @@
     global AmenoDimensionGraphics
     global AmenoDimensionCA
     global AmenoContinuousClickClassification
+    global AmenoContinuousOverlayService
 
     format "\n=== [AMENO_E12_C] START source=% ===\n" (getSourceFileName())
     resetMaxFile #noPrompt
@@ -90,11 +91,12 @@
     e12cEq "add B" (addReference anchorB[1] 1 anchorB[2]) #referenceAdded
     e12cEq "add C" (addReference anchorC[1] 1 anchorC[2]) #referenceAdded
     e12cEq "preview succeeds" (AmenoDimensionContinuousTool.refreshChainPreview [100,baselineY,0]) true
-    e12cEq "preview count N-1" AmenoDimensionContinuousTool.segmentPreviews.count 2
-    for previewIndex = 1 to AmenoDimensionContinuousTool.segmentPreviews.count do
+    e12cEq "overlay count N-1" AmenoContinuousOverlayService.model.segments.count 2
+    e12cEq "continuous tool não cria previews de nós" AmenoDimensionContinuousTool.segmentPreviews.count 0
+    for previewIndex = 1 to AmenoContinuousOverlayService.model.segments.count do
     (
-        e12cNear ("preview line A shared Y " + (previewIndex as string)) AmenoDimensionContinuousTool.segmentPreviews[previewIndex].layout.linePointA.y baselineY
-        e12cNear ("preview line B shared Y " + (previewIndex as string)) AmenoDimensionContinuousTool.segmentPreviews[previewIndex].layout.linePointB.y baselineY
+        e12cNear ("overlay line A shared Y " + (previewIndex as string)) AmenoContinuousOverlayService.model.segments[previewIndex].linePointA.y baselineY
+        e12cNear ("overlay line B shared Y " + (previewIndex as string)) AmenoContinuousOverlayService.model.segments[previewIndex].linePointB.y baselineY
     )
 
     local controllerCountBefore = (AmenoDimensionGraphics.findControllers role:"interactive").count
@@ -102,7 +104,8 @@
     e12cEq "rollback leaves no controller" (AmenoDimensionGraphics.findControllers role:"interactive").count controllerCountBefore
     e12cEq "rollback keeps draft" AmenoDimensionContinuousTool.points.count 3
     e12cEq "rollback returns collecting" AmenoDimensionContinuousTool.stage #collecting
-    e12cEq "rollback preserves preview records" AmenoDimensionContinuousTool.segmentPreviews.count 2
+    e12cEq "rollback preserva overlay" AmenoContinuousOverlayService.model.segments.count 2
+    e12cEq "rollback preserva zero previews de nós" AmenoDimensionContinuousTool.segmentPreviews.count 0
 
     -- Falha na fábrica gráfica dentro do undo real da cadeia (caminho que
     -- reproduziu a suspensão observada no Max interativo).
@@ -153,11 +156,12 @@
     e12cEq "vertical add B" (addReference anchorB[1] 1 anchorB[2]) #referenceAdded
     e12cEq "vertical add C" (addReference anchorC[1] 1 anchorC[2]) #referenceAdded
     e12cEq "vertical preview succeeds" (AmenoDimensionContinuousTool.refreshChainPreview [baselineX,0,0]) true
-    e12cEq "vertical preview count N-1" AmenoDimensionContinuousTool.segmentPreviews.count 2
-    for previewIndex = 1 to AmenoDimensionContinuousTool.segmentPreviews.count do
+    e12cEq "vertical overlay count N-1" AmenoContinuousOverlayService.model.segments.count 2
+    e12cEq "vertical contínuo não cria previews de nós" AmenoDimensionContinuousTool.segmentPreviews.count 0
+    for previewIndex = 1 to AmenoContinuousOverlayService.model.segments.count do
     (
-        e12cNear ("vertical preview line A shared X " + (previewIndex as string)) AmenoDimensionContinuousTool.segmentPreviews[previewIndex].layout.linePointA.x baselineX
-        e12cNear ("vertical preview line B shared X " + (previewIndex as string)) AmenoDimensionContinuousTool.segmentPreviews[previewIndex].layout.linePointB.x baselineX
+        e12cNear ("vertical overlay line A shared X " + (previewIndex as string)) AmenoContinuousOverlayService.model.segments[previewIndex].linePointA.x baselineX
+        e12cNear ("vertical overlay line B shared X " + (previewIndex as string)) AmenoContinuousOverlayService.model.segments[previewIndex].linePointB.x baselineX
     )
 
     local verticalEmptyClick = AmenoContinuousClickClassification kind:#empty worldPoint:[baselineX,0,0]

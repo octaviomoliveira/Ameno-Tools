@@ -12,6 +12,8 @@
 /dist/
 /.test-output/
 *.zip
+# E16 recovery copies stay local and outside version control.
+/work/e16-backups/
 __pycache__/
 *.pyc
 

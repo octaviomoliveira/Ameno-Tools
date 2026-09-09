@@ -39,21 +39,29 @@ global AmenoContinuousInputResolver
 global AmenoContinuousViewportDraw
 global AmenoDimensionPlane
 global AmenoDimensionPlaneService
+global AmenoContinuousOverlayService
 
 try (unRegisterRedrawViewsCallback AmenoContinuousViewportDraw) catch ()
 fn AmenoContinuousViewportDraw =
 (
+    -- O callback GW só assume o controle quando há uma sessão de overlay
+    -- habilitada. Isso mantém o backend #sceneNodes utilizável como rollback
+    -- técnico, sem deixar um serviço desabilitado engolir o desenho legado.
+    if ::AmenoContinuousOverlayService != undefined do
+    (
+        if ::AmenoContinuousOverlayService.enabled do
+        (
+            if ::AmenoDimensionContinuousTool != undefined do
+                if ::AmenoDimensionContinuousTool.previewBackend == #gw do
+                    return (::AmenoContinuousOverlayService.drawCurrent())
+        )
+    )
     if ::AmenoDimensionContinuousTool == undefined or not ::AmenoDimensionContinuousTool.active then return false
     try
     (
         gw.setTransform (matrix3 1)
         for pointValue in ::AmenoDimensionContinuousTool.points where pointValue != undefined do
             gw.marker pointValue #smallDiamond color:(color 245 245 245)
-        if ::AmenoDimensionContinuousTool.hoverVisible and ::AmenoDimensionContinuousTool.hoverPoint != undefined do
-        (
-            local candidateColor = ::AmenoDimensionContinuousTool.hoverColor
-            gw.marker ::AmenoDimensionContinuousTool.hoverPoint #diamond color:candidateColor
-        )
         gw.enlargeUpdateRect #whole
     )
     catch ()
@@ -162,6 +170,13 @@ struct AmenoDimensionContinuousToolService
     -- chamadas programáticas a refreshChainPreview continuam sem throttle.
     interactiveMoveIntervalMs = 40,
     lastInteractiveMoveTick = 0,
+
+    -- E16: backends são exclusivos. #gw é o caminho padrão; #sceneNodes só
+    -- existe como rollback temporário e não é persistido na cena.
+    previewBackend = #gw,
+    moveFullResolveCount = 0,
+    moveSceneMutationCount = 0,
+    moveAcceptedCount = 0,
 
     -- IDs das cotas criadas nesta sessão
     lastSessionIds  = #(),
@@ -444,6 +459,8 @@ struct AmenoDimensionContinuousToolService
     (
         try (unRegisterRedrawViewsCallback ::AmenoContinuousViewportDraw) catch ()
         viewportCallbackRegistered = false
+        if ::AmenoContinuousOverlayService != undefined do
+            try (::AmenoContinuousOverlayService.clearSession()) catch ()
         hoverVisible = false
         hoverPoint = undefined
         hoverClassification = undefined
@@ -457,8 +474,54 @@ struct AmenoDimensionContinuousToolService
         hoverVisible = classification != undefined and classification.kind == #reference and classification.worldPoint != undefined
         hoverPoint = if hoverVisible then classification.worldPoint else undefined
         hoverColor = if hoverVisible then (color 80 220 120) else (color 230 170 60)
-        try (redrawViews()) catch ()
+        local overlayHoverChanged = false
+        if ::AmenoContinuousOverlayService != undefined do
+            try
+            (
+                local hoverKindValue = if classification == undefined then #none else classification.kind
+                overlayHoverChanged = ::AmenoContinuousOverlayService.publishHover hoverKindValue hoverPoint colorValue:hoverColor
+            )
+            catch ()
+        -- Com duas ou mais referências o refreshChainPreview publica o layout
+        -- logo em seguida e faz a única solicitação de redraw. Para a fase de
+        -- coleta inicial (menos de dois pontos), o hover ainda precisa pedir
+        -- um redraw próprio.
+        if previewBackend != #gw or points.count < 2 then
+            if overlayHoverChanged or previewBackend != #gw do try (redrawViews()) catch ()
         hoverVisible
+    ),
+
+    -- E16: o hover não decide âncora e não consulta a cena. O snap nativo é
+    -- apenas um indicativo visual; o clique sempre passa por classifyClick(),
+    -- que chama o resolver completo e valida o vértice real.
+    fn classifyHoverFast sample =
+    (
+        if sample == undefined then return undefined
+        if sample.rayStatus != #ok or sample.planeStatus != #ok or sample.planePoint == undefined then
+            return (AmenoContinuousClickClassification kind:#ambiguous reasonCode:#invalidPlane detail:"viewport ray/plano indisponível")
+
+        if sample.snapHit and sample.snapWorldPoint != undefined then
+            AmenoContinuousClickClassification kind:#reference node:sample.snapNode vertexId:-1 \
+                worldPoint:sample.snapWorldPoint reasonCode:#nativeSnapHint provenance:#nativeSnap \
+                detail:"hint nativo; vértice será confirmado no clique"
+        else
+            AmenoContinuousClickClassification kind:#empty worldPoint:sample.planePoint \
+                reasonCode:#planeIntersection provenance:#planeIntersection detail:"hover leve sem alvo confirmado"
+    ),
+
+    fn ensureOverlaySession =
+    (
+        if previewBackend != #gw or ::AmenoContinuousOverlayService == undefined then return false
+        if ::AmenoContinuousOverlayService.enabled then return true
+        -- Uma sessão normal já captura o estilo em begin(). Este fallback só
+        -- reativa o serviço em cenários defensivos; ele não pode consultar o
+        -- StyleService no mouseMove. O snapshot default é deliberadamente
+        -- seguro até o próximo comando explícito de estilo.
+        local styleValue = undefined
+        local sessionIdValue = if inputSessionId == "" then ((timeStamp()) as string) else inputSessionId
+        ::AmenoContinuousOverlayService.beginSession sessionIdValue style:styleValue \
+            outputUnitValue:(effectiveOutputUnit()) precisionValue:(effectivePrecision())
+        true
     ),
 
     fn isEligibleReferenceNode nodeValue =
@@ -793,9 +856,15 @@ struct AmenoDimensionContinuousToolService
 
     fn removeAllPreviews =
     (
-        removeActivePreview()
-        for i = 1 to segmentPreviews.count do removeSegmentPreview i
+        if previewBackend != #gw do
+        (
+            removeActivePreview()
+            for i = 1 to segmentPreviews.count do removeSegmentPreview i
+        )
+        if previewBackend == #gw and ::AmenoContinuousOverlayService != undefined do
+            try (::AmenoContinuousOverlayService.clearModel()) catch ()
         segmentPreviews = #()
+        activePreview = undefined
     ),
 
     fn calculateChainLayout offsetPoint =
@@ -820,9 +889,26 @@ struct AmenoDimensionContinuousToolService
         local chainLayout = calculateChainLayout offsetPoint
         if chainLayout == undefined or not chainLayout.valid then
         (
-            removeAllPreviews()
+            if previewBackend == #gw and ::AmenoContinuousOverlayService != undefined then
+                try (::AmenoContinuousOverlayService.publishLayout points chainLayout) catch ()
+            else
+                removeAllPreviews()
             lastChainLayout = chainLayout
             return false
+        )
+
+        if previewBackend == #gw then
+        (
+            -- E16: o caminho quente publica um snapshot de valores simples.
+            -- Nenhuma API de graphics, layer, material, CA ou picking é
+            -- alcançada aqui; o callback AmenoContinuousViewportDraw desenha
+            -- o modelo pronto quando o Max redesenha a viewport.
+            ensureOverlaySession()
+            local published = ::AmenoContinuousOverlayService.publishLayout points chainLayout
+            lastChainLayout = chainLayout
+            if published do moveAcceptedCount += 1
+            try (::AmenoContinuousOverlayService.requestRedraw()) catch ()
+            return published
         )
 
         while segmentPreviews.count > chainLayout.segments.count do
@@ -962,9 +1048,20 @@ struct AmenoDimensionContinuousToolService
             lastResult      = #collecting
             cleanupInProgress = false
             resetInteractiveMoveThrottle()
+            moveFullResolveCount = 0
+            moveSceneMutationCount = 0
+            moveAcceptedCount = 0
             inputSessionId = (timeStamp()) as string
             snapshotSessionConfiguration()
             active          = true
+            if previewBackend == #gw and ::AmenoContinuousOverlayService != undefined do
+            (
+                local sessionStyleValue = undefined
+                if ::AmenoStyleService != undefined do
+                    try (sessionStyleValue = ::AmenoStyleService.getStyle (effectiveStyleId())) catch ()
+                ::AmenoContinuousOverlayService.beginSession inputSessionId style:sessionStyleValue \
+                    outputUnitValue:(effectiveOutputUnit()) precisionValue:(effectivePrecision())
+            )
             registerViewportOverlay()
             setStage #collecting
             diagnosticTrace #beginReady #("stage=" + (stage as string), "mode=" + ((effectiveMode()) as string))
@@ -1154,29 +1251,49 @@ struct AmenoDimensionContinuousToolService
         setStage #committing
         local createdIds = #()
         local completed = false
+        local commitStartedAt = try (timeStamp()) catch (0)
+        local preparedContext = undefined
+        local transactionError = undefined
         try
         (
-            undo "Ameno: criar cadeia de cotas" on
+            -- Captura a exceção dentro de um try próprio para que o bloco
+            -- undo seja totalmente encerrado antes de o catch de commit
+            -- restaurar o rascunho GW. O Max só termina o rollback da
+            -- transação ao sair deste escopo interno.
+            try
             (
-                for segmentIndex = 1 to chainLayout.segments.count do
+                undo "Ameno: criar cadeia de cotas" on
                 (
-                    persistentInfo ("E12 segmento begin · segmento=" + (segmentIndex as string) + "/" + (chainLayout.segments.count as string))
-                    diagnosticTrace #segmentCreateBegin #("segment=" + (segmentIndex as string))
-                    if failAtSegment == segmentIndex do throw ("Falha injetada no segmento " + (segmentIndex as string))
-                    local segmentLayout = chainLayout.segments[segmentIndex]
-                    local sourceA = segmentLayout.sourceIndexA
-                    local sourceB = segmentLayout.sourceIndexB
-                    local created = AmenoDimensionGraphics.createDimension points[sourceA] points[sourceB] chainLayout.offsetPoint \
-                        role:"interactive" outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) styleId:(effectiveStyleId()) \
-                        nodeA:anchorNodes[sourceA] anchorVertexIdA:anchorVertexIds[sourceA] \
-                        nodeB:anchorNodes[sourceB] anchorVertexIdB:anchorVertexIds[sourceB] \
-                        dimensionMode:modeValue plane:(effectivePlane()) \
-                        baselinePolicy:chainLayout.baselinePolicy baselineCoordinate:chainLayout.baselineCoordinate useUndo:false
-                    if created == undefined do throw ("Segmento " + (segmentIndex as string) + " não foi criado.")
-                    append createdIds created.dimensionId
-                    diagnosticTrace #segmentCreateEnd #("segment=" + (segmentIndex as string), "dimensionId=" + created.dimensionId)
+                    with redraw off
+                    (
+                        preparedContext = AmenoDimensionGraphics.prepareDimensionBuildContext \
+                            styleId:(effectiveStyleId()) outputUnit:(effectiveOutputUnit()) precision:(effectivePrecision()) \
+                            role:"interactive" mode:modeValue plane:(effectivePlane()) \
+                            baselinePolicy:chainLayout.baselinePolicy baselineCoordinate:chainLayout.baselineCoordinate
+                        if preparedContext == undefined or not preparedContext.valid do
+                            throw (if preparedContext == undefined then "Contexto de build indisponível." else preparedContext.errorMessage)
+
+                        for segmentIndex = 1 to chainLayout.segments.count do
+                        (
+                            persistentInfo ("E12 segmento begin · segmento=" + (segmentIndex as string) + "/" + (chainLayout.segments.count as string))
+                            diagnosticTrace #segmentCreateBegin #("segment=" + (segmentIndex as string))
+                            if failAtSegment == segmentIndex do throw ("Falha injetada no segmento " + (segmentIndex as string))
+                            local segmentLayout = chainLayout.segments[segmentIndex]
+                            local sourceA = segmentLayout.sourceIndexA
+                            local sourceB = segmentLayout.sourceIndexB
+                            local created = AmenoDimensionGraphics.createDimensionFromLayout preparedContext chainLayout segmentLayout \
+                                points[sourceA] points[sourceB] chainLayout.offsetPoint \
+                                nodeA:anchorNodes[sourceA] anchorVertexIdA:anchorVertexIds[sourceA] \
+                                nodeB:anchorNodes[sourceB] anchorVertexIdB:anchorVertexIds[sourceB]
+                            if created == undefined do throw ("Segmento " + (segmentIndex as string) + " não foi criado.")
+                            append createdIds created.dimensionId
+                            diagnosticTrace #segmentCreateEnd #("segment=" + (segmentIndex as string), "dimensionId=" + created.dimensionId)
+                        )
+                    )
                 )
             )
+            catch (transactionError = getCurrentException() as string)
+            if transactionError != undefined do throw transactionError
             completed = (createdIds.count == chainLayout.segments.count)
         )
         catch
@@ -1186,11 +1303,42 @@ struct AmenoDimensionContinuousToolService
             persistentError ("E12 commit exception · segmentosCriados=" + (createdIds.count as string) + " · " + lastError)
             diagnosticTrace #commitException #("error=" + lastError, "createdIds=" + (createdIds.count as string))
             rollbackCreatedDimensions createdIds
+            -- E16: preserve the lightweight GW draft when the undo block aborts.
+            -- Max can invoke internal cleanup while unwinding a failed
+            -- transaction; rehydrate only the already calculated model, with
+            -- no scene access and no second picking pass.
+            if previewBackend == #gw and ::AmenoContinuousOverlayService != undefined do
+            (
+                with undo off
+                (
+                    try
+                    (
+                        if not ::AmenoContinuousOverlayService.enabled do
+                        (
+                            local restoreStyle = undefined
+                            if ::AmenoStyleService != undefined do
+                                try (restoreStyle = ::AmenoStyleService.getStyle (effectiveStyleId())) catch ()
+                            ::AmenoContinuousOverlayService.beginSession inputSessionId style:restoreStyle \
+                                outputUnitValue:(effectiveOutputUnit()) precisionValue:(effectivePrecision())
+                        )
+                        ::AmenoContinuousOverlayService.publishLayout points chainLayout
+                        lastChainLayout = chainLayout
+                    )
+                    catch ()
+                )
+            )
             setStage #collecting
             panelStatus ("E12-C: falha; nenhuma cota mantida. " + lastError)
             diagnosticTrace #commitRollbackEnd #("stage=" + (stage as string), "references=" + (points.count as string))
             return false
         )
+
+        local commitDurationMs = (try (timeStamp()) catch (commitStartedAt)) - commitStartedAt
+        persistentInfo ("[E16_PERF] commit.total=" + (commitDurationMs as string) + "ms · prepare=" + \
+            (if preparedContext == undefined then "0" else (preparedContext.prepareDurationMs as string)) + \
+            "ms · style=" + (if preparedContext == undefined then "0" else (preparedContext.styleDurationMs as string)) + \
+            "ms · material=" + (if preparedContext == undefined then "0" else (preparedContext.materialDurationMs as string)) + \
+            "ms · segments=" + (chainLayout.segments.count as string))
 
         if not completed then
         (
@@ -1475,7 +1623,14 @@ struct AmenoDimensionContinuousToolService
             return undefined
         )
 
-        local classification = classifyInputSample sample
+        local classification = undefined
+        if previewBackend == #gw then
+            classification = classifyHoverFast sample
+        else
+        (
+            moveFullResolveCount += 1
+            classification = classifyInputSample sample
+        )
         setHoverClassification classification
         if sample.planeStatus != #ok or sample.planePoint == undefined then return classification
 

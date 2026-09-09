@@ -12,6 +12,7 @@ global AmenoDimensionChainMath
 global AmenoDimensionMath
 global AmenoDimensionContinuousTool
 global AmenoDimensionGraphics
+global AmenoContinuousOverlayService
 
 (
     local testFile = getSourceFileName()
@@ -44,6 +45,7 @@ global AmenoDimensionGraphics
     fn resetToolForBenchmark modeValue pointsValue =
     (
         try (AmenoDimensionContinuousTool.removeAllPreviews()) catch ()
+        AmenoDimensionContinuousTool.previewBackend = #gw
         AmenoDimensionContinuousTool.active = true
         AmenoDimensionContinuousTool.stage = #collecting
         AmenoDimensionContinuousTool.activeMode = modeValue
@@ -59,6 +61,9 @@ global AmenoDimensionGraphics
         AmenoDimensionContinuousTool.lastChainLayout = undefined
         AmenoDimensionContinuousTool.lastResult = #collecting
         AmenoDimensionContinuousTool.cleanupInProgress = false
+        AmenoDimensionContinuousTool.inputSessionId = ("e16-vertical-" + (modeValue as string))
+        if AmenoContinuousOverlayService != undefined do
+            AmenoContinuousOverlayService.beginSession AmenoDimensionContinuousTool.inputSessionId style:undefined outputUnitValue:#meters precisionValue:2
         true
     )
 
@@ -94,6 +99,10 @@ global AmenoDimensionGraphics
         local createOk = AmenoDimensionContinuousTool.refreshChainPreview offsetValue
         local createMs = msElapsed createStart
         if not createOk then throw ("Benchmark vertical: criação de preview falhou em " + (modeValue as string))
+        if AmenoDimensionContinuousTool.segmentPreviews.count != 0 then
+            throw ("Benchmark vertical: preview criou nós no backend gw " + (modeValue as string))
+        if AmenoContinuousOverlayService == undefined or AmenoContinuousOverlayService.model.segments.count != segmentCount then
+            throw ("Benchmark vertical: overlay incompleto em " + (modeValue as string))
 
         local updateStart = timeStamp()
         for iteration = 1 to previewIterations do
@@ -102,8 +111,12 @@ global AmenoDimensionGraphics
             local updateOffset = if modeValue == #vertical then [600.0 + step, 0.0, 0.0] else [0.0, 600.0 + step, 0.0]
             if not (AmenoDimensionContinuousTool.refreshChainPreview updateOffset) then
                 throw ("Benchmark vertical: atualização de preview falhou em " + (modeValue as string))
+            if AmenoDimensionContinuousTool.segmentPreviews.count != 0 then
+                throw ("Benchmark vertical: atualização criou nós no backend gw " + (modeValue as string))
         )
         local updateMs = msElapsed updateStart
+        local nodePreviewCount = AmenoDimensionContinuousTool.segmentPreviews.count
+        local overlaySegmentCount = if AmenoContinuousOverlayService == undefined then -1 else AmenoContinuousOverlayService.model.segments.count
         finishToolForBenchmark()
 
         local mathPerCall = mathMs / (mathIterations as float)
@@ -111,8 +124,9 @@ global AmenoDimensionGraphics
         local updatePerCall = updateMs / (previewIterations as float)
         local updatePerSegment = updatePerCall / (segmentCount as float)
 
-        format "[AMENO_BENCH] mode=% math_calls=% math_total_ms=% math_ms_call=% create_ms=% create_ms_segment=% update_calls=% update_total_ms=% update_ms_call=% update_ms_segment=% segments=%\n" \
-            modeValue mathIterations mathMs mathPerCall createMs createPerSegment previewIterations updateMs updatePerCall updatePerSegment segmentCount
+        format "[AMENO_BENCH] backend=gw mode=% math_calls=% math_total_ms=% math_ms_call=% preview_build_ms=% preview_build_ms_segment=% update_calls=% update_total_ms=% update_ms_call=% update_ms_segment=% segments=% node_previews=% overlay_segments=%\n" \
+            modeValue mathIterations mathMs mathPerCall createMs createPerSegment previewIterations updateMs updatePerCall updatePerSegment segmentCount \
+            nodePreviewCount overlaySegmentCount
         #(mathPerCall, createPerSegment, updatePerSegment)
     )
 

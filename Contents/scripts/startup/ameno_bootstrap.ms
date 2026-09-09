@@ -172,6 +172,7 @@ struct AmenoBootstrapService
             @"core\ameno_dimension_tool.ms",
             @"core\ameno_continuous_input.ms",
             @"core\ameno_continuous_diagnostics.ms",
+            @"core\ameno_continuous_overlay.ms",
             @"core\ameno_dimension_continuous_tool.ms",
             @"renderers\ameno_renderer_probe.ms",
             @"renderers\ameno_corona_adapter.ms",

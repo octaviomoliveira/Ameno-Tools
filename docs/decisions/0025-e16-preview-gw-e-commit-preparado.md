@@ -2,7 +2,8 @@
 
 Data: 2026-09-09
 
-Status: decidido; implementação não iniciada
+Status: decidido e implementado na branch
+`feature/e16-gw-preview-performance`; soak visual/manual ainda pendente.
 
 ## Contexto
 
@@ -67,6 +68,25 @@ persistente e repete preparação de cena/layout por segmento.
 
 Plano e runbook completos:
 `plans/2026-09-09-e16-otimizacao-preview-commit-viewport.md`.
+
+Implementação e evidência automatizada desta rodada:
+
+- `ameno_continuous_overlay.ms` publica somente primitivas e desenha pelo
+  callback `gw`; o caminho contínuo não cria previews de nós;
+- `test_e16_overlay_model.ms`: 27/27 PASS;
+- `test_e16_mousemove_no_scene.ms`: 13/13 PASS em 1.000 movimentos, com zero
+  full resolve, mutação e preview de nós;
+- `test_e16_callback_lifecycle.ms`: 6/6 PASS em 100 ciclos, cardinalidade
+  0/1/0;
+- `test_e16_commit_performance.ms`: 17/17 PASS, sete segmentos em 181 ms,
+  Undo/Redo único e rollback completo;
+- matriz histórica E12–E15/E14, `test_e15_qt_bridge.ms` e
+  `test_installed_package.ms`: exit 0, PASS explícito e zero FAIL;
+- manifesto fonte/instalação conferido por SHA-256 e backup recuperável criado.
+
+O gate manual E16.9 não é inferido pelos testes Batch: ainda exige processo
+novo do Max, câmeras/DPI/resize, 20 sessões e a cena problemática. O assistente
+está em `tests/maxscript/manual_e16_viewport_soak.ms`.
 
 Aceite mínimo:
 

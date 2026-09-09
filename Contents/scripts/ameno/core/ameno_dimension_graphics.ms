@@ -15,6 +15,39 @@ global AmenoAnchorService
 global AmenoDimensionTerminalMesh
 global AmenoDimensionPlane
 global AmenoDimensionPlaneService
+global AmenoDimensionBuildContext
+global AmenoStyleRecord
+
+/*
+    E16 — contexto preparado para materializar uma cadeia.
+
+    O contexto contém somente dependências estáveis durante um commit: estado
+    da cena, layers, estilo resolvido, material, plano e opções de saída. Dados
+    específicos de A/B continuam no layout do segmento e nos argumentos da
+    fábrica. Assim, o caminho contínuo consegue preparar a cena uma vez sem
+    transformar o contexto em cache global ou carregar referências do mouse.
+*/
+struct AmenoDimensionBuildContext
+(
+    valid = false,
+    errorMessage = "",
+    sceneState = undefined,
+    systemLayer = undefined,
+    dimensionsLayer = undefined,
+    styleId = "default",
+    resolvedStyle = undefined,
+    dimensionMaterial = undefined,
+    plane = undefined,
+    mode = #aligned,
+    outputUnit = #meters,
+    precision = 2,
+    role = "user",
+    baselinePolicy = "relative",
+    baselineCoordinate = 0.0,
+    prepareDurationMs = 0,
+    styleDurationMs = 0,
+    materialDurationMs = 0
+)
 
 struct AmenoDimensionAuditRecord
 (
@@ -1068,7 +1101,7 @@ struct AmenoDimensionGraphicsService
         controller
     ),
 
-    fn createVisualNodes controller layout auditOrText dimensionsLayer style:undefined =
+    fn createVisualNodes controller layout auditOrText dimensionsLayer style:undefined material:undefined =
     (
         local dimensionId = readTextProperty controller "Ameno.DimensionId"
         local audit = undefined
@@ -1101,10 +1134,14 @@ struct AmenoDimensionGraphicsService
             resolvedStyle = ::AmenoStyleService.getStyle sId
         )
 
-        local dimensionColor = (color 245 245 245)
-        if resolvedStyle != undefined and ::AmenoStyleService != undefined do
-            dimensionColor = ::AmenoStyleService.colorFromString resolvedStyle.annotationColor defaultColor:dimensionColor
-        local dimensionMaterial = createDimensionMaterial colorValue:dimensionColor
+        local dimensionMaterial = material
+        if dimensionMaterial == undefined do
+        (
+            local dimensionColor = (color 245 245 245)
+            if resolvedStyle != undefined and ::AmenoStyleService != undefined do
+                dimensionColor = ::AmenoStyleService.colorFromString resolvedStyle.annotationColor defaultColor:dimensionColor
+            dimensionMaterial = createDimensionMaterial colorValue:dimensionColor
+        )
         local lineNode = createLineNode layout style:resolvedStyle material:dimensionMaterial
         registerAllocation lineNode
         maybeInjectFailure #afterLine
@@ -1169,6 +1206,194 @@ struct AmenoDimensionGraphicsService
         decorateGraphicNode textNode dimensionId "label" dimensionsLayer
 
         AmenoGraphicDimensionRecord dimensionId:dimensionId controller:controller lineNode:lineNode textNode:textNode markerNode:markerNode layout:layout displayText:labelText audit:audit style:resolvedStyle termNodeA:termNodeA termNodeB:termNodeB
+    ),
+
+    /*
+        Converte um segmento já resolvido pelo chain math para o layout que a
+        fábrica visual conhece. A projeção dos pontos não é refeita: como a
+        cadeia guarda a linha comum e o afastamento assinado, a projeção de A/B
+        é recuperada por uma subtração vetorial. Isso mantém o contrato
+        geométrico e elimina uma chamada layoutForMode/projection por segmento.
+    */
+    fn layoutFromChainSegment chainLayout segmentLayout =
+    (
+        if chainLayout == undefined or segmentLayout == undefined then return undefined
+        if not chainLayout.valid then return undefined
+
+        local signedOffsetValue = chainLayout.signedOffsetSceneUnits
+        local perpendicularValue = chainLayout.perpendicular
+        local projectedAValue = segmentLayout.linePointA - (perpendicularValue * signedOffsetValue)
+        local projectedBValue = segmentLayout.linePointB - (perpendicularValue * signedOffsetValue)
+        local planeTypeValue = try (chainLayout.planeType) catch (#worldXY)
+        local originValue = try (chainLayout.planeOrigin) catch ([0,0,0])
+        local axisUValue = try (chainLayout.planeAxisU) catch ([1,0,0])
+        local axisVValue = try (chainLayout.planeAxisV) catch ([0,1,0])
+        local normalValue = try (chainLayout.planeNormal) catch ([0,0,1])
+
+        AmenoAlignedDimensionLayout valid:true pointA:segmentLayout.pointA pointB:segmentLayout.pointB \
+            offsetPoint:chainLayout.offsetPoint projectedA:projectedAValue projectedB:projectedBValue \
+            projectedOffsetPoint:chainLayout.offsetPoint direction:chainLayout.direction perpendicular:perpendicularValue \
+            linePointA:segmentLayout.linePointA linePointB:segmentLayout.linePointB \
+            signedOffsetSceneUnits:signedOffsetValue side:(if signedOffsetValue >= 0.0 then #positive else #negative) \
+            measuredSceneUnits:segmentLayout.measuredSceneUnits measuredMillimeters:segmentLayout.measuredMillimeters \
+            dimensionMode:chainLayout.dimensionMode planeType:planeTypeValue planeOrigin:originValue \
+            planeAxisU:axisUValue planeAxisV:axisVValue planeNormal:normalValue
+    ),
+
+    /*
+        Prepara dependências estáveis da cena para o commit de uma cadeia. Este
+        método é intencionalmente explícito: ele não guarda estado em cache
+        global e falha antes de criar qualquer controller quando uma layer,
+        plano, estilo ou material não puder ser resolvido.
+    */
+    fn prepareDimensionBuildContext styleId:"default" style:undefined mode:#aligned plane:undefined \
+        outputUnit:#meters precision:2 role:"user" baselinePolicy:"relative" baselineCoordinate:0.0 =
+    (
+        local context = AmenoDimensionBuildContext styleId:(if styleId == undefined then "default" else (styleId as string)) \
+            mode:mode outputUnit:outputUnit precision:precision role:role baselinePolicy:baselinePolicy baselineCoordinate:baselineCoordinate
+        local prepareStart = try (timeStamp()) catch (0)
+        local sceneState = undefined
+        try (sceneState = ensureSceneReady()) catch
+        (
+            context.errorMessage = "Falha ao preparar a cena: " + (getCurrentException() as string)
+            return context
+        )
+        if sceneState == undefined or sceneState.status != #ready then
+        (
+            context.errorMessage = if sceneState == undefined then "Estado da cena indisponível." else sceneState.detail
+            return context
+        )
+        if sceneState.systemLayer == undefined or sceneState.dimensionsLayer == undefined then
+        (
+            context.errorMessage = "As layers técnica e de dimensões não estão disponíveis."
+            return context
+        )
+
+        local resolvedPlane = undefined
+        try (resolvedPlane = resolvePlane planeValue:plane) catch
+        (
+            context.errorMessage = "Falha ao resolver o plano: " + (getCurrentException() as string)
+            return context
+        )
+        if resolvedPlane == undefined or not resolvedPlane.valid then
+        (
+            context.errorMessage = "O plano da cadeia é inválido."
+            return context
+        )
+
+        local styleStart = try (timeStamp()) catch (prepareStart)
+        local resolvedStyle = style
+        local resolvedStyleId = context.styleId
+        if resolvedStyle == undefined and ::AmenoStyleService != undefined do
+        (
+            try (resolvedStyle = ::AmenoStyleService.getStyle resolvedStyleId) catch
+            (
+                context.errorMessage = "Falha ao resolver o estilo: " + (getCurrentException() as string)
+                return context
+            )
+        )
+        if resolvedStyle == undefined do
+            resolvedStyle = AmenoStyleRecord styleId:resolvedStyleId
+        try
+        (
+            if isProperty resolvedStyle #styleId do resolvedStyleId = resolvedStyle.styleId as string
+        )
+        catch ()
+        context.styleId = resolvedStyleId
+        context.resolvedStyle = resolvedStyle
+        context.styleDurationMs = (try (timeStamp()) catch (styleStart)) - styleStart
+
+        local materialStart = try (timeStamp()) catch (prepareStart)
+        local dimensionColor = (color 245 245 245)
+        if resolvedStyle != undefined and ::AmenoStyleService != undefined do
+            try (dimensionColor = ::AmenoStyleService.colorFromString resolvedStyle.annotationColor defaultColor:dimensionColor) catch ()
+        local dimensionMaterial = undefined
+        try (dimensionMaterial = createDimensionMaterial colorValue:dimensionColor) catch
+        (
+            context.errorMessage = "Falha ao criar material da cadeia: " + (getCurrentException() as string)
+            return context
+        )
+        if dimensionMaterial == undefined then
+        (
+            context.errorMessage = "O material da cadeia não foi criado."
+            return context
+        )
+
+        context.sceneState = sceneState
+        context.systemLayer = sceneState.systemLayer
+        context.dimensionsLayer = sceneState.dimensionsLayer
+        context.dimensionMaterial = dimensionMaterial
+        context.plane = resolvedPlane
+        context.prepareDurationMs = (try (timeStamp()) catch (prepareStart)) - prepareStart
+        context.materialDurationMs = (try (timeStamp()) catch (materialStart)) - materialStart
+        context.valid = true
+        context
+    ),
+
+    /*
+        Caminho interno de criação usado pela cadeia. A assinatura pública
+        createDimension() continua responsável por calcular layout e resolver
+        tudo para callers legados; este método recebe ambos já preparados e não
+        faz nova chamada layoutForMode, ensureSceneReady, getStyle ou criação de
+        material por segmento.
+    */
+    fn createDimensionFromLayout context chainLayout segmentLayout pointA pointB offsetPoint \
+        nodeA:undefined localPointA:undefined anchorVertexIdA:-1 anchorEdgeIdA:-1 anchorEdgeMidA:false \
+        nodeB:undefined localPointB:undefined anchorVertexIdB:-1 anchorEdgeIdB:-1 anchorEdgeMidB:false =
+    (
+        if context == undefined or not context.valid then
+            throw (if context == undefined then "Contexto de build ausente." else context.errorMessage)
+        if segmentLayout == undefined then throw "Segmento de cadeia ausente."
+
+        local layout = layoutFromChainSegment chainLayout segmentLayout
+        if layout == undefined then
+            throw "Não foi possível converter o segmento da cadeia para layout visual."
+
+        local resolvedAnchorType = "world"
+        local resolvedLocalA = localPointA
+        local resolvedLocalB = localPointB
+        if nodeA != undefined and isValidNode nodeA do
+        (
+            if resolvedLocalA == undefined do resolvedLocalA = pointA * (inverse nodeA.transform)
+            resolvedAnchorType = "nodeA"
+        )
+        if nodeB != undefined and isValidNode nodeB do
+        (
+            if resolvedLocalB == undefined do resolvedLocalB = pointB * (inverse nodeB.transform)
+            resolvedAnchorType = if resolvedAnchorType == "nodeA" then "both" else "nodeB"
+        )
+
+        local controller = undefined
+        local result = undefined
+        beginAllocation()
+        try
+        (
+            controller = createController pointA pointB offsetPoint context.systemLayer role:context.role \
+                outputUnit:context.outputUnit precision:context.precision styleId:context.styleId \
+                anchorType:resolvedAnchorType nodeA:nodeA localPointA:resolvedLocalA anchorVertexIdA:anchorVertexIdA \
+                anchorEdgeIdA:anchorEdgeIdA anchorEdgeMidA:anchorEdgeMidA nodeB:nodeB localPointB:resolvedLocalB \
+                anchorVertexIdB:anchorVertexIdB anchorEdgeIdB:anchorEdgeIdB anchorEdgeMidB:anchorEdgeMidB \
+                dimensionMode:context.mode plane:context.plane baselinePolicy:context.baselinePolicy baselineCoordinate:context.baselineCoordinate
+            local audit = calculateAudit controller layout outputUnit:context.outputUnit precision:context.precision
+            if AmenoDimensionCA != undefined do
+            (
+                local rec = AmenoDimensionCA.readCA controller
+                if rec != undefined do
+                (
+                    rec.lastMeasuredMm = audit.measuredMillimeters
+                    rec.lastDeltaMm = audit.deltaMillimeters
+                    AmenoDimensionCA.applyCA controller rec
+                )
+            )
+            result = createVisualNodes controller layout audit context.dimensionsLayer style:context.resolvedStyle material:context.dimensionMaterial
+        )
+        catch
+        (
+            rollbackAllocation()
+            throw
+        )
+        finishAllocation()
+        result
     ),
 
     fn configurePreviewNode nodeValue =
