@@ -171,15 +171,29 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   depende de uma sessão gráfica real. O endpoint de autenticação e a otimização
   do núcleo de viewport permanecem fora deste corte.
 
-- **E16 — otimização da viewport planejada e pronta para execução (2026-09-09):**
-  o diagnóstico de ~2,6 s por segmento foi convertido em um runbook de 10
-  etapas/78 subetapas. O `mouseMove` contínuo passará a publicar um modelo
-  primitivo e o `gw` desenhará o preview sem nós; picking completo ficará apenas
-  no clique. Depois desse gate, o commit usará contexto preparado uma vez por
-  cadeia, um Undo e rollback integral. O plano inclui contratos de função,
-  sentinelas de cena, lifecycle de callback, metas, regressões, instalação e
-  critérios de parada. Implementação ainda não iniciada. Plano:
-  `plans/2026-09-09-e16-otimizacao-preview-commit-viewport.md`; ADR 0025.
+- **E16 — otimização da viewport concluída e validada (2026-09-09):** o
+  `mouseMove` contínuo publica somente um modelo primitivo e o `gw` desenha o
+  preview sem nós; picking completo e criação de objetos ficam no clique. O
+  commit usa contexto preparado uma vez por cadeia, um Undo e rollback integral.
+  A matriz E16 passou overlay, 1.000 movimentos sem mutação de cena, lifecycle
+  de callback e commit de 7 segmentos; não foram observadas novas exceções Qt,
+  WPF ou minidumps no gate. Evidência: `plans/2026-09-09-e16-otimizacao-preview-commit-viewport.md`,
+  `work/e17-gates/summary.txt` e commit `f763059`.
+
+- **E17 — identidade Ameno e experiência guiada Qt concluídas no canary
+  (2026-09-09):** a interface foi escrita do zero em Python/PySide6, sem
+  reutilizar WPF, com Login obrigatório, logo/tema Ameno, chrome nativo,
+  navegação local, divulgação progressiva, mensagens acionáveis e cinco páginas
+  fixas. O launcher ganhou estado explícito de abertura/fechamento após o gate
+  confirmar que `python.Execute` retorna `#success`, não o valor da expressão.
+  Os gates passaram em 17/17 testes Python e 18/18 suites MaxScript (E12–E17),
+  incluindo close/reopen do host, logout que limpa o token, regressões E16 e
+  instalação com o Max fechado. O candidato está instalado no
+  `ApplicationPlugins`; backup recuperável em
+  `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`.
+  O aceite gráfico de resize/DPI/soak e o teste com profissional sem instrução
+  permanecem como etapa manual; nenhuma promoção para `develop` ou `main` foi
+  feita. Plano: `plans/2026-09-09-e17-identidade-ux-qt.md`.
 
 - **Gate de render adiado durante a E15:** o commit `5844730` permanece instalado
   e validado estruturalmente, mas o gate manual da tela WPF não é prioridade
@@ -212,24 +226,29 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Executar E16.0 e E16.1 sem alterar o produto:** abrir a branch
-  `feature/e16-gw-preview-performance` a partir do `develop` atual que contém o
-  plano (a base funcional inspecionada foi `b2ce56b`), congelar a baseline em
-  duas fixtures e criar sentinelas que provem mutação de cena e picking pesado
-  durante `mouseMove`. Depois executar o spike `gw` isolado da E16.2; só
-  integrar o MouseTool quando os gates do spike estiverem verdes.
-  Max Batch deve ser sequencial, o Max deve reiniciar após qualquer instalação,
-  e `main` permanece intacta. Runbook completo:
+- **E17.10.3–E17.10.6 — aceite manual do canary:** abrir o 3ds Max 2026 com a
+  cópia instalada, confirmar Login → App, redimensionamento/maximização,
+  navegação nas cinco páginas, Planta/Fachada, Individual/Sequência, cancelamento
+  e um soak de viewport. Repetir com um profissional sem instrução externa e
+  registrar o resultado no plano E17. Esta é a única etapa funcional pendente;
+  os gates automatizados já estão verdes.
+
+- **E17.10.7 — promoção somente autorizada:** manter `feature/e17-ameno-ux`
+  isolada até o aceite manual. Não fazer push, merge, tag ou alteração em
+  `develop`/`main` sem pedido explícito. Se o aceite falhar, preservar o backup
+  `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919` e corrigir
+  somente após registrar a reprodução.
+
+- **E16 preservada como regressão:** qualquer alteração futura na UI ou na
+  ferramenta deve repetir a matriz E16 (preview `gw`, 1.000 movimentos,
+  callback 0/1/0, commit/rollback) e não pode reintroduzir criação de nós ou
+  acesso ao bridge durante `mouseMove`. Runbook:
   `plans/2026-09-09-e16-otimizacao-preview-commit-viewport.md`.
 
-- **Gate E15 preservado como regressão da E16:** validar Login → Criar,
-  navegação local, min/max/close e fechamento durante MouseTool dentro da matriz
-  E16.8/E16.9. Não alterar a UI Qt nem reintroduzir WPF neste marco. Endpoint de
-  autenticação e demais versões do Max continuam adiados.
-
-- **E14 suspensa durante a E16:** os gates funcionais finais de fachada serão
-  repetidos pela interface Qt como regressão da otimização, mas não haverá
-  expansão funcional até o preview/commit cumprir os gates da E16.
+- **E14 e compatibilidade de versões:** os gates funcionais finais de fachada
+  serão repetidos pelo shell Qt depois do aceite do canary. Max 2021–2025/2027,
+  endpoint de autenticação e novos renderers continuam adiados até o candidato
+  2026 permanecer estável.
 
 - **E14:** executar os gates E14.6–E14.7 na branch `feature/e14-facade-planes`:
   repetir E10.1 contra o candidato instalado, validar reancoragem/bake/órfãs e
@@ -268,6 +287,22 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-09 — Executar o E17 do início ao fim no canary do Max 2026:** a
+  interface Qt foi escrita do zero com identidade Ameno, Login/token em
+  memória, chrome nativo, cinco páginas fixas, divulgação progressiva e
+  mensagens operacionais. A correção final do launcher trata corretamente o
+  contrato `python.Execute` (`#success`) e cobre show/close/reopen. A validação
+  terminou com 17/17 testes Python e 18/18 suites MaxScript E12–E17; a cópia
+  ativa foi instalada com o Max fechado após backup recuperável. O ZIP canary e
+  a paridade por hash serão registrados no mesmo plano após o empacotamento.
+  O ZIP canary `dist/AmenoTools-0.0.1-e17-canary.zip` foi validado sem WPF/cache
+  (SHA-256 `7F3ACAA4BE5D2F1BE7E9EEF90DFEAE2BC57F7B3589ABE7CD8145A59E5E09B406`)
+  e a instalação conferiu 68 arquivos com zero divergências, além das sete
+  ausências WPF esperadas. Aceite gráfico/DPI/soak e promoção continuam
+  pendentes por exigirem ação manual/autorização. Evidências:
+  `plans/2026-09-09-e17-identidade-ux-qt.md`, `work/e17-gates/summary.txt`,
+  branch `feature/e17-ameno-ux`.
 
 - **2026-09-09 — Criar plano extremamente detalhado para a otimização das
   cotas:** criada a E16 em 10 etapas/78 subetapas, com diagnóstico do caminho

@@ -8,6 +8,7 @@ struct AmenoPythonUiService
 (
     scriptPath = "",
     initialized = false,
+    open = false,
 
     fn reportError prefix detail =
     (
@@ -42,6 +43,7 @@ struct AmenoPythonUiService
         try
         (
             python.ExecuteFile scriptPath
+            open = true
             true
         )
         catch
@@ -56,6 +58,7 @@ struct AmenoPythonUiService
         try
         (
             python.Execute "import ameno_ui; ameno_ui.close()"
+            open = false
             true
         )
         catch (reportError "Falha ao fechar interface Python/Qt" (getCurrentException() as string))
@@ -63,13 +66,10 @@ struct AmenoPythonUiService
 
     fn isOpen =
     (
-        if not ensurePython() then return false
-        try
-        (
-            local value = python.Execute "import ameno_ui; ameno_ui.is_open()"
-            value == true
-        )
-        catch (false)
+        -- python.Execute retorna #success (status da execução), não o valor
+        -- da última expressão. O estado é mantido pelo launcher para que
+        -- macros não interpretem #success como uma janela aberta.
+        open == true
     )
 )
 

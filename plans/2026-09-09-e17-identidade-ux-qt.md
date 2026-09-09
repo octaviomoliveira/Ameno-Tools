@@ -2,10 +2,10 @@
 
 Data: 2026-09-09
 
-Status: execução em andamento na branch `feature/e17-ameno-ux`; checkpoint
-visual/arquitetural E17-A concluído e testado localmente
+Status: candidato implementado e instalado na branch `feature/e17-ameno-ux`;
+gates automatizados concluídos em 2026-09-09; aceite gráfico humano pendente
 
-Progresso salvo no checkpoint E17-A:
+Progresso salvo no checkpoint E17 final:
 
 - baseline E15/E16 registrado;
 - assets, fontes licenciadas, cache e fallback adicionados;
@@ -14,9 +14,13 @@ Progresso salvo no checkpoint E17-A:
 - fluxo Cotar convertido para draft local + uma chamada de settings no start;
 - primeiro uso e ajuda `?` implementados sem acesso à cena;
 - prompts individuais e contínuos reescritos como passos operacionais;
-- 14 testes Python verdes e galeria visual de seis telas gerada;
-- pendente após o reinício: gates MaxScript, DPI/resize, pacote/canary e aceite
-  humano antes de qualquer promoção.
+- 17 testes Python verdes e galeria visual de seis telas gerada;
+- matriz MaxScript E12–E17 verde (18/18 suites), incluindo o host Qt, ciclo de
+  logout/fechamento e as métricas do E16;
+- pacote de desenvolvimento instalado no `ApplicationPlugins` com o Max
+  fechado e backup recuperável criado;
+- pendente: somente aceite interativo de usabilidade/resize/DPI/soak em uma
+  sessão gráfica real e autorização explícita para promover a branch.
 
 Escopo: 3ds Max 2026 / Python 3.11 / PySide6 6.5.3. O E17 modifica a
 apresentação e a orquestração de comandos da interface Qt. A matemática, o
@@ -25,6 +29,42 @@ congelados, salvo a inclusão estritamente textual de instruções de etapa no
 prompt da ferramenta.
 
 Estrutura: 11 etapas e 86 subetapas, executadas na ordem deste documento.
+
+## 6.1 Estado de execução e evidências (atualização 2026-09-09)
+
+| Bloco | Estado | Evidência |
+| --- | --- | --- |
+| E17.0 — baseline | concluído | `work/e17-baseline/`, branch `feature/e17-ameno-ux`, commit base E16 `f763059` |
+| E17.1 — assets/identidade | concluído | `Contents/python/ameno_ui/assets/`, `assets/LICENSES.md`, testes de fallback e paridade de instalação |
+| E17.2 — hierarquia de ações | concluído | páginas Qt e teste `test_all_previous_commands_remain_reachable_without_extra_primary_actions` |
+| E17.3 — tema/componentes | concluído | `theme.py`, `components.py`, teste de escopo do QSS e 100 ciclos de navegação |
+| E17.4 — Login | concluído | testes headless/host; token somente em memória; logout limpa o widget |
+| E17.5 — shell/navegação | concluído | `test_e17_qt_host.ms`: cinco páginas fixas, show/close/reopen e navegação local |
+| E17.6 — Cotar | concluído | draft local, uma chamada de settings no início e prompts operacionais; regressão E16 verde |
+| E17.7 — páginas auxiliares | concluído | bridge E15 e host Qt validam Criar/Estilos/Editar/Render/Configuração |
+| E17.8 — primeiro uso/erros | concluído | mensagens acionáveis em `common.py`, ajuda sem leitura da cena, diagnóstico sem token |
+| E17.9 — regressões | concluído | `work/e17-gates/summary.txt`: 18/18 MaxScript; `run-python-gates.py`: 17 testes; ZIP canary validado sem WPF/cache |
+| E17.10.1–E17.10.2 — canary | concluído | backup `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`; instalação com Max fechado |
+| E17.10.3–E17.10.6 — aceite humano | pendente | exige Max interativo, redimensionamento, DPI, cotação real e profissional sem instrução |
+| E17.10.7 — promoção | bloqueado por política | nenhuma alteração automática em `develop`/`main`; requer autorização explícita |
+
+O teste host revelou e corrigiu um contrato importante: `python.Execute` retorna
+`#success` (status), não o valor da última expressão. O launcher
+`AmenoPythonUI.isOpen()` agora mantém estado explícito, e o gate cobre abrir,
+fechar e reabrir. Isso evita falsos negativos e impede que um resultado de
+execução seja confundido com estado de janela.
+
+O canary ativo é a cópia instalada em
+`C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`;
+fonte e destino foram instalados/checados enquanto o 3ds Max estava fechado.
+O artefato distribuível é
+`dist/AmenoTools-0.0.1-e17-canary.zip` (SHA-256
+`7F3ACAA4BE5D2F1BE7E9EEF90DFEAE2BC57F7B3589ABE7CD8145A59E5E09B406`). A
+paridade do conteúdo confirmou zero divergências nos 68 arquivos instalados;
+as sete ausências são exatamente os módulos WPF removidos pelo empacotador.
+O resumo legível da última matriz fica em `work/e17-gates/summary.txt`; os
+logs detalhados permanecem no mesmo diretório e são locais, pois contêm saída
+gerada pelo Max.
 
 ## 1. Resultado esperado
 

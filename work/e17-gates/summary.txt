@@ -1,0 +1,86 @@
+E17 Max 2026 automated gate matrix
+Started: 2026-09-09T12:59:56.2043906-03:00
+Legacy WPF UI suites are intentionally excluded; test_e15_qt_bridge and Python E17 gates replace those contracts.
+test_bootstrap: PASS
+  [AMENO_TEST][PASS] Bootstrap 0.0.1, renderer Arnold, prepara��o de cena, E2, E3, E4, E5, E6, E7, E8, E8.1, E9 e E10.3 V-Ray aprovados.
+test_e12_chain_math: PASS
+  === [AMENO_E12_B] RESULT 29/29 PASS ===
+  [AMENO_TEST][PASS] E12-B shared H/V layout passed.
+test_e12_chain_input: PASS
+  === [AMENO_E12_A] RESULT 21/21 PASS ===
+  [AMENO_TEST][PASS] E12-A input contract passed.
+test_e12_chain_commit: PASS
+  [2026-09-09 13:01:42.323][Ameno][INFO] [E16_PERF] commit.total=40ms � prepare=11ms � style=0ms � material=0ms � segments=2
+  [PASS] successful commit records result
+  [2026-09-09 13:01:42.415][Ameno][INFO] [E16_PERF] commit.total=31ms � prepare=2ms � style=0ms � material=1ms � segments=2
+  === [AMENO_E12_C] RESULT 51/51 PASS ===
+  [AMENO_TEST][PASS] E12-C preview/commit passed.
+test_e12_r1_lifecycle: PASS
+  [PASS] aligned records rejected result
+  [PASS] abort result count=0
+  [PASS] abort result count=1
+  [PASS] abort result count=3
+  [PASS] failure records result
+  [2026-09-09 13:02:02.814][Ameno][INFO] [E16_PERF] commit.total=47ms � prepare=1ms � style=0ms � material=1ms � segments=1
+  [PASS] success records committed result
+  [2026-09-09 13:02:02.822][Ameno][INFO] E12 MouseTool parado � resultado=committed � refs=0 � cotas=1
+  [PASS] stop preserves committed result
+  [2026-09-09 13:02:02.840][Ameno][INFO] E12 MouseTool parado � resultado=committed � refs=0 � cotas=1
+  [2026-09-09 13:02:02.912][Ameno][INFO] [E16_PERF] commit.total=50ms � prepare=0ms � style=0ms � material=0ms � segments=1
+  [2026-09-09 13:02:02.919][Ameno][INFO] E12 MouseTool parado � resultado=committed � refs=0 � cotas=1
+  === [AMENO_E12_R1] RESULT 70/70 PASS ===
+  [AMENO_TEST][PASS] E12-R1 lifecycle and mode gate passed.
+test_e12_r2_picking: PASS
+  === [AMENO_E12_R2] RESULT 33/33 PASS ===
+  [AMENO_TEST][PASS] E12-R2 picking and plane contract passed.
+test_e12_r4_transaction: PASS
+  === [AMENO_E12_R4] RESULT 21/21 PASS ===
+  [AMENO_TEST][PASS] E12-R4 transaction contract passed.
+test_e13_global_styles_render_color: PASS
+  [AMENO_TEST][PASS] servi�o de estilos global carregado
+  [AMENO_TEST][PASS] parser de cor RGB normaliza valor
+  [AMENO_TEST][PASS] parser de cor inv�lida usa fallback
+  [AMENO_TEST][PASS] saveStyle persiste o RGB no estilo
+  [AMENO_TEST][PASS] arquivo da biblioteca global foi criado
+  [AMENO_TEST][PASS] arquivo global cont�m a cor escolhida
+  [AMENO_TEST][PASS] nova inst�ncia l� biblioteca global
+  [AMENO_TEST][PASS] biblioteca global preserva RGB ap�s recarregar
+  [AMENO_TEST][PASS] cria��o aplica cor do estilo ao material da cota
+  [AMENO_TEST][PASS] overlay cria um material por cor distinta
+  [AMENO_TEST][PASS] overlay encaminha primeira cor ao adapter
+  [AMENO_TEST][PASS] overlay encaminha segunda cor ao adapter
+  [AMENO_TEST] Resultado biblioteca/cor: 12 passou(aram), 0 falhou(aram)
+  [AMENO_TEST][PASS] E13 biblioteca global e cor de render passaram.
+test_e14_camera_plane: PASS
+  === [AMENO_E14_CAMERA] RESULT 5/5 PASS ===
+  [AMENO_TEST][PASS] E14 camera plane passed.
+test_e14_plane_math: PASS
+  === [AMENO_E14_1] RESULT 35/35 PASS ===
+  [AMENO_TEST][PASS] E14.1 plane math passed.
+test_e14_graphics: PASS
+  [AMENO_TEST][PASS] E14.2/E14.3 persistence and facade graphics passed.
+test_e14_tools: PASS
+  [2026-09-09 13:04:30.917][Ameno][INFO] [E16_PERF] commit.total=115ms � prepare=2ms � style=0ms � material=1ms � segments=2
+  === [AMENO_E14_TOOLS] RESULT 29/29 PASS ===
+  [AMENO_TEST][PASS] E14 individual and continuous facade flows passed.
+test_e15_qt_bridge: PASS
+  [2026-09-09 13:04:52.686][Ameno][INFO] E12 MouseTool parado � resultado=cancelled � refs=0 � cotas=0
+  [AMENO_TEST][PASS] E15 bridge Qt/Max 2026: launcher, snapshots primitivos e configura��o validados.
+test_e17_qt_host: PASS
+  [AMENO_TEST][PASS] E17 UI constru�da no host Python 3.11.12 / PySide6 6.5.3, cinco p�ginas, Login/App/logout e close/reopen validados.
+test_e16_overlay_model: PASS
+  === [AMENO_E16_OVERLAY_MODEL] RESULT 27/27 PASS ===
+  [AMENO_TEST][PASS] E16 overlay model passed.
+test_e16_mousemove_no_scene: PASS
+  === [AMENO_E16_MOUSEMOVE] RESULT 13/13 PASS elapsedMs=4311.0 ===
+  [AMENO_TEST][PASS] E16 mouseMove no-scene passed.
+test_e16_callback_lifecycle: PASS
+  === [AMENO_E16_CALLBACK] RESULT 6/6 PASS max=1 ===
+  [AMENO_TEST][PASS] E16 callback lifecycle passed.
+test_e16_commit_performance: PASS
+  [2026-09-09 13:06:53.661][Ameno][INFO] [E16_PERF] commit.total=675ms � prepare=5ms � style=2ms � material=3ms � segments=7
+  [E16_PERF] segments=7 totalMs=709.0 averageMs=101.286 prepareContext=shared
+  === [AMENO_E16_COMMIT] RESULT 17/17 PASS totalMs=709.0 ===
+  [AMENO_TEST][PASS] E16 commit performance passed.
+Completed: 2026-09-09T13:06:59.2376484-03:00
+Total: 18/18 suites PASS
