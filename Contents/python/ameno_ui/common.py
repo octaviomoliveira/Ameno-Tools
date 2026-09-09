@@ -42,3 +42,28 @@ def set_message(label: QtWidgets.QLabel, text: str, error: bool = False) -> None
     label.setProperty("error", bool(error))
     label.style().unpolish(label)
     label.style().polish(label)
+
+
+def set_bridge_error(label: QtWidgets.QLabel, error, context: str = "Não foi possível concluir a ação.") -> None:
+    """Translate bridge codes into an operational next step.
+
+    The original detail remains available as a selectable tooltip for support,
+    while the main surface avoids presenting runtime jargon as instruction.
+    """
+    code = str(getattr(error, "code", "unknown") or "unknown")
+    detail = str(getattr(error, "message", "") or "").strip()
+    if code == "noSelection":
+        guidance = "Selecione uma cota Ameno na viewport e tente novamente."
+    elif code == "busy":
+        guidance = "Finalize ou cancele a operação atual antes de iniciar outra."
+    elif code in ("runtimeUnavailable", "bridgeUnavailable", "toolUnavailable", "styleServiceUnavailable", "hostUnavailable"):
+        guidance = "O Ameno não terminou de carregar. Feche esta janela e reinicie o 3ds Max."
+    elif code == "styleProtected":
+        guidance = "O estilo padrão é protegido. Duplique-o para criar uma variação."
+    elif code == "renderFailed" and "isolat" in detail.lower():
+        guidance = detail
+    else:
+        guidance = context + " Tente novamente; se persistir, copie o diagnóstico em Configuração."
+    label.setToolTip("Código: %s\nDetalhe: %s" % (code, detail or "não informado"))
+    label.setProperty("errorCode", code)
+    set_message(label, guidance, error=True)

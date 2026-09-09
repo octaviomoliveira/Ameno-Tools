@@ -44,7 +44,7 @@ try {
     Copy-Item -Path (Join-Path $repoRoot "Contents") -Destination $targetAppFolder -Recurse -Force
     Copy-Item -Path (Join-Path $repoRoot "README.md") -Destination $targetAppFolder -Force
 
-    # O candidato E15 usa a interface Python/Qt no Max 2026. Os módulos WPF
+    # O candidato E17 usa a interface Python/Qt no Max 2026. Os módulos WPF
     # antigos permanecem no repositório para histórico/rollback, mas não podem
     # entrar no pacote executável e ser carregados acidentalmente.
     $legacyWpfFiles = @(

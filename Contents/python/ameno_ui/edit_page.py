@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from .bridge import BridgeError, UiBridge
-from .common import button, group, message_label, set_message
+from .common import button, group, message_label, set_bridge_error, set_message
 from .components import PageHeader, SectionHeading
 from .models import AuditSnapshot, StyleSnapshot
 from .qt_compat import QtCore, QtWidgets
@@ -180,7 +180,7 @@ class EditPage(QtWidgets.QWidget):
             else:
                 set_message(self.status, "Seleção carregada. Revise os valores antes de aplicar uma alteração.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível ler a seleção.")
 
     def apply(self) -> None:
         if self._audit is None:
@@ -198,18 +198,18 @@ class EditPage(QtWidgets.QWidget):
             )
             set_message(self.status, "Alteração aplicada à cota selecionada.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível alterar a cota.")
 
     def restore(self) -> None:
         try:
             self._load(self.bridge.restore_selected())
             set_message(self.status, "Valor medido restaurado.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível restaurar a medida.")
 
     def select_anchors(self) -> None:
         try:
             self.bridge.select_anchors()
             set_message(self.status, "Referências selecionadas na viewport.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível selecionar as referências.")

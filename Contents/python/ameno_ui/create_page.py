@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Callable, Dict, List, Optional
 
 from .bridge import BridgeError, UiBridge
-from .common import button, group, message_label, set_message
+from .common import button, group, message_label, set_bridge_error, set_message
 from .components import ChoiceGroup, Disclosure, PageHeader, SectionHeading, StatusPill
 from .models import CreateSnapshot, SceneSnapshot, StyleSnapshot
 from .preferences import settings
@@ -257,7 +257,7 @@ class CreatePage(QtWidgets.QWidget):
             self.load_snapshot(snapshot)
             set_message(self.status, "Estado da cena atualizado.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível atualizar a cena.")
 
     def apply_settings(self) -> bool:
         """Send exactly one consolidated draft immediately before a tool starts."""
@@ -276,7 +276,7 @@ class CreatePage(QtWidgets.QWidget):
             self._save_preferences()
             return True
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível aplicar os detalhes da cotação.")
             return False
 
     def _set_busy(self, busy: bool) -> None:
@@ -291,7 +291,7 @@ class CreatePage(QtWidgets.QWidget):
             self.load_snapshot(result)
             set_message(self.status, "Cotação encerrada. Você pode iniciar outra ou continuar trabalhando na cena.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível iniciar a cotação.")
         finally:
             self._set_busy(False)
 
@@ -314,7 +314,7 @@ class CreatePage(QtWidgets.QWidget):
             self.refresh()
             set_message(self.status, result.get("label") or "Cena preparada.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível preparar a cena.")
 
     def _maintenance(self, action: Callable[[], int], label: str, confirmation: str = "") -> None:
         if confirmation:
@@ -331,7 +331,7 @@ class CreatePage(QtWidgets.QWidget):
             self.refresh()
             set_message(self.status, "%s: %d cota(s)." % (label, count))
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível executar a manutenção.")
 
     def repair_all(self) -> None:
         self._maintenance(self.bridge.repair_all, "Reparo concluído")

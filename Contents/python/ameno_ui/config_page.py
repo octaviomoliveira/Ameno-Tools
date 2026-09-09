@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Callable
 
 from .bridge import BridgeError, UiBridge
-from .common import button, group, message_label, set_message
+from .common import button, group, message_label, set_bridge_error, set_message
 from .components import Disclosure, PageHeader
 from .host_info import collect
 from .qt_compat import QtWidgets
@@ -58,4 +58,4 @@ class ConfigPage(QtWidgets.QWidget):
             QtWidgets.QApplication.clipboard().setText(text)
             set_message(self.status, "Diagnóstico copiado sem token.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível gerar o diagnóstico.")

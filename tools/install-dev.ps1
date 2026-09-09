@@ -17,7 +17,7 @@ New-Item -ItemType Directory -Force -Path $Destination | Out-Null
 Copy-Item -LiteralPath $manifestPath -Destination $Destination -Force
 Copy-Item -LiteralPath $contentsPath -Destination $Destination -Recurse -Force
 
-# O candidato E15 usa a interface Python/Qt no Max 2026. Os módulos WPF
+# O candidato E17 usa a interface Python/Qt no Max 2026. Os módulos WPF
 # antigos permanecem no repositório para histórico/rollback, mas ficam fora da
 # instalação ativa para impedir carregamento acidental pela inicialização.
 $legacyWpfFiles = @(

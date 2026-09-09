@@ -6,7 +6,7 @@ import os
 from typing import Optional
 
 from .bridge import BridgeError, UiBridge
-from .common import button, group, message_label, set_message
+from .common import button, group, message_label, set_bridge_error, set_message
 from .components import PageHeader, StatusPill
 from .qt_compat import QtCore, QtGui, QtWidgets
 
@@ -87,7 +87,7 @@ class RenderPage(QtWidgets.QWidget):
                 self.path.setText(self.bridge.default_render_path())
             set_message(self.status, "Renderer e caminho atualizados.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível atualizar o renderer.")
 
     def choose_path(self) -> None:
         path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Salvar render", self.path.text(), "PNG (*.png)")
@@ -110,7 +110,7 @@ class RenderPage(QtWidgets.QWidget):
             self.path.setText(result_path)
             set_message(self.status, "PNG exportado: %s" % (status or result_path))
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível exportar o PNG.")
         finally:
             self.render_button.setText("Exportar PNG")
             self.render_button.setEnabled(True)

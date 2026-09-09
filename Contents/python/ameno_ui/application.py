@@ -55,6 +55,7 @@ class AmenoApplication:
     def logout(self) -> None:
         self.auth.logout()
         if self.window is not None:
+            self.window.login_page.clear()
             self.window.show_login("Sessão encerrada. Informe o token novamente.")
 
     def close(self) -> None:

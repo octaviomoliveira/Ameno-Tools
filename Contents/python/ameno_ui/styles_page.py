@@ -6,7 +6,7 @@ from dataclasses import replace
 from typing import Dict, List, Optional
 
 from .bridge import BridgeError, UiBridge
-from .common import button, group, message_label, set_message
+from .common import button, group, message_label, set_bridge_error, set_message
 from .components import Disclosure, PageHeader, SectionHeading
 from .models import StyleSnapshot
 from .qt_compat import QtCore, QtGui, QtWidgets
@@ -276,7 +276,7 @@ class StylesPage(QtWidgets.QWidget):
             self.load_styles(self.bridge.styles())
             set_message(self.status, "Estilos atualizados.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível atualizar os estilos.")
 
     def load_styles(self, styles: List[StyleSnapshot]) -> None:
         self._styles = list(styles)
@@ -359,7 +359,7 @@ class StylesPage(QtWidgets.QWidget):
             self.refresh()
             set_message(self.status, "Estilo salvo; %d cota(s) reconstruída(s)." % count)
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível salvar o estilo.")
 
     def new_style(self) -> None:
         base = self._current.style_id if self._current else "default"
@@ -374,7 +374,7 @@ class StylesPage(QtWidgets.QWidget):
                 self.list_widget.setCurrentRow(row)
             set_message(self.status, "Novo estilo criado.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível criar o estilo.")
 
     def duplicate_style(self) -> None:
         self.new_style()
@@ -392,7 +392,7 @@ class StylesPage(QtWidgets.QWidget):
             self.refresh()
             set_message(self.status, "Estilo excluído.")
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível excluir o estilo.")
 
     def apply_selected(self) -> None:
         if self._current is None:
@@ -401,7 +401,7 @@ class StylesPage(QtWidgets.QWidget):
             count = self.bridge.apply_style(self._current.style_id, False)
             set_message(self.status, "%d cota(s) selecionada(s) atualizada(s)." % count)
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível aplicar o estilo à seleção.")
 
     def apply_all(self) -> None:
         if self._current is None:
@@ -410,4 +410,4 @@ class StylesPage(QtWidgets.QWidget):
             count = self.bridge.apply_style(self._current.style_id, True)
             set_message(self.status, "%d cota(s) atualizada(s)." % count)
         except BridgeError as exc:
-            set_message(self.status, exc.message, error=True)
+            set_bridge_error(self.status, exc, "Não foi possível aplicar o estilo às cotas.")

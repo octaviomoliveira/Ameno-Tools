@@ -11,9 +11,12 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "Contents" / "python"))
 
-from PySide6 import QtCore, QtWidgets  # noqa: E402
+from PySide6 import QtCore, QtGui, QtWidgets  # noqa: E402
 
+from ameno_ui.application import AmenoApplication  # noqa: E402
 from ameno_ui.assets import asset_path, pixmap  # noqa: E402
+from ameno_ui.bridge import BridgeError  # noqa: E402
+from ameno_ui.common import set_bridge_error  # noqa: E402
 from ameno_ui.create_page import CreatePage  # noqa: E402
 from ameno_ui.models import CreateSnapshot, SceneSnapshot, StyleSnapshot  # noqa: E402
 from ameno_ui.theme import COLORS, register_fonts  # noqa: E402
@@ -166,3 +169,63 @@ def test_login_never_serializes_token_and_help_never_reads_scene() -> None:
     assert secret not in text
     window.login_page.clear()
     window.close()
+
+
+def test_logout_erases_token_widget_and_100_window_lifecycles_complete() -> None:
+    app = _app()
+    _settings_file()
+    coordinator = AmenoApplication()
+    bridge = CountingBridge()
+    coordinator.bridge = bridge
+    for index in range(100):
+        coordinator.show("login")
+        window = coordinator.window
+        assert window is not None
+        secret = "SESSION-%d" % index
+        window.login_page.token.setText(secret)
+        coordinator.authenticate(secret)
+        assert coordinator.auth.authenticated
+        assert window.stack.currentWidget() is window.shell
+        coordinator.logout()
+        assert not coordinator.auth.authenticated
+        assert window.login_page.token.text() == ""
+        assert window.stack.currentWidget() is window.login_page
+        coordinator.close()
+        app.processEvents()
+        assert coordinator.window is None
+
+
+def test_layout_renders_at_minimum_default_and_large_sizes() -> None:
+    app = _app()
+    _settings_file()
+    bridge = CountingBridge()
+    window = AmenoMainWindow(bridge, lambda _token: None, lambda: None)
+    window.show_application("create")
+    window.show()
+    for width, height in ((780, 560), (980, 720), (1560, 1000)):
+        window.resize(width, height)
+        for key, view in window.shell.page_views.items():
+            window.shell.show_page(key)
+            app.processEvents()
+            assert view.widget() is window.shell.pages[key]
+            assert view.widgetResizable()
+            image = QtGui.QImage(window.size(), QtGui.QImage.Format.Format_ARGB32)
+            image.fill(0)
+            window.render(image)
+            assert not image.isNull()
+    create = window.shell.pages["create"]
+    assert all(button.accessibleName() for button in create.tool_choice.buttons.buttons())
+    assert all(button.accessibleName() for button in create.plane_choice.buttons.buttons())
+    window.close()
+    app.processEvents()
+
+
+def test_bridge_errors_are_translated_to_an_actionable_next_step() -> None:
+    _app()
+    label = QtWidgets.QLabel()
+    set_bridge_error(label, BridgeError("noSelection", "internal selection detail"))
+    assert "Selecione uma cota Ameno" in label.text()
+    assert label.property("errorCode") == "noSelection"
+    assert "internal selection detail" in label.toolTip()
+    set_bridge_error(label, BridgeError("bridgeUnavailable", ".NET proxy failure"))
+    assert "reinicie o 3ds Max" in label.text()
