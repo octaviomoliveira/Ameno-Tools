@@ -1,0 +1,523 @@
+# E19 — Interface Qt visualmente aprovada no 3ds Max 2026
+
+Data: 2026-09-10
+
+Status: planejada; implementação ainda não iniciada.
+
+Origem: o canary E18 passou os gates técnicos, mas foi reprovado no uso real
+do 3ds Max em 2026-09-10. As capturas em `work/e19-baseline` são a fonte de
+verdade visual desta correção.
+
+Decisão arquitetural: `docs/decisions/0028-e19-referencia-visual-e-gate-no-host.md`.
+
+Base funcional: `feature/e18-ux-10-10`, incluindo o commit funcional
+`d22fc8f` e as evidências posteriores até `f7f30b4`. Antes de editar, registrar
+o HEAD exato e criar `feature/e19-qt-visual-acceptance`. Não trabalhar em
+`develop` ou `main` e não promover sem autorização explícita.
+
+Estrutura: **6 etapas e 32 subetapas**. A página Aparência será a referência
+visual e de interação. Cotar, Revisar, Exportar, Configuração e Login só podem
+ser alteradas depois que Aparência passar no Max real.
+
+## 1. Resultado esperado
+
+Entregar uma interface que caiba, seja legível e oriente o trabalho no tamanho
+real usado pelo usuário. Um profissional deve conseguir identificar o fluxo,
+criar uma cota de planta ou fachada, ajustar um estilo vendo a prévia, revisar
+uma cota e exportar um PNG sem depender de explicação externa.
+
+O E19 não será chamado de “10/10” por avaliação interna. O marco só termina
+quando os critérios objetivos deste documento e o aceite humano forem
+registrados.
+
+## 2. Evidência da reprovação do E18
+
+Capturas feitas dentro do Max, preservadas em:
+
+- `work/e19-baseline/01-cotar-max-real.png`;
+- `work/e19-baseline/02-aparencia-max-real.png`;
+- `work/e19-baseline/03-revisar-max-real.png`;
+- `work/e19-baseline/04-exportar-max-real.png`.
+
+Falhas observadas:
+
+- títulos, descrições, cartões e navegação cortados;
+- breakpoint escolhido pela largura do shell, embora a largura útil da página
+  fosse menor;
+- preview de Aparência fora da área visível durante o ajuste dos sliders;
+- fonte e espaçamentos grandes para a densidade disponível;
+- botão de cor com contraste insuficiente;
+- empty state de Revisar ocupa quase toda a janela sem acrescentar informação;
+- mensagens repetem instruções e expõem detalhes internos de implementação;
+- ausência de scrollbar horizontal foi interpretada como ausência de clipping;
+- galeria offscreen não reproduziu as métricas de fonte, DPI e viewport do host.
+
+## 3. Princípio de execução
+
+```text
+baseline real -> Aparência -> gate no Max -> sistema responsivo
+              -> demais páginas -> gate completo -> canary
+```
+
+Aparência precisa passar antes de qualquer propagação. Se ela falhar, corrigir
+a causa nela e repetir o gate; não compensar o problema nas outras páginas.
+
+## 4. Contrato visual mensurável
+
+### 4.1 Tamanhos obrigatórios
+
+Validar no cliente real da janela, depois de descontar title bar, sidebar,
+scrollbar e margens:
+
+| Janela | Objetivo |
+| --- | --- |
+| 780×560 | mínimo suportado, rail compacto, conteúdo sem corte |
+| 980×720 | tamanho padrão usado nas capturas do usuário |
+| 1280×800 | layout confortável em duas colunas quando couber |
+| maximizada | expansão equilibrada, sem cartões excessivamente largos |
+
+Registrar também `devicePixelRatio`, DPI lógico/físico, família real e métricas
+da fonte carregada. A validação deve usar a escala do Windows do usuário e, na
+automação isolada, 100%, 125%, 150% e 200%.
+
+### 4.2 Critérios globais
+
+- Zero texto cortado, inclusive hint, botão, combo, spinbox e status.
+- Zero sobreposição e zero controle parcialmente fora do viewport horizontal.
+- Quebra de linha explícita para conteúdo instrucional.
+- Elipse somente em dados longos, com tooltip contendo o valor completo.
+- CTA primário visível sem scroll no tamanho padrão.
+- Navegação legível; no rail compacto, ícone completo e tooltip acessível.
+- Contraste mínimo WCAG AA: 4,5:1 para texto normal e 3:1 para texto grande,
+  foco e componentes essenciais.
+- Alvo interativo mínimo de 32×32 px; CTA e ações principais com 40 px.
+- Foco de teclado visível e ordem de Tab coerente.
+- Nenhuma mensagem duplicada na mesma tela.
+- Nenhum texto de arquitetura apresentado como orientação ao usuário.
+
+### 4.3 Contrato específico de Aparência
+
+- Preview 2D permanece visível enquanto qualquer parâmetro é alterado.
+- Preview, primeiro grupo de sliders e barra de ações aparecem juntos em
+  980×720.
+- Em largura confortável, controles rolam à esquerda e preview fica fixo à
+  direita.
+- Em largura mínima, preview fica fixo no topo, ações no rodapé e somente os
+  controles rolam.
+- Nome, fonte, valor, unidade e reset nunca se sobrepõem.
+- Arrastar slider atualiza a prévia localmente, sem bridge, cena ou timer.
+- Digitação aceita vírgula e wheel sem foco não altera valores.
+- Cor usa swatch separado; o texto do botão não herda a cor configurável.
+- Salvar e Aplicar comunicam destinos diferentes e exibem estado dirty.
+- Toda propriedade visível produz efeito perceptível na prévia.
+
+## 5. Arquitetura de layout obrigatória
+
+### 5.1 Largura útil
+
+O breakpoint deve receber a largura do `viewport()` que hospeda a página. Não
+usar `AppShell.width()` como aproximação. A largura útil é a área restante após
+sidebar, frame, scrollbar e margens.
+
+Contrato inicial, ajustável uma única vez com evidência do Max:
+
+```text
+available = page_view.viewport().width()
+compact   = available < 660
+medium    = 660 <= available < 900
+wide      = available >= 900
+```
+
+### 5.2 Host de Aparência
+
+A página Aparência não deve ficar inteira em uma única rolagem externa. Usar
+um root estável com quatro regiões:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ título + seletor compacto de estilo                         │
+├──────────────────────────────┬──────────────────────────────┤
+│ controles com scroll próprio │ preview fixo                 │
+│ texto / linhas / terminais   │ escala / fundo               │
+├──────────────────────────────┴──────────────────────────────┤
+│ estado dirty                   Salvar alterações | Aplicar   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+No compacto, o preview passa para cima dos controles com altura reduzida, mas
+continua fora do scroll dos controles. A barra de ações também fica fixa. Não
+usar coordenadas absolutas.
+
+### 5.3 Política de tamanho
+
+- Definir stretch factors e `QSizePolicy` conscientemente.
+- Campos numéricos usam largura baseada no maior valor formatado.
+- Frases quebram linha; labels de formulário permanecem curtas.
+- Cartões não impõem `minimumWidth` maior que o viewport.
+- Título + descrição usam componente com dois `QLabel` e word-wrap, não texto
+  multiline em `QPushButton`.
+- A rolagem vertical pertence somente à região que cresce.
+- Scrollbar horizontal permanece visível durante desenvolvimento. O gate exige
+  `maximum() == 0` e ausência de clipping interno.
+
+## 6. Plano de execução — 6 etapas / 32 subetapas
+
+### E19.0 — Congelar a falha e corrigir os instrumentos (4)
+
+1. **Preservar o baseline real.** Copiar as quatro capturas para
+   `work/e19-baseline`, registrar data, dimensões, hashes e descrição. Marcar
+   E18.11 como reprovada no plano vivo, no E18 e no índice de planos.
+
+2. **Capturar métricas do host.** Criar diagnóstico Qt local com geometria da
+   janela, sidebar, viewport, scrollareas e widgets visíveis; registrar DPI,
+   DPR, família, pixel size, ascent, descent, line spacing e bounding rect.
+   Identificar cada widget por `objectName` e caminho de pais.
+
+3. **Criar detector real de clipping.** Para `QLabel`, botão, checkbox, combo,
+   spinbox e navegação, comparar `contentsRect()` com font metrics/`sizeHint()`.
+   Considerar wrap, margens, ícone, indicador, suffix e scrollbar.
+
+4. **Executar baseline RED.** Cobrir cartões ChoiceGroup, sidebar, preview fora
+   da vista, botão de cor e empty state. Guardar o RED antes da implementação e
+   confirmar que os gates técnicos E16/E18 continuam verdes.
+
+**Gate E19.0:** as falhas das capturas são reproduzidas por métricas; nenhum
+teste passa por esconder conteúdo ou scrollbar.
+
+### E19.1 — Construir Aparência como referência (8)
+
+1. **Separar estrutura e rolagem.** Refatorar `StylesPage` para root fixo,
+   seletor compacto, workspace, controles roláveis, preview fixo e barra fixa.
+   Preservar instâncias e sinais durante resize.
+
+2. **Implementar dois arranjos.** Wide/medium usam controles à esquerda e
+   preview à direita. Compact usa preview acima e controles abaixo. Mover
+   layouts somente ao cruzar breakpoint, sem destruir widgets ou duplicar
+   conexões.
+
+3. **Redesenhar seletor de estilo.** Exibir estilo atual, quantidade em uso e
+   ações em uma linha compacta; lista completa abre sob demanda. Empty state
+   carrega o draft padrão e nunca bloqueia edição.
+
+4. **Redesenhar `ParameterControl`.** Cada linha contém label, slider, valor
+   técnico com unidade e reset. Dimensionar pelo maior valor. Em compact,
+   permitir duas linhas controladas sem truncar label ou valor.
+
+5. **Fixar e completar Preview 2D.** Manter aspect ratio e elementos dentro do
+   canvas. Representar texto, tracking, gap, espessura, prolongamento, recuo,
+   terminais, posição, ângulo, máscara, cores e escala.
+
+6. **Corrigir cor e contraste.** Substituir o botão preenchido por swatch +
+   valor/ação. Hover, foco e rótulo usam o tema. Testar luminância/contraste AA.
+
+7. **Clarificar Salvar e Aplicar.** Salvar persiste o perfil; Aplicar escolhe
+   seleção ou todas. Estado dirty aparece uma vez. Sucesso atualiza clean;
+   erro preserva draft e oferece recuperação.
+
+8. **Fechar interação e acessibilidade.** Validar mouse, Tab, setas, Home/End,
+   vírgula, reset, wheel, nomes acessíveis e foco. Medir p95 de 1.000 updates
+   locais abaixo de 20 ms e zero bridge/pymxs/timer.
+
+**Gate E19.1:** Aparência passa automação e produz capturas legíveis em
+780×560, 980×720 e 1280×800. Ainda não propagar o padrão.
+
+### E19.2 — Validar a referência e fechar responsividade (6)
+
+1. **Instalar protótipo canary de Aparência.** Fechar Max/Batch, criar backup,
+   instalar a branch, conferir hashes e capturar com fonte/DPI reais.
+
+2. **Executar gate humano intermediário.** O usuário ajusta tamanho,
+   espaçamento, gap, espessura e terminal sem rolar para reencontrar a prévia.
+   E19.3 fica bloqueada enquanto esse gate não passar.
+
+3. **Usar largura útil nos breakpoints.** Ligar o cálculo ao
+   `page_view.viewport().width()`, incluindo resize e mudança de DPI. Atualizar
+   somente ao mudar de modo; não repolir `QStyle` nem reconstruir páginas.
+
+4. **Corrigir navegação e tipografia.** Rail compacto mostra ícones completos e
+   tooltips. Sidebar com rótulos só aparece quando todos cabem medidos pela
+   fonte real. Limitar largura de leitura e definir escala tipográfica coerente.
+
+5. **Criar componentes resilientes.** Substituir ChoiceGroup multiline por
+   cartões compostos, criar helpers de word-wrap e elipse apenas para dados.
+   Nenhum texto depende de altura fixa.
+
+6. **Repetir matriz de layout/lifecycle.** Cinco larguras, quatro DPIs, 100
+   resizes e 100 navegações; árvore estável, conexões únicas, horizontal zero e
+   detector de clipping zero. Repetir captura no Max após mudar breakpoint.
+
+**Gate E19.2:** aprovação explícita de Aparência no Max e sistema responsivo
+comprovado antes de alterar as demais páginas.
+
+### E19.3 — Aplicar o padrão às demais páginas (6)
+
+1. **Cotar.** Manter tipo, plano, resumo e CTA. Cartões empilham quando a
+   descrição não cabe. Estado da cena vira uma linha curta. Detalhes e
+   manutenção ficam sob demanda. Nada corta em 780×560.
+
+2. **Revisar.** Trocar empty state gigante por orientação compacta com uma
+   ação. Remover texto sobre arquitetura. Quando carregada, mostrar leitura,
+   override e aplicação; IDs longos usam elipse + tooltip. Um único status.
+
+3. **Exportar.** Consolidar renderer em uma linha. Caminho, escopo e fundo
+   empilham em compact. Explicar bloqueio de forma acionável e remover mensagens
+   repetidas.
+
+4. **Configuração.** Priorizar conta/logout. Diagnóstico fica recolhido. Dados
+   longos quebram ou podem ser copiados. Token nunca é exposto.
+
+5. **Login.** Marca, token e ação principal cabem em 780×560. Validar progresso,
+   erro e sucesso; Enter, colar, mostrar/ocultar e limpar sem submit duplicado.
+
+6. **Revisar microcopy e hierarquia.** Um título, uma orientação curta, uma
+   ação principal e um estado por página. Remover termos de implementação e
+   uniformizar ícones, espaços e foco.
+
+**Gate E19.3:** todas as páginas passam os contratos de Aparência e todas as
+ações funcionais anteriores continuam alcançáveis.
+
+### E19.4 — Validação visual e de uso no Max (5)
+
+1. **Gerar galeria dentro do host.** Capturar Login, Cotar, Aparência, Revisar
+   vazia/carregada, Exportar e Configuração em 780×560, 980×720 e maximizada;
+   registrar DPI, fonte e geometria.
+
+2. **Executar auditoria host-side.** Percorrer controles visíveis e falhar por
+   texto cortado, overflow, sobreposição, foco invisível, CTA fora da viewport
+   ou preview invisível durante edição.
+
+3. **Executar tarefas sem instrução.** Pedir apenas: criar cota na planta;
+   mudar tamanho e aplicar; exportar cotas. Registrar tempo, primeiro clique,
+   hesitações, erros e necessidade de ajuda.
+
+4. **Testar com três profissionais, idealmente cinco.** Todos devem concluir
+   Cotar; pelo menos 80% concluem Aparência e Exportar sem ajuda; zero perda de
+   dados, crash ou bloqueio. Registrar comentários sem conduzir.
+
+5. **Triar e repetir.** Corrigir causas comprovadas. Correção visual repete
+   E19.1/E19.2; correção de fluxo repete a tarefa; alteração de host repete E16.
+   Comparar capturas novas com o baseline rejeitado.
+
+**Gate E19.4:** critérios aprovados e aceite registrado pelo usuário. Avaliação
+do agente não encerra este gate.
+
+### E19.5 — Regressão, canary final e decisão (3)
+
+1. **Rodar regressão completa.** Executar Python E15–E19, MaxScript E12–E19,
+   E14 planta/fachada e E16 overlay/mouseMove/callback/commit. Verificar logs,
+   dumps, memória, handles e close/reopen. Zero FAIL/exceção nativa.
+
+2. **Empacotar e instalar canary final.** Validar manifesto Max 2026, excluir
+   WPF/cache/work, gerar SHA-256, fechar Max, criar backup, instalar, comparar
+   hashes e rodar smoke. Fazer uma cotação planta/fachada na cópia instalada.
+
+3. **Registrar decisão.** Atualizar plano, galeria e evidências. Solicitar
+   autorização antes de push/merge/promoção. Se o humano reprovar, manter o
+   canary rejeitado e abrir somente correções baseadas em fatos.
+
+**Gate E19.5:** canary funcional e visualmente aprovado, rollback comprovado e
+decisão registrada.
+
+## 7. Testes obrigatórios
+
+Novos testes Python/Qt:
+
+- `test_e19_clipping_audit.py`;
+- `test_e19_appearance_workspace.py`;
+- `test_e19_parameter_rows.py`;
+- `test_e19_responsive_content_width.py`;
+- `test_e19_page_states.py`;
+- `test_e19_copy_contrast.py`;
+- `test_e19_lifecycle_performance.py`.
+
+Testes dentro do Max:
+
+- launcher e close/reopen;
+- Login/App/logout;
+- troca de página sem leitura de cena;
+- resize/DPI com métricas reais;
+- preview visível durante sliders;
+- criação individual/contínua em planta/fachada;
+- Esc, Undo, commit, seleção/revisão e exportação;
+- instalação via `ApplicationPlugins`.
+
+Cada teste de scrollbar deve incluir uma asserção de geometria, texto ou
+visibilidade. Captura golden sozinha não aprova comportamento.
+
+## 8. Falhas previsíveis e caminho correto
+
+### 8.1 Teste verde com texto cortado
+
+Causa: medir somente scrollbar ou widget pai. Caminho: medir `contentsRect`,
+font metrics, margens, ícone, wrap e size hint do controle real no host; guardar
+imagem e relatório do mesmo frame.
+
+### 8.2 Breakpoint errado no Max
+
+Causa: usar largura da janela/shell. Caminho: observar `page_view.viewport()`,
+reagir a resize/DPI e registrar largura disponível + modo no diagnóstico.
+
+### 8.3 Preview desaparece durante ajuste
+
+Causa: preview e controles compartilham scroll. Caminho: preview e ações ficam
+fora da scrollarea dos controles; compact reduz altura, mas não muda o contrato.
+
+### 8.4 Troca de layout duplica sinal ou derruba Qt
+
+Causa: recriar/reparentear a cada resize ou usar `QStyle.unpolish/polish`.
+Caminho: widgets únicos, mudança idempotente apenas no breakpoint, receivers
+testados e stylesheet top-level somente quando necessário.
+
+### 8.5 Fonte real muda a densidade
+
+Causa: confiar no offscreen ou em altura fixa. Caminho: size hints, métricas da
+fonte real e layout flexível; validar Space Grotesk e fallback. Não reduzir a
+fonte globalmente para mascarar.
+
+### 8.6 Valor técnico estoura a linha
+
+Causa: spinbox dimensionado pelo valor atual. Caminho: maior valor formatado,
+incluindo sinal, decimal, unidade e botões; compact pode usar duas linhas.
+
+### 8.7 Cor torna ação ilegível
+
+Causa: cor escolhida usada como fundo do botão. Caminho: swatch independente,
+ação com tema e contraste calculado.
+
+### 8.8 Correção visual toca viewport
+
+Causa: chamar refresh/bridge em resize ou preview. Caminho: layout e painter
+consomem draft local; cena/renderer somente em ações explícitas.
+
+### 8.9 Outras páginas voltam a cortar
+
+Causa: copiar pixels da referência sem princípios. Caminho: extrair componentes
+flexíveis aprovados e rodar o detector em cada página.
+
+### 8.10 Avaliação interna encerra cedo
+
+Causa: confundir preferência do executor com evidência. Caminho: tarefas sem
+instrução, critérios mensuráveis e aceite humano registrado.
+
+## 9. Guardrails obrigatórios
+
+1. Não declarar “10/10” antes do gate humano.
+2. Não alterar `develop` ou `main` durante a execução.
+3. Não fazer push, merge, tag ou release sem autorização.
+4. Não reativar WPF, WebView, browser ou processo auxiliar.
+5. Não instalar dependências no Python do Max.
+6. Não aumentar o tamanho mínimo para esconder clipping.
+7. Não ocultar scrollbar para passar teste.
+8. Não reduzir globalmente a fonte como correção.
+9. Não usar coordenadas absolutas.
+10. Não usar altura fixa em texto com wrap.
+11. Não usar `QPushButton` multiline para título + descrição.
+12. Não usar largura do shell como largura útil.
+13. Não colocar preview e controles no mesmo scroll.
+14. Não destruir/recriar páginas durante resize.
+15. Não reparentear widget em todo resize.
+16. Não conectar sinal mais de uma vez.
+17. Não chamar `QStyle.unpolish/polish` no Qt embarcado.
+18. Não adicionar timer recorrente para layout/preview.
+19. Não chamar bridge, pymxs, cena, renderer ou viewport em paint, slider,
+    hover, resize ou navegação.
+20. Não alterar E16 sem teste vermelho direto.
+21. Não alterar matemática, fachada, CA ou renderer por motivo visual.
+22. Não usar captura offscreen como aceite final.
+23. Não aprovar scrollbar zero sem detector de clipping.
+24. Não usar elipse em instruções ou ações.
+25. Não deixar CTA fora do primeiro viewport padrão.
+26. Não exibir texto destinado ao desenvolvedor.
+27. Não repetir orientação em header, card e status.
+28. Não usar cor configurável sob texto sem contraste.
+29. Não manter controle sem efeito comprovado.
+30. Não perder draft/seleção ao trocar breakpoint.
+31. Não instalar com Max/Batch aberto.
+32. Não remover backup antes da promoção aceita.
+
+## 10. Arquivos previstos
+
+Novos:
+
+- `Contents/python/ameno_ui/layout_metrics.py`;
+- `Contents/python/ameno_ui/visual_audit.py`;
+- testes Python E19 listados na seção 7;
+- `tests/maxscript/test_e19_qt_visual_contracts.ms`;
+- `tests/maxscript/test_e19_installed_host.ms`;
+- `tools/render-e19-host-gallery.py`;
+- `work/e19-baseline/README.md`;
+- `work/e19-gates/summary.txt`;
+- `work/e19-visual/README.md`.
+
+Alterações prováveis:
+
+- `styles_page.py`, `parameter_control.py`, `dimension_preview.py`;
+- `window.py`, `responsive.py`, `page_scaffold.py`, `components.py`, `theme.py`;
+- `create_page.py`, `edit_page.py`, `render_page.py`, `config_page.py`,
+  `login_page.py`;
+- runners e empacotador somente para novos módulos/assets.
+
+Congelados salvo teste vermelho relacionado:
+
+- ferramenta contínua e overlay `gw`;
+- matemática/plano de fachada;
+- spline, TextPlus e terminais;
+- Custom Attributes e persistência;
+- adapters Corona/V-Ray e serviço de render.
+
+## 11. Commits sugeridos
+
+1. `test(e19): capture real host clipping failures`
+2. `feat(e19): build fixed appearance workspace`
+3. `feat(e19): size parameter rows from font metrics`
+4. `fix(e19): drive breakpoints from page viewport`
+5. `feat(e19): add resilient choice cards and page states`
+6. `test(e19): certify visual contracts in Max host`
+7. `chore(e19): package approved canary evidence`
+
+## 12. Definição de pronto
+
+E19 termina somente quando:
+
+- as quatro falhas do baseline não aparecem nas novas capturas;
+- detector de clipping retorna zero em todas as páginas/tamanhos;
+- Aparência mantém preview, controles relevantes e ações acessíveis;
+- usuário aprova Aparência antes da propagação;
+- tarefas Cotar, Aparência e Exportar passam sem instrução;
+- teste com profissionais atinge a taxa definida;
+- regressão Python/Max, E14 e E16 passa;
+- pacote instalado tem hashes iguais e zero WPF/cache;
+- não há exceção nativa, dump ou regressão de viewport;
+- usuário registra aceite final e decide sobre promoção.
+
+## 13. Prompt para o agente executor
+
+```text
+Execute integralmente o plano E19 em
+D:\Ameno\_tools\plans\2026-09-10-e19-correcao-visual-interface-qt.md.
+
+Leia o documento inteiro. Comece pelas capturas reais em work/e19-baseline e
+transforme o clipping atual em testes RED. Construa somente Aparência como
+referência. Não altere outras páginas até ela passar no 3ds Max 2026 e receber
+aceite humano intermediário.
+
+Calcule breakpoints pela largura do viewport da página. Mantenha preview e
+ações fora do scroll dos controles. Meça texto com fonte real, DPI, margens,
+ícones e indicadores; ausência de scrollbar não basta. Não aumente a janela
+mínima; não esconda scrollbar; não reduza globalmente a fonte.
+
+Preserve E16: edição, paint, resize e navegação usam somente estado local e
+nunca chamam bridge, pymxs, cena, renderer ou viewport. Não use
+QStyle.unpolish/polish, timers, WPF, WebView ou dependências novas.
+
+Registre gates e capturas. Deixe push/promoção por último e apenas após
+autorização explícita. Se a referência reprovar, corrija-a antes de propagar.
+```
+
+## 14. Estado de partida
+
+- E16: desempenho de viewport aprovado e congelado.
+- E18: tecnicamente verde, visualmente reprovado no Max real.
+- Canary E18: instalado apenas como baseline; não promover.
+- E19: plano pronto, zero código implementado.
+- Próxima ação: E19.0, preservar baseline, medir host e criar testes RED.

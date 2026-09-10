@@ -1,7 +1,7 @@
 # Plano compartilhado — Ameno Tools
 
 > Fonte de continuidade do projeto para qualquer pessoa ou agente (incluindo Antigravity).
-> Atualizado: 2026-09-09
+> Atualizado: 2026-09-10
 
 ## Regra de trabalho
 
@@ -198,7 +198,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   `ae3e576`. Plano:
   `plans/2026-09-09-e17-identidade-ux-qt.md`.
 
-- **E18 — experiência Qt 10/10 e prévia reativa em validação canary
+- **E18 — candidato técnico aprovado e gate visual reprovado
   (2026-09-09):** runbook preparado para execução no Antigravity em 12 etapas
   e 118 subetapas. A E18.0 já criou a branch isolada e transformou a falha
   da prévia e o overflow de 780×560 em dois testes RED reproduzíveis; a suíte
@@ -215,10 +215,20 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   auxiliares, E18.8 adicionou seis ícones SVG e E18.9 fechou acessibilidade e
   desempenho local. A automação fechou com 56 testes Python e 19/19 suítes
   MaxScript PASS; a galeria, o pacote canary sem WPF/cache e o smoke da cópia
-  instalada também foram verificados. O E16 permanece congelado e nenhuma interação
-  visual pode chamar bridge, cena ou viewport. O aceite humano do canary ainda
-  está pendente; não há promoção automática. Plano:
+  instalada também foram verificados. No Max real, porém, o canary mostrou
+  textos, cartões e sidebar cortados, preview fora da vista durante ajustes,
+  contraste insuficiente e excesso de conteúdo. O gate humano foi reprovado em
+  2026-09-10 e a correção passou ao E19. O E16 permanece congelado; nenhuma
+  interação visual pode chamar bridge, cena ou viewport. Plano:
   `plans/2026-09-09-e18-ux-10-10-preview-reativo.md`; ADR 0027.
+
+- **E19 — correção visual da interface Qt planejada (2026-09-10):** plano em
+  6 etapas e 32 subetapas. As quatro capturas reais do Max foram preservadas em
+  `work/e19-baseline`. Aparência será construída e aprovada como referência
+  antes de qualquer mudança nas demais páginas. Breakpoints passam a usar a
+  largura real do viewport da página; o gate mede clipping de texto, preview
+  visível, contraste, ações e lifecycle dentro do Max. Plano:
+  `plans/2026-09-10-e19-correcao-visual-interface-qt.md`.
 
 - **Gate de render adiado durante a E15:** o commit `5844730` permanece instalado
   e validado estruturalmente, mas o gate manual da tela WPF não é prioridade
@@ -256,19 +266,24 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   `01e32cd`; os dois defeitos foram convertidos em RED reproduzíveis e a
   evidência está em `work/e18-baseline/README.md`.
 
-- **E18.1–E18.10 concluídas; E18.11 em validação humana:** draft local,
+- **E18.1–E18.10 concluídas; E18.11 reprovada visualmente:** draft local,
   controles slider + número, geometria pura/paridade da prévia, fluxo vertical
   da Aparência, shell responsivo, fluxo Cotar guiado, microcopy, ícones,
   acessibilidade, performance local, automação, galeria e pacote canary estão
   implementados e testados, incluindo DPI 100–200%, zero rolagem horizontal,
   CTA no primeiro viewport, 100 ciclos estáveis e host/instalação real no Max
-  2026. Falta apenas a matriz manual com profissionais e a autorização para
-  qualquer promoção.
+  2026. O gate real encontrou clipping e preview fora da região de trabalho;
+  não promover este canary.
+
+- **Próximo passo — E19.0:** criar branch isolada a partir do E18, usar as
+  capturas em `work/e19-baseline`, coletar métricas da fonte/DPI/viewport no
+  Max e transformar o clipping em testes RED. Implementar somente Aparência
+  até seu gate humano intermediário passar.
 
 - **E17 não deve ser promovida:** preservar o backup
   `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`; não fazer
   push, merge, tag ou alteração em `develop`/`main` sem pedido explícito e sem
-  o aceite completo do E18.
+  o aceite completo do E19.
 
 - **E16 preservada como regressão:** qualquer alteração futura na UI ou na
   ferramenta deve repetir a matriz E16 (preview `gw`, 1.000 movimentos,
@@ -318,6 +333,16 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-10 — Criar plano corretivo para a interface Qt:** o canary E18 foi
+  reprovado no Max real por clipping de textos/cartões/sidebar, breakpoint
+  baseado na largura errada, preview fora da região de ajuste, contraste e
+  excesso de conteúdo. As quatro capturas foram preservadas em
+  `work/e19-baseline`. Foi criado o E19 em 6 etapas/32 subetapas, com Aparência
+  como referência obrigatória, detector de clipping por métricas, largura útil
+  do page viewport, preview/ações fixos, gate humano intermediário e propagação
+  bloqueada até aprovação. Plano:
+  `plans/2026-09-10-e19-correcao-visual-interface-qt.md`; ADR 0028.
 
 - **2026-09-09 — Planejar a interface 10/10 para execução no Antigravity:** o
   feedback real reprovou o aceite visual E17 por clipping, rolagem horizontal,

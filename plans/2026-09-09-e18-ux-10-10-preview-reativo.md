@@ -2,9 +2,10 @@
 
 Data: 2026-09-09
 
-Status: execução na branch `feature/e18-ux-10-10`; E18.0–E18.10
-concluídas. E18.11 está em validação canary no Max 2026; promoção continua
-bloqueada até o aceite humano.
+Status: **reprovada no gate visual humano em 2026-09-10**. E18.0–E18.10
+passaram tecnicamente; E18.11 falhou por clipping, densidade, preview fora da
+área de ajuste, contraste e hierarquia. A correção segue no plano E19; este
+canary não pode ser promovido.
 
 Base obrigatória: branch `feature/e17-ameno-ux`, commit `01e32cd`. Criar uma
 branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
@@ -64,12 +65,14 @@ Aparência; só então aplicar responsividade e polimento ao restante do produto
   O host gate também encontrou e corrigiu dois riscos reais: chamadas
   `QStyle.unpolish/polish` incompatíveis com o wrapper Qt embarcado e largura
   natural de páginas que criava overflow no rail compacto.
-- **E18.11 — em andamento (2026-09-09):** backup recuperável criado em
+- **E18.11 — reprovada (2026-09-10):** backup recuperável criado em
   `D:\Ameno\backups\AmenoTools-before-e18-canary-20260909-232710` e backup de
   refresh em `D:\Ameno\backups\AmenoTools-before-e18-refresh-20260909-233530`, canary
   instalado em `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`,
-  hashes dos módulos/ícones conferidos e smoke instalado PASS. Falta o uso
-  manual no Max 2026 e o aceite com profissionais; não fazer push ou promoção.
+  hashes dos módulos/ícones conferidos e smoke instalado PASS. O uso real no
+  Max mostrou textos/cartões/sidebar cortados, preview distante dos controles,
+  contraste insuficiente e estados excessivos. Evidência em
+  `work/e19-baseline`; correção planejada no E19. Não fazer push ou promoção.
 
 ## 1. Objetivo
 
@@ -668,10 +671,10 @@ fechados e após backup recuperável.
 ## 15. Estado ao encerrar este planejamento
 
 - Plano técnico e de produto: pronto.
-- Implementação E18: E18.0–E18.10 concluídas na branch; canary instalado e
-  validado por smoke no Max 2026, ainda sem aceite humano.
+- Implementação E18: E18.0–E18.10 concluídas tecnicamente; canary instalado e
+  validado por smoke, porém reprovado visualmente no Max 2026.
 - E17: gates técnicos verdes, mas aceite visual humano reprovado.
 - E16: baseline de desempenho obrigatório e congelado.
-- Próxima ação do executor: E18.11.5–E18.11.8, executar a matriz manual no Max
-  2026, registrar hesitações/erros e só então decidir correções e eventual
-  promoção explícita.
+- Próxima ação do executor: iniciar E19.0 em
+  `plans/2026-09-10-e19-correcao-visual-interface-qt.md`; reproduzir por
+  métricas as falhas do baseline antes de alterar a interface.

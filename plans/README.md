@@ -15,6 +15,7 @@ Arquivos atuais:
 - [E15 — Transição integral WPF → Python/Qt](2026-09-09-e15-transicao-wpf-python-qt.md): execução ativa da UI do zero, login por token e janela nativa, certificada primeiro apenas no Max 2026.
 - [E16 — Preview `gw` e commit previsível](2026-09-09-e16-otimizacao-preview-commit-viewport.md): plano executável em 10 etapas/78 subetapas para retirar toda mutação e picking pesado do `mouseMove`, desenhar o preview contínuo com `gw` e reduzir o commit sem quebrar âncoras, fachada, Undo ou render.
 - [E17 — Identidade Ameno e experiência guiada Qt](2026-09-09-e17-identidade-ux-qt.md): candidato técnico em 11 etapas/86 subetapas; automação verde, mas aceite visual humano reprovado em 2026-09-09 por clipping, hierarquia e prévia incompleta.
-- [E18 — Experiência Qt 10/10 e prévia reativa](2026-09-09-e18-ux-10-10-preview-reativo.md): runbook para Antigravity em 12 etapas/118 subetapas; corrige primeiro o contrato do draft e a paridade da prévia, depois responsividade, fluxo de primeiro uso, identidade, acessibilidade e canary sem regredir o E16.
+- [E18 — Experiência Qt 10/10 e prévia reativa](2026-09-09-e18-ux-10-10-preview-reativo.md): runbook executado em 12 etapas/118 subetapas; gates técnicos passaram, mas o canary foi reprovado visualmente no Max real por clipping, densidade, contraste e preview fora da área de ajuste.
+- [E19 — Interface Qt visualmente aprovada no Max](2026-09-10-e19-correcao-visual-interface-qt.md): correção em 6 etapas/32 subetapas após a reprovação visual do E18; usa Aparência como referência, mede clipping real e bloqueia propagação até aprovação dentro do Max 2026.
 
 Ao abrir um marco novo, criar um arquivo datado (`AAAA-MM-DD-assunto.md`) e incluir o link no `PLAN.md` quando ele for relevante para continuidade.
