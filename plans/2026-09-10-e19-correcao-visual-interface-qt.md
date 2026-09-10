@@ -305,7 +305,10 @@ comprovado antes de alterar as demais páginas.
 
 **Progresso E19.3:** itens 1 e 2 implementados; 66/66 testes Python passaram,
 incluindo layout 980x720/780x560, quatro escalas de DPI, prévia local sem bridge
-e rodapé fixo. Itens 3 a 6 e gate dentro do Max continuam pendentes.
+e rodapé fixo. Após o primeiro gate no Max, a coluna técnica passou de 5:6 para
+6:5 em relação à prévia; o gate agora exige ao menos 375 px úteis nos controles
+e 210 px nos campos principais em 980x720. Itens 3 a 6 e a repetição do gate
+dentro do Max continuam pendentes.
 
 **Gate E19.3:** todas as páginas passam os contratos de Cotar e todas as ações
 funcionais anteriores continuam alcançáveis.

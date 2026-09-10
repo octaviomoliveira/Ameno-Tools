@@ -268,8 +268,11 @@ class StylesPage(QtWidgets.QWidget):
         self.workspace_layout = QtWidgets.QBoxLayout(QtWidgets.QBoxLayout.Direction.LeftToRight, self.editor)
         self.workspace_layout.setContentsMargins(0, 0, 0, 0)
         self.workspace_layout.setSpacing(10)
-        self.workspace_layout.addWidget(self.controls_scroll, 5)
-        self.workspace_layout.addWidget(self.preview_box, 6)
+        # The technical fields need slightly more room than the preview at the
+        # 980 px host width. A 6:5 split keeps full labels and numeric editors
+        # readable with the larger font metrics used inside 3ds Max.
+        self.workspace_layout.addWidget(self.controls_scroll, 6)
+        self.workspace_layout.addWidget(self.preview_box, 5)
         root.addWidget(self.editor, 1)
         self._workspace_mode = "wide"
         self.advanced = self.lines_section
@@ -342,10 +345,10 @@ class StylesPage(QtWidgets.QWidget):
             self.preview_box.setMinimumWidth(310)
             self.preview_box.setMinimumHeight(0)
             self.preview_box.setMaximumHeight(16777215)
-            self.workspace_layout.insertWidget(0, self.controls_scroll, 5)
-            self.workspace_layout.insertWidget(1, self.preview_box, 6)
-            self.workspace_layout.setStretch(0, 5)
-            self.workspace_layout.setStretch(1, 6)
+            self.workspace_layout.insertWidget(0, self.controls_scroll, 6)
+            self.workspace_layout.insertWidget(1, self.preview_box, 5)
+            self.workspace_layout.setStretch(0, 6)
+            self.workspace_layout.setStretch(1, 5)
 
     def _select_combo(self, row: int) -> None:
         if self._loading or row < 0:

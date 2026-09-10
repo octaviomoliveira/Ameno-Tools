@@ -56,6 +56,10 @@ def test_style_workspace_keeps_preview_and_footer_fixed_at_980x720() -> None:
     assert page._workspace_mode == "wide"
     assert page.preview_box.parentWidget() is page.editor
     assert not page.controls_scroll.isAncestorOf(page.preview_box)
+    # Keep enough room for Max's real font metrics: the former 5:6 split left
+    # only 323 px and visibly truncated name, font and option controls.
+    assert page.controls_scroll.viewport().width() >= 375
+    assert page.name.width() >= 210
     assert view.verticalScrollBarPolicy() == QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
     assert view.horizontalScrollBar().maximum() == 0
     footer_pos = page.footer.mapTo(view.viewport(), QtCore.QPoint(0, 0))
