@@ -147,3 +147,25 @@ def test_direction_segments_use_local_reference_icons() -> None:
     assert len(buttons) == 3
     assert all(not widget.icon().isNull() for widget in buttons)
     window.close()
+
+
+def test_automatic_direction_recovers_after_silent_single_selection_and_show() -> None:
+    app = _app()
+    os.environ["AMENO_SETTINGS_FILE"] = str(Path(tempfile.mkdtemp()) / "e19-auto-recovery.ini")
+    window = AmenoMainWindow(ReferenceBridge(), lambda _token: None, lambda: None)
+    page = window.shell.pages["create"]
+    page.tool_choice.set_value("continuous")
+    assert not page.mode.is_item_enabled("aligned")
+    page.tool_choice.set_value("single")
+    assert page.mode.is_item_enabled("aligned")
+
+    page.mode.set_item_enabled("aligned", False)
+    window.show_application("create")
+    window.show()
+    app.processEvents()
+    assert page.tool_choice.value() == "single"
+    assert page.mode.is_item_enabled("aligned")
+    page.mode._by_value["aligned"].click()
+    assert page.mode.currentData() == "aligned"
+    window.close()
+    app.processEvents()

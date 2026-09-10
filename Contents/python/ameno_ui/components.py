@@ -232,6 +232,9 @@ class ChoiceGroup(QtWidgets.QWidget):
         if emit:
             self.changed.emit(value)
 
+    def items(self):
+        return tuple(self._by_value.items())
+
     def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
         super().resizeEvent(event)
         columns = 1 if self.width() < 560 else self._columns

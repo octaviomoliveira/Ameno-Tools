@@ -172,7 +172,10 @@ class CreatePage(QtWidgets.QWidget):
         self.delete_selection_action.triggered.connect(self.delete_selected)
         self.clear_orphans_action.triggered.connect(self.clear_orphan_dimensions)
         self.delete_all_action.triggered.connect(self.delete_all_dimensions)
-        self.tool_choice.changed.connect(self._on_tool_choice_changed)
+        for value, choice_button in self.tool_choice.items():
+            choice_button.toggled.connect(
+                lambda checked=False, item=value: self._on_tool_choice_toggled(item, checked)
+            )
         self.mode.changed.connect(self._on_direction_changed)
         self.tool_choice.changed.connect(self._save_preferences)
         self.tool_choice.changed.connect(lambda *_args: self._update_summary())
@@ -240,7 +243,9 @@ class CreatePage(QtWidgets.QWidget):
             % (plane, tool, direction, unit)
         )
 
-    def _on_tool_choice_changed(self, value: str) -> None:
+    def _on_tool_choice_toggled(self, value: str, checked: bool) -> None:
+        if not checked:
+            return
         changed = value != self._last_tool_choice
         self._last_tool_choice = value
         self._sync_direction_rule(notify=changed)
@@ -338,8 +343,14 @@ class CreatePage(QtWidgets.QWidget):
         del blocker
         blocker = QtCore.QSignalBlocker(self.follow_line)
         self.follow_line.setChecked(create.text_follows_line)
+        self._sync_direction_rule(notify=False)
         self._update_summary()
         del blocker
+
+    def showEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().showEvent(event)
+        self._last_tool_choice = self.tool_choice.value()
+        self._sync_direction_rule(notify=False)
 
     def refresh(self) -> None:
         try:
@@ -402,6 +413,7 @@ class CreatePage(QtWidgets.QWidget):
 
     def start_individual(self) -> None:
         self.tool_choice.set_value("single")
+        self._sync_direction_rule(notify=False)
         self.start_selected()
 
     def start_continuous(self) -> None:
