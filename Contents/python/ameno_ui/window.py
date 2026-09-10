@@ -13,8 +13,10 @@ from .edit_page import EditPage
 from .login_page import LoginPage
 from .models import SceneSnapshot
 from .preferences import settings
+from .page_scaffold import apply_page_margins
 from .qt_compat import QtCore, QtGui, QtWidgets, max_parent
 from .render_page import RenderPage
+from .responsive import spec_for_width
 from .styles_page import StylesPage
 from .theme import apply_to
 
@@ -23,6 +25,14 @@ class AppShell(QtWidgets.QWidget):
     def __init__(self, bridge: UiBridge, logout: Callable[[], None]) -> None:
         super().__init__()
         self.setObjectName("AppShell")
+        self._responsive_mode = ""
+        self._nav_labels = {
+            "create": "Cotar",
+            "styles": "Aparência",
+            "edit": "Revisar",
+            "render": "Exportar",
+            "config": "Configuração",
+        }
         self.pages: Dict[str, QtWidgets.QWidget] = {}
         self.page_views: Dict[str, QtWidgets.QScrollArea] = {}
         self._nav_by_key: Dict[str, QtWidgets.QPushButton] = {}
@@ -30,13 +40,15 @@ class AppShell(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         sidebar = QtWidgets.QFrame()
         sidebar.setObjectName("Sidebar")
-        sidebar.setFixedWidth(184)
+        self.sidebar = sidebar
+        sidebar.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Expanding)
         side_layout = QtWidgets.QVBoxLayout(sidebar)
         side_layout.setContentsMargins(13, 18, 13, 14)
         brand = BrandImage("brand/ameno-symbol-red.png", 34, 34, fallback="O")
         brand.setAccessibleName("Ameno")
         side_layout.addWidget(brand, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         product = QtWidgets.QLabel("COTAS  /  MAX 2026")
+        self.product_meta = product
         product.setObjectName("Meta")
         side_layout.addWidget(product)
         side_layout.addSpacing(18)
@@ -50,19 +62,25 @@ class AppShell(QtWidgets.QWidget):
             page_button.setCheckable(True)
             page_button.setMinimumHeight(36)
             page_button.setProperty("nav", True)
+            page_button.setAccessibleName(label)
+            page_button.setToolTip(label)
             self.nav.addButton(page_button)
             self._nav_by_key[key] = page_button
             side_layout.addWidget(page_button)
             page_button.clicked.connect(lambda checked=False, name=key: self.show_page(name))
         side_layout.addStretch(1)
         help_button = QtWidgets.QPushButton("?  Como começar")
+        self.help_button = help_button
         help_button.setProperty("nav", True)
+        help_button.setAccessibleName("Como começar")
+        help_button.setToolTip("Como começar")
         help_button.clicked.connect(self.show_help)
         side_layout.addWidget(help_button)
         config_button = QtWidgets.QPushButton("Configuração")
         config_button.setCheckable(True)
         config_button.setMinimumHeight(36)
         config_button.setProperty("nav", True)
+        config_button.setAccessibleName("Configuração")
         self.nav.addButton(config_button)
         self._nav_by_key["config"] = config_button
         config_button.clicked.connect(lambda checked=False: self.show_page("config"))
@@ -90,6 +108,30 @@ class AppShell(QtWidgets.QWidget):
         # antes de o token ser aceito; a primeira leitura acontece no
         # coordenador, depois da autenticação.
         self.show_page("create", refresh=False)
+        self._apply_responsive_layout()
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        self._apply_responsive_layout()
+
+    def _apply_responsive_layout(self) -> None:
+        spec = spec_for_width(self.width())
+        mode, sidebar_width = spec.mode, spec.sidebar_width
+        if mode == self._responsive_mode and self.sidebar.width() == sidebar_width:
+            return
+        self._responsive_mode = mode
+        self.sidebar.setFixedWidth(sidebar_width)
+        compact = mode == "compact"
+        self.product_meta.setVisible(not compact)
+        self.sidebar.layout().setContentsMargins(8 if compact else 13, 18, 8 if compact else 13, 14)
+        for page in self.pages.values():
+            apply_page_margins(page, spec)
+        for key, widget in self._nav_by_key.items():
+            widget.setText(key[0].upper() if compact else self._nav_labels[key])
+            widget.setToolTip(self._nav_labels[key])
+            widget.setMinimumHeight(40 if compact else 36)
+        self.help_button.setText("?" if compact else "?  Como começar")
+        self.help_button.setToolTip("Como começar")
 
     def show_page(self, name: str, refresh: bool = False) -> None:
         page = self.pages.get(name, self.pages["create"])

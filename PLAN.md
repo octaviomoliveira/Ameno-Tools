@@ -208,8 +208,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   parâmetros de estilo, também sem bridge. A ordem começa pelos testes, depois
   implementa preview geométrico puro — já coberto em `dimension_preview.py`
   com cinco contratos de paridade; a E18.4 reorganizou Aparência em fluxo
-  vertical sem splitter fixo e com quatro contratos novos; depois aplica shell
-  responsivo, primeiro uso,
+  vertical sem splitter fixo e com quatro contratos novos; a E18.5 aplicou
+  shell responsivo com rail compacto, margens adaptativas, cinco larguras e
+  DPI 100–200% sem rolagem horizontal; depois trata primeiro uso,
   ícones, acessibilidade e canary. O E16 permanece congelado e nenhuma interação
   visual pode chamar bridge, cena ou viewport. Plano:
   `plans/2026-09-09-e18-ux-10-10-preview-reativo.md`; ADR 0027.
@@ -250,10 +251,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   `01e32cd`; os dois defeitos foram convertidos em RED reproduzíveis e a
   evidência está em `work/e18-baseline/README.md`.
 
-- **E18.1–E18.4 concluídas; E18.5 em execução:** draft local, controles slider +
-  número, geometria pura/paridade da prévia e fluxo vertical da Aparência estão
-  implementados e testados, sem chamadas ao bridge. Próximo passo é corrigir o
-  shell e as páginas que ainda pedem rolagem horizontal na janela mínima.
+- **E18.1–E18.5 concluídas; E18.6 em execução:** draft local, controles slider +
+  número, geometria pura/paridade da prévia, fluxo vertical da Aparência e
+  shell responsivo estão implementados e testados, incluindo DPI 100–200% e
+  zero rolagem horizontal. Próximo passo é simplificar o fluxo Cotar para o
+  primeiro uso sem treinamento.
 
 - **E17 não deve ser promovida:** preservar o backup
   `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`; não fazer

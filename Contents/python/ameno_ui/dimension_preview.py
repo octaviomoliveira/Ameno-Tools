@@ -162,7 +162,7 @@ def build_preview_geometry(
         _terminal(terminal_kind, right_terminal_anchor, terminal_size, terminal_angle, -1.0),
     )
 
-    font_size_px = max(8.0, min(120.0, float(snapshot.font_size) * 0.16 * feature_scale))
+    font_size_px = max(8.0, min(120.0, float(snapshot.font_size) * 0.38 * feature_scale))
     tracking_px = float(snapshot.tracking) * 0.08 * feature_scale
     text_width = max(font_size_px * 1.8, len(text) * font_size_px * 0.56 + max(0, len(text) - 1) * tracking_px)
     text_gap = max(8.0, float(snapshot.text_gap) * 0.12 * feature_scale)

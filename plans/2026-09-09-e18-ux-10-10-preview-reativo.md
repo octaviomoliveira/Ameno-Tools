@@ -2,8 +2,8 @@
 
 Data: 2026-09-09
 
-Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0–E18.4
-concluídas. Próximo checkpoint: E18.5.
+Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0–E18.5
+concluídas. Próximo checkpoint: E18.6.
 
 Base obrigatória: branch `feature/e17-ameno-ux`, commit `01e32cd`. Criar uma
 branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
@@ -37,8 +37,13 @@ Aparência; só então aplicar responsividade e polimento ao restante do produto
   conflitantes e passou a um fluxo vertical com Estilo atual, Prévia 2D, Texto,
   ajustes avançados e ações explícitas. Empty state continua editável e quatro
   contratos de estrutura/fluxo passaram.
-- **E18.5 — próxima:** aplicar breakpoints ao shell inteiro e eliminar clipping
-  em todas as páginas.
+- **E18.5 — concluída (2026-09-09):** breakpoints puros Wide/Medium/Compact,
+  sidebar 208/184/64, rail compacto, margens adaptativas sem reconstrução,
+  janela mínima 780×560 sem rolagem horizontal em todas as páginas e cinco
+  larguras; subprocessos validaram 100/125/150/200% de DPI. Três contratos de
+  shell e o baseline E18 passaram.
+- **E18.6 — próxima:** simplificar Cotar para o primeiro uso e deixar uma única
+  ação principal clara.
 
 ## 1. Objetivo
 
@@ -634,8 +639,9 @@ fechados e após backup recuperável.
 ## 15. Estado ao encerrar este planejamento
 
 - Plano técnico e de produto: pronto.
-- Implementação E18: não iniciada.
+- Implementação E18: E18.0–E18.5 implementadas na branch; canary ainda não
+  instalado nem submetido ao aceite humano.
 - E17: gates técnicos verdes, mas aceite visual humano reprovado.
 - E16: baseline de desempenho obrigatório e congelado.
-- Próxima ação do executor: E18.5, aplicando breakpoints ao shell e removendo
-  a rolagem horizontal da janela mínima em todas as páginas.
+- Próxima ação do executor: E18.6, simplificando o fluxo Cotar para um
+  profissional que nunca usou o 3ds Max.
