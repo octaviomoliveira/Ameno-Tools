@@ -1,0 +1,714 @@
+2026/09/09 23:35:54 INF: [19208] [53904] Application started with secure mode state 'OFF'
+2026/09/09 23:35:54 INF: [19208] [53904] Application started with safe scene state 'ON' 
+2026/09/09 23:35:54 INF: [19208] [53904] Product version: 3ds Max 2026.3 (28.3.0.30732)
+2026/09/09 23:35:54 INF: [19208] [53904] Data collection and use is 'OFF'. Change your participation anytime in the Help menu of 3ds Max.
+2026/09/09 23:35:54 DBG: [19208] [53904] Could not find the specified file in DefaultSettingsParser::parse()
+2026/09/09 23:35:55 INF: [19208] [53904] Successfully loaded plugin package - Name: V-Ray for 3ds Max - Company: Chaos Software - Version: 7.10.00 - Location: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\
+2026/09/09 23:35:55 INF: [19208] [53904] Successfully loaded plugin package - Name: Retopology Tools for 3ds Max 2026 - Company: Autodesk, Inc. - Version: 1.8.0.16 - Location: c:\programdata\autodesk\applicationplugins\retopology3dsmax2026\
+2026/09/09 23:35:55 INF: [19208] [53904] Successfully loaded plugin package - Name: Alembic - Company: Autodesk - Version: 1.0.0 - Location: c:\program files\autodesk\3ds max 2026\applicationplugins\alembic\
+2026/09/09 23:35:55 INF: [19208] [53904] Successfully loaded plugin package - Name: Flow Retopology for 3ds Max 2026 - Company: Autodesk, Inc. - Version: 1.6.0.5 - Location: c:\programdata\autodesk\applicationplugins\flowretopologyfor3dsmax2026\
+2026/09/09 23:35:55 INF: [19208] [53904] Successfully loaded plugin package - Name: capholes - Company: Autodesk - Version: 1.0.0 - Location: c:\program files\autodesk\3ds max 2026\applicationplugins\capholes\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: Substance in 3ds Max - Company: Adobe - Version: 3.0.5 - Location: c:\programdata\autodesk\applicationplugins\substancein3dsmax2026\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: MAXtoA for 3ds Max 2026 - Company: Autodesk, Inc. - Version: 5.8.3.2 - Location: c:\programdata\autodesk\applicationplugins\maxtoa_2026\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: Autodesk 3ds Max 2026 CivilView - Company: Autodesk - Version: 1.0.1.0 - Location: c:\program files\autodesk\3ds max 2026\applicationplugins\civilviewio\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: 3ds Max Scene Security Tools - Company: Autodesk, Inc. - Version: 2.1.8 - Location: c:\program files\autodesk\3ds max 2026\applicationplugins\scenesecuritytools\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: USD for 3ds Max 2026 - Company: Autodesk, Inc. - Version: 0.13.0.13 - Location: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: Advanced Modeling Tools for 3ds Max 2026 - Company: Autodesk - Version: 1.11.0.6 - Location: c:\programdata\autodesk\applicationplugins\advancedmodeling3dsmax2026\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: Ameno Tools - Company: Ameno - Version: 0.0.1 - Location: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: Autodesk 3ds Max 2026 CivilView - Company: Autodesk - Version: 1.2.6.0 - Location: c:\programdata\autodesk\applicationplugins\3dsmax-civilview-2026-1.2.6.0\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: RevitImporter - Company: Autodesk - Version: 1.0.0 - Location: c:\program files\autodesk\3ds max 2026\applicationplugins\revitimporter\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: SiNi Software - Company: SiNi Software - Version: 2.0.3 - Location: c:\programdata\autodesk\applicationplugins\sinisoftware2026\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: BooleanObject - Company: Autodesk - Version: 1.0.0 - Location: c:\program files\autodesk\3ds max 2026\applicationplugins\booleanobject\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: Chaos Scatter for 3ds Max - Company: Chaos Software - Version: 9.1.682603 - Location: c:\programdata\autodesk\applicationplugins\chaosscatter3dsmax2026\
+2026/09/09 23:35:56 INF: [19208] [53904] Successfully loaded plugin package - Name: MaxFluids - Company: Autodesk - Version: 0.0.1 - Location: c:\program files\autodesk\3ds max 2026\applicationplugins\maxfluid\
+2026/09/09 23:35:59 DBG: [19208] [53904] Is GPU present : Yes
+2026/09/09 23:35:59 DBG: [19208] [53904] Graphics driver requested by the user : Nitrous
+2026/09/09 23:35:59 DBG: [19208] [53904] Graphics driver actually created in the viewports : Nitrous DX11 SW
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_AdvancedLighting.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_AdvancedQuadOptions.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Animation.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_AssetTrackingSystem.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_BakeTextures.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_BodyObjects.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_BoneAdjustmentsTools.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Bones.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_BrushPresets.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_CAT.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Characters.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Constraints.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Containers.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ContentBrowser.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_CoordinateSys.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_CreaseExplorer.mcr
+2026/09/09 23:35:59 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_CreateDefaultProject.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_CreateEmptyProject.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_CreateProjectFromCurrent.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_CrowdAreaDraw.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_CustomAttributes.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_DXDisplay.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_EditableMesh.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_EditablePatch.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_EditablePolygon.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_EditablePolygon2.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_EditableSpline.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_FreezeTransform.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_GeometryChecker.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_GrabViewport.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Hair.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Help.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_IKSolvers.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_IsoSel.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Layer.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_LightInclude.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_LightList.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Luminaires.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_MassFX.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_MaterialExplorer.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_MCG.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_MeasureDistance.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_MeditUtilities.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_MergeAnimation.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_MeshValidator.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_MissingPlugInEntitiesExplorer.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Mixer.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Modifiers.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ModifierStackTools.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_NamedSelSets.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Notes.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsAEC.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsCameras.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsCompounds.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsDynamics.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsFluids.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsHelpers.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsLights.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsNURBS.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsParticles.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsPrimitives.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsShapes.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsSpaceWarps.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ObjectsSystems.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ParameterCollector.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ParamWire.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_PolyTools.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ProSound.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_RenameObjects.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_RenderActionItems.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_RenderButtonActionItems.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_RenderToPrint.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Ribbon-Modeling.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_SceneConverter.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_SceneExplorer.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_SchematicView.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_SelectFromTarget.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_SelectInstances.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Separator.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_SetProjectFolder.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ShapesCompounds.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_SkinTools.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_SubObjectLevels.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_TrackView.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Trajectories.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Transforms.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_UIOptions.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_UIScheme.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_UnwrapUI.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_Utilities.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_VertexPaint.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_ViewportShadingMgr.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_WalkAssist.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\Macro_WalkThrough.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\AddColourVari.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\AttachAll.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\AttachByGroup.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\AttachByLayer.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\AttachByMtls.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\BatchMaxscripts.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\CameraProperties.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\CleanFile.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\ConvertCamerasToStandard.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\CopyObjs.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\DeleteOverlappingSplines.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\FlattenSplines.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\InstanceObjs.mcr
+2026/09/09 23:36:00 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\LockCameras.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\PasteObjs.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\RandRotObjs.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\RandScaleObjs.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\SelectCamera.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\StackUp.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\StraightenObj.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\SwitchCameras.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\UniqueObjs.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\UnlockCameras.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: C:\Program Files\Autodesk\3ds Max 2026\MacroScripts\SiNi_Software\WirecolourBy.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: D:\Ameno\_tools\.test-output\isolated-macros\Ameno Tools-AbrirCotasPanel.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: D:\Ameno\_tools\.test-output\isolated-macros\Ameno Tools-AbrirEditorEstilos.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: D:\Ameno\_tools\.test-output\isolated-macros\Ameno Tools-AmenoTools_Open.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: D:\Ameno\_tools\.test-output\isolated-macros\Ameno Tools-CriarCotaContinua.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: D:\Ameno\_tools\.test-output\isolated-macros\Ameno Tools-CriarCotaIndividual.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: D:\Ameno\_tools\.test-output\isolated-macros\Ameno Tools-RenderizarCotas.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\program files\autodesk\3ds max 2026\applicationplugins\civilviewio\macroscripts\Macro_CivilView_Initialize.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\3dsmax-civilview-2026-1.2.6.0\contents\macroscripts\Macro_CivilView.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\advancedmodeling3dsmax2026\contents\macroscripts\BooleanModifier.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\advancedmodeling3dsmax2026\contents\macroscripts\ArrayModifier.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\flowretopologyfor3dsmax2026\contents\macroscripts\FlowTools.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\Macro_MAXtoA.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\retopology3dsmax2026\contents\macroscripts\RetopologyTools.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Add_Callback.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_DeSipher.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_ForenSic.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Help_Links.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_IgNite.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Illumi.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Jumble.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_MoJo.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Pivot.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_PreFlight.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Open_Scripts.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Remove_Callback.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Scribe.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Script.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Sculpt.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\sinisoftware2026\scripts\marcoscripts\SiNi_Unite.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\scripts\registerMenu.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\scripts\materials\UsdMaterialAttributeMacro.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\scripts\VRay-VRayLightLister.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded macroscript: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\macroscripts\AmenoTools.mcr
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\addmodfunc.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\AutoProjectSwitcher.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CamTrakr.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CharacterPluginObject.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\controllerfunctions.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CreateCameraFromView.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CrowdAreaDraw.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\custattribstructs.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\customUIschemes_functions.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\DaylightSimulationScripts.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\editfunctions.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\filterfunctions.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\functions_snaps.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\IdleAreaObject.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\lightTool.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\Main-Ribbon.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\manipulator_lights_roll_angle.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\MCG_functions.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\meditfunctions.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\MergeAnimation.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\Modifier-AttributeHolder.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\modifier_camera_perspective_correction.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\modifier_uvwunwrap_dialog.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\NET_ListViewWrapper.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\NET_TreeViewWrapper.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\PathConfigHelper.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\en-US\px_localStrings.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_localization.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_common.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_nodekeys.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_unitchanges.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_mouse.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_globals.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_ragdoll.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_modifierRB.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_bake.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_visualizer.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_modifierClothing.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_guiMenuToolbar.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_modifierCloth.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_mesh.ms
+2026/09/09 23:36:01 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_guiRagdoll.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_panelD6.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_panelMultiEditor_Constraints.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_panelMultiEditor.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_PhysXPanel.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_d6joint.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_compatibility.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_watcher.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_exporterRollout.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\(MassFX)\px_loader.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\physx_startup.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\pointCloudMtlGenerationShader.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\PolyTools.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\ProjectionMod.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\quadcolor_startup.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\radiusmanip.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\Ribbon-Modeling.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\RTT_methods.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\SceneConverter.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\scripttools.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\selection_display_filters.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\slidermanip.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\TrackViewUtility.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\uvwmanip.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\VFB_methods.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\baseLib\rolloutCreator.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\baseLib\xmlIO.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\CATMacroUtilFunctions.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\ApplyIKChain.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\CATMacroUtilFunctions.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\CaptureAnimation.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\CATMacroUtilFunctions.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\CATRiggingRCM.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\CollapseLayers.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\ImportBip.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\ImportBVH.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\ImportHTR.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\CATMacroUtilFunctions.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\PoseMixer.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\ResetXForms.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\CATMacroUtilFunctions.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\stdplugs\stdscripts\CATScripts\SaveLoadClipsPoses.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: c:\program files\autodesk\3ds max 2026\applicationplugins\civilviewio\scripts\CivilView.Plugins.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Initializing Python version: 3.11.12
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "pymxs". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_io". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_pymxs". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "maxlistener". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "contextlib". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "abc". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "os". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "sys". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_collections_abc". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "collections". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "itertools". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "keyword". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "operator". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "builtins". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_operator". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "reprlib". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_thread". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_weakref". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_collections". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "functools". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "types". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_functools". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "importlib". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_imp". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_frozen_importlib". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_frozen_importlib_external". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "warnings". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_warnings". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_bootstrap". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "nt". 
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\scripts\register-usd-python-runtime.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\scripts\usd-python-scripts.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\scripts\materials\USDMaterialAttributeHolder.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\scripts\materials\UsdPreviewSurface.ms
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "pxr". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "platform". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "re". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "enum". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "". 
+2026/09/09 23:36:02 INF: [19208] [53904] Importing python module "_sre". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_constants". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_casefix". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "copyreg". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "socket". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_socket". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "io". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "selectors". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "collections.abc". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "math". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "select". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "errno". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "subprocess". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "locale". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "encodings". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "encodings.aliases". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_locale". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "time". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "signal". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_signal". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "threading". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_weakrefset". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "fcntl". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "msvcrt". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_winapi". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "winreg". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "inspect". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "ast". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_ast". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "dis". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "opcode". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_opcode". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "importlib.machinery". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "_bootstrap_external". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "linecache". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "tokenize". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "codecs". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "token". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "pxr.Tf". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "pxr.Trace". 
+2026/09/09 23:36:03 INF: [19208] [53904] Importing python module "pxr.Work". 
+2026/09/09 23:36:03 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\scripts\register-usd-plugin-paths.ms
+2026/09/09 23:36:04 INF: [19208] [53904] SYSTEM: Production renderer is changed to Arnold. Previous messages are cleared.
+2026/09/09 23:36:04 DBG: [19208] [53904] At Nitrous init, the OGS graphics device requested is : Nitrous DX11 SW
+2026/09/09 23:36:05 DBG: [19208] [53904] At Nitrous init, the OGS graphic device actually created is : Nitrous Software (= Direct3D 11 WARP )- 
+2026/09/09 23:36:06 DBG: [19208] [53904] Starting network
+2026/09/09 23:36:06 INF: [19208] [53904] Starting GUP: PaintboxStartup
+2026/09/09 23:36:06 INF: [19208] [53904] Starting GUP: Particle Flow Global Actions
+2026/09/09 23:36:06 INF: [19208] [53904] Starting GUP: Box#2 Global Utility
+2026/09/09 23:36:06 INF: [19208] [53904] Starting GUP: MassFX Loader Linkage
+2026/09/09 23:36:06 INF: [19208] [53904] Starting GUP: Particle Flow Tools Global Utility
+2026/09/09 23:36:06 INF: [19208] [53904] Starting GUP: Particle View Global Actions
+2026/09/09 23:36:06 INF: [19208] [53904] Starting GUP: OffsetManagerGUP
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: PhysicalMaterialManager
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: PhysXPanelGUP
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: ATSMax
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: AutoCam
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: GripManager
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: MaxRenderer COM Server
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: DialogMonitor
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: FltGUP
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: GeometryCheckerManager
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: FlippedFacesClass
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: FlippedUVWFacesClass
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: IsolatedVertexClass
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: MissingUVCoordinatesClass
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: MultipleEdgeClass
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: OpenEdgesClass
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: OverlappedUVWFacesClass
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: OverlappingFacesClass
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: OverlappingVerticesClass
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: MapMtlClipboard
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: MaterialPreviewerGUP
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: Mb_select
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: OneClick
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: ParameterCollectorCA
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: ParserLoader
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: Plug-in Manager
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: PolyToolsSelect
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: PolyToolsModeling
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: PolyToolsTopology
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: PolyToolsPolyDraw
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: PolyToolsPaintDeform
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: PolyToolsShift
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: PolyToolsUVWTweak
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: Save Verification
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: Scene_Converter
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: SMEGUP
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: SnapWorkingPivot
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: tprofiler
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: ViewportManagerControl
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: GameNavGup
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: CoronaPowerTools
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: VRSceneExporter
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: 
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: VRMatImporter
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: VRMatExporter
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: CosmosImporter
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: Substance2MenuManager
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: MAXtoA_Menu
+2026/09/09 23:36:07 INF: [19208] [53904] Starting GUP: ArnoldShadersLoader
+2026/09/09 23:36:09 INF: [19208] [53904] Starting GUP: SecurityToolsUtility
+2026/09/09 23:36:09 INF: [19208] [53904] ALC Security Tool 1.3 enabled.
+2026/09/09 23:36:09 INF: [19208] [53904] ALC2 Security Tool 1.3 enabled.
+2026/09/09 23:36:09 INF: [19208] [53904] PhysXPluginMfx Security Tool 1.3 enabled.
+2026/09/09 23:36:09 INF: [19208] [53904] PhysXPluginMfx2 Security Tool 1.1 enabled.
+2026/09/09 23:36:09 INF: [19208] [53904] CRP Security Tool 1.1 enabled.
+2026/09/09 23:36:09 INF: [19208] [53904] ADSL Security Tool 1.1 enabled.
+2026/09/09 23:36:09 INF: [19208] [53904] MSCPROP Security Tool 1.0 enabled.
+2026/09/09 23:36:10 INF: [19208] [53904] Starting GUP: Guppi
+2026/09/09 23:36:10 DBG: [19208] [53904] Graphics driver requested by the user : Nitrous
+2026/09/09 23:36:10 DBG: [19208] [53904] Graphics driver actually created in the viewports : Nitrous
+2026/09/09 23:36:10 DBG: [19208] [53904] Graphics driver requested by the user : Nitrous
+2026/09/09 23:36:10 DBG: [19208] [53904] Graphics driver actually created in the viewports : Nitrous
+2026/09/09 23:36:10 DBG: [19208] [53904] Graphics driver requested by the user : Nitrous
+2026/09/09 23:36:10 DBG: [19208] [53904] Graphics driver actually created in the viewports : Nitrous
+2026/09/09 23:36:11 INF: [19208] [53904] Importing python module "ar_project_tokens". 
+2026/09/09 23:36:11 INF: [19208] [53904] Importing python module "pxr.Plug". 
+2026/09/09 23:36:11 INF: [19208] [53904] Importing python module "pxr.Gf". 
+2026/09/09 23:36:11 INF: [19208] [53904] Importing python module "pxr.Vt". 
+2026/09/09 23:36:11 INF: [19208] [53904] Importing python module "AdskAssetResolver". 
+2026/09/09 23:36:14 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\CivilView.ms
+2026/09/09 23:36:14 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\CustomAttributes.ms
+2026/09/09 23:36:14 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\holdSysMon_stub.ms
+2026/09/09 23:36:14 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\Material_glTF.ms
+2026/09/09 23:36:14 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\Material_PBR_MetalRough.ms
+2026/09/09 23:36:14 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\Material_PBR_SpecGloss.ms
+2026/09/09 23:36:14 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\OSLHelpers.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\ProceduralContent.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\uvchecker_override_material.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\ValidateSceneRefHierarchy_stub.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\AmbientOcclusionMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\BeautyMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\ColorMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\EmissiveMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\MaterialIDMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\MaterialInputMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\MetalnessMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\NormalMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\OpacityMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\RoughnessMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\RoundedCornersMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\scripts\startup\BTT\VertexColorMap.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Users\octav\AppData\Local\Autodesk\3dsMax\2026 - 64bit\ENU\scripts\startup\collect_asset_startup.ms
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Users\octav\AppData\Local\Autodesk\3dsMax\2026 - 64bit\ENU\scripts\NikScripts\UVTools\UVTools.mse
+2026/09/09 23:36:15 WRN: [19208] [53904] Failed to load script: C:\Users\octav\AppData\Local\Autodesk\3dsMax\2026 - 64bit\ENU\scripts\NikScripts\UVTools\UVTools.mse
+2026/09/09 23:36:15 INF: [19208] [53904] Loaded script: C:\Users\octav\AppData\Local\Autodesk\3dsMax\2026 - 64bit\ENU\scripts\startup\UVTools_loader.mse
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\3dsmax-civilview-2026-1.2.6.0\contents\scripts\CivilViewStartup.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnoldcamera_vr.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnold_fisheye_camera.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnold_spherical_camera.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnold_cyl_camera.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnoldlight_barndoorfilter.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnoldlight_cylindermanip.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnoldlight_decayfilter.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnoldlight_gobofilter.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnoldlight_quadmanip.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnoldlight_radiusmanip.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\arnoldlight_spotmanip.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\MAXtoA_OpenPBR_CustomAttribute.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\MAXtoA_PhysicalMaterial_CustomAttribute.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\maxscript\MAXtoA_MaxUSD_Stage_CustomAttribute.ms
+2026/09/09 23:36:16 INF: [19208] [53904] Executing python file: "c:\programdata\autodesk\applicationplugins\maxtoa_2026\usdtools\MAXtoAUSDTools.py".
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "maxUsd". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "ufe". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "PyUfe". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "shiboken6". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "zipfile". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "binascii". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "importlib.util". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "_abc". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "posixpath". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "stat". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "genericpath". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "posix". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "shutil". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "fnmatch". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "zlib". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "bz2". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "_compression". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "_bz2". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "lzma". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "_lzma". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "struct". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "_struct". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "pathlib". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "ntpath". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "urllib.parse". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "ipaddress". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "base64". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "marshal". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "textwrap". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "traceback". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "tempfile". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "random". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "bisect". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "_bisect". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "_random". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "_sha512". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "weakref". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "typing". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "_typing". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "shiboken6.Shiboken". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "numpy.core._multiarray_umath". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "encodings.cp437". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "shibokensupport". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "shibokensupport.signature". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "signature_bootstrap". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "shibokensupport.signature.mapping". 
+2026/09/09 23:36:16 INF: [19208] [53904] Importing python module "shibokensupport.signature.lib.tool". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "PySide6.support". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "shibokensupport.signature.lib". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "shibokensupport.signature.layout". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "argparse". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "gettext". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "logging". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "string". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "_string". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "atexit". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "shibokensupport.signature.lib.enum_sig". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "PySide6". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "PySide6.support.feature". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Ar". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Kind". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Ts". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "TsTest_Baseliner". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "TsTest_MayapyEvaluator". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Sdf". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Pcp". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Usd". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.UsdGeom". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.CameraUtil". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Garch". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Glf". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.PxOsd". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Ndr". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.Sdr". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.UsdShade". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.UsdHydra". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.UsdImagingGL". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.UsdLux". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.UsdRi". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.UsdSkel". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.UsdUtils". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "complianceChecker". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "__future__". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "pxr.UsdUtils.constantsGroup". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "updateSchemaWithSdrNode". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "fixBrokenPixarSchemas". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "usdzUtils". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "glob". 
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\maxtoa_2026\usdtools\MAXtoAUSDTools.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Executing python file: "c:\programdata\autodesk\applicationplugins\substancein3dsmax2026\scripts\post-startup\..\python\substance\SubstanceRendererCompatibility.py".
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "copy". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "org.python.core". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "gc". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "SubstanceDialog". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "PySide6.QtGui". 
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "SubstanceRendererCompatibility". 
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\substancein3dsmax2026\scripts\post-startup\SubstanceStartup.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\materialx_plugin\contents\scripts\MtlXMaterial.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\scripts\materialx\register-materialx-target.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\scripts\materialx\registerPlugin.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\usd for 3ds max 2026\contents\materialx_plugin\contents\scripts\MtlXMaterial2.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Include script: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\scripts\vrayutils.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\SceneConverter\ConversionScripts\AutodeskMat_To_PhysicalMat.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\scripts\vraymtlexport.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\SceneConverter\ConversionScripts\AutodeskMat_To_PhysicalMat.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\scripts\vrayutils.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\scripts\vrsceneexport.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Include script: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\scripts\vraymtlexport.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Include script: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\scripts\vrayutils.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: C:\Program Files\Autodesk\3ds Max 2026\SceneConverter\ConversionScripts\AutodeskMat_To_PhysicalMat.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\scripts\vrvismatconvertor.ms
+2026/09/09 23:36:17 INF: [19208] [53904] Importing python module "ctypes". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "_ctypes". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "ctypes._endian". 
+2026/09/09 23:36:18 WRN: [19208] [53904] [V-Ray] Unsupported USD for Autodesk 3dsMax version (0.13.0), V-Ray for 3dsMax USD translator plugin will not be loaded
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\programdata\autodesk\applicationplugins\vray3dsmax2026\plugins\max_usd\vrayusdregisterplugin.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_version.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_logger.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_scene_setup.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_dimension_plane.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_dimensions_math.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_dimension_chain_math.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_dimension_ca.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_dimension_terminal_mesh.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_dimension_graphics.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_anchor_service.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_style_service.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_dimension_tool.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_continuous_input.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_continuous_diagnostics.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_continuous_overlay.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_dimension_continuous_tool.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\renderers\ameno_renderer_probe.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\renderers\ameno_corona_adapter.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\renderers\ameno_vray_adapter.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_render_cotas_service.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_diagnostic_service.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\core\ameno_runtime.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\ui\ameno_ui_bridge.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\ameno\ui\ameno_python_ui.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\scripts\startup\ameno_bootstrap.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Loaded script: C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools\Contents\scripts\startup\ameno_bootstrap.ms
+2026/09/09 23:36:18 INF: [19208] [53904] Executing python file: "c:\users\octav\appdata\roaming\autodesk\applicationplugins\amenotools\contents\python\ameno_ui\entrypoint.py".
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "ameno_ui". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "application". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "auth". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "dataclasses". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "bridge". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "models". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "qt_compat". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "window". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "assets". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "components". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "config_page". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "common". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "host_info". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "create_page". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "preferences". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "edit_page". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "login_page". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "page_scaffold". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "responsive". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "render_page". 
+2026/09/09 23:36:18 INF: [19208] [53904] Importing python module "styles_page". 
+2026/09/09 23:36:19 INF: [19208] [53904] Importing python module "dimension_preview". 
+2026/09/09 23:36:19 INF: [19208] [53904] Importing python module "parameter_control". 
+2026/09/09 23:36:19 INF: [19208] [53904] Importing python module "style_draft". 
+2026/09/09 23:36:19 INF: [19208] [53904] Importing python module "theme". 
+2026/09/09 23:36:19 INF: [19208] [53904] Importing python module "qtmax". 
+2026/09/09 23:36:19 INF: [19208] [53904] Importing python module "PySide6.QtWidgets". 
+2026/09/09 23:36:19 INF: [19208] [53904] Importing python module "QtMaxNative". 
+2026/09/09 23:36:19 INF: [19208] [53904] Importing python module "ameno_ui.style_draft". 
+2026/09/09 23:36:19 INF: [19208] [53904] Importing python module "ameno_ui.dimension_preview". 
+2026/09/09 23:36:19 INF: [19208] [53904] [V-Ray] ============================================================
+2026/09/09 23:36:19 INF: [19208] [53904] [V-Ray] Console created, V-Ray 7.10.00 for x64 from May 14 2025, 14:20:21
+2026/09/09 23:36:20 INF: [19208] [53904] [V-Ray] ============================================================
+2026/09/09 23:36:20 INF: [19208] [53904] [V-Ray] Compiled with Microsoft Visual C++ compiler, version 19,4
+2026/09/09 23:36:20 INF: [19208] [53904] [V-Ray] Host is 3ds Max, version 28
+2026/09/09 23:36:20 INF: [19208] [53904] [V-Ray] V-Ray DLL version is 7.10.00
+2026/09/09 23:36:20 INF: [19208] [53904] Importing python module "ameno_ui.assets". 
+2026/09/09 23:36:20 INF: [19208] [53904] Loaded script: D:\Ameno\_tools\tests\maxscript\test_e18_installed_host.ms
+2026/09/09 23:36:20 INF: [19208] [53904] StartupTemplate factoryTemplateFolder: C:\Program Files\Autodesk\3ds Max 2026\en-US\StartupTemplates
+2026/09/09 23:36:20 INF: [19208] [53904] StartupTemplate userTemplateFolder: C:\Users\octav\Documents\3ds Max 2026\startuptemplates
+2026/09/09 23:36:20 INF: [19208] [53904] StartupTemplate appdataTemplateFolder: C:\Users\octav\AppData\Local\Autodesk\3dsMax\2026 - 64bit\ENU\en-US\StartupTemplates
+2026/09/09 23:36:21 INF: [19208] [53904] [V-Ray] Maximum memory usage for texman: 0,00 MB
+2026/09/09 23:36:22 DBG: [19208] [53904] Stop network
+2026/09/09 23:36:22 INF: [19208] [53904] [V-Ray] ============================================================
+2026/09/09 23:36:22 INF: [19208] [53904] [V-Ray] Console closed normally
+2026/09/09 23:36:22 INF: [19208] [53904] [V-Ray] ============================================================
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: PaintboxStartup
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: Particle Flow Global Actions
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: Box#2 Global Utility
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: MassFX Loader Linkage
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: Particle Flow Tools Global Utility
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: Particle View Global Actions
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: PhysicalMaterialManager
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: PhysXPanelGUP
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: ATSMax
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: AutoCam
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: GripManager
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: DialogMonitor
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: FltGUP
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: GeometryCheckerManager
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: FlippedFacesClass
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: FlippedUVWFacesClass
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: IsolatedVertexClass
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: MissingUVCoordinatesClass
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: MultipleEdgeClass
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: OpenEdgesClass
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: OverlappedUVWFacesClass
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: OverlappingFacesClass
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: OverlappingVerticesClass
+2026/09/09 23:36:22 INF: [19208] [53904] Stopping GUP: MapMtlClipboard
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: MaterialPreviewerGUP
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: OneClick
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: ParameterCollectorCA
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: ParserLoader
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: Plug-in Manager
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: PolyToolsSelect
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: PolyToolsModeling
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: PolyToolsTopology
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: PolyToolsPolyDraw
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: PolyToolsPaintDeform
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: PolyToolsShift
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: PolyToolsUVWTweak
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: Save Verification
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: Scene_Converter
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: SMEGUP
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: SnapWorkingPivot
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: tprofiler
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: ViewportManagerControl
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: GameNavGup
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: CoronaPowerTools
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: VRSceneExporter
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: 
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: VRMatImporter
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: VRMatExporter
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: CosmosImporter
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: Substance2MenuManager
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: MAXtoA_Menu
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: ArnoldShadersLoader
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: SecurityToolsUtility
+2026/09/09 23:36:23 INF: [19208] [53904] ALC Security Tool 1.3 disabled.
+2026/09/09 23:36:23 INF: [19208] [53904] ALC2 Security Tool 1.3 disabled.
+2026/09/09 23:36:23 INF: [19208] [53904] PhysXPluginMfx Security Tool 1.3 disabled.
+2026/09/09 23:36:23 INF: [19208] [53904] CRP Security Tool 1.1 disabled.
+2026/09/09 23:36:23 INF: [19208] [53904] ADSL Security Tool 1.1 disabled.
+2026/09/09 23:36:23 INF: [19208] [53904] Stopping GUP: Guppi
+2026/09/09 23:36:25 INF: [19208] [53904] PhysXPluginMfx2 Security Tool 1.1 disabled.
+2026/09/09 23:36:25 INF: [19208] [53904] MSCPROP Security Tool 1.0 disabled.
