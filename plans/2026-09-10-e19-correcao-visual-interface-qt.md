@@ -2,8 +2,8 @@
 
 Data: 2026-09-10
 
-Status: em execução; referência Cotar implementada localmente e aguardando gate
-no 3ds Max 2026.
+Status: em execução; referência Cotar implementada e instalada como canary.
+Gate visual/funcional no 3ds Max 2026 pendente.
 
 Origem: o canary E18 passou os gates técnicos, mas foi reprovado no uso real
 do 3ds Max em 2026-09-10. As capturas em `work/e19-baseline` são a fonte de
@@ -237,7 +237,8 @@ teste passa por esconder conteúdo ou scrollbar.
    planta/fachada e individual/contínua mantêm o mesmo bridge.
 
 **Gate E19.1:** Cotar passa automação e produz captura legível em 980×720. O
-gate automatizado está verde; o gate no Max 2026 continua pendente.
+gate automatizado está verde; canary instalado em 2026-09-10; o gate no Max
+2026 continua pendente.
 
 ### E19.2 — Validar a referência e fechar responsividade (6)
 
