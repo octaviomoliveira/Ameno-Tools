@@ -581,19 +581,21 @@ Novos:
 - `Contents/python/ameno_ui/responsive.py`
 - `Contents/python/ameno_ui/page_scaffold.py`
 - `Contents/python/ameno_ui/assets/icons/*.svg`
-- `Contents/python/ameno_ui/assets/icons/png/{1x,2x}/*.png`
 - `tests/python/test_e18_style_draft.py`
 - `tests/python/test_e18_parameter_control.py`
 - `tests/python/test_e18_preview_geometry.py`
 - `tests/python/test_e18_responsive_layout.py`
-- `tests/python/test_e18_accessibility_performance.py`
+- `tests/python/test_e18_quality.py`
+- `tests/python/test_e18_secondary_pages.py`
+- `tests/python/test_e18_icons.py`
+- `tests/python/test_e18_packaging.py`
 - `tests/maxscript/test_e18_qt_host.ms`
 - `tests/maxscript/test_e18_installed_host.ms`
 
 Alterações prováveis:
 
 - `styles_page.py`, `create_page.py`, `edit_page.py`, `render_page.py`,
-  `login_page.py`, `settings_page.py`;
+  `login_page.py`, `config_page.py`;
 - `window.py`, `components.py`, `theme.py`, `models.py`;
 - empacotador, validador estrutural e launcher somente se assets/módulos novos
   exigirem inclusão explícita.
