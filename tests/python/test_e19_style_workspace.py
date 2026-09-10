@@ -136,3 +136,15 @@ def test_style_compact_mode_places_fixed_preview_above_scrolling_controls() -> N
     assert view.verticalScrollBar().maximum() == 0
     window.close()
     app.processEvents()
+
+
+def test_style_default_height_gives_the_preview_room_to_explain_the_dimension() -> None:
+    app = _app()
+    window = _window(780, 720)
+    page = window.shell.pages["styles"]
+    assert page._workspace_mode == "compact"
+    assert page.preview_box.height() >= 240
+    assert page.preview.height() >= 165
+    assert page.controls_scroll.viewport().height() >= 100
+    window.close()
+    app.processEvents()

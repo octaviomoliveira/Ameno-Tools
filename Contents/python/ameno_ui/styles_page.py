@@ -48,6 +48,12 @@ class PreviewWidget(QtWidgets.QWidget):
         bg = QtGui.QColor("#121212" if self._dark else "#E8E8E0")
         painter.fillRect(self.rect(), bg)
         geometry = build_preview_geometry(self._style, self.rect(), self._zoom)
+        wall_fill = QtGui.QColor("#242529" if self._dark else "#D9D9D3")
+        wall_stroke = QtGui.QColor("#3B3D43" if self._dark else "#B8B8B0")
+        painter.setPen(QtGui.QPen(wall_stroke, 1.0))
+        painter.setBrush(wall_fill)
+        for wall in geometry.wall_rects:
+            painter.drawRect(QtCore.QRectF(wall.x, wall.y, wall.width, wall.height))
         line_color = color_text_to_qcolor(geometry.line_color)
         text_color = color_text_to_qcolor(geometry.text.color)
         if not line_color.isValid():
@@ -57,6 +63,11 @@ class PreviewWidget(QtWidgets.QWidget):
         pen = QtGui.QPen(line_color)
         pen.setWidthF(geometry.line_thickness_px)
         painter.setPen(pen)
+        painter.setBrush(line_color)
+        reference_radius = max(2.5, min(4.5, geometry.line_thickness_px * 1.5))
+        for point in geometry.wall_reference_points:
+            painter.drawEllipse(QtCore.QPointF(*point), reference_radius, reference_radius)
+        painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
         for segment in geometry.all_segments:
             painter.drawLine(QtCore.QPointF(*segment.start), QtCore.QPointF(*segment.end))
         for terminal in geometry.terminals:
@@ -187,6 +198,7 @@ class StylesPage(QtWidgets.QWidget):
         self.zoom = QtWidgets.QComboBox()
         for label, value in (("50%", 0.5), ("100%", 1.0), ("200%", 2.0)):
             self.zoom.addItem(label, value)
+        self.zoom.setCurrentIndex(1)
         self.dark = QtWidgets.QCheckBox("Fundo escuro")
         self.dark.setChecked(True)
         self.zoom.currentIndexChanged.connect(self.update_preview)
@@ -328,20 +340,25 @@ class StylesPage(QtWidgets.QWidget):
         # font metrics from Max while keeping every numeric editor visible.
         compact = self.width() < 780
         mode = "compact" if compact else "wide"
-        if mode == self._workspace_mode and self.editor.isVisible():
-            return
+        mode_changed = mode != self._workspace_mode or not self.editor.isVisible()
         self._workspace_mode = mode
-        self.workspace_layout.setDirection(
-            QtWidgets.QBoxLayout.Direction.TopToBottom
-            if compact
-            else QtWidgets.QBoxLayout.Direction.LeftToRight
-        )
+        if mode_changed:
+            self.workspace_layout.setDirection(
+                QtWidgets.QBoxLayout.Direction.TopToBottom
+                if compact
+                else QtWidgets.QBoxLayout.Direction.LeftToRight
+            )
         if compact:
             self.controls_scroll.setMinimumWidth(0)
             self.preview_box.setMinimumWidth(0)
-            self.preview_box.setMinimumHeight(170)
-            self.preview_box.setMaximumHeight(190)
-            self.workspace_layout.insertWidget(0, self.preview_box)
+            # A 720 px-tall shell gets a genuinely readable architectural
+            # preview. Shorter windows retain enough room for the dedicated
+            # controls scroll instead of pushing the fixed footer away.
+            preview_height = max(190, min(285, round(self.height() * 0.5625 - 125)))
+            self.preview_box.setMinimumHeight(preview_height)
+            self.preview_box.setMaximumHeight(preview_height)
+            if mode_changed:
+                self.workspace_layout.insertWidget(0, self.preview_box)
             self.workspace_layout.setStretch(0, 0)
             self.workspace_layout.setStretch(1, 1)
         else:
@@ -349,8 +366,9 @@ class StylesPage(QtWidgets.QWidget):
             self.preview_box.setMinimumWidth(250)
             self.preview_box.setMinimumHeight(0)
             self.preview_box.setMaximumHeight(16777215)
-            self.workspace_layout.insertWidget(0, self.controls_scroll, 7)
-            self.workspace_layout.insertWidget(1, self.preview_box, 4)
+            if mode_changed:
+                self.workspace_layout.insertWidget(0, self.controls_scroll, 7)
+                self.workspace_layout.insertWidget(1, self.preview_box, 4)
             self.workspace_layout.setStretch(0, 7)
             self.workspace_layout.setStretch(1, 4)
 

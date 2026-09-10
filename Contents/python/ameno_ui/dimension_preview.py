@@ -19,6 +19,14 @@ class PreviewSegment:
 
 
 @dataclass(frozen=True)
+class PreviewRect:
+    x: float
+    y: float
+    width: float
+    height: float
+
+
+@dataclass(frozen=True)
 class PreviewTerminal:
     kind: str
     anchor: Point
@@ -45,6 +53,8 @@ class PreviewGeometry:
     height: float
     line_color: str
     line_thickness_px: float
+    wall_rects: tuple[PreviewRect, ...]
+    wall_reference_points: tuple[Point, ...]
     extension_segments: tuple[PreviewSegment, ...]
     dimension_segment: PreviewSegment
     terminals: tuple[PreviewTerminal, ...]
@@ -120,10 +130,38 @@ def build_preview_geometry(
     external_zoom = max(0.25, min(4.0, float(zoom or 1.0)))
     style_scale = max(0.1, min(10.0, float(snapshot.preview_scale or 1.0)))
     effective_scale = external_zoom * style_scale
-    margin = max(18.0, min(64.0, width * 0.08))
-    left_anchor = margin
-    right_anchor = max(left_anchor + 60.0, width - margin)
-    center_y = height * 0.62
+    margin = max(24.0, min(72.0, width * 0.1))
+    available_span = max(60.0, width - margin * 2.0)
+    # Zoom changes the whole sample, including its measured span. Keep 50%
+    # large enough to remain explanatory and cap 200% inside the canvas.
+    span_ratio = max(0.58, min(1.0, 0.8 * effective_scale))
+    sample_span = available_span * span_ratio
+    left_anchor = width * 0.5 - sample_span * 0.5
+    right_anchor = width * 0.5 + sample_span * 0.5
+    # The sample is deliberately architectural: a dimension sits above a
+    # small wall fragment instead of floating without context. This mirrors
+    # the old WPF preview while remaining pure, deterministic geometry.
+    center_y = max(46.0, min(height * 0.43, height - 76.0))
+    wall_top = max(center_y + 42.0, min(height * 0.72, height - 34.0))
+    wall_thickness = max(12.0, min(22.0, height * 0.09))
+    wall_padding = max(18.0, min(34.0, width * 0.055))
+    return_width = max(12.0, min(20.0, width * 0.035))
+    return_height = max(14.0, min(30.0, height - wall_top - wall_thickness))
+    wall_rects = (
+        PreviewRect(
+            left_anchor - wall_padding,
+            wall_top,
+            right_anchor - left_anchor + wall_padding * 2.0,
+            wall_thickness,
+        ),
+        PreviewRect(left_anchor - wall_padding, wall_top + wall_thickness, return_width, return_height),
+        PreviewRect(
+            right_anchor + wall_padding - return_width,
+            wall_top + wall_thickness,
+            return_width,
+            return_height,
+        ),
+    )
 
     # Keep the preview legible while still exposing the physical style values.
     feature_scale = max(0.08, min(0.8, min(width / 900.0, height / 300.0))) * effective_scale
@@ -132,12 +170,10 @@ def build_preview_geometry(
     terminal_size = max(4.0, float(snapshot.terminal_size) * 0.08 * feature_scale)
     line_thickness = max(0.5, float(snapshot.line_thickness) * 0.75 * feature_scale)
 
-    left = left_anchor + extension_gap
-    right = right_anchor - extension_gap
-    if right <= left + 20:
-        left, right = left_anchor, right_anchor
-    extension_top = max(8.0, center_y - (34.0 + overhang))
-    extension_bottom = min(height - 8.0, center_y + (34.0 + overhang))
+    left = left_anchor
+    right = right_anchor
+    extension_top = max(8.0, center_y - overhang)
+    extension_bottom = max(center_y + 2.0, wall_top - extension_gap)
     extension_segments = (
         PreviewSegment((left, extension_top), (left, extension_bottom)),
         PreviewSegment((right, extension_top), (right, extension_bottom)),
@@ -191,6 +227,8 @@ def build_preview_geometry(
         height=height,
         line_color=_color_text(snapshot.annotation_color),
         line_thickness_px=line_thickness,
+        wall_rects=wall_rects,
+        wall_reference_points=((left_anchor, wall_top), (right_anchor, wall_top)),
         extension_segments=extension_segments,
         dimension_segment=dimension_segment,
         terminals=terminals,

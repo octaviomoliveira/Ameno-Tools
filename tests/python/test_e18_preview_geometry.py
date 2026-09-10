@@ -26,8 +26,12 @@ def test_geometry_is_deterministic_and_does_not_require_qt_or_scene() -> None:
     assert first == second
     assert first.width == 620.0
     assert first.height == 240.0
+    assert len(first.wall_rects) == 3
+    assert len(first.wall_reference_points) == 2
     assert len(first.extension_segments) == 2
     assert first.dimension_segment.start[0] < first.dimension_segment.end[0]
+    assert first.dimension_segment.start[1] < first.wall_rects[0].y
+    assert first.extension_segments[0].end[1] <= first.wall_rects[0].y
 
 
 def test_line_and_text_parameters_have_visible_geometry_effects() -> None:
