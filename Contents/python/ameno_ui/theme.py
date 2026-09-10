@@ -87,6 +87,12 @@ QLabel#PageTitle { color: %(white)s; font-size: 22pt; font-weight: 600; }
 QLabel#PageSubtitle { color: %(muted)s; font-size: 10pt; }
 QLabel#SectionTitle { color: %(white)s; font-size: 12pt; font-weight: 600; }
 QLabel#SectionHint { color: %(muted)s; font-size: 9pt; }
+QWidget#CreatePage QLabel#PageTitle { font-size: 25pt; font-weight: 500; }
+QWidget#CreatePage QLabel#SectionTitle { font-size: 13pt; }
+QLabel#ChoiceTitle { color: %(white)s; font-size: 11.5pt; font-weight: 600; }
+QLabel#ChoiceHint { color: %(muted)s; font-size: 9.5pt; }
+QLabel#SelectionSummary { color: %(muted)s; font-size: 9.5pt; }
+QLabel#SceneTitle { color: %(white)s; font-size: 11pt; font-weight: 600; }
 QLabel#Status {
     background-color: %(secondary)s;
     border: 1px solid %(border)s;
@@ -109,6 +115,12 @@ QGroupBox#Card, QFrame#Card {
     margin-top: 8px;
     padding: 15px;
 }
+QFrame#SceneCard {
+    background-color: %(elevated)s;
+    border: 1px solid %(border)s;
+    border-radius: 10px;
+}
+QFrame#SceneRule { color: %(border)s; }
 QGroupBox#Card::title {
     subcontrol-origin: margin;
     left: 14px;
@@ -155,6 +167,7 @@ QPushButton[primary="true"] {
     font-weight: 700;
     min-height: 40px;
 }
+QWidget#CreatePage QPushButton[primary="true"] { min-height: 44px; }
 QPushButton[primary="true"]:hover { background-color: #F04A3D; }
 QPushButton[primary="true"]:pressed { background-color: %(red_dark)s; }
 QPushButton[quiet="true"] { background: transparent; border-color: transparent; color: %(muted)s; }
@@ -178,15 +191,16 @@ QPushButton[nav="true"][compact="true"] {
     padding: 4px 0;
     text-align: center;
 }
-QPushButton[choice="true"] {
+QPushButton#ChoiceCard {
     background-color: %(secondary)s;
     border: 1px solid %(border)s;
-    border-radius: 9px;
-    min-height: 62px;
-    padding: 8px 12px;
-    text-align: left;
+    border-radius: 10px;
+    padding: 0;
 }
-QPushButton[choice="true"]:checked { border: 2px solid %(red)s; background-color: #1D1312; }
+QPushButton#ChoiceCard:hover { background-color: %(hover)s; border-color: #3A3A3A; }
+QPushButton#ChoiceCard:checked { border: 2px solid %(red)s; background-color: #1D1312; }
+QPushButton#ChoiceCard:focus { border: 2px solid #62645F; }
+QPushButton#ChoiceCard:focus:checked { border: 2px solid %(red)s; }
 QToolButton {
     background-color: %(secondary)s;
     border: 1px solid %(border)s;

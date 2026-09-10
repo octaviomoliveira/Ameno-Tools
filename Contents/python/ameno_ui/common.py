@@ -40,6 +40,7 @@ def message_label() -> QtWidgets.QLabel:
 
 def set_message(label: QtWidgets.QLabel, text: str, error: bool = False) -> None:
     label.setText(text)
+    label.setVisible(bool(text))
     label.setProperty("error", bool(error))
     label.style().unpolish(label)
     label.style().polish(label)

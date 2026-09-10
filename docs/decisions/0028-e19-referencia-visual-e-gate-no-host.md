@@ -1,4 +1,4 @@
-# ADR 0028 — Aparência como referência e gate visual no host
+# ADR 0028 — Cotar como referência e gate visual no host
 
 Data: 2026-09-10
 
@@ -17,10 +17,11 @@ scrollbars. A galeria offscreen não reproduziu a densidade observada no Max.
 
 ## Decisão
 
-1. Usar Aparência como única referência antes de propagar alterações.
-2. Bloquear as demais páginas até Aparência ser aprovada no Max 2026.
+1. Usar Cotar como primeira referência antes de propagar alterações.
+2. Bloquear as demais páginas até Cotar ser aprovada no Max 2026.
 3. Calcular breakpoints pela largura do viewport que hospeda a página.
-4. Manter preview e barra de ações fora da rolagem dos controles.
+4. Em Cotar, usar cards compostos com ícone vetorial, título e hint separados;
+   em Aparência, manter preview e ações fora da rolagem dos controles.
 5. Medir clipping com `QFontMetrics`, `contentsRect`, margens, ícones e size
    hints, além de verificar scrollbars.
 6. Exigir capturas e tarefas no host real para aceite visual.
@@ -28,10 +29,11 @@ scrollbars. A galeria offscreen não reproduziu a densidade observada no Max.
 
 ## Consequências
 
-- A primeira entrega E19 cobre somente Aparência até o gate intermediário.
+- A primeira entrega E19 cobre somente Cotar até o gate intermediário.
 - A responsividade usa a largura realmente disponível para cada página.
 - Testes ficam mais próximos do que o usuário vê, incluindo fonte e DPI.
-- Aparência ganha rolagem interna própria; preview e ações permanecem visíveis.
+- Cotar define a hierarquia, densidade, sidebar e seleção visual reutilizáveis.
+- Aparência ganha rolagem interna própria na etapa seguinte.
 - O avanço fica mais lento por checkpoint, mas evita propagar uma referência
   visual reprovada para todo o produto.
 

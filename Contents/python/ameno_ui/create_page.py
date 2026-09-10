@@ -6,7 +6,7 @@ from typing import Callable, Dict, List, Optional
 
 from .bridge import BridgeError, UiBridge
 from .common import button, group, message_label, set_bridge_error, set_message
-from .components import ChoiceGroup, Disclosure, PageHeader, SectionHeading, StatusPill
+from .components import ChoiceGroup, Disclosure, PageHeader, SectionHeading, StatusDot
 from .models import CreateSnapshot, SceneSnapshot, StyleSnapshot
 from .preferences import settings
 from .qt_compat import QtCore, QtWidgets
@@ -25,51 +25,45 @@ class CreatePage(QtWidgets.QWidget):
 
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(30, 26, 30, 30)
-        # Keep the primary CTA inside the first viewport at the default
-        # 980x720 shell size, including when the onboarding card is visible.
-        root.setSpacing(8)
+        root.setSpacing(10)
         root.addWidget(
             PageHeader(
                 "Cotar",
-                "Escolha o que você quer medir. O Ameno traduz isso para a viewport.",
-                "AMENO COTAS",
+                "Escolha como medir e inicie a cotação.",
+                "COTAR",
             )
         )
 
+        # Help exists on demand, but never competes with the primary flow.
         self.guide = QtWidgets.QFrame()
         self.guide.setObjectName("Card")
         guide_layout = QtWidgets.QVBoxLayout(self.guide)
         guide_layout.setSpacing(4)
-        guide_layout.addWidget(SectionHeading("Como começar", "Escolha, inicie e siga a mensagem da viewport."))
+        guide_layout.addWidget(SectionHeading("Como começar"))
         guide_text = QtWidgets.QLabel(
-            "1. Onde está o desenho?  2. O que você quer medir?  "
-            "3. Clique em Iniciar cotação.\n"
-            "Durante a coleta: Esc cancela · Ctrl+Z desfaz."
+            "Escolha a medição e a orientação. Depois, inicie e clique na viewport.\n"
+            "Esc cancela · Ctrl+Z desfaz."
         )
         guide_text.setWordWrap(True)
         guide_layout.addWidget(guide_text)
         root.addWidget(self.guide)
 
-        intent_box = group("O que você vai cotar?")
-        intent_layout = QtWidgets.QVBoxLayout(intent_box)
-        intent_layout.setSpacing(10)
-        intent_layout.addWidget(SectionHeading("Tipo de medição", "Você pode trocar esta escolha a qualquer momento."))
+        root.addWidget(SectionHeading("Como você quer medir?"))
         self.tool_choice = ChoiceGroup(
             (
-                ("Uma medida", "Dois pontos e a posição do texto", "single"),
-                ("Várias medidas", "Uma sequência contínua de segmentos", "continuous"),
+                ("Uma medida", "Seleciona uma única cota", "single"),
+                ("Várias medidas", "Cria uma sequência contínua", "continuous"),
             )
         )
-        intent_layout.addWidget(self.tool_choice)
-        intent_layout.addWidget(SectionHeading("Onde está o desenho?"))
+        root.addWidget(self.tool_choice)
+        root.addWidget(SectionHeading("Orientação do desenho"))
         self.plane_choice = ChoiceGroup(
             (
-                ("Planta", "Medições no plano horizontal XY", "worldXY"),
-                ("Fachada ou vista", "Medições alinhadas à vista atual", "viewPlane"),
+                ("Planta", "Medições no plano horizontal", "worldXY"),
+                ("Fachada / Vista", "Medições alinhadas à vista", "viewPlane"),
             )
         )
-        intent_layout.addWidget(self.plane_choice)
-        root.addWidget(intent_box)
+        root.addWidget(self.plane_choice)
 
         details_box = group("")
         details_form = QtWidgets.QFormLayout(details_box)
@@ -98,33 +92,46 @@ class CreatePage(QtWidgets.QWidget):
         details_form.addRow("Precisão", self.precision)
         details_form.addRow("Texto", self.follow_line)
         self.details = Disclosure("Ajustar detalhes", details_box, expanded=False)
-        action_box = QtWidgets.QFrame()
-        action_box.setObjectName("Card")
-        self.action_box = action_box
-        action_layout = QtWidgets.QVBoxLayout(action_box)
-        action_layout.setSpacing(10)
+        scene_box = QtWidgets.QFrame()
+        scene_box.setObjectName("SceneCard")
+        self.action_box = scene_box
+        action_layout = QtWidgets.QHBoxLayout(scene_box)
+        action_layout.setContentsMargins(16, 12, 16, 12)
+        action_layout.setSpacing(12)
+        self.scene_dot = StatusDot()
+        action_layout.addWidget(self.scene_dot, 0, QtCore.Qt.AlignmentFlag.AlignTop)
+        state_copy = QtWidgets.QVBoxLayout()
+        state_copy.setSpacing(2)
+        self.scene_status = QtWidgets.QLabel("Cena não verificada")
+        self.scene_status.setObjectName("SceneTitle")
+        state_copy.addWidget(self.scene_status)
         self.selection_summary = QtWidgets.QLabel()
         self.selection_summary.setObjectName("SelectionSummary")
         self.selection_summary.setWordWrap(True)
-        action_layout.addWidget(self.selection_summary)
-        scene_row = QtWidgets.QHBoxLayout()
-        self.scene_status = StatusPill("Cena não verificada")
+        state_copy.addWidget(self.selection_summary)
+        action_layout.addLayout(state_copy, 1)
+        action_layout.addWidget(self._vertical_rule())
+        scene_meta = QtWidgets.QVBoxLayout()
+        scene_meta.setSpacing(2)
         self.scene_detail = QtWidgets.QLabel("")
         self.scene_detail.setObjectName("Muted")
         self.scene_detail.setWordWrap(True)
-        self.count_label = QtWidgets.QLabel("0 cotas")
+        self.count_label = QtWidgets.QLabel("0 cota(s)")
         self.count_label.setObjectName("Meta")
-        scene_row.addWidget(self.scene_status)
-        scene_row.addWidget(self.scene_detail, 1)
-        scene_row.addWidget(self.count_label)
-        action_layout.addLayout(scene_row)
+        self.count_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
+        self.scene_detail.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
+        scene_meta.addWidget(self.count_label)
+        scene_meta.addWidget(self.scene_detail)
+        action_layout.addLayout(scene_meta)
+        root.addWidget(scene_box)
 
         button_row = QtWidgets.QHBoxLayout()
+        button_row.setSpacing(10)
         self.start_button = button("Iniciar cotação", self.start_selected, primary=True)
         self.start_button.setAccessibleName("Iniciar cotação")
         self.start_button.setMinimumWidth(260)
         self.more_button = QtWidgets.QToolButton()
-        self.more_button.setText("Mais ações  ···")
+        self.more_button.setText("Mais ações")
         self.more_button.setAccessibleName("Mais ações de cotação")
         self.more_button.setMinimumHeight(40)
         self.more_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
@@ -139,12 +146,12 @@ class CreatePage(QtWidgets.QWidget):
         self.more_button.setMenu(self.more_menu)
         button_row.addWidget(self.start_button, 1)
         button_row.addWidget(self.more_button)
-        action_layout.addLayout(button_row)
-        root.addWidget(action_box)
+        root.addLayout(button_row)
         root.addWidget(self.details)
 
         self.status = message_label()
-        self.status.setText("Pronto para começar. A cena só será consultada quando você iniciar ou atualizar.")
+        self.status.setText("")
+        self.status.setVisible(False)
         root.addWidget(self.status)
         root.addStretch(1)
 
@@ -180,7 +187,7 @@ class CreatePage(QtWidgets.QWidget):
         self.delete_all = self.delete_all_action
         self._restore_preferences()
         self._update_summary()
-        self.guide.setVisible(not self._setting_bool("onboarding/seen", False))
+        self.guide.setVisible(False)
 
     @property
     def pending_action(self) -> Optional[str]:
@@ -209,9 +216,16 @@ class CreatePage(QtWidgets.QWidget):
         plane = "planta" if self.plane_choice.value() == "worldXY" else "fachada/vista"
         unit = str(self.unit.currentText() or "unidade padrão").lower()
         self.selection_summary.setText(
-            "Pronto para cotar: %s · %s · %s. Você poderá ajustar detalhes depois."
+            "%s · %s · %s"
             % (plane, tool, unit)
         )
+
+    @staticmethod
+    def _vertical_rule() -> QtWidgets.QFrame:
+        rule = QtWidgets.QFrame()
+        rule.setObjectName("SceneRule")
+        rule.setFrameShape(QtWidgets.QFrame.Shape.VLine)
+        return rule
 
     def _restore_preferences(self) -> None:
         self.tool_choice.set_value(str(self._preferences.value("create/tool", "single")))
@@ -257,6 +271,7 @@ class CreatePage(QtWidgets.QWidget):
         scene: SceneSnapshot = snapshot.get("scene", SceneSnapshot())
         create: CreateSnapshot = snapshot.get("create", CreateSnapshot())
         self.scene_status.setText(scene.status_label)
+        self.scene_dot.set_ready(scene.status == "ready")
         self.scene_detail.setText(scene.detail)
         self.count_label.setText("%d cota(s)" % scene.dimension_count)
         self.plane_choice.set_value(create.plane)

@@ -28,10 +28,10 @@ class AppShell(QtWidgets.QWidget):
         self._responsive_mode = ""
         self._nav_labels = {
             "create": "Cotar",
-            "styles": "Aparência",
+            "styles": "Estilo",
             "edit": "Revisar",
             "render": "Exportar",
-            "config": "Configuração",
+            "config": "Configurações",
         }
         self._nav_icons = {
             "create": "cotar",
@@ -64,7 +64,7 @@ class AppShell(QtWidgets.QWidget):
         content = QtWidgets.QStackedWidget()
         content.setObjectName("ContentStack")
         self.content = content
-        for key, label in (("create", "Cotar"), ("styles", "Aparência"), ("edit", "Revisar"), ("render", "Exportar")):
+        for key, label in (("create", "Cotar"), ("styles", "Estilo"), ("edit", "Revisar"), ("render", "Exportar")):
             page_button = QtWidgets.QPushButton(label)
             page_button.setCheckable(True)
             page_button.setMinimumHeight(36)
@@ -77,20 +77,20 @@ class AppShell(QtWidgets.QWidget):
             side_layout.addWidget(page_button)
             page_button.clicked.connect(lambda checked=False, name=key: self.show_page(name))
         side_layout.addStretch(1)
-        help_button = QtWidgets.QPushButton("?  Como começar")
+        help_button = QtWidgets.QPushButton("Ajuda")
         self.help_button = help_button
         help_button.setProperty("nav", True)
-        help_button.setAccessibleName("Como começar")
+        help_button.setAccessibleName("Ajuda")
         help_button.setToolTip("Como começar")
         help_button.setIcon(nav_icon("ajuda"))
         help_button.clicked.connect(self.show_help)
         side_layout.addWidget(help_button)
-        config_button = QtWidgets.QPushButton("Configuração")
+        config_button = QtWidgets.QPushButton("Configurações")
         config_button.setCheckable(True)
         config_button.setMinimumHeight(36)
         config_button.setProperty("nav", True)
-        config_button.setAccessibleName("Configuração")
-        config_button.setToolTip("Configuração")
+        config_button.setAccessibleName("Configurações")
+        config_button.setToolTip("Configurações")
         config_button.setIcon(nav_icon(self._nav_icons["config"]))
         self.nav.addButton(config_button)
         self._nav_by_key["config"] = config_button
@@ -151,7 +151,7 @@ class AppShell(QtWidgets.QWidget):
         owner = self.window()
         if owner is not None and owner.styleSheet():
             owner.setStyleSheet(owner.styleSheet())
-        self.help_button.setText("?" if compact else "?  Como começar")
+        self.help_button.setText("?" if compact else "Ajuda")
         self.help_button.setIconSize(QtCore.QSize(22 if compact else 18, 22 if compact else 18))
         self.help_button.setToolTip("Como começar")
 

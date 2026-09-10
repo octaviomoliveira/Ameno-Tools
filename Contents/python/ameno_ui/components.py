@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Iterable, Optional, Sequence, Tuple
 
 from .assets import pixmap
-from .qt_compat import QtCore, QtWidgets
+from .qt_compat import QtCore, QtGui, QtWidgets
 
 
 class BrandImage(QtWidgets.QLabel):
@@ -57,6 +57,144 @@ class SectionHeading(QtWidgets.QWidget):
             layout.addWidget(hint_label)
 
 
+class ChoiceGlyph(QtWidgets.QWidget):
+    """Small vector illustration used by a choice card."""
+
+    def __init__(self, kind: str, parent=None) -> None:
+        super().__init__(parent)
+        self.kind = kind
+        self.setFixedSize(56, 48)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+
+    def paintEvent(self, event) -> None:  # noqa: N802 - Qt API
+        del event
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
+        active = bool(getattr(self.parentWidget(), "isChecked", lambda: False)())
+        pen = QtGui.QPen(QtGui.QColor("#FFFFFF" if active else "#B8B8B3"), 2.0)
+        pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(QtCore.Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+        painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
+
+        if self.kind == "continuous":
+            painter.drawLine(6, 24, 50, 24)
+            for x in (8, 23, 36, 49):
+                painter.drawLine(x, 14, x, 34)
+        elif self.kind == "worldXY":
+            path = QtGui.QPainterPath()
+            path.moveTo(9, 8)
+            path.lineTo(44, 8)
+            path.lineTo(44, 29)
+            path.lineTo(35, 29)
+            path.lineTo(35, 40)
+            path.lineTo(9, 40)
+            path.closeSubpath()
+            painter.drawPath(path)
+            painter.drawLine(15, 8, 15, 19)
+            painter.drawLine(9, 34, 18, 34)
+        elif self.kind == "viewPlane":
+            painter.drawLine(5, 39, 51, 39)
+            painter.drawRect(12, 11, 21, 28)
+            painter.drawRect(33, 22, 13, 17)
+            painter.drawLine(19, 17, 19, 22)
+            painter.drawLine(26, 17, 26, 22)
+            painter.drawLine(19, 28, 19, 33)
+            painter.drawLine(26, 28, 26, 33)
+        else:
+            painter.drawLine(7, 24, 49, 24)
+            painter.drawLine(9, 14, 9, 34)
+            painter.drawLine(47, 14, 47, 34)
+
+
+class ChoiceIndicator(QtWidgets.QWidget):
+    def __init__(self, owner: QtWidgets.QAbstractButton) -> None:
+        super().__init__(owner)
+        self.owner = owner
+        self.setFixedSize(22, 22)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        owner.toggled.connect(lambda _checked: self.update())
+
+    def paintEvent(self, event) -> None:  # noqa: N802 - Qt API
+        del event
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
+        checked = self.owner.isChecked()
+        painter.setPen(QtGui.QPen(QtGui.QColor("#F23B32" if checked else "#555753"), 1.6))
+        painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
+        painter.drawEllipse(2, 2, 18, 18)
+        if checked:
+            painter.setPen(QtCore.Qt.PenStyle.NoPen)
+            painter.setBrush(QtGui.QColor("#F23B32"))
+            painter.drawEllipse(6, 6, 10, 10)
+
+
+class StatusDot(QtWidgets.QWidget):
+    """Font-independent status mark for compact scene summaries."""
+
+    def __init__(self, ready: bool = False, parent=None) -> None:
+        super().__init__(parent)
+        self._ready = ready
+        self.setFixedSize(18, 18)
+        self.setAccessibleName("Estado da cena")
+
+    def set_ready(self, ready: bool) -> None:
+        self._ready = bool(ready)
+        self.update()
+
+    def is_ready(self) -> bool:
+        return self._ready
+
+    def paintEvent(self, event) -> None:  # noqa: N802 - Qt API
+        del event
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
+        color = QtGui.QColor("#47C978" if self._ready else "#777873")
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
+        painter.setBrush(color)
+        painter.drawEllipse(3, 3, 12, 12)
+
+
+class ChoiceCard(QtWidgets.QPushButton):
+    """Checkable card whose title and description can wrap independently."""
+
+    def __init__(self, label: str, hint: str, value: str) -> None:
+        super().__init__("")
+        self.setObjectName("ChoiceCard")
+        self.setCheckable(True)
+        self.setProperty("choice", True)
+        self.setProperty("choiceValue", value)
+        self.setAccessibleName(label)
+        self.setAccessibleDescription(hint)
+        self.setToolTip(hint)
+        self.setMinimumHeight(92)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
+
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(18, 14, 14, 14)
+        layout.setSpacing(14)
+        self.glyph = ChoiceGlyph(value, self)
+        layout.addWidget(self.glyph, 0, QtCore.Qt.AlignmentFlag.AlignVCenter)
+
+        copy = QtWidgets.QVBoxLayout()
+        copy.setSpacing(2)
+        self.title_label = QtWidgets.QLabel(label)
+        self.title_label.setObjectName("ChoiceTitle")
+        self.title_label.setWordWrap(True)
+        self.title_label.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.hint_label = QtWidgets.QLabel(hint)
+        self.hint_label.setObjectName("ChoiceHint")
+        self.hint_label.setWordWrap(True)
+        self.hint_label.setAttribute(QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        copy.addWidget(self.title_label)
+        copy.addWidget(self.hint_label)
+        layout.addLayout(copy, 1)
+
+        self.indicator = ChoiceIndicator(self)
+        layout.addWidget(self.indicator, 0, QtCore.Qt.AlignmentFlag.AlignTop)
+        self.toggled.connect(lambda _checked: self.glyph.update())
+
+
 class ChoiceGroup(QtWidgets.QWidget):
     changed = QtCore.Signal(str)
 
@@ -65,20 +203,17 @@ class ChoiceGroup(QtWidgets.QWidget):
         self.buttons = QtWidgets.QButtonGroup(self)
         self.buttons.setExclusive(True)
         self._by_value = {}
-        layout = QtWidgets.QGridLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        self._columns = max(1, columns)
+        self._current_columns = self._columns
+        self._layout = QtWidgets.QGridLayout(self)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setHorizontalSpacing(12)
+        self._layout.setVerticalSpacing(10)
         for index, (label, hint, value) in enumerate(choices):
-            text = label if not hint else "%s\n%s" % (label, hint)
-            widget = QtWidgets.QPushButton(text)
-            widget.setCheckable(True)
-            widget.setProperty("choice", True)
-            widget.setProperty("choiceValue", value)
-            widget.setAccessibleName(label)
-            widget.setToolTip(hint)
+            widget = ChoiceCard(label, hint, value)
             self.buttons.addButton(widget)
             self._by_value[value] = widget
-            layout.addWidget(widget, index // columns, index % columns)
+            self._layout.addWidget(widget, index // self._columns, index % self._columns)
             widget.clicked.connect(lambda checked=False, item=value: self.changed.emit(item) if checked else None)
         if choices:
             self.set_value(choices[0][2], emit=False)
@@ -96,6 +231,15 @@ class ChoiceGroup(QtWidgets.QWidget):
         del blocker
         if emit:
             self.changed.emit(value)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        columns = 1 if self.width() < 560 else self._columns
+        if columns == self._current_columns:
+            return
+        self._current_columns = columns
+        for index, widget in enumerate(self.buttons.buttons()):
+            self._layout.addWidget(widget, index // columns, index % columns)
 
 
 class Disclosure(QtWidgets.QWidget):

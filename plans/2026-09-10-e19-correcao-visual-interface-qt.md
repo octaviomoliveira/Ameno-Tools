@@ -2,7 +2,8 @@
 
 Data: 2026-09-10
 
-Status: planejada; implementação ainda não iniciada.
+Status: em execução; referência Cotar implementada localmente e aguardando gate
+no 3ds Max 2026.
 
 Origem: o canary E18 passou os gates técnicos, mas foi reprovado no uso real
 do 3ds Max em 2026-09-10. As capturas em `work/e19-baseline` são a fonte de
@@ -15,9 +16,10 @@ Base funcional: `feature/e18-ux-10-10`, incluindo o commit funcional
 o HEAD exato e criar `feature/e19-qt-visual-acceptance`. Não trabalhar em
 `develop` ou `main` e não promover sem autorização explícita.
 
-Estrutura: **6 etapas e 32 subetapas**. A página Aparência será a referência
-visual e de interação. Cotar, Revisar, Exportar, Configuração e Login só podem
-ser alteradas depois que Aparência passar no Max real.
+Estrutura: **6 etapas e 32 subetapas**. Por decisão do usuário em 2026-09-10,
+a página Cotar passa a ser a primeira referência visual e de interação.
+Aparência e as demais páginas só recebem o padrão depois que Cotar passar no
+Max real.
 
 ## 1. Resultado esperado
 
@@ -55,12 +57,12 @@ Falhas observadas:
 ## 3. Princípio de execução
 
 ```text
-baseline real -> Aparência -> gate no Max -> sistema responsivo
-              -> demais páginas -> gate completo -> canary
+baseline real -> Cotar -> gate no Max -> sistema responsivo
+              -> Aparência e demais páginas -> gate completo -> canary
 ```
 
-Aparência precisa passar antes de qualquer propagação. Se ela falhar, corrigir
-a causa nela e repetir o gate; não compensar o problema nas outras páginas.
+Cotar precisa passar antes de qualquer propagação. Se ela falhar, corrigir a
+causa nela e repetir o gate; não compensar o problema nas outras páginas.
 
 ## 4. Contrato visual mensurável
 
@@ -95,7 +97,24 @@ automação isolada, 100%, 125%, 150% e 200%.
 - Nenhuma mensagem duplicada na mesma tela.
 - Nenhum texto de arquitetura apresentado como orientação ao usuário.
 
-### 4.3 Contrato específico de Aparência
+### 4.3 Contrato específico de Cotar
+
+- Textos curtos e orientados à decisão; nenhuma explicação repete o título.
+- Quatro `ChoiceCard` reutilizáveis, cada um com ícone vetorial, título,
+  descrição curta e indicador próprio.
+- Duas perguntas apenas: como medir e orientação do desenho.
+- Descrição nunca é texto multiline dentro de `QPushButton`; título e hint são
+  `QLabel` independentes com word-wrap.
+- Em 980×720, os quatro cards, o estado da cena e o CTA ficam inteiros sem
+  rolagem horizontal ou vertical para iniciar.
+- O vermelho marca somente a opção ativa e o CTA; estados inativos permanecem
+  neutros.
+- Sidebar permanece compacta e legível; Ajuda e Configurações não cortam.
+- Estado da cena comunica prontidão, resumo, contagem e layers sem duplicação.
+- Detalhes e manutenção ficam sob demanda e não competem com o primeiro uso.
+- A referência preservada é `work/e19-reference/01-cotar-target.png`.
+
+### 4.4 Contrato específico de Aparência
 
 - Preview 2D permanece visível enquanto qualquer parâmetro é alterado.
 - Preview, primeiro grupo de sliders e barra de ações aparecem juntos em
@@ -184,51 +203,50 @@ usar coordenadas absolutas.
 **Gate E19.0:** as falhas das capturas são reproduzidas por métricas; nenhum
 teste passa por esconder conteúdo ou scrollbar.
 
-### E19.1 — Construir Aparência como referência (8)
+### E19.1 — Construir Cotar como referência (8)
 
-1. **Separar estrutura e rolagem.** Refatorar `StylesPage` para root fixo,
-   seletor compacto, workspace, controles roláveis, preview fixo e barra fixa.
-   Preservar instâncias e sinais durante resize.
+1. **Preservar a referência do usuário.** Copiar a imagem para
+   `work/e19-reference`, registrar origem, dimensões, hash e critérios. A imagem
+   orienta composição; nunca é usada como fundo ou código.
 
-2. **Implementar dois arranjos.** Wide/medium usam controles à esquerda e
-   preview à direita. Compact usa preview acima e controles abaixo. Mover
-   layouts somente ao cruzar breakpoint, sem destruir widgets ou duplicar
-   conexões.
+2. **Criar `ChoiceCard` reutilizável.** Compor um botão checkable com ícone,
+   título, hint e indicador em widgets independentes. Preservar `ChoiceGroup`,
+   valores, sinais, preferências e acessibilidade.
 
-3. **Redesenhar seletor de estilo.** Exibir estilo atual, quantidade em uso e
-   ações em uma linha compacta; lista completa abre sob demanda. Empty state
-   carrega o draft padrão e nunca bloqueia edição.
+3. **Desenhar ícones no Qt.** Usar `QPainter` para medida única, sequência,
+   planta, fachada e estado. Não depender de glifos Unicode ou arquivos
+   externos que possam faltar no host.
 
-4. **Redesenhar `ParameterControl`.** Cada linha contém label, slider, valor
-   técnico com unidade e reset. Dimensionar pelo maior valor. Em compact,
-   permitir duas linhas controladas sem truncar label ou valor.
+4. **Reduzir conteúdo.** Manter um título, uma frase curta, duas perguntas e
+   descrições de no máximo 34 caracteres. Remover tutorial da rota principal e
+   deixá-lo acessível apenas por Ajuda.
 
-5. **Fixar e completar Preview 2D.** Manter aspect ratio e elementos dentro do
-   canvas. Representar texto, tracking, gap, espessura, prolongamento, recuo,
-   terminais, posição, ângulo, máscara, cores e escala.
+5. **Compor estado da cena.** Mostrar indicador, status, resumo da escolha,
+   contagem e layers em um único card compacto. Nenhuma consulta acontece por
+   resize, navegação ou pintura.
 
-6. **Corrigir cor e contraste.** Substituir o botão preenchido por swatch +
-   valor/ação. Hover, foco e rótulo usam o tema. Testar luminância/contraste AA.
+6. **Hierarquizar ações.** Manter um único CTA vermelho `Iniciar cotação` e
+   uma ação secundária neutra `Mais ações`. Detalhes permanecem recolhidos.
 
-7. **Clarificar Salvar e Aplicar.** Salvar persiste o perfil; Aplicar escolhe
-   seleção ou todas. Estado dirty aparece uma vez. Sucesso atualiza clean;
-   erro preserva draft e oferece recuperação.
+7. **Validar o conteúdo interno.** Em 980×720, medir `contentsRect` e
+   `QFontMetrics` de todos os títulos e hints, CTA visível e scrollbar
+   horizontal em zero. Repetir em 780×560 e DPIs suportados.
 
-8. **Fechar interação e acessibilidade.** Validar mouse, Tab, setas, Home/End,
-   vírgula, reset, wheel, nomes acessíveis e foco. Medir p95 de 1.000 updates
-   locais abaixo de 20 ms e zero bridge/pymxs/timer.
+8. **Preservar contratos funcionais.** Seleções continuam locais até o clique
+   no CTA; cada pergunta tem uma opção ativa; preferências, manutenção,
+   planta/fachada e individual/contínua mantêm o mesmo bridge.
 
-**Gate E19.1:** Aparência passa automação e produz capturas legíveis em
-780×560, 980×720 e 1280×800. Ainda não propagar o padrão.
+**Gate E19.1:** Cotar passa automação e produz captura legível em 980×720. O
+gate automatizado está verde; o gate no Max 2026 continua pendente.
 
 ### E19.2 — Validar a referência e fechar responsividade (6)
 
-1. **Instalar protótipo canary de Aparência.** Fechar Max/Batch, criar backup,
+1. **Instalar protótipo canary de Cotar.** Fechar Max/Batch, criar backup,
    instalar a branch, conferir hashes e capturar com fonte/DPI reais.
 
-2. **Executar gate humano intermediário.** O usuário ajusta tamanho,
-   espaçamento, gap, espessura e terminal sem rolar para reencontrar a prévia.
-   E19.3 fica bloqueada enquanto esse gate não passar.
+2. **Executar gate humano intermediário.** O usuário identifica como criar uma
+   medida, várias medidas, planta e fachada; troca escolhas e encontra o CTA
+   sem instrução externa. E19.3 fica bloqueada enquanto esse gate não passar.
 
 3. **Usar largura útil nos breakpoints.** Ligar o cálculo ao
    `page_view.viewport().width()`, incluindo resize e mudança de DPI. Atualizar
@@ -238,42 +256,43 @@ teste passa por esconder conteúdo ou scrollbar.
    tooltips. Sidebar com rótulos só aparece quando todos cabem medidos pela
    fonte real. Limitar largura de leitura e definir escala tipográfica coerente.
 
-5. **Criar componentes resilientes.** Substituir ChoiceGroup multiline por
-   cartões compostos, criar helpers de word-wrap e elipse apenas para dados.
-   Nenhum texto depende de altura fixa.
+5. **Fechar comportamento compacto.** Empilhar cards apenas quando a largura
+   útil exigir. Não esconder texto, reduzir fonte abaixo do token ou impor
+   largura mínima maior que o viewport.
 
 6. **Repetir matriz de layout/lifecycle.** Cinco larguras, quatro DPIs, 100
    resizes e 100 navegações; árvore estável, conexões únicas, horizontal zero e
    detector de clipping zero. Repetir captura no Max após mudar breakpoint.
 
-**Gate E19.2:** aprovação explícita de Aparência no Max e sistema responsivo
+**Gate E19.2:** aprovação explícita de Cotar no Max e sistema responsivo
 comprovado antes de alterar as demais páginas.
 
 ### E19.3 — Aplicar o padrão às demais páginas (6)
 
-1. **Cotar.** Manter tipo, plano, resumo e CTA. Cartões empilham quando a
-   descrição não cabe. Estado da cena vira uma linha curta. Detalhes e
-   manutenção ficam sob demanda. Nada corta em 780×560.
+1. **Aparência.** Criar root fixo com seletor de estilo, controles roláveis,
+   preview sempre visível e barra de ações fixa. Preservar draft e sinais.
 
-2. **Revisar.** Trocar empty state gigante por orientação compacta com uma
+2. **Preview e parâmetros.** Slider, valor técnico, unidade e reset não se
+   sobrepõem. Toda alteração atualiza a prévia local imediatamente; cor usa
+   swatch legível e Salvar/Aplicar têm destinos claros.
+
+3. **Revisar.** Trocar empty state gigante por orientação compacta com uma
    ação. Remover texto sobre arquitetura. Quando carregada, mostrar leitura,
    override e aplicação; IDs longos usam elipse + tooltip. Um único status.
 
-3. **Exportar.** Consolidar renderer em uma linha. Caminho, escopo e fundo
+4. **Exportar.** Consolidar renderer em uma linha. Caminho, escopo e fundo
    empilham em compact. Explicar bloqueio de forma acionável e remover mensagens
    repetidas.
 
-4. **Configuração.** Priorizar conta/logout. Diagnóstico fica recolhido. Dados
-   longos quebram ou podem ser copiados. Token nunca é exposto.
-
-5. **Login.** Marca, token e ação principal cabem em 780×560. Validar progresso,
-   erro e sucesso; Enter, colar, mostrar/ocultar e limpar sem submit duplicado.
+5. **Configuração e Login.** Priorizar conta/logout; diagnóstico fica
+   recolhido. Marca, token e CTA cabem em 780×560. Validar Enter, mostrar,
+   ocultar e limpar sem submit duplicado nem exposição do token.
 
 6. **Revisar microcopy e hierarquia.** Um título, uma orientação curta, uma
    ação principal e um estado por página. Remover termos de implementação e
    uniformizar ícones, espaços e foco.
 
-**Gate E19.3:** todas as páginas passam os contratos de Aparência e todas as
+**Gate E19.3:** todas as páginas passam os contratos de Cotar e todas as
 ações funcionais anteriores continuam alcançáveis.
 
 ### E19.4 — Validação visual e de uso no Max (5)
@@ -446,6 +465,7 @@ Novos:
 - `tests/maxscript/test_e19_installed_host.ms`;
 - `tools/render-e19-host-gallery.py`;
 - `work/e19-baseline/README.md`;
+- `work/e19-reference/README.md` e `01-cotar-target.png`;
 - `work/e19-gates/summary.txt`;
 - `work/e19-visual/README.md`.
 
@@ -468,10 +488,10 @@ Congelados salvo teste vermelho relacionado:
 ## 11. Commits sugeridos
 
 1. `test(e19): capture real host clipping failures`
-2. `feat(e19): build fixed appearance workspace`
-3. `feat(e19): size parameter rows from font metrics`
-4. `fix(e19): drive breakpoints from page viewport`
-5. `feat(e19): add resilient choice cards and page states`
+2. `feat(e19): rebuild cotar from approved visual reference`
+3. `test(e19): certify cotar at 980x720`
+4. `feat(e19): build fixed appearance workspace`
+5. `fix(e19): drive breakpoints from page viewport`
 6. `test(e19): certify visual contracts in Max host`
 7. `chore(e19): package approved canary evidence`
 
@@ -481,8 +501,9 @@ E19 termina somente quando:
 
 - as quatro falhas do baseline não aparecem nas novas capturas;
 - detector de clipping retorna zero em todas as páginas/tamanhos;
+- Cotar preserva textos curtos, cards íntegros e CTA visível em 980×720;
 - Aparência mantém preview, controles relevantes e ações acessíveis;
-- usuário aprova Aparência antes da propagação;
+- usuário aprova Cotar antes da propagação;
 - tarefas Cotar, Aparência e Exportar passam sem instrução;
 - teste com profissionais atinge a taxa definida;
 - regressão Python/Max, E14 e E16 passa;
@@ -497,9 +518,14 @@ Execute integralmente o plano E19 em
 D:\Ameno\_tools\plans\2026-09-10-e19-correcao-visual-interface-qt.md.
 
 Leia o documento inteiro. Comece pelas capturas reais em work/e19-baseline e
-transforme o clipping atual em testes RED. Construa somente Aparência como
-referência. Não altere outras páginas até ela passar no 3ds Max 2026 e receber
-aceite humano intermediário.
+pela referência em work/e19-reference. Construa somente Cotar como primeira
+referência. Não propague o padrão às demais páginas até Cotar passar no 3ds
+Max 2026 e receber aceite humano intermediário.
+
+Em Cotar, use textos curtos, sidebar compacta, cards com descrição curta e
+componentes reutilizáveis. Não corte conteúdo em 980×720. Vermelho aparece
+somente na opção ativa e no CTA. Evite tutorial permanente, duplicação e
+poluição visual.
 
 Calcule breakpoints pela largura do viewport da página. Mantenha preview e
 ações fora do scroll dos controles. Meça texto com fonte real, DPI, margens,
