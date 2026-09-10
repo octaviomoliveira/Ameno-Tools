@@ -2,8 +2,8 @@
 
 Data: 2026-09-09
 
-Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0 e E18.1
-concluídas. Próximo checkpoint: E18.2.
+Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0, E18.1 e
+E18.2 concluídas. Próximo checkpoint: E18.3.
 
 Base obrigatória: branch `feature/e17-ameno-ux`, commit `01e32cd`. Criar uma
 branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
@@ -24,8 +24,12 @@ Aparência; só então aplicar responsividade e polimento ao restante do produto
   normalização centralizada, dirty/clean/restore e integração inicial da
   Aparência; a prévia já nasce com snapshot padrão e editar o campo gera
   zero chamadas externas. Quatro contratos unitários passaram.
-- **E18.2 — próxima:** construir o controle slider + entrada numérica e
-  sincronização sem loops.
+- **E18.2 — concluída (2026-09-09):** `ParameterControl` reutilizável com
+  slider, entrada técnica, reset, teclado, acessibilidade, vírgula decimal e
+  `QSignalBlocker`; oito parâmetros de estilo foram integrados sem quebrar a
+  API da página. Quatro contratos unitários passaram.
+- **E18.3 — próxima:** separar geometria pura e atingir paridade de todos os
+  parâmetros na prévia 2D.
 
 ## 1. Objetivo
 
@@ -624,5 +628,5 @@ fechados e após backup recuperável.
 - Implementação E18: não iniciada.
 - E17: gates técnicos verdes, mas aceite visual humano reprovado.
 - E16: baseline de desempenho obrigatório e congelado.
-- Próxima ação do executor: E18.2, implementando o controle slider + número
-  sem loops, bridge ou mutação da cena.
+- Próxima ação do executor: E18.3, extraindo a geometria da prévia 2D e
+  cobrindo cada parâmetro com efeito visual verificável.

@@ -8,6 +8,7 @@ from .bridge import BridgeError, UiBridge
 from .common import button, group, message_label, set_bridge_error, set_message
 from .components import Disclosure, PageHeader, SectionHeading
 from .models import StyleSnapshot
+from .parameter_control import ParameterControl, style_parameter_specs
 from .qt_compat import QtCore, QtGui, QtWidgets
 from .style_draft import StyleDraft
 
@@ -138,30 +139,15 @@ class StylesPage(QtWidgets.QWidget):
         right_layout = QtWidgets.QVBoxLayout(right)
         self.name = QtWidgets.QLineEdit()
         self.font = QtWidgets.QFontComboBox()
-        self.font_size = QtWidgets.QDoubleSpinBox()
-        self.font_size.setRange(1, 5000)
-        self.font_size.setDecimals(1)
-        self.tracking = QtWidgets.QDoubleSpinBox()
-        self.tracking.setRange(-100, 100)
-        self.tracking.setDecimals(1)
-        self.text_gap = QtWidgets.QDoubleSpinBox()
-        self.text_gap.setRange(0, 1000)
-        self.text_gap.setDecimals(1)
-        self.line_thickness = QtWidgets.QDoubleSpinBox()
-        self.line_thickness.setRange(0.1, 100)
-        self.line_thickness.setDecimals(1)
-        self.overhang = QtWidgets.QDoubleSpinBox()
-        self.overhang.setRange(0, 2000)
-        self.overhang.setDecimals(1)
-        self.extension_gap = QtWidgets.QDoubleSpinBox()
-        self.extension_gap.setRange(0, 2000)
-        self.extension_gap.setDecimals(1)
-        self.terminal_size = QtWidgets.QDoubleSpinBox()
-        self.terminal_size.setRange(0, 2000)
-        self.terminal_size.setDecimals(1)
-        self.terminal_angle = QtWidgets.QDoubleSpinBox()
-        self.terminal_angle.setRange(0, 180)
-        self.terminal_angle.setDecimals(1)
+        controls = {spec.field_name: ParameterControl(spec) for spec in style_parameter_specs()}
+        self.font_size = controls["font_size"]
+        self.tracking = controls["tracking"]
+        self.text_gap = controls["text_gap"]
+        self.line_thickness = controls["line_thickness"]
+        self.overhang = controls["extension_overhang"]
+        self.extension_gap = controls["extension_gap"]
+        self.terminal_size = controls["terminal_size"]
+        self.terminal_angle = controls["terminal_angle"]
         self.terminal = QtWidgets.QComboBox()
         for label, value in (("Tick", "tick"), ("Seta fechada", "arrowClosed"), ("Seta aberta", "arrowOpen"), ("Ponto", "dot"), ("Nenhum", "none")):
             self.terminal.addItem(label, value)
