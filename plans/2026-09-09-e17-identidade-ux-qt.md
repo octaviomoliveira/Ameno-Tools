@@ -3,7 +3,8 @@
 Data: 2026-09-09
 
 Status: candidato implementado e instalado na branch `feature/e17-ameno-ux`;
-gates automatizados concluídos em 2026-09-09; aceite gráfico humano pendente
+gates automatizados concluídos, mas o aceite gráfico humano foi **reprovado**
+em 2026-09-09. Não promover. Correção e novo aceite seguem no E18.
 
 Progresso salvo no checkpoint E17 final:
 
@@ -19,8 +20,12 @@ Progresso salvo no checkpoint E17 final:
   logout/fechamento e as métricas do E16;
 - pacote de desenvolvimento instalado no `ApplicationPlugins` com o Max
   fechado e backup recuperável criado;
-- pendente: somente aceite interativo de usabilidade/resize/DPI/soak em uma
-  sessão gráfica real e autorização explícita para promover a branch.
+- o aceite interativo real encontrou clipping, rolagem horizontal, hierarquia
+  visual insuficiente e prévia 2D sem resposta/paridade completa;
+- E17.10.3 foi reprovada; E17.10.4–E17.10.7 ficam suspensas e nenhuma promoção
+  é permitida até o E18 passar;
+- plano sucessor:
+  `plans/2026-09-09-e18-ux-10-10-preview-reativo.md`.
 
 Escopo: 3ds Max 2026 / Python 3.11 / PySide6 6.5.3. O E17 modifica a
 apresentação e a orquestração de comandos da interface Qt. A matemática, o
@@ -45,8 +50,9 @@ Estrutura: 11 etapas e 86 subetapas, executadas na ordem deste documento.
 | E17.8 — primeiro uso/erros | concluído | mensagens acionáveis em `common.py`, ajuda sem leitura da cena, diagnóstico sem token |
 | E17.9 — regressões | concluído | `work/e17-gates/summary.txt`: 18/18 MaxScript; `run-python-gates.py`: 17 testes; ZIP canary validado sem WPF/cache; commit `ae3e576` |
 | E17.10.1–E17.10.2 — canary | concluído | backup `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`; instalação com Max fechado |
-| E17.10.3–E17.10.6 — aceite humano | pendente | exige Max interativo, redimensionamento, DPI, cotação real e profissional sem instrução |
-| E17.10.7 — promoção | bloqueado por política | nenhuma alteração automática em `develop`/`main`; requer autorização explícita |
+| E17.10.3 — inspeção visual/resize | reprovado | capturas reais mostram clipping, barra horizontal e prévia de estilo sem resposta completa |
+| E17.10.4–E17.10.6 — funcional/soak/profissional | suspenso | repetir somente no candidato E18 após corrigir os bloqueios visuais |
+| E17.10.7 — promoção | bloqueado | E17 não pode ser promovida; exige E18 aprovado e autorização explícita |
 
 O teste host revelou e corrigiu um contrato importante: `python.Execute` retorna
 `#success` (status), não o valor da última expressão. O launcher
@@ -353,6 +359,12 @@ Gate: zero exceção Qt/WPF, zero callback extra e zero regressão E16.
 7. E17.10.7 — promover somente após autorização explícita.
 
 Gate: candidato utilizável; `main` e `develop` não são alteradas implicitamente.
+
+Resultado do gate humano em 2026-09-09: **reprovado em E17.10.3**. A janela
+real apresentou clipping e rolagem horizontal, e a prévia 2D de Aparência não
+respondeu com paridade aos parâmetros. E17.10.4–E17.10.7 não devem ser
+executadas neste candidato. O novo ciclo de correção e aceite está especificado
+na E18.
 
 ## 7. Guardrails técnicos
 

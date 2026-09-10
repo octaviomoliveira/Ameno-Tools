@@ -180,7 +180,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   WPF ou minidumps no gate. Evidência: `plans/2026-09-09-e16-otimizacao-preview-commit-viewport.md`,
   `work/e17-gates/summary.txt` e commit `f763059`.
 
-- **E17 — identidade Ameno e experiência guiada Qt concluídas no canary
+- **E17 — candidato técnico Qt com aceite visual reprovado
   (2026-09-09):** a interface foi escrita do zero em Python/PySide6, sem
   reutilizar WPF, com Login obrigatório, logo/tema Ameno, chrome nativo,
   navegação local, divulgação progressiva, mensagens acionáveis e cinco páginas
@@ -191,10 +191,21 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   instalação com o Max fechado. O candidato está instalado no
   `ApplicationPlugins`; backup recuperável em
   `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`.
-  O aceite gráfico de resize/DPI/soak e o teste com profissional sem instrução
-  permanecem como etapa manual; nenhuma promoção para `develop` ou `main` foi
-  feita. Commit local de encerramento: `ae3e576`. Plano:
+  O gate humano encontrou clipping, rolagem horizontal, excesso de conteúdo e
+  uma prévia 2D que não responde/representa todos os parâmetros. E17.10.3 foi
+  reprovada; as etapas funcionais humanas e a promoção foram suspensas. Nenhuma
+  promoção para `develop` ou `main` foi feita. Commit funcional:
+  `ae3e576`. Plano:
   `plans/2026-09-09-e17-identidade-ux-qt.md`.
+
+- **E18 — experiência Qt 10/10 e prévia reativa planejada
+  (2026-09-09):** runbook preparado para execução no Antigravity em 12 etapas
+  e 118 subetapas. A ordem começa por testes vermelhos da prévia e overflow,
+  introduz um `StyleDraft` sempre válido, preview geométrico puro e controles
+  slider + número; depois reorganiza Aparência, shell responsivo, primeiro uso,
+  ícones, acessibilidade e canary. O E16 permanece congelado e nenhuma interação
+  visual pode chamar bridge, cena ou viewport. Plano:
+  `plans/2026-09-09-e18-ux-10-10-preview-reativo.md`; ADR 0027.
 
 - **Gate de render adiado durante a E15:** o commit `5844730` permanece instalado
   e validado estruturalmente, mas o gate manual da tela WPF não é prioridade
@@ -227,18 +238,19 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **E17.10.3–E17.10.6 — aceite manual do canary:** abrir o 3ds Max 2026 com a
-  cópia instalada, confirmar Login → App, redimensionamento/maximização,
-  navegação nas cinco páginas, Planta/Fachada, Individual/Sequência, cancelamento
-  e um soak de viewport. Repetir com um profissional sem instrução externa e
-  registrar o resultado no plano E17. Esta é a única etapa funcional pendente;
-  os gates automatizados já estão verdes.
+- **E18.0 — baseline e reprodução:** no Antigravity, criar
+  `feature/e18-ux-10-10` a partir de `feature/e17-ameno-ux` em `01e32cd`.
+  Transformar em testes vermelhos a prévia que cai no snapshot padrão e o
+  overflow real da janela. Registrar medidas e chamadas antes de editar.
 
-- **E17.10.7 — promoção somente autorizada:** manter `feature/e17-ameno-ux`
-  isolada até o aceite manual. Não fazer push, merge, tag ou alteração em
-  `develop`/`main` sem pedido explícito. Se o aceite falhar, preservar o backup
-  `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919` e corrigir
-  somente após registrar a reprodução.
+- **E18.1–E18.3 antes do redesenho:** implementar o draft local sempre válido,
+  slider + número e geometria pura da prévia. Aparência só pode ser redesenhada
+  depois que cada parâmetro tiver efeito testável e zero chamadas ao bridge.
+
+- **E17 não deve ser promovida:** preservar o backup
+  `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`; não fazer
+  push, merge, tag ou alteração em `develop`/`main` sem pedido explícito e sem
+  o aceite completo do E18.
 
 - **E16 preservada como regressão:** qualquer alteração futura na UI ou na
   ferramenta deve repetir a matriz E16 (preview `gw`, 1.000 movimentos,
@@ -288,6 +300,17 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-09 — Planejar a interface 10/10 para execução no Antigravity:** o
+  feedback real reprovou o aceite visual E17 por clipping, rolagem horizontal,
+  carga cognitiva e prévia 2D sem resposta/paridade. Foi criado o E18 em 12
+  etapas/118 subetapas com diagnóstico de código, critérios mensuráveis,
+  `StyleDraft` local, sliders sincronizados, preview geométrico puro, layout
+  adaptativo, fluxo de primeiro uso, ícones próprios, acessibilidade,
+  performance, gates humanos, 30 guardrails e prompt pronto para o executor.
+  Somente documentação; implementação E18 não iniciada. Evidências:
+  `plans/2026-09-09-e18-ux-10-10-preview-reativo.md`, ADR 0027 e
+  `work/e18-baseline/README.md`.
 
 - **2026-09-09 — Executar o E17 do início ao fim no canary do Max 2026:** a
   interface Qt foi escrita do zero com identidade Ameno, Login/token em
