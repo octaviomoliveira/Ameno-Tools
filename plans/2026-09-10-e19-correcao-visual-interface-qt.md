@@ -111,6 +111,11 @@ automação isolada, 100%, 125%, 150% e 200%.
   neutros.
 - Sidebar permanece compacta e legível; Ajuda e Configurações não cortam.
 - Estado da cena comunica prontidão, resumo, contagem e layers sem duplicação.
+- Direção fica no fluxo principal em um seletor segmentado compacto. Automática
+  é exclusiva de Uma medida; ao ativar Várias medidas, a interface escolhe
+  Horizontal, mantém Automática visível e desabilitada e explica a regra.
+- Combinação contínua + automática é impedida por estado; modal existe somente
+  como fallback no CTA e nunca como fluxo normal.
 - Detalhes e manutenção ficam sob demanda e não competem com o primeiro uso.
 - A referência preservada é `work/e19-reference/01-cotar-target.png`.
 

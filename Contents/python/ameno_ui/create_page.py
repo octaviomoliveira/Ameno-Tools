@@ -6,7 +6,7 @@ from typing import Callable, Dict, List, Optional
 
 from .bridge import BridgeError, UiBridge
 from .common import button, group, message_label, set_bridge_error, set_message
-from .components import ChoiceGroup, Disclosure, PageHeader, SectionHeading, StatusDot
+from .components import ChoiceGroup, Disclosure, PageHeader, SectionHeading, SegmentedChoice, StatusDot
 from .models import CreateSnapshot, SceneSnapshot, StyleSnapshot
 from .preferences import settings
 from .qt_compat import QtCore, QtWidgets
@@ -55,6 +55,7 @@ class CreatePage(QtWidgets.QWidget):
                 ("Várias medidas", "Cria uma sequência contínua", "continuous"),
             )
         )
+        self._last_tool_choice = self.tool_choice.value()
         root.addWidget(self.tool_choice)
         root.addWidget(SectionHeading("Orientação do desenho"))
         self.plane_choice = ChoiceGroup(
@@ -65,13 +66,24 @@ class CreatePage(QtWidgets.QWidget):
         )
         root.addWidget(self.plane_choice)
 
+        root.addWidget(SectionHeading("Direção"))
+        self.mode = SegmentedChoice(
+            (
+                ("Automática", "aligned"),
+                ("Horizontal", "horizontal"),
+                ("Vertical", "vertical"),
+            )
+        )
+        root.addWidget(self.mode)
+        self.direction_message = QtWidgets.QLabel()
+        self.direction_message.setObjectName("DirectionRule")
+        self.direction_message.setWordWrap(True)
+        self.direction_message.setVisible(False)
+        root.addWidget(self.direction_message)
+
         details_box = group("")
         details_form = QtWidgets.QFormLayout(details_box)
         details_form.setFieldGrowthPolicy(QtWidgets.QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-        self.mode = QtWidgets.QComboBox()
-        self.mode.addItem("Direção automática", "aligned")
-        self.mode.addItem("Somente horizontal", "horizontal")
-        self.mode.addItem("Somente vertical", "vertical")
         self.style = QtWidgets.QComboBox()
         self.unit = QtWidgets.QComboBox()
         for label, value in (
@@ -86,7 +98,6 @@ class CreatePage(QtWidgets.QWidget):
         self.precision.setSuffix(" casas")
         self.follow_line = QtWidgets.QCheckBox("Texto acompanha a linha")
         self.follow_line.setChecked(True)
-        details_form.addRow("Direção", self.mode)
         details_form.addRow("Aparência", self.style)
         details_form.addRow("Unidade", self.unit)
         details_form.addRow("Precisão", self.precision)
@@ -161,6 +172,8 @@ class CreatePage(QtWidgets.QWidget):
         self.delete_selection_action.triggered.connect(self.delete_selected)
         self.clear_orphans_action.triggered.connect(self.clear_orphan_dimensions)
         self.delete_all_action.triggered.connect(self.delete_all_dimensions)
+        self.tool_choice.changed.connect(self._on_tool_choice_changed)
+        self.mode.changed.connect(self._on_direction_changed)
         self.tool_choice.changed.connect(self._save_preferences)
         self.tool_choice.changed.connect(lambda *_args: self._update_summary())
         self.plane_choice.changed.connect(self._save_preferences)
@@ -186,6 +199,8 @@ class CreatePage(QtWidgets.QWidget):
         self.clear_orphans = self.clear_orphans_action
         self.delete_all = self.delete_all_action
         self._restore_preferences()
+        self._last_tool_choice = self.tool_choice.value()
+        self._sync_direction_rule(notify=False)
         self._update_summary()
         self.guide.setVisible(False)
 
@@ -214,11 +229,51 @@ class CreatePage(QtWidgets.QWidget):
     def _update_summary(self) -> None:
         tool = "uma medida" if self.tool_choice.value() == "single" else "várias medidas"
         plane = "planta" if self.plane_choice.value() == "worldXY" else "fachada/vista"
+        direction = {
+            "aligned": "automática",
+            "horizontal": "horizontal",
+            "vertical": "vertical",
+        }.get(str(self.mode.currentData()), "direção")
         unit = str(self.unit.currentText() or "unidade padrão").lower()
         self.selection_summary.setText(
-            "%s · %s · %s"
-            % (plane, tool, unit)
+            "%s · %s · %s · %s"
+            % (plane, tool, direction, unit)
         )
+
+    def _on_tool_choice_changed(self, value: str) -> None:
+        changed = value != self._last_tool_choice
+        self._last_tool_choice = value
+        self._sync_direction_rule(notify=changed)
+
+    def _on_direction_changed(self, _value: str) -> None:
+        if self.tool_choice.value() == "continuous":
+            self._show_direction_message(
+                "Em várias medidas, a direção automática não está disponível.",
+                feedback=False,
+            )
+        else:
+            self.direction_message.setVisible(False)
+
+    def _sync_direction_rule(self, notify: bool) -> None:
+        continuous = self.tool_choice.value() == "continuous"
+        was_automatic = self.mode.currentData() == "aligned"
+        if continuous and (was_automatic or notify):
+            self.mode.set_value("horizontal", emit=True)
+        self.mode.set_item_enabled("aligned", not continuous)
+        if continuous:
+            message = (
+                "Direção alterada para Horizontal · Automática só funciona em uma medida."
+                if notify and was_automatic
+                else "Em várias medidas, a direção automática não está disponível."
+            )
+            self._show_direction_message(message, feedback=bool(notify and was_automatic))
+        else:
+            self.direction_message.setVisible(False)
+
+    def _show_direction_message(self, text: str, feedback: bool) -> None:
+        self.direction_message.setText(text)
+        self.direction_message.setProperty("feedback", feedback)
+        self.direction_message.setVisible(True)
 
     @staticmethod
     def _vertical_rule() -> QtWidgets.QFrame:
@@ -248,7 +303,7 @@ class CreatePage(QtWidgets.QWidget):
         self._preferences.setValue("create/precision", self.precision.value())
         self._preferences.setValue("create/followLine", self.follow_line.isChecked())
 
-    def _set_combo(self, combo: QtWidgets.QComboBox, value: str) -> None:
+    def _set_combo(self, combo, value: str) -> None:
         index = combo.findData(value)
         if index >= 0:
             blocker = QtCore.QSignalBlocker(combo)
@@ -332,6 +387,15 @@ class CreatePage(QtWidgets.QWidget):
             self._set_busy(False)
 
     def start_selected(self) -> None:
+        if self.tool_choice.value() == "continuous" and self.mode.currentData() == "aligned":
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Direção automática indisponível",
+                "Em várias medidas, escolha Horizontal ou Vertical para continuar.",
+            )
+            self.mode.set_item_enabled("aligned", False)
+            self.mode.set_value("horizontal", emit=True)
+            return
         if not self.apply_settings():
             return
         self._run_tool(self.tool_choice.value() == "continuous")

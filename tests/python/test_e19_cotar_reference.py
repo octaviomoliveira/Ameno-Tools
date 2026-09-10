@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / "Contents" / "python"))
 
 from PySide6 import QtCore, QtWidgets  # noqa: E402
 
-from ameno_ui.components import ChoiceCard  # noqa: E402
+from ameno_ui.components import ChoiceCard, SegmentedChoice  # noqa: E402
 from ameno_ui.window import AmenoMainWindow  # noqa: E402
 
 
@@ -73,4 +73,62 @@ def test_choice_cards_keep_one_active_option_per_question() -> None:
     assert page.plane_choice.value() == "viewPlane"
     assert sum(card.isChecked() for card in page.tool_choice.findChildren(ChoiceCard)) == 1
     assert sum(card.isChecked() for card in page.plane_choice.findChildren(ChoiceCard)) == 1
+    window.close()
+
+
+def test_continuous_measurement_prevents_automatic_direction_in_the_main_flow() -> None:
+    _app()
+    os.environ["AMENO_SETTINGS_FILE"] = str(Path(tempfile.mkdtemp()) / "e19-direction.ini")
+    window = AmenoMainWindow(ReferenceBridge(), lambda _token: None, lambda: None)
+    page = window.shell.pages["create"]
+    assert isinstance(page.mode, SegmentedChoice)
+    page.tool_choice.set_value("single", emit=True)
+    page.mode.set_value("aligned", emit=True)
+
+    page.tool_choice.set_value("continuous", emit=True)
+
+    assert page.mode.currentData() == "horizontal"
+    assert not page.mode.is_item_enabled("aligned")
+    assert not page.direction_message.isHidden()
+    assert page.direction_message.text() == (
+        "Direção alterada para Horizontal · Automática só funciona em uma medida."
+    )
+
+    page.mode.set_value("vertical", emit=True)
+    assert page.mode.currentData() == "vertical"
+    assert page.direction_message.text() == (
+        "Em várias medidas, a direção automática não está disponível."
+    )
+
+    page.tool_choice.set_value("single", emit=True)
+    assert page.mode.is_item_enabled("aligned")
+    assert page.direction_message.isHidden()
+    page.mode.set_value("vertical", emit=True)
+    page.tool_choice.set_value("continuous", emit=True)
+    assert page.mode.currentData() == "horizontal"
+    assert page.direction_message.text() == (
+        "Em várias medidas, a direção automática não está disponível."
+    )
+    window.close()
+
+
+def test_invalid_direction_modal_is_only_a_start_fallback() -> None:
+    _app()
+    os.environ["AMENO_SETTINGS_FILE"] = str(Path(tempfile.mkdtemp()) / "e19-fallback.ini")
+    window = AmenoMainWindow(ReferenceBridge(), lambda _token: None, lambda: None)
+    page = window.shell.pages["create"]
+    page.tool_choice.set_value("continuous", emit=True)
+    automatic = page.mode._by_value["aligned"]
+    automatic.setEnabled(True)
+    automatic.setChecked(True)
+    automatic.setEnabled(False)
+    calls = []
+    original = QtWidgets.QMessageBox.warning
+    QtWidgets.QMessageBox.warning = lambda *args: calls.append(args)  # type: ignore[assignment]
+    try:
+        page.start_selected()
+    finally:
+        QtWidgets.QMessageBox.warning = original  # type: ignore[assignment]
+    assert len(calls) == 1
+    assert page.mode.currentData() == "horizontal"
     window.close()

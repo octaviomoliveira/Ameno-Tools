@@ -242,6 +242,84 @@ class ChoiceGroup(QtWidgets.QWidget):
             self._layout.addWidget(widget, index // columns, index % columns)
 
 
+class SegmentedChoice(QtWidgets.QWidget):
+    """Compact exclusive selector with a small QComboBox-compatible surface."""
+
+    changed = QtCore.Signal(str)
+    currentIndexChanged = QtCore.Signal(int)
+
+    def __init__(self, choices: Sequence[Tuple[str, str]]) -> None:
+        super().__init__()
+        self.setObjectName("SegmentedChoice")
+        self.buttons = QtWidgets.QButtonGroup(self)
+        self.buttons.setExclusive(True)
+        self._items = list(choices)
+        self._by_value = {}
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        last = len(self._items) - 1
+        for index, (label, value) in enumerate(self._items):
+            widget = QtWidgets.QPushButton(label)
+            widget.setCheckable(True)
+            widget.setProperty("segment", True)
+            widget.setProperty("segmentPosition", "first" if index == 0 else "last" if index == last else "middle")
+            widget.setProperty("choiceValue", value)
+            widget.setAccessibleName("Direção: " + label)
+            widget.setMinimumHeight(36)
+            self.buttons.addButton(widget, index)
+            self._by_value[value] = widget
+            layout.addWidget(widget, 1)
+            widget.clicked.connect(lambda checked=False, item=value: self._emit_clicked(item) if checked else None)
+        if self._items:
+            self.set_value(self._items[0][1], emit=False)
+
+    def value(self) -> str:
+        checked = self.buttons.checkedButton()
+        return str(checked.property("choiceValue")) if checked is not None else ""
+
+    def currentData(self) -> str:
+        return self.value()
+
+    def currentIndex(self) -> int:
+        return self.findData(self.value())
+
+    def findData(self, value: str) -> int:
+        for index, (_label, item_value) in enumerate(self._items):
+            if item_value == value:
+                return index
+        return -1
+
+    def setCurrentIndex(self, index: int) -> None:
+        if 0 <= index < len(self._items):
+            self.set_value(self._items[index][1], emit=True)
+
+    def set_value(self, value: str, emit: bool = False) -> None:
+        widget = self._by_value.get(value)
+        if widget is None or not widget.isEnabled():
+            return
+        changed = self.value() != value
+        widget.setChecked(True)
+        if emit and changed:
+            index = self.findData(value)
+            self.changed.emit(value)
+            self.currentIndexChanged.emit(index)
+
+    def _emit_clicked(self, value: str) -> None:
+        index = self.findData(value)
+        self.changed.emit(value)
+        self.currentIndexChanged.emit(index)
+
+    def set_item_enabled(self, value: str, enabled: bool) -> None:
+        widget = self._by_value.get(value)
+        if widget is not None:
+            widget.setEnabled(enabled)
+
+    def is_item_enabled(self, value: str) -> bool:
+        widget = self._by_value.get(value)
+        return bool(widget is not None and widget.isEnabled())
+
+
 class Disclosure(QtWidgets.QWidget):
     def __init__(self, label: str, content: QtWidgets.QWidget, expanded: bool = False) -> None:
         super().__init__()

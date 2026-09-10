@@ -93,6 +93,7 @@ QLabel#ChoiceTitle { color: %(white)s; font-size: 11.5pt; font-weight: 600; }
 QLabel#ChoiceHint { color: %(muted)s; font-size: 9.5pt; }
 QLabel#SelectionSummary { color: %(muted)s; font-size: 9.5pt; }
 QLabel#SceneTitle { color: %(white)s; font-size: 11pt; font-weight: 600; }
+QLabel#DirectionRule { color: %(muted)s; font-size: 9pt; padding: 0 3px; }
 QLabel#Status {
     background-color: %(secondary)s;
     border: 1px solid %(border)s;
@@ -201,6 +202,36 @@ QPushButton#ChoiceCard:hover { background-color: %(hover)s; border-color: #3A3A3
 QPushButton#ChoiceCard:checked { border: 2px solid %(red)s; background-color: #1D1312; }
 QPushButton#ChoiceCard:focus { border: 2px solid #62645F; }
 QPushButton#ChoiceCard:focus:checked { border: 2px solid %(red)s; }
+QPushButton[segment="true"] {
+    background-color: %(secondary)s;
+    border: 1px solid %(border)s;
+    border-radius: 0;
+    color: %(text)s;
+    min-height: 36px;
+    padding: 1px 10px;
+}
+QPushButton[segment="true"][segmentPosition="first"] {
+    border-top-left-radius: 7px;
+    border-bottom-left-radius: 7px;
+}
+QPushButton[segment="true"][segmentPosition="middle"],
+QPushButton[segment="true"][segmentPosition="last"] { border-left: 0; }
+QPushButton[segment="true"][segmentPosition="last"] {
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+}
+QPushButton[segment="true"]:hover { background-color: %(hover)s; }
+QPushButton[segment="true"]:checked {
+    background-color: #5A201C;
+    border: 1px solid %(red)s;
+    color: %(white)s;
+    font-weight: 600;
+}
+QPushButton[segment="true"]:disabled {
+    background-color: #151515;
+    border-color: %(border)s;
+    color: #5E5E5A;
+}
 QToolButton {
     background-color: %(secondary)s;
     border: 1px solid %(border)s;
