@@ -29,3 +29,12 @@ Critérios vinculantes informados pelo usuário:
   visível, porém desabilitada.
 - A limitação e qualquer correção automática recebem feedback curto na tela.
 - Modal de erro é apenas fallback antes de iniciar uma combinação inválida.
+
+## 02 — Estilo
+
+- Arquivo: `02-estilo-target.png`
+- Origem: imagem fornecida pelo usuário em 2026-09-10.
+- Dimensões: 1456×1086 px.
+- SHA-256: `3D165EFD4088671FF2710A4BB0B111BC1393B9821FB736098C5C5CD9FF97CFF0`
+- Papel: referência de estrutura, hierarquia e comportamento responsivo; não é
+  conteúdo executável.

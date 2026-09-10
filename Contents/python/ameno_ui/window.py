@@ -21,6 +21,20 @@ from .styles_page import StylesPage
 from .theme import apply_to
 
 
+class FixedPageHost(QtWidgets.QScrollArea):
+    """Non-scrolling host for pages that own their internal scroll regions."""
+
+    def setWidget(self, widget) -> None:  # noqa: N802 - Qt API
+        super().setWidget(widget)
+        widget.resize(self.viewport().size())
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        child = self.widget()
+        if child is not None:
+            child.resize(self.viewport().size())
+
+
 class AppShell(QtWidgets.QWidget):
     def __init__(self, bridge: UiBridge, logout: Callable[[], None]) -> None:
         super().__init__()
@@ -107,10 +121,17 @@ class AppShell(QtWidgets.QWidget):
             # Cada página recebe um único host de rolagem no construtor. O
             # host nunca é trocado durante a navegação, evitando reparenting e
             # mantendo todos os controles acessíveis em telas menores.
-            page_view = QtWidgets.QScrollArea()
-            page_view.setWidgetResizable(True)
+            page_view = FixedPageHost() if key == "styles" else QtWidgets.QScrollArea()
+            # Estilo owns its only vertical scroll region. Let FixedPageHost
+            # size that page explicitly to the viewport; QScrollArea's normal
+            # content-driven sizing would otherwise push the fixed footer out
+            # of view at compact heights.
+            page_view.setWidgetResizable(key != "styles")
             page_view.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
             page_view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            if key == "styles":
+                page_view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+                page_view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             page_view.setWidget(self.pages[key])
             self.page_views[key] = page_view
             content.addWidget(page_view)
@@ -135,8 +156,17 @@ class AppShell(QtWidgets.QWidget):
         compact = mode == "compact"
         self.product_meta.setVisible(not compact)
         self.sidebar.layout().setContentsMargins(8 if compact else 13, 18, 8 if compact else 13, 14)
-        for page in self.pages.values():
+        for key, page in self.pages.items():
             apply_page_margins(page, spec)
+            if key == "styles":
+                # Estilo owns its only vertical scroll inside the controls
+                # column. The page itself must fill, not outgrow, the outer
+                # viewport so preview and footer remain fixed.
+                page.setMinimumHeight(0)
+                page.setSizePolicy(
+                    QtWidgets.QSizePolicy.Policy.Ignored,
+                    QtWidgets.QSizePolicy.Policy.Ignored,
+                )
         for key, widget in self._nav_by_key.items():
             widget.setText("" if compact else self._nav_labels[key])
             widget.setToolTip(self._nav_labels[key])

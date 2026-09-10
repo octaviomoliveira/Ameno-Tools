@@ -208,7 +208,13 @@ def test_layout_renders_at_minimum_default_and_large_sizes() -> None:
             window.shell.show_page(key)
             app.processEvents()
             assert view.widget() is window.shell.pages[key]
-            assert view.widgetResizable()
+            if key == "styles":
+                # E19 gives Estilo a fixed shell with its own controls-only
+                # scroll region so preview and footer never leave the screen.
+                assert not view.widgetResizable()
+                assert view.verticalScrollBar().maximum() == 0
+            else:
+                assert view.widgetResizable()
             image = QtGui.QImage(window.size(), QtGui.QImage.Format.Format_ARGB32)
             image.fill(0)
             window.render(image)

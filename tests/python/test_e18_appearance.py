@@ -60,8 +60,8 @@ def test_loading_a_style_updates_draft_and_keeps_actions_explicit() -> None:
     assert page.draft.to_snapshot().style_id == "s"
     assert page.draft.value("font_size") == 220.0
     assert page.draft.value("terminal_type") == "dot"
-    assert page.save_button.property("primary") is True
-    assert page.apply_button.property("primary") in (None, False)
+    assert page.save_button.property("primary") in (None, False)
+    assert page.apply_button.property("primary") is True
 
 
 def test_appearance_fits_narrow_page_without_horizontal_content() -> None:

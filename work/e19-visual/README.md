@@ -11,3 +11,13 @@
 Esta captura foi gerada com Qt offscreen. Ela valida composição e regressão,
 mas não substitui a captura e o aceite dentro do 3ds Max 2026 com DPI e fonte
 do host real.
+
+## Página Estilo
+
+- `02-estilo-980x720.png`: duas colunas, preview e rodapé fixos.
+- SHA-256: `F8B0EA62202F37BBCFCC0AF453D7D7C5834CCCD00B3D7BBF50B2C98CA453BDF0`.
+- `03-estilo-780x560.png`: preview acima, controles em scroll próprio e rodapé
+  fixo.
+- SHA-256: `71E71DDB758DA298E91928364C85211C3270F1538FE73F67927BD0F97C3663B4`.
+- Referência: `work/e19-reference/02-estilo-target.png`.
+- Testes: `tests/python/test_e19_style_workspace.py`.

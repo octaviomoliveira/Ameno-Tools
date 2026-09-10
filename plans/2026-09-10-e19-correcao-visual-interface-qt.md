@@ -2,8 +2,9 @@
 
 Data: 2026-09-10
 
-Status: em execução; referência Cotar implementada e instalada como canary.
-Gate visual/funcional no 3ds Max 2026 pendente.
+Status: em execução; referências Cotar e Estilo implementadas e aprovadas nos
+gates Qt locais. Cotar está instalada como canary; instalação e gate visual de
+Estilo no 3ds Max 2026 ainda pendentes.
 
 Origem: o canary E18 passou os gates técnicos, mas foi reprovado no uso real
 do 3ds Max em 2026-09-10. As capturas em `work/e19-baseline` são a fonte de
@@ -18,7 +19,7 @@ o HEAD exato e criar `feature/e19-qt-visual-acceptance`. Não trabalhar em
 
 Estrutura: **6 etapas e 32 subetapas**. Por decisão do usuário em 2026-09-10,
 a página Cotar passa a ser a primeira referência visual e de interação.
-Aparência e as demais páginas só recebem o padrão depois que Cotar passar no
+Estilo e as demais páginas só recebem o padrão depois que Cotar passar no
 Max real.
 
 ## 1. Resultado esperado
@@ -121,7 +122,7 @@ automação isolada, 100%, 125%, 150% e 200%.
 - Detalhes e manutenção ficam sob demanda e não competem com o primeiro uso.
 - A referência preservada é `work/e19-reference/01-cotar-target.png`.
 
-### 4.4 Contrato específico de Aparência
+### 4.4 Contrato específico de Estilo
 
 - Preview 2D permanece visível enquanto qualquer parâmetro é alterado.
 - Preview, primeiro grupo de sliders e barra de ações aparecem juntos em
@@ -154,9 +155,9 @@ medium    = 660 <= available < 900
 wide      = available >= 900
 ```
 
-### 5.2 Host de Aparência
+### 5.2 Host de Estilo
 
-A página Aparência não deve ficar inteira em uma única rolagem externa. Usar
+A página Estilo não deve ficar inteira em uma única rolagem externa. Usar
 um root estável com quatro regiões:
 
 ```text
@@ -277,12 +278,14 @@ comprovado antes de alterar as demais páginas.
 
 ### E19.3 — Aplicar o padrão às demais páginas (6)
 
-1. **Aparência.** Criar root fixo com seletor de estilo, controles roláveis,
-   preview sempre visível e barra de ações fixa. Preservar draft e sinais.
+1. **Estilo.** Renomear a superfície Aparência e criar root fixo com seletor
+   do estilo atual, `Novo estilo`, menu de ações, controles roláveis, preview
+   sempre visível e barra de ações fixa. Preservar draft e sinais.
 
-2. **Preview e parâmetros.** Slider, valor técnico, unidade e reset não se
-   sobrepõem. Toda alteração atualiza a prévia local imediatamente; cor usa
-   swatch legível e Salvar/Aplicar têm destinos claros.
+2. **Preview e parâmetros.** Organizar Texto, Linhas, Terminais e Cores em
+   grupos recolhíveis. Slider, valor técnico e unidade não se sobrepõem. Toda
+   alteração atualiza a prévia local imediatamente; cor usa swatch + valor +
+   ação, e Salvar/Aplicar têm destinos claros.
 
 3. **Revisar.** Trocar empty state gigante por orientação compacta com uma
    ação. Remover texto sobre arquitetura. Quando carregada, mostrar leitura,
@@ -300,12 +303,16 @@ comprovado antes de alterar as demais páginas.
    ação principal e um estado por página. Remover termos de implementação e
    uniformizar ícones, espaços e foco.
 
-**Gate E19.3:** todas as páginas passam os contratos de Cotar e todas as
-ações funcionais anteriores continuam alcançáveis.
+**Progresso E19.3:** itens 1 e 2 implementados; 66/66 testes Python passaram,
+incluindo layout 980x720/780x560, quatro escalas de DPI, prévia local sem bridge
+e rodapé fixo. Itens 3 a 6 e gate dentro do Max continuam pendentes.
+
+**Gate E19.3:** todas as páginas passam os contratos de Cotar e todas as ações
+funcionais anteriores continuam alcançáveis.
 
 ### E19.4 — Validação visual e de uso no Max (5)
 
-1. **Gerar galeria dentro do host.** Capturar Login, Cotar, Aparência, Revisar
+1. **Gerar galeria dentro do host.** Capturar Login, Cotar, Estilo, Revisar
    vazia/carregada, Exportar e Configuração em 780×560, 980×720 e maximizada;
    registrar DPI, fonte e geometria.
 

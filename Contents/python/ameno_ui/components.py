@@ -155,6 +155,80 @@ class StatusDot(QtWidgets.QWidget):
         painter.drawEllipse(3, 3, 12, 12)
 
 
+class CollapsibleSection(QtWidgets.QFrame):
+    """Compact editor group with a native arrow and stable content widget."""
+
+    def __init__(self, title: str, content: QtWidgets.QWidget, expanded: bool = False) -> None:
+        super().__init__()
+        self.setObjectName("EditorSection")
+        self.content = content
+        self.toggle = QtWidgets.QToolButton()
+        self.toggle.setObjectName("SectionToggle")
+        self.toggle.setText(title)
+        self.toggle.setCheckable(True)
+        self.toggle.setChecked(expanded)
+        self.toggle.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.toggle.setAccessibleName(title)
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.toggle)
+        layout.addWidget(content)
+        self.toggle.toggled.connect(self._set_expanded)
+        self._set_expanded(expanded)
+
+    def _set_expanded(self, expanded: bool) -> None:
+        self.content.setVisible(expanded)
+        self.toggle.setArrowType(
+            QtCore.Qt.ArrowType.DownArrow if expanded else QtCore.Qt.ArrowType.RightArrow
+        )
+
+
+class ColorControl(QtWidgets.QWidget):
+    """Color swatch, readable value and explicit edit action."""
+
+    edit_requested = QtCore.Signal()
+
+    def __init__(self, label: str = "Editar cor") -> None:
+        super().__init__()
+        self.setObjectName("ColorControl")
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+        self.swatch = QtWidgets.QFrame()
+        self.swatch.setObjectName("ColorSwatch")
+        self.swatch.setFixedSize(28, 28)
+        layout.addWidget(self.swatch)
+        self.value_label = QtWidgets.QLabel("#F5F5F5")
+        self.value_label.setObjectName("ColorValue")
+        self.value_label.setMinimumWidth(72)
+        self.value_label.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.value_label)
+        layout.addStretch(1)
+        self.edit_button = QtWidgets.QToolButton()
+        self.edit_button.setText("Editar")
+        self.edit_button.setAccessibleName(label)
+        self.edit_button.clicked.connect(self.edit_requested)
+        layout.addWidget(self.edit_button)
+        self.set_color_text("245,245,245")
+
+    def color_text(self) -> str:
+        return str(self.property("colorText") or "245,245,245")
+
+    def set_color_text(self, value: str) -> None:
+        parts = []
+        try:
+            parts = [max(0, min(255, int(item.strip()))) for item in str(value).split(",")]
+        except (TypeError, ValueError):
+            parts = []
+        if len(parts) != 3:
+            parts = [245, 245, 245]
+        normalized = "%d,%d,%d" % tuple(parts)
+        self.setProperty("colorText", normalized)
+        self.value_label.setText("#%02X%02X%02X" % tuple(parts))
+        self.swatch.setStyleSheet("background-color: rgb(%s);" % normalized)
+
+
 class ChoiceCard(QtWidgets.QPushButton):
     """Checkable card whose title and description can wrap independently."""
 

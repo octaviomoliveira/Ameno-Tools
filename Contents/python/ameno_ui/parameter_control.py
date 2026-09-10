@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from math import isfinite
 from typing import Any
 
+from .assets import nav_icon
 from .qt_compat import QtCore, QtWidgets
 
 
@@ -68,7 +69,8 @@ class ParameterControl(QtWidgets.QWidget):
         layout.addWidget(self.spinbox)
 
         self.reset_button = QtWidgets.QToolButton()
-        self.reset_button.setText("↺")
+        self.reset_button.setIcon(nav_icon("reset"))
+        self.reset_button.setIconSize(QtCore.QSize(16, 16))
         self.reset_button.setToolTip("Restaurar padrão: %s" % self._format(spec.default))
         self.reset_button.setAccessibleName("Restaurar " + spec.label)
         self.reset_button.setAutoRaise(True)

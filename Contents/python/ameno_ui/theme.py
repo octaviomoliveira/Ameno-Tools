@@ -89,6 +89,11 @@ QLabel#SectionTitle { color: %(white)s; font-size: 12pt; font-weight: 600; }
 QLabel#SectionHint { color: %(muted)s; font-size: 9pt; }
 QWidget#CreatePage QLabel#PageTitle { font-size: 25pt; font-weight: 500; }
 QWidget#CreatePage QLabel#SectionTitle { font-size: 13pt; }
+QWidget#StylesPage QLabel#PageTitle { font-size: 25pt; font-weight: 500; }
+QLabel#EditorSectionTitle { color: %(white)s; font-size: 12pt; font-weight: 600; }
+QLabel#FooterStatus { color: %(muted)s; font-size: 9.5pt; }
+QLabel#FooterStatus[error="true"] { color: #FFB4AE; }
+QLabel#ColorValue { color: %(text)s; font-family: "%(mono_font)s", "Consolas"; font-size: 9pt; }
 QLabel#ChoiceTitle { color: %(white)s; font-size: 11.5pt; font-weight: 600; }
 QLabel#ChoiceHint { color: %(muted)s; font-size: 9.5pt; }
 QLabel#SelectionSummary { color: %(muted)s; font-size: 9.5pt; }
@@ -122,6 +127,19 @@ QFrame#SceneCard {
     border-radius: 10px;
 }
 QFrame#SceneRule { color: %(border)s; }
+QFrame#EditorSection, QFrame#PreviewPanel {
+    background-color: %(secondary)s;
+    border: 1px solid %(border)s;
+    border-radius: 9px;
+}
+QFrame#StyleFooter {
+    background-color: %(background)s;
+    border-top: 1px solid %(border)s;
+}
+QFrame#ColorSwatch {
+    border: 1px solid #444444;
+    border-radius: 5px;
+}
 QGroupBox#Card::title {
     subcontrol-origin: margin;
     left: 14px;
@@ -243,6 +261,26 @@ QToolButton {
 QToolButton:hover { background-color: %(hover)s; border-color: #3A3A3A; }
 QToolButton:focus { border: 1px solid %(red)s; }
 QToolButton:disabled { color: %(disabled)s; }
+QToolButton#SectionToggle {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    color: %(white)s;
+    font-size: 11pt;
+    font-weight: 600;
+    min-height: 36px;
+    padding: 2px 12px;
+    text-align: left;
+}
+QToolButton#SectionToggle:hover { background-color: %(hover)s; }
+QToolButton[primary="true"] {
+    background-color: %(red)s;
+    border-color: %(red)s;
+    color: #090909;
+    font-weight: 700;
+    min-height: 40px;
+}
+QToolButton[primary="true"]:hover { background-color: #F04A3D; }
 QCheckBox { spacing: 8px; }
 QCheckBox::indicator { width: 16px; height: 16px; }
 QCheckBox::indicator:unchecked { background: %(secondary)s; border: 1px solid #4A4A4A; border-radius: 3px; }
