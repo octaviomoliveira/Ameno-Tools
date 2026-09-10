@@ -268,11 +268,11 @@ class StylesPage(QtWidgets.QWidget):
         self.workspace_layout = QtWidgets.QBoxLayout(QtWidgets.QBoxLayout.Direction.LeftToRight, self.editor)
         self.workspace_layout.setContentsMargins(0, 0, 0, 0)
         self.workspace_layout.setSpacing(10)
-        # The technical fields need slightly more room than the preview at the
-        # 980 px host width. A 6:5 split keeps full labels and numeric editors
-        # readable with the larger font metrics used inside 3ds Max.
-        self.workspace_layout.addWidget(self.controls_scroll, 6)
-        self.workspace_layout.addWidget(self.preview_box, 5)
+        # The technical fields need more room than the drawing at the 980 px
+        # host width. The preview is geometrically simple and remains legible
+        # in a narrower pane; controls must never be clipped.
+        self.workspace_layout.addWidget(self.controls_scroll, 7)
+        self.workspace_layout.addWidget(self.preview_box, 4)
         root.addWidget(self.editor, 1)
         self._workspace_mode = "wide"
         self.advanced = self.lines_section
@@ -324,7 +324,9 @@ class StylesPage(QtWidgets.QWidget):
         self._apply_workspace_mode()
 
     def _apply_workspace_mode(self) -> None:
-        compact = self.width() < 720
+        # Below this useful page width, two columns cannot satisfy the real
+        # font metrics from Max while keeping every numeric editor visible.
+        compact = self.width() < 780
         mode = "compact" if compact else "wide"
         if mode == self._workspace_mode and self.editor.isVisible():
             return
@@ -335,6 +337,7 @@ class StylesPage(QtWidgets.QWidget):
             else QtWidgets.QBoxLayout.Direction.LeftToRight
         )
         if compact:
+            self.controls_scroll.setMinimumWidth(0)
             self.preview_box.setMinimumWidth(0)
             self.preview_box.setMinimumHeight(170)
             self.preview_box.setMaximumHeight(190)
@@ -342,13 +345,14 @@ class StylesPage(QtWidgets.QWidget):
             self.workspace_layout.setStretch(0, 0)
             self.workspace_layout.setStretch(1, 1)
         else:
-            self.preview_box.setMinimumWidth(310)
+            self.controls_scroll.setMinimumWidth(450)
+            self.preview_box.setMinimumWidth(250)
             self.preview_box.setMinimumHeight(0)
             self.preview_box.setMaximumHeight(16777215)
-            self.workspace_layout.insertWidget(0, self.controls_scroll, 6)
-            self.workspace_layout.insertWidget(1, self.preview_box, 5)
-            self.workspace_layout.setStretch(0, 6)
-            self.workspace_layout.setStretch(1, 5)
+            self.workspace_layout.insertWidget(0, self.controls_scroll, 7)
+            self.workspace_layout.insertWidget(1, self.preview_box, 4)
+            self.workspace_layout.setStretch(0, 7)
+            self.workspace_layout.setStretch(1, 4)
 
     def _select_combo(self, row: int) -> None:
         if self._loading or row < 0:
