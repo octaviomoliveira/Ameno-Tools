@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional, Sequence, Tuple
 
-from .assets import pixmap
+from .assets import nav_icon, pixmap
 from .qt_compat import QtCore, QtGui, QtWidgets
 
 
@@ -248,7 +248,7 @@ class SegmentedChoice(QtWidgets.QWidget):
     changed = QtCore.Signal(str)
     currentIndexChanged = QtCore.Signal(int)
 
-    def __init__(self, choices: Sequence[Tuple[str, str]]) -> None:
+    def __init__(self, choices: Sequence[Tuple[str, ...]]) -> None:
         super().__init__()
         self.setObjectName("SegmentedChoice")
         self.buttons = QtWidgets.QButtonGroup(self)
@@ -259,7 +259,9 @@ class SegmentedChoice(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         last = len(self._items) - 1
-        for index, (label, value) in enumerate(self._items):
+        for index, item in enumerate(self._items):
+            label, value = item[0], item[1]
+            icon_name = item[2] if len(item) > 2 else ""
             widget = QtWidgets.QPushButton(label)
             widget.setCheckable(True)
             widget.setProperty("segment", True)
@@ -267,6 +269,9 @@ class SegmentedChoice(QtWidgets.QWidget):
             widget.setProperty("choiceValue", value)
             widget.setAccessibleName("Direção: " + label)
             widget.setMinimumHeight(36)
+            if icon_name:
+                widget.setIcon(nav_icon(icon_name))
+                widget.setIconSize(QtCore.QSize(20, 20))
             self.buttons.addButton(widget, index)
             self._by_value[value] = widget
             layout.addWidget(widget, 1)
@@ -285,7 +290,8 @@ class SegmentedChoice(QtWidgets.QWidget):
         return self.findData(self.value())
 
     def findData(self, value: str) -> int:
-        for index, (_label, item_value) in enumerate(self._items):
+        for index, item in enumerate(self._items):
+            item_value = item[1]
             if item_value == value:
                 return index
         return -1

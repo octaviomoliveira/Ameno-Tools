@@ -132,3 +132,18 @@ def test_invalid_direction_modal_is_only_a_start_fallback() -> None:
     assert len(calls) == 1
     assert page.mode.currentData() == "horizontal"
     window.close()
+
+
+def test_direction_segments_use_local_reference_icons() -> None:
+    _app()
+    os.environ["AMENO_SETTINGS_FILE"] = str(Path(tempfile.mkdtemp()) / "e19-icons.ini")
+    icon_root = ROOT / "Contents" / "python" / "ameno_ui" / "assets" / "icons"
+    for name in ("direcao-automatica.svg", "direcao-horizontal.svg", "direcao-vertical.svg"):
+        source = icon_root / name
+        assert source.is_file()
+        assert "<svg" in source.read_text(encoding="utf-8")
+    window = AmenoMainWindow(ReferenceBridge(), lambda _token: None, lambda: None)
+    buttons = window.shell.pages["create"].mode.buttons.buttons()
+    assert len(buttons) == 3
+    assert all(not widget.icon().isNull() for widget in buttons)
+    window.close()

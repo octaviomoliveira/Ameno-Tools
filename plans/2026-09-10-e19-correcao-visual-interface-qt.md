@@ -114,6 +114,8 @@ automação isolada, 100%, 125%, 150% e 200%.
 - Direção fica no fluxo principal em um seletor segmentado compacto. Automática
   é exclusiva de Uma medida; ao ativar Várias medidas, a interface escolhe
   Horizontal, mantém Automática visível e desabilitada e explica a regra.
+- Automática, Horizontal e Vertical usam SVGs locais próprios, equivalentes à
+  referência, com fallback seguro e sem depender de glifos da fonte do host.
 - Combinação contínua + automática é impedida por estado; modal existe somente
   como fallback no CTA e nunca como fluxo normal.
 - Detalhes e manutenção ficam sob demanda e não competem com o primeiro uso.

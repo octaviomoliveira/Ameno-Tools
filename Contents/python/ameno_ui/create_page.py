@@ -69,9 +69,9 @@ class CreatePage(QtWidgets.QWidget):
         root.addWidget(SectionHeading("Direção"))
         self.mode = SegmentedChoice(
             (
-                ("Automática", "aligned"),
-                ("Horizontal", "horizontal"),
-                ("Vertical", "vertical"),
+                ("Automática", "aligned", "direcao-automatica"),
+                ("Horizontal", "horizontal", "direcao-horizontal"),
+                ("Vertical", "vertical", "direcao-vertical"),
             )
         )
         root.addWidget(self.mode)

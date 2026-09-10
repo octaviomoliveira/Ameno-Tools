@@ -4,7 +4,7 @@
 
 - Arquivo: `01-cotar-980x720.png`
 - Tamanho da janela: 980×720 px.
-- SHA-256: `6B2B99D512D4BFB4413E7DC11BF1612FAFC8044E292F3D3CD70BD6C46ED9206F`
+- SHA-256: `95073F044CB4F162FED0FAFADE43949D421DC858443AD7777299A6C1326962F4`
 - Resultado: quatro cards íntegros, CTA visível e scrollbar horizontal em zero.
 - Testes associados: `tests/python/test_e19_cotar_reference.py`.
 
