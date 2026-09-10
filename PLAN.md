@@ -198,9 +198,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   `ae3e576`. Plano:
   `plans/2026-09-09-e17-identidade-ux-qt.md`.
 
-- **E18 — experiência Qt 10/10 e prévia reativa planejada
+- **E18 — experiência Qt 10/10 e prévia reativa em execução
   (2026-09-09):** runbook preparado para execução no Antigravity em 12 etapas
-  e 118 subetapas. A ordem começa por testes vermelhos da prévia e overflow,
+  e 118 subetapas. A E18.0 já criou a branch isolada e transformou a falha
+  da prévia e o overflow de 780×560 em dois testes RED reproduzíveis; a suíte
+  legada permanece em 17/17 PASS. A ordem começa por esses testes, depois
   introduz um `StyleDraft` sempre válido, preview geométrico puro e controles
   slider + número; depois reorganiza Aparência, shell responsivo, primeiro uso,
   ícones, acessibilidade e canary. O E16 permanece congelado e nenhuma interação
@@ -238,12 +240,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **E18.0 — baseline e reprodução:** no Antigravity, criar
-  `feature/e18-ux-10-10` a partir de `feature/e17-ameno-ux` em `01e32cd`.
-  Transformar em testes vermelhos a prévia que cai no snapshot padrão e o
-  overflow real da janela. Registrar medidas e chamadas antes de editar.
+- **E18.0 — baseline e reprodução concluída:** a branch
+  `feature/e18-ux-10-10` foi criada a partir de `feature/e17-ameno-ux` em
+  `01e32cd`; os dois defeitos foram convertidos em RED reproduzíveis e a
+  evidência está em `work/e18-baseline/README.md`.
 
-- **E18.1–E18.3 antes do redesenho:** implementar o draft local sempre válido,
+- **E18.1–E18.3 antes do redesenho:** implementar agora o draft local sempre válido,
   slider + número e geometria pura da prévia. Aparência só pode ser redesenhada
   depois que cada parâmetro tiver efeito testável e zero chamadas ao bridge.
 

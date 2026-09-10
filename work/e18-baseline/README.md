@@ -59,3 +59,31 @@ Registrar aqui ou em `work/e18-gates/summary.md`:
 
 O runbook completo está em
 `plans/2026-09-09-e18-ux-10-10-preview-reativo.md`.
+
+## Execução E18.0 — 2026-09-09
+
+Branch criada: `feature/e18-ux-10-10`.
+
+Comando da suíte anterior:
+
+```text
+python tools/run-python-gates.py
+```
+
+Resultado antes dos testes E18: **17 testes Python PASS**.
+
+Os testes de baseline foram adicionados em
+`tests/python/test_e18_baseline.py` e executados individualmente para não
+interromper a coleta no primeiro caso:
+
+- `test_pages_fit_default_window_without_horizontal_scroll` — **RED esperado**:
+  a página `create` exige rolagem horizontal em 780×560;
+- `test_preview_reacts_before_style_list_refresh` — **RED esperado**:
+  Aparência nasce sem draft/modelo de prévia válido.
+
+Ao incluir os testes E18 no runner completo, o processo para no primeiro RED,
+como esperado para este checkpoint. Nenhum arquivo de produção foi alterado na
+E18.0.
+
+Conclusão: as duas falhas humanas estão reproduzidas como contratos
+automatizados. Próximo checkpoint: E18.1, `StyleDraft` local sempre válido.

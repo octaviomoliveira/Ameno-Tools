@@ -2,8 +2,8 @@
 
 Data: 2026-09-09
 
-Status: planejado para execução no Antigravity; nenhuma implementação E18 foi
-iniciada neste documento.
+Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0 concluída
+com dois testes vermelhos reproduzíveis. Próximo checkpoint: E18.1.
 
 Base obrigatória: branch `feature/e17-ameno-ux`, commit `01e32cd`. Criar uma
 branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
@@ -12,6 +12,16 @@ branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
 Estrutura: **12 etapas e 118 subetapas**. A ordem é deliberada: primeiro
 reproduzir e corrigir o contrato da prévia; depois redesenhar a página
 Aparência; só então aplicar responsividade e polimento ao restante do produto.
+
+## Checkpoint de execução
+
+- **E18.0 — concluída (2026-09-09):** branch isolada criada; baseline E15/E17
+  executada com 17 testes Python PASS; falha do draft sem modelo e overflow em
+  780×560 convertidos em dois RED esperados em
+  `tests/python/test_e18_baseline.py`; evidência em
+  `work/e18-baseline/README.md`.
+- **E18.1 — próxima:** implementar `StyleDraft` sempre válido, sem bridge,
+  cena, `pymxs` ou mutação durante a edição.
 
 ## 1. Objetivo
 
@@ -610,4 +620,5 @@ fechados e após backup recuperável.
 - Implementação E18: não iniciada.
 - E17: gates técnicos verdes, mas aceite visual humano reprovado.
 - E16: baseline de desempenho obrigatório e congelado.
-- Próxima ação do executor: E18.0, produzindo testes vermelhos reproduzíveis.
+- Próxima ação do executor: E18.1, implementando o `StyleDraft` local sempre
+  válido e fazendo os dois testes RED avançarem sem acessar a cena.
