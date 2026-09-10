@@ -2,8 +2,8 @@
 
 Data: 2026-09-09
 
-Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0, E18.1 e
-E18.2 concluídas. Próximo checkpoint: E18.3.
+Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0–E18.3
+concluídas. Próximo checkpoint: E18.4.
 
 Base obrigatória: branch `feature/e17-ameno-ux`, commit `01e32cd`. Criar uma
 branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
@@ -28,8 +28,13 @@ Aparência; só então aplicar responsividade e polimento ao restante do produto
   slider, entrada técnica, reset, teclado, acessibilidade, vírgula decimal e
   `QSignalBlocker`; oito parâmetros de estilo foram integrados sem quebrar a
   API da página. Quatro contratos unitários passaram.
-- **E18.3 — próxima:** separar geometria pura e atingir paridade de todos os
-  parâmetros na prévia 2D.
+- **E18.3 — concluída (2026-09-09):** geometria pura em
+  `dimension_preview.py`, painter sem regra de domínio e paridade de linha,
+  extensões, afastamento, prolongamento, recuo, terminais, texto, máscara,
+  cores, escala, fonte, tracking e peso. Cinco contratos geométricos passaram;
+  a prévia renderizada também permanece sem objetos de cena.
+- **E18.4 — próxima:** reorganizar Aparência em estilo, preview e ajustes,
+  preservando draft e aplicação explícita.
 
 ## 1. Objetivo
 
@@ -628,5 +633,5 @@ fechados e após backup recuperável.
 - Implementação E18: não iniciada.
 - E17: gates técnicos verdes, mas aceite visual humano reprovado.
 - E16: baseline de desempenho obrigatório e congelado.
-- Próxima ação do executor: E18.3, extraindo a geometria da prévia 2D e
-  cobrindo cada parâmetro com efeito visual verificável.
+- Próxima ação do executor: E18.4, redesenhando a página Aparência sem
+  reintroduzir mínimos horizontais ou ações ambíguas.

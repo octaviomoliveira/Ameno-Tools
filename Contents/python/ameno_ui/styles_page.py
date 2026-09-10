@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 from .bridge import BridgeError, UiBridge
 from .common import button, group, message_label, set_bridge_error, set_message
 from .components import Disclosure, PageHeader, SectionHeading
+from .dimension_preview import PreviewGeometry, PreviewTerminal, build_preview_geometry
 from .models import StyleSnapshot
 from .parameter_control import ParameterControl, style_parameter_specs
 from .qt_compat import QtCore, QtGui, QtWidgets
@@ -31,12 +32,12 @@ class PreviewWidget(QtWidgets.QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.setMinimumHeight(190)
-        self._style: Optional[StyleSnapshot] = None
+        self._style: StyleSnapshot = StyleSnapshot("default", "Arquitetônico")
         self._dark = True
         self._zoom = 1.0
 
     def set_model(self, style: Optional[StyleSnapshot], dark: bool, zoom: float) -> None:
-        self._style = style
+        self._style = style or StyleSnapshot("default", "Arquitetônico")
         self._dark = dark
         self._zoom = zoom
         self.update()
@@ -46,41 +47,51 @@ class PreviewWidget(QtWidgets.QWidget):
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
         bg = QtGui.QColor("#121212" if self._dark else "#E8E8E0")
         painter.fillRect(self.rect(), bg)
-        style = self._style or StyleSnapshot("default", "Arquitetônico")
-        fg = color_text_to_qcolor(style.annotation_color)
-        if not fg.isValid():
-            fg = QtGui.QColor("#f3f4f6" if self._dark else "#1f2937")
-        pen = QtGui.QPen(fg)
-        pen.setWidthF(max(0.5, style.line_thickness * self._zoom))
+        geometry = build_preview_geometry(self._style, self.rect(), self._zoom)
+        line_color = color_text_to_qcolor(geometry.line_color)
+        text_color = color_text_to_qcolor(geometry.text.color)
+        if not line_color.isValid():
+            line_color = QtGui.QColor("#f3f4f6" if self._dark else "#1f2937")
+        if not text_color.isValid():
+            text_color = line_color
+        pen = QtGui.QPen(line_color)
+        pen.setWidthF(geometry.line_thickness_px)
         painter.setPen(pen)
-        left = 28.0
-        right = float(self.width() - 28)
-        center = float(self.height()) * 0.62
-        painter.drawLine(QtCore.QPointF(left, center), QtCore.QPointF(right, center))
-        painter.drawLine(QtCore.QPointF(left, center - 28), QtCore.QPointF(left, center + 28))
-        painter.drawLine(QtCore.QPointF(right, center - 28), QtCore.QPointF(right, center + 28))
-        terminal = style.terminal_type
-        if terminal in ("tick", "arrowOpen", "arrowClosed"):
-            painter.drawLine(QtCore.QPointF(left, center), QtCore.QPointF(left + 10, center - 10))
-            painter.drawLine(QtCore.QPointF(right, center), QtCore.QPointF(right - 10, center + 10))
-        elif terminal == "dot":
-            painter.setBrush(fg)
-            painter.drawEllipse(QtCore.QPointF(left - 4, center - 4), 4, 4)
-            painter.drawEllipse(QtCore.QPointF(right - 4, center - 4), 4, 4)
-        font = QtGui.QFont(style.font_name, max(8, int(style.font_size * 0.16 * self._zoom)))
-        font.setBold(style.bold)
-        font.setItalic(style.italic)
+        for segment in geometry.all_segments:
+            painter.drawLine(QtCore.QPointF(*segment.start), QtCore.QPointF(*segment.end))
+        for terminal in geometry.terminals:
+            self._paint_terminal(painter, terminal, line_color)
+        font = QtGui.QFont(geometry.text.font_name)
+        font.setPixelSize(max(1, round(geometry.text.font_size_px)))
+        font.setBold(geometry.text.bold)
+        font.setItalic(geometry.text.italic)
+        try:
+            font.setLetterSpacing(QtGui.QFont.SpacingType.AbsoluteSpacing, geometry.text.tracking_px)
+        except (AttributeError, TypeError):
+            pass
         painter.setFont(font)
-        text = "3,50 m"
-        text_rect = painter.fontMetrics().boundingRect(text)
-        text_x = (self.width() - text_rect.width()) / 2.0
-        text_y = center - max(10, style.text_gap * 0.15)
-        if style.text_mask_enabled:
-            mask = QtCore.QRectF(text_x - 8, text_y - text_rect.height(), text_rect.width() + 16, text_rect.height() + 8)
-            painter.fillRect(mask, bg)
-        painter.setPen(fg)
-        painter.drawText(QtCore.QPointF(text_x, text_y), text)
+        if geometry.text.mask_rect is not None:
+            x, y, width, height = geometry.text.mask_rect
+            painter.fillRect(QtCore.QRectF(x, y, width, height), bg)
+        painter.setPen(text_color)
+        painter.drawText(QtCore.QPointF(*geometry.text.baseline), geometry.text.value)
         painter.end()
+
+    @staticmethod
+    def _paint_terminal(painter: QtGui.QPainter, terminal: PreviewTerminal, color: QtGui.QColor) -> None:
+        painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
+        if terminal.kind == "dot":
+            painter.setBrush(color)
+            painter.drawEllipse(QtCore.QPointF(*terminal.anchor), terminal.radius, terminal.radius)
+        elif terminal.kind == "arrowClosed":
+            painter.setBrush(color)
+            painter.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(*point) for point in terminal.points]))
+        elif terminal.points:
+            for index in range(0, len(terminal.points) - 1, 2):
+                painter.drawLine(
+                    QtCore.QPointF(*terminal.points[index]),
+                    QtCore.QPointF(*terminal.points[index + 1]),
+                )
 
 
 class StylesPage(QtWidgets.QWidget):
