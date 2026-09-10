@@ -2,8 +2,8 @@
 
 Data: 2026-09-09
 
-Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0–E18.5
-concluídas. Próximo checkpoint: E18.6.
+Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0–E18.6
+concluídas. Próximo checkpoint: E18.7.
 
 Base obrigatória: branch `feature/e17-ameno-ux`, commit `01e32cd`. Criar uma
 branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
@@ -42,8 +42,12 @@ Aparência; só então aplicar responsividade e polimento ao restante do produto
   janela mínima 780×560 sem rolagem horizontal em todas as páginas e cinco
   larguras; subprocessos validaram 100/125/150/200% de DPI. Três contratos de
   shell e o baseline E18 passaram.
-- **E18.6 — próxima:** simplificar Cotar para o primeiro uso e deixar uma única
-  ação principal clara.
+- **E18.6 — concluída (2026-09-09):** orientação reduzida a três passos,
+  resumo vivo de planta/fachada e individual/contínua, CTA único, detalhes
+  depois da ação e escolha de estilo preservada. Três contratos de primeiro uso
+  passaram, incluindo CTA visível na janela padrão.
+- **E18.7 — próxima:** revisar microcopy e ação principal de Revisar,
+  Exportar, Login e Configuração.
 
 ## 1. Objetivo
 
@@ -639,9 +643,9 @@ fechados e após backup recuperável.
 ## 15. Estado ao encerrar este planejamento
 
 - Plano técnico e de produto: pronto.
-- Implementação E18: E18.0–E18.5 implementadas na branch; canary ainda não
+- Implementação E18: E18.0–E18.6 implementadas na branch; canary ainda não
   instalado nem submetido ao aceite humano.
 - E17: gates técnicos verdes, mas aceite visual humano reprovado.
 - E16: baseline de desempenho obrigatório e congelado.
-- Próxima ação do executor: E18.6, simplificando o fluxo Cotar para um
-  profissional que nunca usou o 3ds Max.
+- Próxima ação do executor: E18.7, tornando Revisar, Exportar, Login e
+  Configuração igualmente autoexplicativos.

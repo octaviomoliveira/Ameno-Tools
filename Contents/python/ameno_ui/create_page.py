@@ -38,11 +38,11 @@ class CreatePage(QtWidgets.QWidget):
         self.guide.setObjectName("Card")
         guide_layout = QtWidgets.QVBoxLayout(self.guide)
         guide_layout.setSpacing(8)
-        guide_layout.addWidget(SectionHeading("Primeira cotação", "Você não precisa conhecer os comandos do 3ds Max."))
+        guide_layout.addWidget(SectionHeading("Como começar", "Escolha, inicie e siga a mensagem da viewport."))
         guide_text = QtWidgets.QLabel(
-            "1. Escolha Planta ou Fachada/Vista.  2. Escolha uma medida ou uma sequência.  "
-            "3. Clique em Iniciar cotação e siga a mensagem da viewport.\n"
-            "Dica: S liga/desliga o Snap · Esc cancela · Ctrl+Z desfaz."
+            "1. Onde está o desenho?  2. O que você quer medir?  "
+            "3. Clique em Iniciar cotação.\n"
+            "Durante a coleta: Esc cancela · Ctrl+Z desfaz."
         )
         guide_text.setWordWrap(True)
         guide_layout.addWidget(guide_text)
@@ -100,12 +100,15 @@ class CreatePage(QtWidgets.QWidget):
         details_form.addRow("Precisão", self.precision)
         details_form.addRow("Texto", self.follow_line)
         self.details = Disclosure("Ajustar detalhes", details_box, expanded=False)
-        root.addWidget(self.details)
-
         action_box = QtWidgets.QFrame()
         action_box.setObjectName("Card")
+        self.action_box = action_box
         action_layout = QtWidgets.QVBoxLayout(action_box)
         action_layout.setSpacing(10)
+        self.selection_summary = QtWidgets.QLabel()
+        self.selection_summary.setObjectName("SelectionSummary")
+        self.selection_summary.setWordWrap(True)
+        action_layout.addWidget(self.selection_summary)
         scene_row = QtWidgets.QHBoxLayout()
         self.scene_status = StatusPill("Cena não verificada")
         self.scene_detail = QtWidgets.QLabel("")
@@ -120,6 +123,7 @@ class CreatePage(QtWidgets.QWidget):
 
         button_row = QtWidgets.QHBoxLayout()
         self.start_button = button("Iniciar cotação", self.start_selected, primary=True)
+        self.start_button.setAccessibleName("Iniciar cotação")
         self.start_button.setMinimumWidth(260)
         self.more_button = QtWidgets.QToolButton()
         self.more_button.setText("Mais ações  ···")
@@ -138,6 +142,7 @@ class CreatePage(QtWidgets.QWidget):
         button_row.addWidget(self.more_button)
         action_layout.addLayout(button_row)
         root.addWidget(action_box)
+        root.addWidget(self.details)
 
         self.status = message_label()
         self.status.setText("Pronto para começar. A cena só será consultada quando você iniciar ou atualizar.")
@@ -151,12 +156,18 @@ class CreatePage(QtWidgets.QWidget):
         self.clear_orphans_action.triggered.connect(self.clear_orphan_dimensions)
         self.delete_all_action.triggered.connect(self.delete_all_dimensions)
         self.tool_choice.changed.connect(self._save_preferences)
+        self.tool_choice.changed.connect(lambda *_args: self._update_summary())
         self.plane_choice.changed.connect(self._save_preferences)
+        self.plane_choice.changed.connect(lambda *_args: self._update_summary())
         self.mode.currentIndexChanged.connect(self._save_preferences)
         self.style.currentIndexChanged.connect(self._save_preferences)
         self.unit.currentIndexChanged.connect(self._save_preferences)
         self.precision.valueChanged.connect(self._save_preferences)
         self.follow_line.toggled.connect(self._save_preferences)
+        self.mode.currentIndexChanged.connect(lambda *_args: self._update_summary())
+        self.style.currentIndexChanged.connect(lambda *_args: self._update_summary())
+        self.unit.currentIndexChanged.connect(lambda *_args: self._update_summary())
+        self.precision.valueChanged.connect(lambda *_args: self._update_summary())
 
         # Compatibility aliases retained for callers from the functional E15
         # surface. They are actions now, not duplicate visible buttons.
@@ -169,6 +180,7 @@ class CreatePage(QtWidgets.QWidget):
         self.clear_orphans = self.clear_orphans_action
         self.delete_all = self.delete_all_action
         self._restore_preferences()
+        self._update_summary()
         self.guide.setVisible(not self._setting_bool("onboarding/seen", False))
 
     @property
@@ -192,6 +204,15 @@ class CreatePage(QtWidgets.QWidget):
     def hide_guide(self) -> None:
         self.guide.setVisible(False)
         self._preferences.setValue("onboarding/seen", True)
+
+    def _update_summary(self) -> None:
+        tool = "uma medida" if self.tool_choice.value() == "single" else "várias medidas"
+        plane = "planta" if self.plane_choice.value() == "worldXY" else "fachada/vista"
+        unit = str(self.unit.currentText() or "unidade padrão").lower()
+        self.selection_summary.setText(
+            "Pronto para cotar: %s · %s · %s. Você poderá ajustar detalhes depois."
+            % (plane, tool, unit)
+        )
 
     def _restore_preferences(self) -> None:
         self.tool_choice.set_value(str(self._preferences.value("create/tool", "single")))
@@ -248,6 +269,7 @@ class CreatePage(QtWidgets.QWidget):
         del blocker
         blocker = QtCore.QSignalBlocker(self.follow_line)
         self.follow_line.setChecked(create.text_follows_line)
+        self._update_summary()
         del blocker
 
     def refresh(self) -> None:

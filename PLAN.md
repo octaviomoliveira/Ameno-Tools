@@ -210,7 +210,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   com cinco contratos de paridade; a E18.4 reorganizou Aparência em fluxo
   vertical sem splitter fixo e com quatro contratos novos; a E18.5 aplicou
   shell responsivo com rail compacto, margens adaptativas, cinco larguras e
-  DPI 100–200% sem rolagem horizontal; depois trata primeiro uso,
+  DPI 100–200% sem rolagem horizontal; a E18.6 simplificou Cotar com três
+  passos, resumo vivo e CTA único visível; depois trata primeiro uso,
   ícones, acessibilidade e canary. O E16 permanece congelado e nenhuma interação
   visual pode chamar bridge, cena ou viewport. Plano:
   `plans/2026-09-09-e18-ux-10-10-preview-reativo.md`; ADR 0027.
@@ -251,11 +252,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   `01e32cd`; os dois defeitos foram convertidos em RED reproduzíveis e a
   evidência está em `work/e18-baseline/README.md`.
 
-- **E18.1–E18.5 concluídas; E18.6 em execução:** draft local, controles slider +
+- **E18.1–E18.6 concluídas; E18.7 em execução:** draft local, controles slider +
   número, geometria pura/paridade da prévia, fluxo vertical da Aparência e
-  shell responsivo estão implementados e testados, incluindo DPI 100–200% e
-  zero rolagem horizontal. Próximo passo é simplificar o fluxo Cotar para o
-  primeiro uso sem treinamento.
+  shell responsivo e fluxo Cotar guiado estão implementados e testados,
+  incluindo DPI 100–200%, zero rolagem horizontal e CTA no primeiro viewport.
+  Próximo passo é igualar o microcopy e a hierarquia das páginas auxiliares.
 
 - **E17 não deve ser promovida:** preservar o backup
   `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`; não fazer
