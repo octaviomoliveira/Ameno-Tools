@@ -212,7 +212,7 @@ class AmenoMainWindow(QtWidgets.QMainWindow):
         self.setObjectName("AmenoMainWindow")
         self.setWindowFlags(QtCore.Qt.WindowType.Window | QtCore.Qt.WindowType.WindowMinimizeButtonHint | QtCore.Qt.WindowType.WindowMaximizeButtonHint | QtCore.Qt.WindowType.WindowCloseButtonHint)
         self.setMinimumSize(780, 560)
-        self.resize(980, 720)
+        self.resize(1280, 720)
         self.setWindowIcon(icon("brand/ameno-symbol-red.png"))
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose, True)
         self._authenticate = authenticate
@@ -237,6 +237,17 @@ class AmenoMainWindow(QtWidgets.QMainWindow):
                 self.restoreGeometry(geometry)
             except Exception:
                 pass
+        # Open in the comfortable horizontal workspace approved in the real
+        # Max host. Preserve the restored position, but normalize the opening
+        # size so an older narrow saved geometry cannot squeeze Estilo again.
+        screen = self.screen() or QtGui.QGuiApplication.primaryScreen()
+        if screen is not None:
+            available = screen.availableGeometry().size()
+            width = max(780, min(1280, available.width() - 24))
+            height = max(560, min(720, available.height() - 24))
+            self.resize(width, height)
+        else:
+            self.resize(1280, 720)
         maximized = preferences.value("window/maximized", False)
         if isinstance(maximized, str):
             maximized = maximized.strip().lower() in ("1", "true", "yes", "on")

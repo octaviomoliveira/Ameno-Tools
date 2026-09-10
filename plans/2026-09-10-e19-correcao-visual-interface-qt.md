@@ -303,13 +303,21 @@ comprovado antes de alterar as demais páginas.
    ação principal e um estado por página. Remover termos de implementação e
    uniformizar ícones, espaços e foco.
 
-**Progresso E19.3:** itens 1 e 2 implementados; 66/66 testes Python passaram,
+**Progresso E19.3:** itens 1 e 2 implementados; 67/67 testes Python passaram,
 incluindo layout 980x720/780x560, quatro escalas de DPI, prévia local sem bridge
 e rodapé fixo. Após os primeiros gates no Max, a divisão foi ajustada para 7:4
 em favor da coluna técnica. O gate agora exige ao menos 440 px úteis nos
 controles e 265 px nos campos principais em 980x720; abaixo de 780 px úteis da
 página, a prévia sobe antes que qualquer campo seja cortado. Itens 3 a 6 e a
 repetição do gate dentro do Max continuam pendentes.
+
+Complemento após o gate real: a janela passa a abrir em 1280x720, limitada à
+área útil do monitor, mesmo quando existir geometria estreita de uma sessão
+anterior. Bibliotecas antigas que possuíam somente o estilo Arquitetônico
+recebem os presets Editorial e Técnico sem sobrescrever estilos personalizados
+e sem duplicar registros em aberturas posteriores. O conjunto local passou a
+67 testes Python; a migração host-side possui teste MaxScript dedicado e ainda
+precisa ser executada com o Max fechado.
 
 **Gate E19.3:** todas as páginas passam os contratos de Cotar e todas as ações
 funcionais anteriores continuam alcançáveis.

@@ -48,6 +48,16 @@ def _window(width: int, height: int):
     return window
 
 
+def test_window_opens_in_comfortable_horizontal_workspace() -> None:
+    app = _app()
+    window = AmenoMainWindow(StyleBridge(), lambda _token: None, lambda: None)
+    available = (window.screen() or QtGui.QGuiApplication.primaryScreen()).availableGeometry().size()
+    assert window.width() == max(780, min(1280, available.width() - 24))
+    assert window.height() == max(560, min(720, available.height() - 24))
+    window.close()
+    app.processEvents()
+
+
 def test_style_workspace_keeps_preview_and_footer_fixed_at_980x720() -> None:
     app = _app()
     window = _window(980, 720)

@@ -261,6 +261,36 @@ struct AmenoStyleServiceDefinition
         presets
     ),
 
+    fn hasStyleId styleList styleId =
+    (
+        if styleList == undefined or styleId == undefined or styleId == "" then return false
+        for styleRecord in styleList where styleRecord != undefined and styleRecord.styleId == styleId do return true
+        false
+    ),
+
+    fn ensureBuiltInPresets persist:true =
+    (
+        -- Bibliotecas criadas por versões antigas podem conter apenas o
+        -- Arquitetônico. Acrescente somente presets ausentes; nunca substitua
+        -- um preset que o usuário já editou na cena ou na biblioteca global.
+        local changed = false
+        local presets = createDefaultPresets()
+        for preset in presets do
+        (
+            if not (hasStyleId styles preset.styleId) and not (hasStyleId globalStyles preset.styleId) do
+            (
+                append globalStyles (cloneStyle preset)
+                changed = true
+            )
+        )
+        if changed and persist do
+        (
+            if not (saveGlobalLibrary()) and ::AmenoLog != undefined do
+                try (::AmenoLog.warn "Os presets internos foram carregados, mas não puderam ser persistidos na biblioteca global.") catch ()
+        )
+        changed
+    ),
+
     fn cloneStyle style =
     (
         if style == undefined then return undefined
@@ -521,6 +551,7 @@ struct AmenoStyleServiceDefinition
                 styles = createDefaultPresets()
                 cachedSerialized = serializeStyles()
             )
+            ensureBuiltInPresets()
             true
         )
         catch
