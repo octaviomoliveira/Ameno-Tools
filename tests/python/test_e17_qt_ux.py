@@ -134,13 +134,13 @@ def test_all_previous_commands_remain_reachable_without_extra_primary_actions() 
     create = window.shell.pages["create"]
     create_actions = {action.text() for action in create.more_menu.actions() if not action.isSeparator()}
     assert {
-        "Atualizar estado da cena",
-        "Preparar cena",
         "Reparar todas as cotas",
         "Excluir cotas selecionadas…",
         "Limpar cotas órfãs…",
         "Excluir todas as cotas…",
     } == create_actions
+    assert create.prepare_button.isVisibleTo(create)
+    assert create.prepare_button.text() == "Preparar cena"
     primary_counts = {}
     for key, page in window.shell.pages.items():
         primary_counts[key] = sum(

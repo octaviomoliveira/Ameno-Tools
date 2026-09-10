@@ -98,7 +98,7 @@ class CreatePage(QtWidgets.QWidget):
         self.precision.setSuffix(" casas")
         self.follow_line = QtWidgets.QCheckBox("Texto acompanha a linha")
         self.follow_line.setChecked(True)
-        details_form.addRow("Aparência", self.style)
+        details_form.addRow("Estilo", self.style)
         details_form.addRow("Unidade", self.unit)
         details_form.addRow("Precisão", self.precision)
         details_form.addRow("Texto", self.follow_line)
@@ -120,6 +120,10 @@ class CreatePage(QtWidgets.QWidget):
         self.selection_summary.setObjectName("SelectionSummary")
         self.selection_summary.setWordWrap(True)
         state_copy.addWidget(self.selection_summary)
+        self.prepare_button = button("Preparar cena", self.prepare_scene)
+        self.prepare_button.setAccessibleName("Preparar cena e criar as layers de cotas")
+        self.prepare_button.setMinimumWidth(142)
+        state_copy.addWidget(self.prepare_button, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         action_layout.addLayout(state_copy, 1)
         action_layout.addWidget(self._vertical_rule())
         scene_meta = QtWidgets.QVBoxLayout()
@@ -147,9 +151,6 @@ class CreatePage(QtWidgets.QWidget):
         self.more_button.setMinimumHeight(40)
         self.more_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.more_menu = QtWidgets.QMenu(self.more_button)
-        self.refresh_action = self.more_menu.addAction("Atualizar estado da cena")
-        self.prepare_action = self.more_menu.addAction("Preparar cena")
-        self.more_menu.addSeparator()
         self.repair_action = self.more_menu.addAction("Reparar todas as cotas")
         self.delete_selection_action = self.more_menu.addAction("Excluir cotas selecionadas…")
         self.clear_orphans_action = self.more_menu.addAction("Limpar cotas órfãs…")
@@ -166,8 +167,6 @@ class CreatePage(QtWidgets.QWidget):
         root.addWidget(self.status)
         root.addStretch(1)
 
-        self.refresh_action.triggered.connect(self.refresh)
-        self.prepare_action.triggered.connect(self.prepare_scene)
         self.repair_action.triggered.connect(self.repair_all)
         self.delete_selection_action.triggered.connect(self.delete_selected)
         self.clear_orphans_action.triggered.connect(self.clear_orphan_dimensions)
@@ -195,8 +194,8 @@ class CreatePage(QtWidgets.QWidget):
         # surface. They are actions now, not duplicate visible buttons.
         self.individual = self.start_button
         self.continuous = self.start_button
-        self.prepare = self.prepare_action
-        self.refresh_button = self.refresh_action
+        self.prepare = self.prepare_button
+        self.refresh_button = None
         self.repair = self.repair_action
         self.delete_selection = self.delete_selection_action
         self.clear_orphans = self.clear_orphans_action
@@ -382,7 +381,7 @@ class CreatePage(QtWidgets.QWidget):
             return False
 
     def _set_busy(self, busy: bool) -> None:
-        for control in (self.start_button, self.more_button, self.tool_choice, self.plane_choice, self.details):
+        for control in (self.start_button, self.prepare_button, self.more_button, self.tool_choice, self.plane_choice, self.details):
             control.setEnabled(not busy)
 
     def _run_tool(self, continuous: bool) -> None:

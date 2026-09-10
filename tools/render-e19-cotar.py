@@ -44,15 +44,24 @@ def main() -> None:
     page.tool_choice.set_value("continuous", emit=True)
     window.show()
     app.processEvents()
-    image = QtGui.QImage(window.size(), QtGui.QImage.Format.Format_ARGB32)
-    image.fill(QtGui.QColor("#0A0A0A"))
-    window.render(image)
-    target = OUTPUT / "01-cotar-980x720.png"
-    if not image.save(str(target)):
-        raise RuntimeError("Falha ao salvar " + str(target))
+    targets = []
+    for width, height, name in (
+        (980, 720, "01-cotar-980x720.png"),
+        (780, 720, "05-cotar-default-780x720.png"),
+    ):
+        window.resize(width, height)
+        app.processEvents()
+        image = QtGui.QImage(window.size(), QtGui.QImage.Format.Format_ARGB32)
+        image.fill(QtGui.QColor("#0A0A0A"))
+        window.render(image)
+        target = OUTPUT / name
+        if not image.save(str(target)):
+            raise RuntimeError("Falha ao salvar " + str(target))
+        targets.append(target)
     window.close()
     app.processEvents()
-    print(target)
+    for target in targets:
+        print(target)
 
 
 if __name__ == "__main__":

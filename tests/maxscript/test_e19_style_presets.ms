@@ -21,8 +21,16 @@ try
     local customized = service.cloneStyle presets[1]
     customized.name = "Arquitetônico personalizado"
     customized.fontSize = 276.0
-    service.styles = #(customized)
-    service.globalStyles = #()
+    local ghost = service.cloneStyle presets[1]
+    ghost.styleId = "style-legacy-ameno-01"
+    ghost.name = "Ameno_01"
+    service.styles = #(customized, ghost)
+    service.globalStyles = #(service.cloneStyle ghost)
+
+    local removed = service.removeLegacyGhostStyles persist:false
+    if not removed do throw "E19: limpeza não detectou Ameno_01."
+    if service.styles.count != 1 or service.globalStyles.count != 0 do throw "E19: Ameno_01 permaneceu na biblioteca."
+    if service.styles[1].name != "Arquitetônico personalizado" do throw "E19: limpeza removeu um estilo legítimo."
 
     local changed = service.ensureBuiltInPresets persist:false
     if not changed do throw "E19: migração não detectou presets ausentes."

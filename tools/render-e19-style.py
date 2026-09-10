@@ -48,6 +48,7 @@ def main() -> None:
     for width, height, name in (
         (980, 720, "02-estilo-980x720.png"),
         (780, 560, "03-estilo-780x560.png"),
+        (780, 720, "04-estilo-default-780x720.png"),
     ):
         window.resize(width, height)
         app.processEvents()

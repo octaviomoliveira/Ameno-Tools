@@ -456,6 +456,29 @@ struct AmenoStyleServiceDefinition
         )
     ),
 
+    fn isLegacyGhostStyle styleRecord =
+    (
+        styleRecord != undefined and styleRecord.name != undefined and (stricmp (styleRecord.name as string) "Ameno_01") == 0
+    ),
+
+    fn removeLegacyGhostStyles persist:true =
+    (
+        -- Ameno_01 foi criado por uma versão intermediária sem um perfil
+        -- correspondente. Remova apenas esse nome exato e preserve todo o
+        -- restante da biblioteca do usuário.
+        local sceneBefore = styles.count
+        local globalBefore = globalStyles.count
+        styles = for styleRecord in styles where not (isLegacyGhostStyle styleRecord) collect (cloneStyle styleRecord)
+        globalStyles = for styleRecord in globalStyles where not (isLegacyGhostStyle styleRecord) collect (cloneStyle styleRecord)
+        local changed = styles.count != sceneBefore or globalStyles.count != globalBefore
+        if changed and persist do
+        (
+            if not (saveGlobalLibrary()) and ::AmenoLog != undefined do
+                try (::AmenoLog.warn "O perfil legado Ameno_01 foi removido da sessão, mas a biblioteca global não pôde ser atualizada.") catch ()
+        )
+        changed
+    ),
+
     fn ensureBuiltInPresets persist:true =
     (
         -- Bibliotecas criadas por versões antigas podem conter apenas o
@@ -551,6 +574,7 @@ struct AmenoStyleServiceDefinition
                 styles = createDefaultPresets()
                 cachedSerialized = serializeStyles()
             )
+            removeLegacyGhostStyles()
             ensureBuiltInPresets()
             true
         )
