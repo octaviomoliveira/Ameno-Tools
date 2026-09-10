@@ -2,8 +2,8 @@
 
 Data: 2026-09-09
 
-Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0–E18.3
-concluídas. Próximo checkpoint: E18.4.
+Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0–E18.4
+concluídas. Próximo checkpoint: E18.5.
 
 Base obrigatória: branch `feature/e17-ameno-ux`, commit `01e32cd`. Criar uma
 branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
@@ -33,8 +33,12 @@ Aparência; só então aplicar responsividade e polimento ao restante do produto
   extensões, afastamento, prolongamento, recuo, terminais, texto, máscara,
   cores, escala, fonte, tracking e peso. Cinco contratos geométricos passaram;
   a prévia renderizada também permanece sem objetos de cena.
-- **E18.4 — próxima:** reorganizar Aparência em estilo, preview e ajustes,
-  preservando draft e aplicação explícita.
+- **E18.4 — concluída (2026-09-09):** Aparência deixou o splitter de mínimos
+  conflitantes e passou a um fluxo vertical com Estilo atual, Prévia 2D, Texto,
+  ajustes avançados e ações explícitas. Empty state continua editável e quatro
+  contratos de estrutura/fluxo passaram.
+- **E18.5 — próxima:** aplicar breakpoints ao shell inteiro e eliminar clipping
+  em todas as páginas.
 
 ## 1. Objetivo
 
@@ -633,5 +637,5 @@ fechados e após backup recuperável.
 - Implementação E18: não iniciada.
 - E17: gates técnicos verdes, mas aceite visual humano reprovado.
 - E16: baseline de desempenho obrigatório e congelado.
-- Próxima ação do executor: E18.4, redesenhando a página Aparência sem
-  reintroduzir mínimos horizontais ou ações ambíguas.
+- Próxima ação do executor: E18.5, aplicando breakpoints ao shell e removendo
+  a rolagem horizontal da janela mínima em todas as páginas.
