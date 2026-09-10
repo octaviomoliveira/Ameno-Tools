@@ -129,6 +129,7 @@ class StylesPage(QtWidgets.QWidget):
         self.new_button = button("Novo estilo", self.new_style)
         self.style_more = QtWidgets.QToolButton()
         self.style_more.setText("Mais  ···")
+        self.style_more.setAccessibleName("Mais ações de estilo")
         self.style_more.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.style_menu = QtWidgets.QMenu(self.style_more)
         self.refresh_action = self.style_menu.addAction("Atualizar lista")
@@ -225,6 +226,7 @@ class StylesPage(QtWidgets.QWidget):
         self.save_button = button("Salvar alterações", self.save_style, primary=True)
         self.apply_button = QtWidgets.QToolButton()
         self.apply_button.setText("Aplicar estilo  ▾")
+        self.apply_button.setAccessibleName("Aplicar estilo")
         self.apply_button.setMinimumHeight(40)
         self.apply_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.apply_menu = QtWidgets.QMenu(self.apply_button)
@@ -243,7 +245,14 @@ class StylesPage(QtWidgets.QWidget):
         root.addWidget(self.status)
 
         self._connect_dirty_signals()
+        self.draft.dirty_changed.connect(self._draft_state_changed)
         self._load_form(self.draft.to_snapshot())
+
+    def _draft_state_changed(self, dirty: bool) -> None:
+        if dirty:
+            self.status.setText("Alterações locais não salvas. Salve o estilo quando estiver pronto.")
+        elif not self.status.property("error"):
+            self.status.setText("Rascunho local sincronizado.")
 
     def _connect_dirty_signals(self) -> None:
         # Conecte cada sinal explicitamente. Alguns SignalInstance de Qt têm

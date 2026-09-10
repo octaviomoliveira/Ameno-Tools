@@ -64,6 +64,7 @@ class ParameterControl(QtWidgets.QWidget):
         self.spinbox.setSuffix((" " + spec.unit) if spec.unit else "")
         self.spinbox.setAccessibleName(spec.label + ((" (" + spec.unit + ")") if spec.unit else ""))
         self.spinbox.setToolTip(spec.description or spec.label)
+        self.spinbox.installEventFilter(self)
         layout.addWidget(self.spinbox)
 
         self.reset_button = QtWidgets.QToolButton()
@@ -115,6 +116,15 @@ class ParameterControl(QtWidgets.QWidget):
 
     def _spin_changed(self, value: float) -> None:
         self._set_value(value, emit=True)
+
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802 - Qt API
+        if (
+            watched is self.spinbox
+            and event.type() == QtCore.QEvent.Type.Wheel
+            and not self.spinbox.hasFocus()
+        ):
+            return True
+        return super().eventFilter(watched, event)
 
     def value(self) -> float:
         return float(self.spinbox.value())

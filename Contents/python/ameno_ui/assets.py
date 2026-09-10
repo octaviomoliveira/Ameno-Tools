@@ -39,5 +39,14 @@ def pixmap(relative: str, width: int = 0, height: int = 0) -> Optional[QtGui.QPi
 
 
 def icon(relative: str) -> QtGui.QIcon:
-    source = pixmap(relative)
-    return QtGui.QIcon(source) if source is not None else QtGui.QIcon()
+    path = asset_path(relative)
+    source = QtGui.QIcon(str(path))
+    if not source.isNull():
+        return source
+    # Keep a usable icon if an optional SVG plugin/asset is unavailable.
+    fallback = pixmap("brand/ameno-symbol-red.png")
+    return QtGui.QIcon(fallback) if fallback is not None else QtGui.QIcon()
+
+
+def nav_icon(name: str) -> QtGui.QIcon:
+    return icon("icons/%s.svg" % name)

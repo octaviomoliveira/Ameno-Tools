@@ -174,6 +174,10 @@ QPushButton[nav="true"]:checked {
     color: %(white)s;
     font-weight: 600;
 }
+QPushButton[nav="true"][compact="true"] {
+    padding: 4px 0;
+    text-align: center;
+}
 QPushButton[choice="true"] {
     background-color: %(secondary)s;
     border: 1px solid %(border)s;
@@ -198,6 +202,21 @@ QCheckBox { spacing: 8px; }
 QCheckBox::indicator { width: 16px; height: 16px; }
 QCheckBox::indicator:unchecked { background: %(secondary)s; border: 1px solid #4A4A4A; border-radius: 3px; }
 QCheckBox::indicator:checked { background: %(red)s; border: 1px solid %(red)s; border-radius: 3px; }
+QSlider::groove:horizontal {
+    height: 4px;
+    background: #2A2A2A;
+    border-radius: 2px;
+}
+QSlider::sub-page:horizontal { background: %(red)s; border-radius: 2px; }
+QSlider::add-page:horizontal { background: #2A2A2A; border-radius: 2px; }
+QSlider::handle:horizontal {
+    width: 14px;
+    margin: -5px 0;
+    background: %(text)s;
+    border: 1px solid %(red)s;
+    border-radius: 7px;
+}
+QSlider:disabled { opacity: 0.55; }
 QListWidget {
     background-color: %(secondary)s;
     border: 1px solid %(border)s;

@@ -20,7 +20,7 @@ class ConfigPage(QtWidgets.QWidget):
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(30, 26, 30, 30)
         root.setSpacing(14)
-        root.addWidget(PageHeader("Configuração", "Conta, ambiente e informações para suporte.", "AMENO"))
+        root.addWidget(PageHeader("Configuração", "Conta, ambiente e diagnóstico para suporte. O token nunca é salvo.", "AMENO"))
 
         account_box = group("Conta")
         account_layout = QtWidgets.QVBoxLayout(account_box)
@@ -31,6 +31,7 @@ class ConfigPage(QtWidgets.QWidget):
         privacy.setObjectName("Muted")
         account_layout.addWidget(privacy)
         self.logout_button = button("Sair da conta", self._logout)
+        self.logout_button.setAccessibleName("Sair da conta Ameno")
         account_layout.addWidget(self.logout_button, 0)
         root.addWidget(account_box)
 

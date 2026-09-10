@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Callable, Dict, Optional
 
 from .bridge import BridgeError, UiBridge
-from .assets import icon
+from .assets import icon, nav_icon
 from .components import BrandImage
 from .config_page import ConfigPage
 from .create_page import CreatePage
@@ -32,6 +32,13 @@ class AppShell(QtWidgets.QWidget):
             "edit": "Revisar",
             "render": "Exportar",
             "config": "Configuração",
+        }
+        self._nav_icons = {
+            "create": "cotar",
+            "styles": "aparencia",
+            "edit": "revisar",
+            "render": "exportar",
+            "config": "configuracao",
         }
         self.pages: Dict[str, QtWidgets.QWidget] = {}
         self.page_views: Dict[str, QtWidgets.QScrollArea] = {}
@@ -64,6 +71,7 @@ class AppShell(QtWidgets.QWidget):
             page_button.setProperty("nav", True)
             page_button.setAccessibleName(label)
             page_button.setToolTip(label)
+            page_button.setIcon(nav_icon(self._nav_icons[key]))
             self.nav.addButton(page_button)
             self._nav_by_key[key] = page_button
             side_layout.addWidget(page_button)
@@ -74,6 +82,7 @@ class AppShell(QtWidgets.QWidget):
         help_button.setProperty("nav", True)
         help_button.setAccessibleName("Como começar")
         help_button.setToolTip("Como começar")
+        help_button.setIcon(nav_icon("ajuda"))
         help_button.clicked.connect(self.show_help)
         side_layout.addWidget(help_button)
         config_button = QtWidgets.QPushButton("Configuração")
@@ -81,6 +90,8 @@ class AppShell(QtWidgets.QWidget):
         config_button.setMinimumHeight(36)
         config_button.setProperty("nav", True)
         config_button.setAccessibleName("Configuração")
+        config_button.setToolTip("Configuração")
+        config_button.setIcon(nav_icon(self._nav_icons["config"]))
         self.nav.addButton(config_button)
         self._nav_by_key["config"] = config_button
         config_button.clicked.connect(lambda checked=False: self.show_page("config"))
@@ -127,10 +138,21 @@ class AppShell(QtWidgets.QWidget):
         for page in self.pages.values():
             apply_page_margins(page, spec)
         for key, widget in self._nav_by_key.items():
-            widget.setText(key[0].upper() if compact else self._nav_labels[key])
+            widget.setText("" if compact else self._nav_labels[key])
             widget.setToolTip(self._nav_labels[key])
             widget.setMinimumHeight(40 if compact else 36)
+            widget.setIconSize(QtCore.QSize(22 if compact else 18, 22 if compact else 18))
+            widget.setProperty("compact", compact)
+        # Re-evaluate the dynamic compact selector once per breakpoint. Calling
+        # ``widget.style().unpolish/polish`` is unsafe in 3ds Max's embedded
+        # Qt: the transient QStyle wrapper can already be deleted while the
+        # shell is being constructed. Reapplying the window-scoped stylesheet
+        # keeps the same widget tree and avoids that dangling wrapper.
+        owner = self.window()
+        if owner is not None and owner.styleSheet():
+            owner.setStyleSheet(owner.styleSheet())
         self.help_button.setText("?" if compact else "?  Como começar")
+        self.help_button.setIconSize(QtCore.QSize(22 if compact else 18, 22 if compact else 18))
         self.help_button.setToolTip("Como começar")
 
     def show_page(self, name: str, refresh: bool = False) -> None:

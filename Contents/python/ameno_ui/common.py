@@ -7,6 +7,7 @@ from .qt_compat import QtCore, QtGui, QtWidgets
 
 def button(text: str, slot=None, primary: bool = False) -> QtWidgets.QPushButton:
     widget = QtWidgets.QPushButton(text)
+    widget.setAccessibleName(text.replace("…", "").strip())
     widget.setMinimumHeight(32)
     if primary:
         widget.setProperty("primary", True)

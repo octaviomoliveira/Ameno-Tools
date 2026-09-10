@@ -60,6 +60,8 @@ class StyleDraft(QtCore.QObject):
                 return int(round(number))
             return number
         if name in ("bold", "italic", "text_mask_enabled"):
+            if isinstance(value, str):
+                return value.strip().lower() in ("1", "true", "yes", "on", "sim")
             return bool(value)
         if name in cls._ENUMS:
             candidate = str(value or "")

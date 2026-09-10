@@ -2,8 +2,9 @@
 
 Data: 2026-09-09
 
-Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0–E18.6
-concluídas. Próximo checkpoint: E18.7.
+Status: execução na branch `feature/e18-ux-10-10`; E18.0–E18.10
+concluídas. E18.11 está em validação canary no Max 2026; promoção continua
+bloqueada até o aceite humano.
 
 Base obrigatória: branch `feature/e17-ameno-ux`, commit `01e32cd`. Criar uma
 branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
@@ -46,8 +47,28 @@ Aparência; só então aplicar responsividade e polimento ao restante do produto
   resumo vivo de planta/fachada e individual/contínua, CTA único, detalhes
   depois da ação e escolha de estilo preservada. Três contratos de primeiro uso
   passaram, incluindo CTA visível na janela padrão.
-- **E18.7 — próxima:** revisar microcopy e ação principal de Revisar,
-  Exportar, Login e Configuração.
+- **E18.7 — concluída (2026-09-09):** microcopy acionável e accessible names
+  adicionados a Login, Revisar, Exportar e Configuração; três contratos de
+  páginas auxiliares passaram e navegação continua local.
+- **E18.8 — concluída (2026-09-09):** seis ícones SVG próprios, carregamento
+  por `nav_icon()` com fallback de marca, rail compacto com ícone/tooltip e
+  navegação ampla com ícone + rótulo; três contratos de assets passaram.
+- **E18.9 — concluída (2026-09-09):** wheel sem foco bloqueado, accessible
+  names, indicador de draft, p95 de 1.000 alterações abaixo de 20 ms, zero
+  bridge/timer e árvore estável em 100 ciclos; quatro contratos de qualidade
+  passaram.
+- **E18.10 — concluída (2026-09-09):** 56 testes Python PASS; matriz Max
+  E12–E18 com 19/19 suítes PASS; galeria em `work/e18-visual`; manifesto e
+  pacote canary validados sem WPF/cache, com SHA-256
+  `77F74901242A51CD5156F06617B67F2111FB377806ED35CAC473A661CA30473C`.
+  O host gate também encontrou e corrigiu dois riscos reais: chamadas
+  `QStyle.unpolish/polish` incompatíveis com o wrapper Qt embarcado e largura
+  natural de páginas que criava overflow no rail compacto.
+- **E18.11 — em andamento (2026-09-09):** backup recuperável criado em
+  `D:\Ameno\backups\AmenoTools-before-e18-canary-20260909-232710`, canary
+  instalado em `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`,
+  hashes dos módulos/ícones conferidos e smoke instalado PASS. Falta o uso
+  manual no Max 2026 e o aceite com profissionais; não fazer push ou promoção.
 
 ## 1. Objetivo
 
@@ -438,7 +459,7 @@ hierarquia quando uma fonte ou SVG falhar.
 5. Adicionar testes de responsive e DPI.
 6. Adicionar teste de árvore estável em resize/navegação.
 7. Rodar toda a suíte Python.
-8. Rodar as 18 suítes MaxScript E12–E17/E18 e métricas E16.
+8. Rodar as 19 suítes MaxScript E12–E17/E18 e métricas E16.
 9. Gerar galeria visual e manifesto SHA-256.
 10. Empacotar canary excluindo WPF, caches, evidência e arquivos de trabalho.
 
@@ -566,6 +587,7 @@ Novos:
 - `tests/python/test_e18_responsive_layout.py`
 - `tests/python/test_e18_accessibility_performance.py`
 - `tests/maxscript/test_e18_qt_host.ms`
+- `tests/maxscript/test_e18_installed_host.ms`
 
 Alterações prováveis:
 
@@ -643,9 +665,10 @@ fechados e após backup recuperável.
 ## 15. Estado ao encerrar este planejamento
 
 - Plano técnico e de produto: pronto.
-- Implementação E18: E18.0–E18.6 implementadas na branch; canary ainda não
-  instalado nem submetido ao aceite humano.
+- Implementação E18: E18.0–E18.10 concluídas na branch; canary instalado e
+  validado por smoke no Max 2026, ainda sem aceite humano.
 - E17: gates técnicos verdes, mas aceite visual humano reprovado.
 - E16: baseline de desempenho obrigatório e congelado.
-- Próxima ação do executor: E18.7, tornando Revisar, Exportar, Login e
-  Configuração igualmente autoexplicativos.
+- Próxima ação do executor: E18.11.5–E18.11.8, executar a matriz manual no Max
+  2026, registrar hesitações/erros e só então decidir correções e eventual
+  promoção explícita.

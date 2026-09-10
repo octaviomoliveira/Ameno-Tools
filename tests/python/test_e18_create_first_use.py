@@ -50,6 +50,7 @@ def test_first_use_has_one_cta_and_summary_follows_choices() -> None:
 
 def test_cta_is_visible_in_default_window_without_scrolling() -> None:
     app = _app()
+    os.environ["AMENO_SETTINGS_FILE"] = str(Path(tempfile.mkdtemp()) / "cta-window.ini")
     window = AmenoMainWindow(CreateBridge(), lambda _token: None, lambda: None)
     window.resize(980, 720)
     window.show_application("create")

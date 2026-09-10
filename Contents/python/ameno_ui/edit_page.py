@@ -23,7 +23,7 @@ class EditPage(QtWidgets.QWidget):
         root.addWidget(
             PageHeader(
                 "Revisar",
-                "Selecione uma cota na viewport e atualize a leitura para revisar ou corrigir o valor exibido.",
+                "Selecione uma cota na viewport. Leia a medida, corrija o texto e aplique somente quando estiver pronto.",
                 "EDIÇÃO",
             )
         )
@@ -31,6 +31,7 @@ class EditPage(QtWidgets.QWidget):
         refresh_row = QtWidgets.QHBoxLayout()
         refresh_row.addStretch(1)
         self.refresh_button = button("Ler seleção atual", self.refresh)
+        self.refresh_button.setAccessibleName("Ler seleção atual na viewport")
         refresh_row.addWidget(self.refresh_button)
         root.addLayout(refresh_row)
 
@@ -111,8 +112,10 @@ class EditPage(QtWidgets.QWidget):
 
         actions = QtWidgets.QHBoxLayout()
         self.apply_button = button("Aplicar alteração", self.apply, primary=True)
+        self.apply_button.setAccessibleName("Aplicar alteração à cota")
         self.more_button = QtWidgets.QToolButton()
         self.more_button.setText("Mais ações  ···")
+        self.more_button.setAccessibleName("Mais ações de revisão")
         self.more_button.setMinimumHeight(40)
         self.more_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.more_menu = QtWidgets.QMenu(self.more_button)
@@ -128,7 +131,7 @@ class EditPage(QtWidgets.QWidget):
         root.addWidget(self.selection_stack)
 
         self.status = message_label()
-        self.status.setText("Selecione uma cota e atualize a leitura quando estiver pronto.")
+        self.status.setText("Selecione uma cota e clique em Ler seleção atual quando estiver pronto.")
         root.addWidget(self.status)
         root.addStretch(1)
         self.mode.currentIndexChanged.connect(self._update_enabled)

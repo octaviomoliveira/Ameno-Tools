@@ -22,7 +22,7 @@ class RenderPage(QtWidgets.QWidget):
         root.addWidget(
             PageHeader(
                 "Exportar",
-                "Gere um PNG das cotas para composição, revisão ou entrega.",
+                "Escolha o arquivo e o que incluir. O renderer só será consultado ao atualizar ou exportar.",
                 "SAÍDA",
             )
         )
@@ -58,8 +58,10 @@ class RenderPage(QtWidgets.QWidget):
 
         actions = QtWidgets.QHBoxLayout()
         self.render_button = button("Exportar PNG", self.render, primary=True)
+        self.render_button.setAccessibleName("Exportar cotas em PNG")
         self.more_button = QtWidgets.QToolButton()
         self.more_button.setText("Mais ações  ···")
+        self.more_button.setAccessibleName("Mais ações de exportação")
         self.more_button.setMinimumHeight(40)
         self.more_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.more_menu = QtWidgets.QMenu(self.more_button)
@@ -74,7 +76,7 @@ class RenderPage(QtWidgets.QWidget):
         actions.addWidget(self.more_button)
         root.addLayout(actions)
         self.status = message_label()
-        self.status.setText("Escolha o arquivo. O renderer será consultado apenas ao atualizar ou exportar.")
+        self.status.setText("Escolha um arquivo de saída e revise o escopo antes de exportar.")
         root.addWidget(self.status)
         root.addStretch(1)
 

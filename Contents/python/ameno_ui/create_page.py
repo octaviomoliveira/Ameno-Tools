@@ -25,7 +25,9 @@ class CreatePage(QtWidgets.QWidget):
 
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(30, 26, 30, 30)
-        root.setSpacing(14)
+        # Keep the primary CTA inside the first viewport at the default
+        # 980x720 shell size, including when the onboarding card is visible.
+        root.setSpacing(8)
         root.addWidget(
             PageHeader(
                 "Cotar",
@@ -37,7 +39,7 @@ class CreatePage(QtWidgets.QWidget):
         self.guide = QtWidgets.QFrame()
         self.guide.setObjectName("Card")
         guide_layout = QtWidgets.QVBoxLayout(self.guide)
-        guide_layout.setSpacing(8)
+        guide_layout.setSpacing(4)
         guide_layout.addWidget(SectionHeading("Como começar", "Escolha, inicie e siga a mensagem da viewport."))
         guide_text = QtWidgets.QLabel(
             "1. Onde está o desenho?  2. O que você quer medir?  "
@@ -46,9 +48,6 @@ class CreatePage(QtWidgets.QWidget):
         )
         guide_text.setWordWrap(True)
         guide_layout.addWidget(guide_text)
-        dismiss = button("Entendi", self.hide_guide)
-        dismiss.setProperty("quiet", True)
-        guide_layout.addWidget(dismiss, 0, QtCore.Qt.AlignmentFlag.AlignRight)
         root.addWidget(self.guide)
 
         intent_box = group("O que você vai cotar?")
@@ -62,7 +61,6 @@ class CreatePage(QtWidgets.QWidget):
             )
         )
         intent_layout.addWidget(self.tool_choice)
-        intent_layout.addSpacing(5)
         intent_layout.addWidget(SectionHeading("Onde está o desenho?"))
         self.plane_choice = ChoiceGroup(
             (
@@ -127,6 +125,7 @@ class CreatePage(QtWidgets.QWidget):
         self.start_button.setMinimumWidth(260)
         self.more_button = QtWidgets.QToolButton()
         self.more_button.setText("Mais ações  ···")
+        self.more_button.setAccessibleName("Mais ações de cotação")
         self.more_button.setMinimumHeight(40)
         self.more_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.more_menu = QtWidgets.QMenu(self.more_button)
