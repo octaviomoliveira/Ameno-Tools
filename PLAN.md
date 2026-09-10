@@ -202,8 +202,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   (2026-09-09):** runbook preparado para execução no Antigravity em 12 etapas
   e 118 subetapas. A E18.0 já criou a branch isolada e transformou a falha
   da prévia e o overflow de 780×560 em dois testes RED reproduzíveis; a suíte
-  legada permanece em 17/17 PASS. A ordem começa por esses testes, depois
-  introduz um `StyleDraft` sempre válido, preview geométrico puro e controles
+  legada permanece em 17/17 PASS. A E18.1 introduziu o `StyleDraft` sempre
+  válido e integrou a Aparência sem chamadas externas; os contratos unitários
+  passaram. A ordem começa pelos testes, depois implementa preview geométrico
+  puro e controles
   slider + número; depois reorganiza Aparência, shell responsivo, primeiro uso,
   ícones, acessibilidade e canary. O E16 permanece congelado e nenhuma interação
   visual pode chamar bridge, cena ou viewport. Plano:
@@ -245,9 +247,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   `01e32cd`; os dois defeitos foram convertidos em RED reproduzíveis e a
   evidência está em `work/e18-baseline/README.md`.
 
-- **E18.1–E18.3 antes do redesenho:** implementar agora o draft local sempre válido,
-  slider + número e geometria pura da prévia. Aparência só pode ser redesenhada
-  depois que cada parâmetro tiver efeito testável e zero chamadas ao bridge.
+- **E18.1 concluída; E18.2–E18.3 antes do redesenho:** o draft local sempre
+  válido está implementado e testado, sem chamadas ao bridge. Próximo passo é o
+  slider + número e depois a geometria pura da prévia. Aparência só pode ser
+  redesenhada depois que cada parâmetro tiver efeito testável e zero chamadas ao
+  bridge.
 
 - **E17 não deve ser promovida:** preservar o backup
   `D:\Ameno\backups\AmenoTools-before-e17-launcher-20260909-125919`; não fazer

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from typing import Dict, List, Optional
 
 from .bridge import BridgeError, UiBridge
@@ -10,6 +9,7 @@ from .common import button, group, message_label, set_bridge_error, set_message
 from .components import Disclosure, PageHeader, SectionHeading
 from .models import StyleSnapshot
 from .qt_compat import QtCore, QtGui, QtWidgets
+from .style_draft import StyleDraft
 
 
 def color_text_to_qcolor(value: str) -> QtGui.QColor:
@@ -90,6 +90,9 @@ class StylesPage(QtWidgets.QWidget):
         self._styles: List[StyleSnapshot] = []
         self._current: Optional[StyleSnapshot] = None
         self._loading = False
+        # A local draft exists before the style library or the scene is read.
+        # It is the only source used by the form and the 2D preview.
+        self.draft = StyleDraft(parent=self)
 
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(30, 26, 30, 30)
@@ -244,32 +247,54 @@ class StylesPage(QtWidgets.QWidget):
         root.addWidget(self.status)
 
         self._connect_dirty_signals()
+        self._load_form(self.draft.to_snapshot())
 
     def _connect_dirty_signals(self) -> None:
         # Conecte cada sinal explicitamente. Alguns SignalInstance de Qt têm
         # conversão booleana dependente da versão; encadear ``or`` neles pode
         # escolher o sinal errado ou falhar antes mesmo de a janela aparecer.
         signals = (
-            (self.name, "textChanged"),
-            (self.font, "currentFontChanged"),
-            (self.font_size, "valueChanged"),
-            (self.tracking, "valueChanged"),
-            (self.text_gap, "valueChanged"),
-            (self.line_thickness, "valueChanged"),
-            (self.overhang, "valueChanged"),
-            (self.extension_gap, "valueChanged"),
-            (self.terminal, "currentIndexChanged"),
-            (self.terminal_size, "valueChanged"),
-            (self.placement, "currentIndexChanged"),
-            (self.terminal_angle, "valueChanged"),
-            (self.bold, "toggled"),
-            (self.italic, "toggled"),
-            (self.mask, "toggled"),
+            (self.name, "textChanged", "name"),
+            (self.font, "currentFontChanged", "font_name"),
+            (self.font_size, "valueChanged", "font_size"),
+            (self.tracking, "valueChanged", "tracking"),
+            (self.text_gap, "valueChanged", "text_gap"),
+            (self.line_thickness, "valueChanged", "line_thickness"),
+            (self.overhang, "valueChanged", "extension_overhang"),
+            (self.extension_gap, "valueChanged", "extension_gap"),
+            (self.terminal, "currentIndexChanged", "terminal_type"),
+            (self.terminal_size, "valueChanged", "terminal_size"),
+            (self.placement, "currentIndexChanged", "terminal_placement"),
+            (self.terminal_angle, "valueChanged", "terminal_angle"),
+            (self.bold, "toggled", "bold"),
+            (self.italic, "toggled", "italic"),
+            (self.mask, "toggled", "text_mask_enabled"),
         )
-        for widget, signal_name in signals:
+        for widget, signal_name, field_name in signals:
             signal = getattr(widget, signal_name, None)
             if signal is not None:
-                signal.connect(lambda *_args: self.update_preview())
+                signal.connect(
+                    lambda *_args, source=widget, field=field_name: self._form_changed(source, field)
+                )
+        self.draft.changed.connect(lambda *_args: self.update_preview())
+
+    def _form_value(self, widget: QtWidgets.QWidget, field_name: str):
+        if field_name == "font_name":
+            return widget.currentFont().family()
+        if field_name in ("terminal_type", "terminal_placement"):
+            return str(widget.currentData())
+        if field_name in ("bold", "italic", "text_mask_enabled"):
+            return widget.isChecked()
+        if field_name == "annotation_color":
+            return str(self.annotation_color.property("colorText") or "245,245,245")
+        if hasattr(widget, "value"):
+            return widget.value()
+        return widget.text()
+
+    def _form_changed(self, widget: QtWidgets.QWidget, field_name: str) -> None:
+        if self._loading:
+            return
+        self.draft.set_value(field_name, self._form_value(widget, field_name))
 
     def refresh(self) -> None:
         try:
@@ -307,6 +332,7 @@ class StylesPage(QtWidgets.QWidget):
 
     def _load_form(self, style: StyleSnapshot) -> None:
         self._loading = True
+        self.draft.load(style)
         self.name.setText(style.name)
         self.font.setCurrentFont(QtGui.QFont(style.font_name))
         self.font_size.setValue(style.font_size)
@@ -328,18 +354,15 @@ class StylesPage(QtWidgets.QWidget):
         self.update_preview()
 
     def _clear_form(self) -> None:
-        self.name.clear()
-        self.preview.set_model(None, True, 1.0)
+        self._load_form(StyleSnapshot("default", "Arquitetônico"))
 
-    def _edited_style(self) -> Optional[StyleSnapshot]:
-        if self._current is None:
-            return None
-        return replace(self._current, name=self.name.text().strip() or self._current.name, font_name=self.font.currentFont().family(), font_size=self.font_size.value(), bold=self.bold.isChecked(), italic=self.italic.isChecked(), tracking=self.tracking.value(), text_gap=self.text_gap.value(), line_thickness=self.line_thickness.value(), extension_overhang=self.overhang.value(), extension_gap=self.extension_gap.value(), terminal_type=str(self.terminal.currentData()), terminal_size=self.terminal_size.value(), text_mask_enabled=self.mask.isChecked(), annotation_color=str(self.annotation_color.property("colorText") or self._current.annotation_color), terminal_placement=str(self.placement.currentData()), terminal_angle=self.terminal_angle.value())
+    def _edited_style(self) -> StyleSnapshot:
+        return self.draft.to_snapshot()
 
     def update_preview(self) -> None:
         if self._loading:
             return
-        self.preview.set_model(self._edited_style(), self.dark.isChecked(), float(self.zoom.currentData() or 1.0))
+        self.preview.set_model(self.draft.to_snapshot(), self.dark.isChecked(), float(self.zoom.currentData() or 1.0))
 
     def choose_color(self) -> None:
         current = color_text_to_qcolor(str(self.annotation_color.property("colorText") or "245,245,245"))
@@ -348,7 +371,7 @@ class StylesPage(QtWidgets.QWidget):
             text = qcolor_to_text(color)
             self.annotation_color.setProperty("colorText", text)
             self.annotation_color.setStyleSheet("background: rgb(%s);" % text)
-            self.update_preview()
+            self.draft.set_value("annotation_color", text)
 
     def save_style(self) -> None:
         style = self._edited_style()

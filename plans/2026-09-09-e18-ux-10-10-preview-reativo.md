@@ -2,8 +2,8 @@
 
 Data: 2026-09-09
 
-Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0 concluída
-com dois testes vermelhos reproduzíveis. Próximo checkpoint: E18.1.
+Status: execução iniciada na branch `feature/e18-ux-10-10`; E18.0 e E18.1
+concluídas. Próximo checkpoint: E18.2.
 
 Base obrigatória: branch `feature/e17-ameno-ux`, commit `01e32cd`. Criar uma
 branch nova a partir dessa base. Não trabalhar diretamente em `develop` ou
@@ -20,8 +20,12 @@ Aparência; só então aplicar responsividade e polimento ao restante do produto
   780×560 convertidos em dois RED esperados em
   `tests/python/test_e18_baseline.py`; evidência em
   `work/e18-baseline/README.md`.
-- **E18.1 — próxima:** implementar `StyleDraft` sempre válido, sem bridge,
-  cena, `pymxs` ou mutação durante a edição.
+- **E18.1 — concluída (2026-09-09):** `StyleDraft` local sempre válido,
+  normalização centralizada, dirty/clean/restore e integração inicial da
+  Aparência; a prévia já nasce com snapshot padrão e editar o campo gera
+  zero chamadas externas. Quatro contratos unitários passaram.
+- **E18.2 — próxima:** construir o controle slider + entrada numérica e
+  sincronização sem loops.
 
 ## 1. Objetivo
 
@@ -620,5 +624,5 @@ fechados e após backup recuperável.
 - Implementação E18: não iniciada.
 - E17: gates técnicos verdes, mas aceite visual humano reprovado.
 - E16: baseline de desempenho obrigatório e congelado.
-- Próxima ação do executor: E18.1, implementando o `StyleDraft` local sempre
-  válido e fazendo os dois testes RED avançarem sem acessar a cena.
+- Próxima ação do executor: E18.2, implementando o controle slider + número
+  sem loops, bridge ou mutação da cena.
