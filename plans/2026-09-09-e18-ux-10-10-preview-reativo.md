@@ -60,12 +60,13 @@ Aparência; só então aplicar responsividade e polimento ao restante do produto
 - **E18.10 — concluída (2026-09-09):** 56 testes Python PASS; matriz Max
   E12–E18 com 19/19 suítes PASS; galeria em `work/e18-visual`; manifesto e
   pacote canary validados sem WPF/cache, com SHA-256
-  `77F74901242A51CD5156F06617B67F2111FB377806ED35CAC473A661CA30473C`.
+  `6339302E8A3F87391F8503761F2C413BD7D2600B9D1C7B41DCD1FC2C2FAD361B`.
   O host gate também encontrou e corrigiu dois riscos reais: chamadas
   `QStyle.unpolish/polish` incompatíveis com o wrapper Qt embarcado e largura
   natural de páginas que criava overflow no rail compacto.
 - **E18.11 — em andamento (2026-09-09):** backup recuperável criado em
-  `D:\Ameno\backups\AmenoTools-before-e18-canary-20260909-232710`, canary
+  `D:\Ameno\backups\AmenoTools-before-e18-canary-20260909-232710` e backup de
+  refresh em `D:\Ameno\backups\AmenoTools-before-e18-refresh-20260909-233530`, canary
   instalado em `C:\Users\octav\AppData\Roaming\Autodesk\ApplicationPlugins\AmenoTools`,
   hashes dos módulos/ícones conferidos e smoke instalado PASS. Falta o uso
   manual no Max 2026 e o aceite com profissionais; não fazer push ou promoção.
