@@ -106,14 +106,19 @@ def _terminal(kind: str, anchor: Point, size: float, angle: float, side: float) 
     if kind == "dot":
         return PreviewTerminal(kind, anchor, radius=max(2.0, size * 0.16))
     if kind == "tick":
-        return PreviewTerminal(kind, anchor, points=(anchor, _add(anchor, _scale(axis, size))))
+        # Architectural ticks cross the measured point symmetrically. The
+        # previous one-sided vector made the two ends look unrelated.
+        half = _scale((cos(theta), sin(theta)), size * 0.5)
+        return PreviewTerminal(kind, anchor, points=(_sub(anchor, half), _add(anchor, half)))
     if kind == "arrowOpen":
         tip = anchor
-        back = _sub(anchor, _scale(axis, size))
+        # The tip stays on the reference point and both arms extend toward
+        # the inside (or outside when explicitly requested).
+        back = _add(anchor, _scale(axis, size))
         arm = _scale(normal, size * 0.42)
         return PreviewTerminal(kind, anchor, points=(tip, _add(back, arm), tip, _sub(back, arm)))
     # arrowClosed and unknown values are represented as a filled triangular head.
-    back = _sub(anchor, _scale(axis, size))
+    back = _add(anchor, _scale(axis, size))
     half = _scale(normal, size * 0.45)
     return PreviewTerminal(kind, anchor, points=(anchor, _add(back, half), _sub(back, half)))
 
@@ -164,10 +169,13 @@ def build_preview_geometry(
     )
 
     # Keep the preview legible while still exposing the physical style values.
-    feature_scale = max(0.08, min(0.8, min(width / 900.0, height / 300.0))) * effective_scale
+    # 100% is the normal readable view, not a miniature. The height cap keeps
+    # 200% useful without letting large technical values consume the canvas.
+    canvas_scale = max(0.35, min(1.0, min(width / 620.0, height / 180.0)))
+    feature_scale = canvas_scale * effective_scale
     extension_gap = max(0.0, float(snapshot.extension_gap)) * 0.15 * feature_scale
     overhang = max(0.0, float(snapshot.extension_overhang)) * 0.12 * feature_scale
-    terminal_size = max(4.0, float(snapshot.terminal_size) * 0.08 * feature_scale)
+    terminal_size = max(6.0, min(28.0, float(snapshot.terminal_size) * 0.1 * feature_scale))
     line_thickness = max(0.5, float(snapshot.line_thickness) * 0.75 * feature_scale)
 
     left = left_anchor
@@ -181,24 +189,17 @@ def build_preview_geometry(
     dimension_segment = PreviewSegment((left, center_y), (right, center_y))
 
     placement = str(snapshot.terminal_placement or "auto")
-    placement_offset = terminal_size * 0.25
-    if placement == "inside":
-        left_terminal_anchor = (left + placement_offset, center_y)
-        right_terminal_anchor = (right - placement_offset, center_y)
-    elif placement == "outside":
-        left_terminal_anchor = (left - placement_offset, center_y)
-        right_terminal_anchor = (right + placement_offset, center_y)
-    else:
-        left_terminal_anchor = (left, center_y)
-        right_terminal_anchor = (right, center_y)
+    left_terminal_anchor = (left, center_y)
+    right_terminal_anchor = (right, center_y)
     terminal_kind = str(snapshot.terminal_type or "tick")
     terminal_angle = float(snapshot.terminal_angle or 0.0)
+    outside = placement == "outside"
     terminals = (
-        _terminal(terminal_kind, left_terminal_anchor, terminal_size, terminal_angle, 1.0),
-        _terminal(terminal_kind, right_terminal_anchor, terminal_size, terminal_angle, -1.0),
+        _terminal(terminal_kind, left_terminal_anchor, terminal_size, terminal_angle, -1.0 if outside else 1.0),
+        _terminal(terminal_kind, right_terminal_anchor, terminal_size, terminal_angle, 1.0 if outside else -1.0),
     )
 
-    font_size_px = max(8.0, min(120.0, float(snapshot.font_size) * 0.38 * feature_scale))
+    font_size_px = max(10.0, min(height * 0.27, float(snapshot.font_size) * 0.38 * feature_scale))
     tracking_px = float(snapshot.tracking) * 0.08 * feature_scale
     text_width = max(font_size_px * 1.8, len(text) * font_size_px * 0.56 + max(0, len(text) - 1) * tracking_px)
     text_gap = max(8.0, float(snapshot.text_gap) * 0.12 * feature_scale)

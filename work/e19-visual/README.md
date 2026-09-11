@@ -18,14 +18,16 @@ do host real.
 ## Página Estilo
 
 - `02-estilo-980x720.png`: duas colunas, preview e rodapé fixos.
-- SHA-256: `1034CC97C2C8E0D09EAB529170912437DD572AF3560882FAA0DBDE07750DB2F9`.
+- SHA-256: `87A673AB829CE787552F29DA33BD90B80A217681EFF9DCA890786AEE93FF74CA`.
 - `03-estilo-780x560.png`: preview acima, controles em scroll próprio e rodapé
   fixo.
-- SHA-256: `F24CE33B39AD8F34540C24213E22569CA0BA31C2D682C7D0BEA0F1ADB03AC34F`.
+- SHA-256: `596A066D0C1A38B2BE3289CCDF4E6A0002A5D9059038C43474697D1F80AFC72F`.
 - `04-estilo-default-780x720.png`: abertura vertical padrão, preview fixo acima
   e controles em scroll independente. A amostra abre em 100% e recupera o
   contexto arquitetônico do WPF: parede, retornos, pontos medidos, extensões,
-  linha, terminais e texto.
-- SHA-256: `96669374B2DD2DB04E5F424640AB0E472102DE52C858A3A0F8E2A054BE7A31B7`.
+  linha, terminais e texto. Em 100%, texto e terminais usam a escala normal
+  legível; ticks são centrados e setas respeitam corretamente posição interna
+  ou externa.
+- SHA-256: `2E32FD807E9675DA48A82A91DE3D630254FF15C3CAF84554FD0DEE16E51D2C19`.
 - Referência: `work/e19-reference/02-estilo-target.png`.
 - Testes: `tests/python/test_e19_style_workspace.py`.

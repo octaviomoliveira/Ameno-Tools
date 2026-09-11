@@ -72,6 +72,24 @@ def test_terminal_type_size_placement_and_angle_are_not_decorative() -> None:
     assert all(item.kind == "none" and not item.points for item in none.terminals)
 
 
+def test_ticks_are_centered_and_arrow_heads_extend_toward_the_selected_side() -> None:
+    tick = build_preview_geometry(replace(_style(), terminal_type="tick", terminal_angle=45), (620, 240))
+    left_tick = tick.terminals[0]
+    assert left_tick.points[0][0] < left_tick.anchor[0] < left_tick.points[1][0]
+    assert left_tick.points[0][1] < left_tick.anchor[1] < left_tick.points[1][1]
+
+    inside = build_preview_geometry(
+        replace(_style(), terminal_type="arrowClosed", terminal_placement="inside"),
+        (620, 240),
+    )
+    outside = build_preview_geometry(
+        replace(_style(), terminal_type="arrowClosed", terminal_placement="outside"),
+        (620, 240),
+    )
+    assert all(point[0] > inside.terminals[0].anchor[0] for point in inside.terminals[0].points[1:])
+    assert all(point[0] < outside.terminals[0].anchor[0] for point in outside.terminals[0].points[1:])
+
+
 def test_text_color_is_separate_from_line_color() -> None:
     geometry = build_preview_geometry(
         replace(_style(), annotation_color="10,20,30", text_color="200,210,220"),
