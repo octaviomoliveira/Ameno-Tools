@@ -261,6 +261,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
+- **Próximo passo — E20.0:** executar o plano de interface vertical adaptativa
+  a partir da `develop` publicada, em branch funcional isolada. Preservar as
+  capturas verticais de 2026-09-13, registrar métricas e transformar geometria
+  de janela, clipping e terminais incorretos em testes RED antes de alterar a
+  UI. Plano: `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
+
 - **E18.0 — baseline e reprodução concluída:** a branch
   `feature/e18-ux-10-10` foi criada a partir de `feature/e17-ameno-ux` em
   `01e32cd`; os dois defeitos foram convertidos em RED reproduzíveis e a
@@ -333,6 +339,16 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-13 — Planejar interface vertical adaptativa:** o usuário aprovou a
+  janela vertical como experiência principal para Cotar e Estilos, mantendo
+  redimensionamento livre, maximização e persistência de tamanho/posição. Foi
+  definido que Estilos terá prévia fiel à geometria real, terminais corrigidos,
+  atualização local de todo atributo visual, unidades mm/cm/m e distinção entre
+  Salvar estilo e Aplicar. O executor terá autonomia visual sobre todas as
+  páginas, sem imitar o 3ds Max e sem criar funções sem suporte. O plano E20 foi
+  dividido em nove etapas, da captura do baseline à instalação segura no Max:
+  `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
 
 - **2026-09-10 — Criar plano corretivo para a interface Qt:** o canary E18 foi
   reprovado no Max real por clipping de textos/cartões/sidebar, breakpoint
