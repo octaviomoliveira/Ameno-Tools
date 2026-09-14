@@ -16,6 +16,7 @@ from PySide6 import QtCore, QtGui, QtWidgets  # noqa: E402
 from ameno_ui.components import CollapsibleSection, ColorControl  # noqa: E402
 from ameno_ui.models import StyleSnapshot  # noqa: E402
 from ameno_ui.window import AmenoMainWindow  # noqa: E402
+from ameno_ui.window_geometry import initial_window_geometry  # noqa: E402
 
 
 class StyleBridge:
@@ -43,6 +44,9 @@ def _window(width: int, height: int):
     window = AmenoMainWindow(StyleBridge(), lambda _token: None, lambda: None)
     window.resize(width, height)
     window.show_application("styles")
+    # These historical layout matrices intentionally exceed the 800x800
+    # offscreen monitor. Bypass only the native-frame recovery for this canvas.
+    window._frame_checked = True
     window.show()
     _app().processEvents()
     return window
@@ -50,10 +54,10 @@ def _window(width: int, height: int):
 
 def test_window_opens_in_vertical_stacked_workspace() -> None:
     app = _app()
+    os.environ["AMENO_SETTINGS_FILE"] = str(Path(tempfile.mkdtemp()) / "e19-default.ini")
     window = AmenoMainWindow(StyleBridge(), lambda _token: None, lambda: None)
-    available = (window.screen() or QtGui.QGuiApplication.primaryScreen()).availableGeometry().size()
-    assert window.width() == max(780, min(780, available.width() - 24))
-    assert window.height() == max(560, min(720, available.height() - 24))
+    available = (window.screen() or QtGui.QGuiApplication.primaryScreen()).availableGeometry()
+    assert window.geometry() == initial_window_geometry(available)
     window.show_application("styles")
     window.show()
     app.processEvents()

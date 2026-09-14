@@ -67,7 +67,14 @@ def manifest(output: Path, installed: Path | None) -> int:
 def run_tests(suite: str, report: Path) -> int:
     results = []
     files = sorted((ROOT / "tests" / "python").glob("test_*.py"))
-    files = [path for path in files if path.name.startswith("test_e20_") == (suite == "e20")]
+    if suite == "legacy":
+        files = [path for path in files if not path.name.startswith("test_e20_")]
+    elif suite == "e20-window":
+        files = [path for path in files if path.name == "test_e20_window_contracts.py"]
+    elif suite == "e20-preview":
+        files = [path for path in files if path.name == "test_e20_preview_contracts.py"]
+    else:
+        files = [path for path in files if path.name.startswith("test_e20_")]
     with tempfile.TemporaryDirectory(prefix="ameno-e20-tests-") as directory:
         os.environ["AMENO_SETTINGS_FILE"] = str(Path(directory) / "isolated.ini")
         for path in files:
@@ -90,11 +97,16 @@ def run_tests(suite: str, report: Path) -> int:
     failed = sum(result["status"] == "FAIL" for result in results)
     from PySide6 import QtCore, __version__ as pyside_version
 
+    runtime_files = sorted((ROOT / "Contents" / "python" / "ameno_ui").glob("*.py"))
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(json.dumps({"suite": suite, "python": platform.python_version(),
         "head": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "pyside": pyside_version, "qt": QtCore.qVersion(),
         "test_sources": {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in files},
+        "runtime_sources": {
+            str(path.relative_to(ROOT)).replace("\\", "/"): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in runtime_files
+        },
         "font_dpi_override": os.environ.get("QT_FONT_DPI"), "tests": results,
         "passed": len(results) - failed, "failed": failed}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("RESULT %s: %d PASS / %d FAIL" % (suite, len(results) - failed, failed), flush=True)
@@ -198,7 +210,7 @@ def capture(output: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--suite", choices=("legacy", "e20"))
+    parser.add_argument("--suite", choices=("legacy", "e20", "e20-window", "e20-preview"))
     parser.add_argument("--report", type=Path, default=ROOT / "work/e20-baseline/python-results.json")
     parser.add_argument("--capture", type=Path)
     parser.add_argument("--manifest", type=Path)

@@ -42,6 +42,9 @@ def test_cotar_matches_reference_contract_at_980x720() -> None:
     window = AmenoMainWindow(ReferenceBridge(), lambda _token: None, lambda: None)
     window.resize(980, 720)
     window.show_application("create")
+    # This reference canvas intentionally exceeds the 800 px offscreen
+    # monitor; E20.1 validates native-frame recovery separately in 3ds Max.
+    window._frame_checked = True
     window.show()
     app.processEvents()
 

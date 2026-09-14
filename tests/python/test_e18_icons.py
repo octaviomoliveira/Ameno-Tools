@@ -58,6 +58,9 @@ def test_wide_navigation_keeps_labels_and_icons() -> None:
     window = AmenoMainWindow(IconBridge(), lambda _token: None, lambda: None)
     window.resize(1280, 800)
     window.show_application("create")
+    # Synthetic wide canvas: the offscreen monitor is only 800 px wide, while
+    # production correctly recovers the native frame onto a real monitor.
+    window._frame_checked = True
     window.show()
     QtWidgets.QApplication.processEvents()
     assert window.shell._nav_by_key["create"].text() == "Cotar"

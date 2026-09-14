@@ -19,6 +19,12 @@ from .render_page import RenderPage
 from .responsive import spec_for_width
 from .styles_page import StylesPage
 from .theme import apply_to
+from .window_geometry import (
+    initial_window_geometry,
+    recover_window_geometry,
+    remap_window_geometry,
+    visible_enough,
+)
 
 
 class FixedPageHost(QtWidgets.QScrollArea):
@@ -207,12 +213,17 @@ class AmenoMainWindow(QtWidgets.QMainWindow):
     def __init__(self, bridge: UiBridge, authenticate: Callable[[str], None], logout: Callable[[], None]) -> None:
         parent = max_parent()
         super().__init__(parent)
+        self._last_normal_geometry = QtCore.QRect()
+        self._last_non_minimized_maximized = False
+        self._frame_checked = False
+        self._frame_check_scheduled = False
         self.bridge = bridge
         self.setWindowTitle("Ameno Tools · Cotas")
         self.setObjectName("AmenoMainWindow")
         self.setWindowFlags(QtCore.Qt.WindowType.Window | QtCore.Qt.WindowType.WindowMinimizeButtonHint | QtCore.Qt.WindowType.WindowMaximizeButtonHint | QtCore.Qt.WindowType.WindowCloseButtonHint)
-        self.setMinimumSize(780, 560)
-        self.resize(780, 720)
+        # A fixed minimum can make the native frame larger than a small or
+        # high-DPI monitor. Individual pages own vertical scrolling instead.
+        self.setMinimumSize(0, 0)
         self.setWindowIcon(icon("brand/ameno-symbol-red.png"))
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose, True)
         self._authenticate = authenticate
@@ -220,44 +231,203 @@ class AmenoMainWindow(QtWidgets.QMainWindow):
         self.login_page = LoginPage(authenticate)
         self.shell = AppShell(bridge, logout)
         self.stack = QtWidgets.QStackedWidget()
+        # The window is the constraint boundary. Let each page scroll instead
+        # of exporting its size hint as an implicit native minimum.
+        self.stack.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Ignored,
+            QtWidgets.QSizePolicy.Policy.Ignored,
+        )
         self.stack.addWidget(self.login_page)
         self.stack.addWidget(self.shell)
         self.setCentralWidget(self.stack)
+        # Autodesk's host style may otherwise promote the central size hint to
+        # an explicit native minimum when the window is polished.
+        if self.layout() is not None:
+            self.layout().setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetNoConstraint)
         self.stack.setCurrentWidget(self.login_page)
         # Keep the host palette untouched: the stylesheet belongs only to
         # this top-level Ameno window and its descendants.
         apply_to(self)
         self._restore_geometry()
 
+    @staticmethod
+    def _screen_record(screen) -> tuple[str, str, QtCore.QRect]:
+        def text_value(name: str) -> str:
+            value = getattr(screen, name, None)
+            try:
+                return str(value() if callable(value) else value or "")
+            except Exception:
+                return ""
+
+        return text_value("serialNumber"), text_value("name"), QtCore.QRect(screen.availableGeometry())
+
+    def _screen_records(self, preferred_screen=None) -> list[tuple[str, str, QtCore.QRect]]:
+        records = [self._screen_record(screen) for screen in QtGui.QGuiApplication.screens()]
+        if preferred_screen is not None:
+            preferred = self._screen_record(preferred_screen)
+            if preferred not in records:
+                records.insert(0, preferred)
+        return records
+
+    @staticmethod
+    def _bool_setting(value) -> bool:
+        if isinstance(value, str):
+            return value.strip().lower() in ("1", "true", "yes", "on")
+        return bool(value)
+
     def _restore_geometry(self) -> None:
         preferences = settings()
-        geometry = preferences.value("window/geometry")
-        if geometry is not None:
-            try:
-                self.restoreGeometry(geometry)
-            except Exception:
-                pass
-        # Open in the vertical workspace approved in the real Max host. This
-        # intentionally activates Estilo's stacked layout, keeping its preview
-        # above the scrolling controls instead of squeezing two columns.
         screen = self.screen() or QtGui.QGuiApplication.primaryScreen()
-        if screen is not None:
-            available = screen.availableGeometry().size()
-            width = max(780, min(780, available.width() - 24))
-            height = max(560, min(720, available.height() - 24))
-            self.resize(width, height)
+        preferred = screen.availableGeometry() if screen is not None else QtCore.QRect(0, 0, 780, 1020)
+        records = self._screen_records(screen)
+        areas = [record[2] for record in records]
+        saved_serial = str(preferences.value("window/screenSerial", "") or "")
+        saved_name = str(preferences.value("window/screenName", "") or "")
+        matched = next((record for record in records if saved_serial and record[0] == saved_serial), None)
+        if matched is None:
+            matched = next((record for record in records if saved_name and record[1] == saved_name), None)
+        if matched is not None:
+            preferred = matched[2]
+
+        native_geometry = preferences.value("window/geometry")
+        native_restored = False
+        if native_geometry is not None:
+            try:
+                native_restored = bool(self.restoreGeometry(native_geometry))
+            except Exception:
+                native_restored = False
+        # restoreGeometry may carry an old maximized bit. The explicit setting
+        # below is authoritative, and geometry validation operates on a normal
+        # window rectangle.
+        special_states = (
+            QtCore.Qt.WindowState.WindowMinimized
+            | QtCore.Qt.WindowState.WindowMaximized
+            | QtCore.Qt.WindowState.WindowFullScreen
+        )
+        self.setWindowState(self.windowState() & ~special_states)
+        saved_normal = preferences.value("window/normalGeometry")
+        if not isinstance(saved_normal, QtCore.QRect) or not saved_normal.isValid():
+            saved_normal = None
+        candidate = QtCore.QRect(saved_normal) if saved_normal is not None else (
+            QtCore.QRect(self.geometry()) if native_restored else None
+        )
+        if candidate is not None:
+            saved_available = preferences.value("window/screenAvailableGeometry")
+            if matched is not None and isinstance(saved_available, QtCore.QRect) and saved_available.isValid():
+                candidate = remap_window_geometry(candidate, saved_available, matched[2])
+            candidate = recover_window_geometry(candidate, areas, preferred)
+            self.setGeometry(candidate)
         else:
-            self.resize(780, 720)
-        maximized = preferences.value("window/maximized", False)
-        if isinstance(maximized, str):
-            maximized = maximized.strip().lower() in ("1", "true", "yes", "on")
-        if bool(maximized):
+            self.setGeometry(initial_window_geometry(preferred))
+        self._last_normal_geometry = QtCore.QRect(self.geometry())
+        maximized = self._bool_setting(preferences.value("window/maximized", False))
+        self._last_non_minimized_maximized = maximized
+        if maximized:
             self.setWindowState(self.windowState() | QtCore.Qt.WindowState.WindowMaximized)
 
     def _save_geometry(self) -> None:
         preferences = settings()
-        preferences.setValue("window/geometry", self.saveGeometry())
-        preferences.setValue("window/maximized", self.isMaximized())
+        screen = self.screen() or QtGui.QGuiApplication.primaryScreen()
+        records = self._screen_records(screen)
+        areas = [record[2] for record in records]
+        if not self.isMaximized() and not self.isMinimized() and not self.isFullScreen():
+            candidate = QtCore.QRect(self.geometry())
+            self._last_normal_geometry = QtCore.QRect(candidate)
+        else:
+            candidate = QtCore.QRect(self.normalGeometry())
+            if not candidate.isValid():
+                candidate = QtCore.QRect(self._last_normal_geometry)
+        # Do not replace a known-good restore point with an inaccessible frame.
+        if visible_enough(candidate, areas):
+            preferences.setValue("window/geometry", self.saveGeometry())
+            preferences.setValue("window/normalGeometry", candidate)
+            selected = max(
+                records,
+                key=lambda record: candidate.intersected(record[2]).width()
+                * candidate.intersected(record[2]).height(),
+                default=("", "", QtCore.QRect()),
+            )
+            preferences.setValue("window/screenAvailableGeometry", selected[2])
+            for key, value in (("window/screenSerial", selected[0]), ("window/screenName", selected[1])):
+                if value:
+                    preferences.setValue(key, value)
+                else:
+                    preferences.remove(key)
+        maximized = self._last_non_minimized_maximized if self.isMinimized() else self.isMaximized()
+        preferences.setValue("window/maximized", maximized)
+        preferences.sync()
+
+    def _remember_normal_geometry(self) -> None:
+        state = self.windowState()
+        special = (
+            QtCore.Qt.WindowState.WindowMinimized
+            | QtCore.Qt.WindowState.WindowMaximized
+            | QtCore.Qt.WindowState.WindowFullScreen
+        )
+        if not bool(state & special) and self.geometry().isValid():
+            self._last_normal_geometry = QtCore.QRect(self.geometry())
+
+    def moveEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().moveEvent(event)
+        self._remember_normal_geometry()
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        self._remember_normal_geometry()
+
+    def changeEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().changeEvent(event)
+        if event.type() == QtCore.QEvent.Type.WindowStateChange:
+            state = self.windowState()
+            if bool(state & QtCore.Qt.WindowState.WindowMinimized):
+                old_state = event.oldState() if hasattr(event, "oldState") else QtCore.Qt.WindowState.WindowNoState
+                if bool(old_state & QtCore.Qt.WindowState.WindowMaximized):
+                    self._last_non_minimized_maximized = True
+            else:
+                self._last_non_minimized_maximized = bool(state & QtCore.Qt.WindowState.WindowMaximized)
+            special = (
+                QtCore.Qt.WindowState.WindowMinimized
+                | QtCore.Qt.WindowState.WindowMaximized
+                | QtCore.Qt.WindowState.WindowFullScreen
+            )
+            if not bool(state & special) and self.isVisible():
+                self._schedule_frame_check()
+
+    def showEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().showEvent(event)
+        self._schedule_frame_check()
+
+    def _schedule_frame_check(self) -> None:
+        if self._frame_checked or self._frame_check_scheduled or self.isMaximized():
+            return
+        # Native frame margins are not final during showEvent in 3ds Max.
+        # Defer exactly once; this is not polling and never touches the bridge.
+        self._frame_check_scheduled = True
+        QtCore.QTimer.singleShot(0, self._ensure_frame_visible)
+
+    def _ensure_frame_visible(self) -> None:
+        self._frame_check_scheduled = False
+        if self._frame_checked or self.isMaximized() or not self.isVisible():
+            return
+        self._frame_checked = True
+        screen = self.screen() or QtGui.QGuiApplication.primaryScreen()
+        if screen is None:
+            return
+        available = screen.availableGeometry()
+        frame = self.frameGeometry()
+        if available.contains(frame):
+            return
+        safe_frame = recover_window_geometry(frame, [available], available)
+        client = self.geometry()
+        horizontal_frame = max(0, frame.width() - client.width())
+        vertical_frame = max(0, frame.height() - client.height())
+        self.setGeometry(
+            safe_frame.left() + (client.left() - frame.left()),
+            safe_frame.top() + (client.top() - frame.top()),
+            max(1, safe_frame.width() - horizontal_frame),
+            max(1, safe_frame.height() - vertical_frame),
+        )
+        self._remember_normal_geometry()
 
     def show_login(self, message: str = "") -> None:
         self.stack.setCurrentWidget(self.login_page)

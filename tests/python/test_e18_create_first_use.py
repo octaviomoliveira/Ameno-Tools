@@ -54,6 +54,9 @@ def test_cta_is_visible_in_default_window_without_scrolling() -> None:
     window = AmenoMainWindow(CreateBridge(), lambda _token: None, lambda: None)
     window.resize(980, 720)
     window.show_application("create")
+    # This is a synthetic 980 px layout canvas on Qt's 800 px offscreen
+    # monitor. Native-frame recovery has its own real-host contract in E20.1.
+    window._frame_checked = True
     window.show()
     app.processEvents()
     view = window.shell.page_views["create"]
