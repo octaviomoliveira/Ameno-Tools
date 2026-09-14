@@ -1,0 +1,94 @@
+{
+  "suite": "e20",
+  "python": "3.11.9",
+  "head": "d030e4f46e0e9e83c7c61d6e1b17f6b24e65dfd4",
+  "pyside": "6.5.3",
+  "qt": "6.5.3",
+  "test_sources": {
+    "test_e20_preview_contracts.py": "942545a2fa6bd8467fe61ee06c919e020e006532c934a64df13d2975218353f4",
+    "test_e20_window_contracts.py": "71906d2b00d4427b21ecc4fda43affbcd2c1c0199902a4009cb5e7144ab250a9"
+  },
+  "font_dpi_override": "96",
+  "tests": [
+    {
+      "test": "test_e20_preview_contracts.py::test_backend_supported_diamond_is_a_centered_four_vertex_terminal",
+      "status": "FAIL",
+      "seconds": 0.001,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 106, in test_backend_supported_diamond_is_a_centered_four_vertex_terminal\n    assert len(terminal.points) == 4, (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: committed diamond has four vertices; preview has 3\n"
+    },
+    {
+      "test": "test_e20_preview_contracts.py::test_closed_arrow_has_the_committed_half_width_to_length_ratio",
+      "status": "FAIL",
+      "seconds": 0.0003,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 57, in test_closed_arrow_has_the_committed_half_width_to_length_ratio\n    _assert_ratio(\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 39, in _assert_ratio\n    assert isclose(actual, expected, rel_tol=1e-6, abs_tol=1e-6), (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: closed arrow base width / axial length: preview 0.900000, required ratio 0.500000\n"
+    },
+    {
+      "test": "test_e20_preview_contracts.py::test_default_arrows_stay_parallel_to_the_committed_dimension_line",
+      "status": "FAIL",
+      "seconds": 0.0005,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 89, in test_default_arrows_stay_parallel_to_the_committed_dimension_line\n    assert isclose(base_center_y, terminal.anchor[1], abs_tol=1e-6), (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: arrowClosed is tilted in preview: base center y=110.271068, line y=103.200000\n"
+    },
+    {
+      "test": "test_e20_preview_contracts.py::test_dot_radius_matches_the_committed_fraction_of_terminal_size",
+      "status": "FAIL",
+      "seconds": 0.0004,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 99, in test_dot_radius_matches_the_committed_fraction_of_terminal_size\n    _assert_ratio(dot.radius / _distance(*tick.points), 0.35, \"dot radius / terminal size\")\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 39, in _assert_ratio\n    assert isclose(actual, expected, rel_tol=1e-6, abs_tol=1e-6), (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: dot radius / terminal size: preview 0.160000, required ratio 0.350000\n"
+    },
+    {
+      "test": "test_e20_preview_contracts.py::test_equal_physical_terminal_gap_and_overhang_use_one_canvas_scale",
+      "status": "FAIL",
+      "seconds": 0.0005,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 130, in test_equal_physical_terminal_gap_and_overhang_use_one_canvas_scale\n    _assert_ratio(overhang / tick_length, 1.0, \"100 mm overhang / 100 mm terminal\")\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 39, in _assert_ratio\n    assert isclose(actual, expected, rel_tol=1e-6, abs_tol=1e-6), (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 100 mm overhang / 100 mm terminal: preview 1.200000, required ratio 1.000000\n"
+    },
+    {
+      "test": "test_e20_preview_contracts.py::test_extreme_supported_text_settings_fit_the_preview_canvas",
+      "status": "FAIL",
+      "seconds": 0.0005,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 170, in test_extreme_supported_text_settings_fit_the_preview_canvas\n    assert 0 <= x and 0 <= y and x + width <= geometry.width and y + height <= geometry.height, (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: text mask (192.06399999999996, -90.67200000000001, 235.87200000000007, 82.94400000000002) falls outside 620x240 preview\n"
+    },
+    {
+      "test": "test_e20_preview_contracts.py::test_line_thickness_and_terminal_length_preserve_the_physical_ratio",
+      "status": "FAIL",
+      "seconds": 0.0005,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 138, in test_line_thickness_and_terminal_length_preserve_the_physical_ratio\n    _assert_ratio(\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 39, in _assert_ratio\n    assert isclose(actual, expected, rel_tol=1e-6, abs_tol=1e-6), (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 10 mm line thickness / 100 mm terminal: preview 0.750000, required ratio 0.100000\n"
+    },
+    {
+      "test": "test_e20_preview_contracts.py::test_open_arrow_has_the_committed_half_width_to_length_ratio",
+      "status": "FAIL",
+      "seconds": 0.0004,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 70, in test_open_arrow_has_the_committed_half_width_to_length_ratio\n    _assert_ratio(\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 39, in _assert_ratio\n    assert isclose(actual, expected, rel_tol=1e-6, abs_tol=1e-6), (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: open arrow base width / axial length: preview 0.840000, required ratio 0.500000\n"
+    },
+    {
+      "test": "test_e20_preview_contracts.py::test_zoom_preserves_terminal_to_measured_span_ratio",
+      "status": "FAIL",
+      "seconds": 0.0004,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 157, in test_zoom_preserves_terminal_to_measured_span_ratio\n    _assert_ratio(ratios[0], ratios[1], \"terminal / measured span at 50% versus 100% zoom\")\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_preview_contracts.py\", line 39, in _assert_ratio\n    assert isclose(actual, expected, rel_tol=1e-6, abs_tol=1e-6), (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: terminal / measured span at 50% versus 100% zoom: preview 0.034761, required ratio 0.050403\n"
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_cotar_primary_action_fits_the_offscreen_control_at_780x720",
+      "status": "PASS",
+      "seconds": 0.1312,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_first_open_fits_a_small_available_monitor",
+      "status": "FAIL",
+      "seconds": 0.063,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_window_contracts.py\", line 96, in test_first_open_fits_a_small_available_monitor\n    assert window.width() <= area.width() and window.height() <= area.height(), (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: window 780x696 exceeds available monitor 640x720\n"
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_first_open_uses_portrait_when_the_monitor_has_room",
+      "status": "FAIL",
+      "seconds": 0.0674,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_window_contracts.py\", line 84, in test_first_open_uses_portrait_when_the_monitor_has_room\n    assert window.height() > window.width(), (\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: first open should use portrait on a spacious monitor, got 780x720\n"
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_reopening_preserves_restored_size_or_recovers_if_it_no_longer_fits",
+      "status": "FAIL",
+      "seconds": 0.1394,
+      "error": "Traceback (most recent call last):\n  File \"D:\\Ameno\\_tools\\tools\\e20-baseline.py\", line 84, in run_tests\n    getattr(module, name)()\n  File \"D:\\Ameno\\_tools\\tests\\python\\test_e20_window_contracts.py\", line 68, in test_reopening_preserves_restored_size_or_recovers_if_it_no_longer_fits\n    assert second.size() == size, (\n           ^^^^^^^^^^^^^^^^^^^^^\nAssertionError: valid restored size 780x600 was replaced by 780x720\n"
+    }
+  ],
+  "passed": 1,
+  "failed": 12
+}

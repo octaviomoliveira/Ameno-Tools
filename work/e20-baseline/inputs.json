@@ -1,0 +1,439 @@
+{
+  "head": "d030e4f46e0e9e83c7c61d6e1b17f6b24e65dfd4",
+  "installed_root": "C:\\Users\\octav\\AppData\\Roaming\\Autodesk\\ApplicationPlugins\\AmenoTools",
+  "note": "Read-only content comparison; normalized equality is NOT binary installation parity.",
+  "user_screenshots": [
+    {
+      "file": "user\\01-cotar-square-clipped.png",
+      "sha256": "769f9e580d66d386205e819165819ddb912ec3ea4b4801b683e903b86875c7d6",
+      "image_pixels": [
+        783,
+        769
+      ]
+    },
+    {
+      "file": "user\\02-cotar-vertical.png",
+      "sha256": "954436c3e01a91720226a5750938b9165ca781c5ef0029fb1227dce1820f8696",
+      "image_pixels": [
+        781,
+        1072
+      ]
+    },
+    {
+      "file": "user\\03-estilos-vertical.png",
+      "sha256": "e8f92e3b03425b9c858f6c9188b957df6345973267943bbd0567cf17fe99feac",
+      "image_pixels": [
+        789,
+        1075
+      ]
+    }
+  ],
+  "production_sources": [
+    {
+      "file": "macroscripts/AmenoTools.mcr",
+      "source_sha256": "68be3d86c3a695c9f2ca078a54d9690af0dab6114dd14b18c14a80efee6f6b81",
+      "installed_exists": true,
+      "installed_sha256": "68be3d86c3a695c9f2ca078a54d9690af0dab6114dd14b18c14a80efee6f6b81",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/__init__.py",
+      "source_sha256": "03c01f44cb5406fe8b3790e8bcbe13a62ed303a8493f986bc36c22942207ca3b",
+      "installed_exists": true,
+      "installed_sha256": "03c01f44cb5406fe8b3790e8bcbe13a62ed303a8493f986bc36c22942207ca3b",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/application.py",
+      "source_sha256": "445e4880ea0fd8f37382c8708be72098447620e4f0855ecd1129d90409a02b14",
+      "installed_exists": true,
+      "installed_sha256": "780ac66814b6c452feacb3c84d431ce0e93ef2e5a7eb9426fbd6c0f40cf93db6",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/assets.py",
+      "source_sha256": "c02e37302c170606f712b9719918e98dfdf4a0cbe027c356255c810679eea3d3",
+      "installed_exists": true,
+      "installed_sha256": "399658d04085b5956752ae725a15ff7b3a8cd449e928b03a9c91ab61ad19e006",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/auth.py",
+      "source_sha256": "95ebb25a4a2fe11e61901f02efe8da7b3a762f28f9c977d1aacf4bafcb609575",
+      "installed_exists": true,
+      "installed_sha256": "95ebb25a4a2fe11e61901f02efe8da7b3a762f28f9c977d1aacf4bafcb609575",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/bridge.py",
+      "source_sha256": "fbc5b81427cc5361e368ac215e40fbbf5fd6f212e7e12639d130cfb43f76ddbc",
+      "installed_exists": true,
+      "installed_sha256": "fbc5b81427cc5361e368ac215e40fbbf5fd6f212e7e12639d130cfb43f76ddbc",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/common.py",
+      "source_sha256": "cbd3d7c06b480e240cbecf64d77ea0a2c03309d04fa4a6554160cea11908bba8",
+      "installed_exists": true,
+      "installed_sha256": "94fc5d7ce94f5c0e513ee96bff6c4a2d55fc6f5c7f3f8c571ee660cca8d4c083",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/components.py",
+      "source_sha256": "dcab9f9566302e0b180d11c00f9a6841ef9ca463521ff19338b37c68b1ce1f04",
+      "installed_exists": true,
+      "installed_sha256": "c54bf77a5d0382edfc76037bd6a6d476d383723c9d49ea7086d18306fa88e6a5",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/config_page.py",
+      "source_sha256": "b48b6a92953bc1af3f513cc1f286b2dd8b32d6dac17c6bbafd66b633d5c4a44d",
+      "installed_exists": true,
+      "installed_sha256": "61317fd266b51211345d8c6631567c02fb1a2e3ad9e2a72064044f97f9e7ac52",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/create_page.py",
+      "source_sha256": "1533006bebdb29050ff2997dd2d8e6af44fbb11c8a3498dcbfa66b963b74cfd4",
+      "installed_exists": true,
+      "installed_sha256": "c4c76e10dc93bf6ce69dfcbee2cb4111b0dbc2eb6c3263435d96838eab4b31dc",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/dimension_preview.py",
+      "source_sha256": "22c02c6f62579217784c8633529051b5ae8eb32fc35ad792d259543a7255d24b",
+      "installed_exists": true,
+      "installed_sha256": "02d3a9053e9ed18325dfc55851f2c018a63c1e4846dedbf1f16bc0910ad6edaf",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/edit_page.py",
+      "source_sha256": "09d48ae919c0fb317ea1286d266d8fcbc192d9b3a96552533987105c2f8be20b",
+      "installed_exists": true,
+      "installed_sha256": "5c21b9c1b07cf37b9e43d54d50e075023836209e04938049504f1a2982f41337",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/entrypoint.py",
+      "source_sha256": "8027bbbe3d17a109891740ddda0afaea8e4e42d6b480649b8d0bc308f9edfcad",
+      "installed_exists": true,
+      "installed_sha256": "8027bbbe3d17a109891740ddda0afaea8e4e42d6b480649b8d0bc308f9edfcad",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/host_info.py",
+      "source_sha256": "40426938e42038210c048ace2110a46b03fe626ef21fdf12ffc8eb6a69741730",
+      "installed_exists": true,
+      "installed_sha256": "40426938e42038210c048ace2110a46b03fe626ef21fdf12ffc8eb6a69741730",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/login_page.py",
+      "source_sha256": "970cce4e704732964227b754604856e64e3c92d1c45800f086ad2b58ea08e01a",
+      "installed_exists": true,
+      "installed_sha256": "50d36861e0ab2b81000b46f6791f084bb3985675169d98fea702e28b308a9925",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/models.py",
+      "source_sha256": "d0f330a7f0c271f085ad08d950c236625e18e101a764d32e131c2d268a63c830",
+      "installed_exists": true,
+      "installed_sha256": "d0f330a7f0c271f085ad08d950c236625e18e101a764d32e131c2d268a63c830",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/page_scaffold.py",
+      "source_sha256": "ab2b5d2497518a4b5943423f611cfd2dc696a5eba22fdf14afe02c6d2a7ffcc8",
+      "installed_exists": true,
+      "installed_sha256": "4b98df042e1c70465b71af8002ac87bb2c5e273e6e1960dff209f20e3cf08f57",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/parameter_control.py",
+      "source_sha256": "1c8e2a911a4fa9530d83f6a4e63b27c453bfe9129098530a8e3248337bda357d",
+      "installed_exists": true,
+      "installed_sha256": "cb72842c0655694e3f1024c287227263ea47702841a6aeeec8126671d9b1c4b2",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/preferences.py",
+      "source_sha256": "440256d90831acf70e722eccb72ddaa290e6f5569dca5a615faf38f81447ad5f",
+      "installed_exists": true,
+      "installed_sha256": "b26882dea389975e1a62ffa074207c021870cb6c4c523971ddabc82cf7f01cd3",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/qt_compat.py",
+      "source_sha256": "c20fd539d08a8f10f2e7c29026409216be12c6a1d9541bc43442932eefaa9105",
+      "installed_exists": true,
+      "installed_sha256": "c20fd539d08a8f10f2e7c29026409216be12c6a1d9541bc43442932eefaa9105",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/render_page.py",
+      "source_sha256": "727b141c4bf5bc5b8a9c4a1b67b7b9a7a5303d9176c8446a255e98f5a2229952",
+      "installed_exists": true,
+      "installed_sha256": "a97f68b3cbb1aab123ae3f190eb0148c155cc95ebda31856c5d0fde94284f624",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/responsive.py",
+      "source_sha256": "429eacf2e5b3f9b41b15dc754f0d580d99d74fd9415e82d4af918070106fba53",
+      "installed_exists": true,
+      "installed_sha256": "532226f6fa55f6b5405572e00f2683464695963d33b742b7ac50cb3ce02a9051",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/style_draft.py",
+      "source_sha256": "1bac9a268e6662b8c6cfa54bf339a9b62ce0c9a207f224aeb10514961f2e8d9d",
+      "installed_exists": true,
+      "installed_sha256": "e4812c6bb8c8fe6b9441a519f540309823b36df1148d9ad7ae771680c3a4e365",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/styles_page.py",
+      "source_sha256": "5ea5478b8b70f8a50fdf40e334183ddc17c8c770b84076681dc874443affcee3",
+      "installed_exists": true,
+      "installed_sha256": "d05cab63e350c9892c357380276db24073a646319006e3c56e34f673dfd01bb8",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/theme.py",
+      "source_sha256": "7df16930ff80438020f0601d860d1a90218265eb82f3c0e3bed21f02db3ebd96",
+      "installed_exists": true,
+      "installed_sha256": "6918ba5daadad8e9e4cf869003c17e0c2441101871e29d0881d20834eaf33e3e",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "python/ameno_ui/window.py",
+      "source_sha256": "5dea0bd2e175084ac47c99fa37a673d3ed8456a545410d57518c7f39f21a55fd",
+      "installed_exists": true,
+      "installed_sha256": "f5ce793d975c4c1b7dbaf699dcbfc662f516e7c613636a56d8165ef15cb0597e",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_anchor_service.ms",
+      "source_sha256": "7a04ea923b3b43f265d6a93266b96545dbee991418bd3f4b16cf91c70d677c56",
+      "installed_exists": true,
+      "installed_sha256": "7a04ea923b3b43f265d6a93266b96545dbee991418bd3f4b16cf91c70d677c56",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_continuous_diagnostics.ms",
+      "source_sha256": "9fb92c98135db6d8d73a065e79feaee8bff3ec6d2e4f42f88266d75aa40f3850",
+      "installed_exists": true,
+      "installed_sha256": "9fb92c98135db6d8d73a065e79feaee8bff3ec6d2e4f42f88266d75aa40f3850",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_continuous_input.ms",
+      "source_sha256": "5d51e22eb566b4d2c60d8cd4d14b5d87279a31f61db70b6bbd561d0dae4d4de7",
+      "installed_exists": true,
+      "installed_sha256": "5d51e22eb566b4d2c60d8cd4d14b5d87279a31f61db70b6bbd561d0dae4d4de7",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_continuous_overlay.ms",
+      "source_sha256": "1b795b275ed61bba90ce304a3f749b211cb141de0a20b15fd885c4f1b937ebe7",
+      "installed_exists": true,
+      "installed_sha256": "5138d3401a520187823f81880f879cb284151ddd1355c6b341353140e5b2d06d",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_diagnostic_service.ms",
+      "source_sha256": "debf66bce79f92037ad8616027ee4f4f4ae7c49998f27cd1e2296dbe9b9a69fc",
+      "installed_exists": true,
+      "installed_sha256": "debf66bce79f92037ad8616027ee4f4f4ae7c49998f27cd1e2296dbe9b9a69fc",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_dimension_ca.ms",
+      "source_sha256": "ca1be4932fde6af2ae6e50995b1e0385ac2ef2a6361a23372995078da02e37cc",
+      "installed_exists": true,
+      "installed_sha256": "ca1be4932fde6af2ae6e50995b1e0385ac2ef2a6361a23372995078da02e37cc",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_dimension_chain_math.ms",
+      "source_sha256": "affee49e5ef4601b4303097772a9e44c69ec1110d0278464d5cbf128ee5fb2d5",
+      "installed_exists": true,
+      "installed_sha256": "affee49e5ef4601b4303097772a9e44c69ec1110d0278464d5cbf128ee5fb2d5",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_dimension_continuous_tool.ms",
+      "source_sha256": "1da7aefdd89cb63694569077b578675e86fcdfc15b61aec3110ee29260d4fa59",
+      "installed_exists": true,
+      "installed_sha256": "dd90f7cefe9fe637117ddc77ef474326e2ab1c1a3f3f4f7c5f2d277336676e42",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_dimension_graphics.ms",
+      "source_sha256": "ea3bfb40fa0376bfd50e098d01a09f6ee1d97862a02a846a098fec365d963724",
+      "installed_exists": true,
+      "installed_sha256": "da79934c64d2786dc1a51b92a7fc2e91b30b09719d6e2ea21a1a85f61fd53774",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_dimension_plane.ms",
+      "source_sha256": "36168d54bff926b93d9153a6e51b4fb0cf36ba9ee9107f94cdaa2f375835fe66",
+      "installed_exists": true,
+      "installed_sha256": "36168d54bff926b93d9153a6e51b4fb0cf36ba9ee9107f94cdaa2f375835fe66",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_dimension_terminal_mesh.ms",
+      "source_sha256": "d8678eb609de2404b348c1e17c1db0b18f62d41ef1d94a7b63815284fe992487",
+      "installed_exists": true,
+      "installed_sha256": "d8678eb609de2404b348c1e17c1db0b18f62d41ef1d94a7b63815284fe992487",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_dimension_tool.ms",
+      "source_sha256": "8f53c8ed150865629c7f0f2a91100cf772f012e8ba2206cf938e4ea83d02dfa3",
+      "installed_exists": true,
+      "installed_sha256": "3ac33f76ba7da5b66168333ad94f652fdc3211e7f7a2ce86dde357c642125543",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_dimensions_math.ms",
+      "source_sha256": "3f2cfdbc828386ffc086c8cc2c7add66ba795a5bfec77431d18676366be33758",
+      "installed_exists": true,
+      "installed_sha256": "3f2cfdbc828386ffc086c8cc2c7add66ba795a5bfec77431d18676366be33758",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_logger.ms",
+      "source_sha256": "dda4f25220e0876eebf0b6102f963a0bd28e81cb403abb0b559c1329a26a0135",
+      "installed_exists": true,
+      "installed_sha256": "dda4f25220e0876eebf0b6102f963a0bd28e81cb403abb0b559c1329a26a0135",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_render_cotas_service.ms",
+      "source_sha256": "5742ca70866cee83119724076f7dcb9c8f7c962b4451cbdd3fb7c226f57b0978",
+      "installed_exists": true,
+      "installed_sha256": "5742ca70866cee83119724076f7dcb9c8f7c962b4451cbdd3fb7c226f57b0978",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_runtime.ms",
+      "source_sha256": "08e60d43c6e26ff682e344586779483076d5de9b878bb3957825542bdfba3603",
+      "installed_exists": true,
+      "installed_sha256": "08e60d43c6e26ff682e344586779483076d5de9b878bb3957825542bdfba3603",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_scene_setup.ms",
+      "source_sha256": "3fe951298e2285731003006520daf7f135d94d8cdd5a30ee0ef4d2a21881880b",
+      "installed_exists": true,
+      "installed_sha256": "3fe951298e2285731003006520daf7f135d94d8cdd5a30ee0ef4d2a21881880b",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_style_service.ms",
+      "source_sha256": "5c9b394780e46718e6cdf16a7a658197a644e6c9c201fd816c512b635dd64372",
+      "installed_exists": true,
+      "installed_sha256": "96693a4e845817255afe4478c2cc520a8e89d411827e8cafff5b9663ce4fe479",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/core/ameno_version.ms",
+      "source_sha256": "5fbdb56922961f0f7fb3132428920357f996a92278f70406ed2d129c7b18fd5f",
+      "installed_exists": true,
+      "installed_sha256": "5fbdb56922961f0f7fb3132428920357f996a92278f70406ed2d129c7b18fd5f",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/renderers/ameno_corona_adapter.ms",
+      "source_sha256": "ded882825dabd66e50c2efdaea5724fff1a350f2e282ac86f05c35a8a0503df0",
+      "installed_exists": true,
+      "installed_sha256": "ded882825dabd66e50c2efdaea5724fff1a350f2e282ac86f05c35a8a0503df0",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/renderers/ameno_renderer_probe.ms",
+      "source_sha256": "6a7a573c66e13b966c48864799ba036d091a4ac0d137728b0bec985cff2b8c2b",
+      "installed_exists": true,
+      "installed_sha256": "6a7a573c66e13b966c48864799ba036d091a4ac0d137728b0bec985cff2b8c2b",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/renderers/ameno_vray_adapter.ms",
+      "source_sha256": "ab73c9d6a5dc9d251b46bf2966ef61c37d640714eb588a189ed862e7a2a57b42",
+      "installed_exists": true,
+      "installed_sha256": "ab73c9d6a5dc9d251b46bf2966ef61c37d640714eb588a189ed862e7a2a57b42",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_cotas_criar_tab.ms",
+      "source_sha256": "c1bbcb0d58961333b426e88dfa7e76b7b01263a2dd155ea47a210981c09c6519",
+      "installed_exists": false
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_cotas_editar_tab.ms",
+      "source_sha256": "7ac1b7b5dd54e0e5c5b12a9a4a945492af5eb2820155c6a6af575b17adb17a64",
+      "installed_exists": false
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_cotas_estilos_tab.ms",
+      "source_sha256": "2b2380d59d3a2c5a1b1e14411de34c8c931b5ff4ed8cacfc2eddd1e5a7255513",
+      "installed_exists": false
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_cotas_render_tab.ms",
+      "source_sha256": "684cfd46ea244e87f495c1beb6a8b757eefc868f39bc09bfa8977ed3e8025172",
+      "installed_exists": false
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_cotas_window.ms",
+      "source_sha256": "9ec0673948401c34194680d6b41ac2ad8552912d9cd4158a8088e8128dc37094",
+      "installed_exists": false
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_main_panel.ms",
+      "source_sha256": "711cba3959a1d9455b9f993d1e7812da76d67bb613fcd54c940fc2088196e3cb",
+      "installed_exists": false
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_preview_renderer.ms",
+      "source_sha256": "a01ea3f221ad3131fa4d88245994b944cc2a037282a51e7acf141c2aeaec171d",
+      "installed_exists": true,
+      "installed_sha256": "a01ea3f221ad3131fa4d88245994b944cc2a037282a51e7acf141c2aeaec171d",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_python_ui.ms",
+      "source_sha256": "488df40c225e608dbd0aa0c77f7f8cc63e48e8d5d8d8939307a73547ab28bc59",
+      "installed_exists": true,
+      "installed_sha256": "182fa4f6f6ad45833e21a556c974be1567f0a12631a6c3b830408388705f98ae",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_style_editor.ms",
+      "source_sha256": "0d9c90361e8e3a9ea6c27708e5dcbe889f8ba472186c9f185a622395fb8bad7b",
+      "installed_exists": true,
+      "installed_sha256": "0d9c90361e8e3a9ea6c27708e5dcbe889f8ba472186c9f185a622395fb8bad7b",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_style_editor_wpf.ms",
+      "source_sha256": "743087eae999c175c0e85f0a478f6a9aee3bba7aadeb8ae98a9e2cc844122c5f",
+      "installed_exists": false
+    },
+    {
+      "file": "scripts/ameno/ui/ameno_ui_bridge.ms",
+      "source_sha256": "6eeca60fab620d5e311854c3b4b2460fb99e3996325a58112a60ae5aa0436f36",
+      "installed_exists": true,
+      "installed_sha256": "6eeca60fab620d5e311854c3b4b2460fb99e3996325a58112a60ae5aa0436f36",
+      "equal_ignoring_eol_and_bom": true
+    },
+    {
+      "file": "scripts/startup/ameno_bootstrap.ms",
+      "source_sha256": "2b23b7035b2634672859b4e7f1569865e98856601e75187b6cd0695bc60971f4",
+      "installed_exists": true,
+      "installed_sha256": "66101451329b75769085ade9b5199145b7d22f222ef8501c18ab5e1fd597d1f2",
+      "equal_ignoring_eol_and_bom": true
+    }
+  ]
+}

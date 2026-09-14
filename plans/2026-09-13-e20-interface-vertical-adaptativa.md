@@ -2,7 +2,35 @@
 
 Data: 2026-09-13
 
-Status: planejada; implementação não iniciada.
+Status: E20.0 concluída; E20.1–E20.8 não iniciadas.
+
+## Checkpoint de execução — 2026-09-14
+
+- Base publicada registrada: `origin/develop` em
+  `1acc10af35a289c18ffafa9186ca2055e4f97f41`.
+- Branch funcional isolada: `feature/e20-vertical-adaptive-ui`.
+- Plano preservado por cherry-pick `d030e4f`; zero alterações em `Contents/`.
+- Evidência: [baseline E20.0](../work/e20-baseline/README.md), três originais
+  com dimensões/SHA-256, 50 capturas Qt e 12 contratos RED reproduzíveis.
+- 69 regressões Python verdes; 19/19 suítes MAXScript verdes, zero FAIL;
+  pacote estrutural válido. Testes executados em 2026-09-13, checkpoint
+  concluído em 2026-09-14. Resumo Max na pasta de baseline.
+- Decisão duradoura: [ADR 0029](../docs/decisions/0029-e20-vertical-adaptativo-e-previa-fiel.md).
+- Dependência E20.5: Aplicar ainda usa o estilo salvo; Salvar pode reconstruir
+  cotas. A separação aprovada exige contrato funcional adicional, registrado
+  na baseline, sem mudança do núcleo nesta etapa.
+
+| Etapa | Estado |
+| --- | --- |
+| E20.0 — Base e contratos | Concluída; regressões verdes e 12 REDs específicos |
+| E20.1 — Janela e persistência | Não iniciada; próxima |
+| E20.2 — Shell e identidade | Não iniciada |
+| E20.3 — Cotar | Não iniciada |
+| E20.4 — Prévia fiel | Não iniciada |
+| E20.5 — Estilos | Não iniciada; dependência funcional identificada |
+| E20.6 — Demais páginas | Não iniciada |
+| E20.7 — Regressões e aceite técnico | Não iniciada |
+| E20.8 — Instalação e aceite humano | Não iniciada |
 
 Base obrigatória: `develop` no commit que estiver publicado quando a execução
 começar. O executor deve registrar o SHA da base e criar uma branch funcional
@@ -316,4 +344,3 @@ refatoração ampla do núcleo dentro da E20.
 > ADRs relacionadas. Faça testes e um commit recuperável por etapa, atualize o
 > `PLAN.md` e pare em cada gate quando faltar evidência. Não faça merge em
 > `develop`/`main`. Não recarregue o bootstrap no mesmo processo do Max.
-

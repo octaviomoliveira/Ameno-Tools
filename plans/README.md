@@ -6,6 +6,7 @@ Esta pasta preserva planos de marco, handoffs e registros suficientemente detalh
 
 Arquivos atuais:
 
+- [E20 — Interface vertical adaptativa e prévia fiel](2026-09-13-e20-interface-vertical-adaptativa.md): plano corrente em nove etapas; baseline, janela/persistência, shell, Cotar, prévia, Estilos, demais páginas, regressões e instalação segura. Evidências em `../work/e20-baseline/README.md`; substitui a ordem de execução visual E19.
 - [Fundação de 2026-09-03](2026-09-03-foundation.md): estado técnico entregue, decisões e ponto de retomada.
 - [Plano incremental do MVP](2026-09-03-mvp-incremental.md): etapas funcionais, gates no 3ds Max e ordem de implementação.
 - [E11 — Editor Visual e Preview ao Vivo](2026-09-04-e11-editor-visual-preview.md): inventário histórico do editor WPF; a apresentação distribuída foi supersedida pela reescrita Python/Qt da E15.

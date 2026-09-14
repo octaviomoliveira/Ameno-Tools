@@ -1,7 +1,28 @@
 # Plano compartilhado — Ameno Tools
 
 > Fonte de continuidade do projeto para qualquer pessoa ou agente (incluindo Antigravity).
-> Atualizado: 2026-09-10
+> Atualizado: 2026-09-14
+
+## Checkpoint corrente — E20
+
+Este checkpoint e o plano E20 prevalecem sobre os próximos passos históricos
+E18/E19 mantidos abaixo. Branch `feature/e20-vertical-adaptive-ui`, base publicada
+`develop` em `1acc10af35a289c18ffafa9186ca2055e4f97f41`; plano preservado no commit
+`d030e4f`. E20.0 concluída; não houve alteração de produção ou nova
+instalação. Evidências: `work/e20-baseline/README.md`. E20.1–E20.8 não iniciadas.
+
+Já foram registrados 69 testes Python legados verdes, 12 REDs reproduzíveis
+(três de janela, sete de geometria/escala da prévia e dois de apresentação), um
+controle positivo e 50 capturas Qt. A matriz MAXScript concluiu 19/19 suítes
+verdes, zero FAIL, em 2026-09-13; checkpoint fechado em 2026-09-14. Resumo:
+`work/e20-baseline/max-regression/summary.txt`. O aceite visual do candidato
+continua pendente das etapas de implementação e instalação.
+
+**ATENÇÃO — NECESSIDADE NO CÓDIGO FUNCIONAL:** Aplicar ignora o rascunho atual,
+enquanto Salvar pode reconstruir cotas. Separar esses efeitos exige contrato
+adicional da fachada/núcleo na E20.5; também há divergência de ângulo/posição de
+terminais entre overlay e commit. Não simular suporte nem declarar esses
+requisitos completos apenas com mudanças visuais. Ver baseline e ADR 0029.
 
 ## Regra de trabalho
 
@@ -19,6 +40,13 @@ Não substituir o histórico: acrescentar uma entrada datada. O plano corrente �
 Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions**. Ele deve criar cotas rápidas, editáveis e persistentes para plantas humanizadas, com apresentação controlável e uma saída de render independente para composição.
 
 ## Concluído
+
+- **E20.0 — baseline e critérios (2026-09-14):** branch isolada criada a partir
+  da base publicada; três originais preservados por SHA-256, 50 capturas Qt,
+  69/69 regressões Python e 19/19 suítes MAXScript aprovadas. Doze REDs
+  específicos e um controle positivo documentados para E20.1/E20.4; pacote
+  estrutural válido. Evidências em `work/e20-baseline/README.md`; ADR 0029.
+  Nenhum arquivo de produção alterado ou reinstalado.
 
 - **E14.1–E14.5 implementadas em branch de entrega (2026-09-08):** criado o
   contrato de plano ortonormal U/V/N, matemática de fachada, CA v6 aditivo,
@@ -86,6 +114,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Escopo inicial definido para 3ds Max 2026; compatibilidade 2021–2025 será avaliada após o MVP estar estável.
 
 ## Em andamento
+
+- **E20 — interface vertical adaptativa:** E20.0 concluída. Próxima entrega é
+  E20.1, geometria/persistência; E20.2–E20.8 não iniciadas. Manter commits
+  recuperáveis na branch `feature/e20-vertical-adaptive-ui`, sem merge/tag.
 
 - **E14 — Planos de cotação e fachadas em validação:** E14.1–E14.5 foram
   implementadas em `feature/e14-facade-planes`, com persistência CA v6,
@@ -261,11 +293,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Próximo passo — E20.0:** executar o plano de interface vertical adaptativa
-  a partir da `develop` publicada, em branch funcional isolada. Preservar as
-  capturas verticais de 2026-09-13, registrar métricas e transformar geometria
-  de janela, clipping e terminais incorretos em testes RED antes de alterar a
-  UI. Plano: `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
+- **Próximo passo — E20.1:** corrigir geometria vertical/persistência na branch
+  isolada, mantendo a baseline E20.0 intacta. Ampliar casos de posição, maximização e
+  monitor removido; não sobrescrever tamanho salvo válido. Plano:
+  `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
 
 - **E18.0 — baseline e reprodução concluída:** a branch
   `feature/e18-ux-10-10` foi criada a partir de `feature/e17-ameno-ux` em
@@ -281,7 +312,7 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
   2026. O gate real encontrou clipping e preview fora da região de trabalho;
   não promover este canary.
 
-- **Próximo passo — E19.0:** criar branch isolada a partir do E18, usar as
+- **Histórico E19.0 — substituído pelo plano E20:** criar branch isolada a partir do E18, usar as
   capturas em `work/e19-baseline`, coletar métricas da fonte/DPI/viewport no
   Max e transformar o clipping em testes RED. Implementar somente Aparência
   até seu gate humano intermediário passar.
@@ -339,6 +370,18 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-14 — Continuar do checkpoint sem refazer trabalho:** confirmada a
+  conclusão das 19 suítes Max executadas na noite anterior; fechados evidência,
+  plano vivo e gate E20.0. Próximo passo funcional é E20.1. O núcleo e o pacote
+  instalado não foram alterados.
+
+- **2026-09-13 — Executar o plano e retomar sem recapitulação:** iniciada E20.0
+  sobre a `develop` publicada, em branch isolada; capturas originais preservadas,
+  auditoria paralela da janela/prévia, testes RED e baseline Qt reproduzível.
+  Resultados e limites do offscreen em `work/e20-baseline/README.md`; nenhuma
+  mudança em `Contents/`. ADR 0029 registra prioridade vertical, restauração
+  válida e prévia fiel. Instalação fica para E20.8; sem merge automático.
 
 - **2026-09-13 — Planejar interface vertical adaptativa:** o usuário aprovou a
   janela vertical como experiência principal para Cotar e Estilos, mantendo
