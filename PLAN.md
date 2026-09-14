@@ -8,8 +8,9 @@
 Este checkpoint e o plano E20 prevalecem sobre os próximos passos históricos
 E18/E19 mantidos abaixo. Branch `feature/e20-vertical-adaptive-ui`, base publicada
 `develop` em `1acc10af35a289c18ffafa9186ca2055e4f97f41`; plano preservado no commit
-`d030e4f`. E20.0 concluída; não houve alteração de produção ou nova
-instalação. Evidências: `work/e20-baseline/README.md`. E20.1–E20.8 não iniciadas.
+`d030e4f`. E20.0 e E20.1 concluídas; nenhuma nova instalação foi feita.
+Evidências: `work/e20-baseline/README.md` e `work/e20-window/README.md`.
+E20.2 é a próxima etapa; E20.3–E20.8 não iniciadas.
 
 Já foram registrados 69 testes Python legados verdes, 12 REDs reproduzíveis
 (três de janela, sete de geometria/escala da prévia e dois de apresentação), um
@@ -17,6 +18,11 @@ controle positivo e 50 capturas Qt. A matriz MAXScript concluiu 19/19 suítes
 verdes, zero FAIL, em 2026-09-13; checkpoint fechado em 2026-09-14. Resumo:
 `work/e20-baseline/max-regression/summary.txt`. O aceite visual do candidato
 continua pendente das etapas de implementação e instalação.
+
+A E20.1 adotou abertura vertical baseada na área útil, removeu o mínimo fixo,
+separou geometria normal/estado/tela e recupera mudanças de monitor, resolução
+e DPI. O gate fechou com 20/20 contratos em 96 e 144 DPI, 69/69 regressões e
+teste nativo do Max 2026 com 1 PASS/0 FAIL. Commit funcional `0329146`.
 
 **ATENÇÃO — NECESSIDADE NO CÓDIGO FUNCIONAL:** Aplicar ignora o rascunho atual,
 enquanto Salvar pode reconstruir cotas. Separar esses efeitos exige contrato
@@ -40,6 +46,14 @@ Não substituir o histórico: acrescentar uma entrada datada. O plano corrente �
 Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions**. Ele deve criar cotas rápidas, editáveis e persistentes para plantas humanizadas, com apresentação controlável e uma saída de render independente para composição.
 
 ## Concluído
+
+- **E20.1 — janela vertical e persistência segura (2026-09-14):** primeira
+  abertura `780×1020` escalada pela área útil, redimensionamento livre,
+  persistência de posição/tamanho/maximização e recuperação de monitor/DPI,
+  inclusive da moldura nativa ao restaurar uma janela maximizada. Contratos de
+  janela 20/20 em 96 e 144 DPI, regressões 69/69, pacote válido e host Max
+  2026 com 1 PASS/0 FAIL. Commit funcional `0329146`; evidências em
+  `work/e20-window/README.md`. Sem instalação, merge ou tag.
 
 - **E20.0 — baseline e critérios (2026-09-14):** branch isolada criada a partir
   da base publicada; três originais preservados por SHA-256, 50 capturas Qt,
@@ -115,8 +129,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **E20 — interface vertical adaptativa:** E20.0 concluída. Próxima entrega é
-  E20.1, geometria/persistência; E20.2–E20.8 não iniciadas. Manter commits
+- **E20 — interface vertical adaptativa:** E20.0–E20.1 concluídas. Próxima
+  entrega é E20.2, shell adaptativo e linguagem visual; E20.3–E20.8 não
+  iniciadas. Manter commits
   recuperáveis na branch `feature/e20-vertical-adaptive-ui`, sem merge/tag.
 
 - **E14 — Planos de cotação e fachadas em validação:** E14.1–E14.5 foram
@@ -293,9 +308,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Próximo passo — E20.1:** corrigir geometria vertical/persistência na branch
-  isolada, mantendo a baseline E20.0 intacta. Ampliar casos de posição, maximização e
-  monitor removido; não sobrescrever tamanho salvo válido. Plano:
+- **Próximo passo — E20.2:** medir breakpoints pela largura real do viewport,
+  consolidar o shell e os tokens Ameno, corrigir contraste/foco/teclado e
+  provar zero overflow horizontal sem reconstruir páginas nem acessar bridge.
+  Manter a geometria E20.1 e a baseline E20.0 intactas. Plano:
   `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
 
 - **E18.0 — baseline e reprodução concluída:** a branch
@@ -370,6 +386,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-14 — Continuar as etapas da E20:** E20.1 implementada e fechada
+  com geometria vertical segura, persistência de posição/tamanho/estado,
+  recuperação de monitor/DPI e validação da moldura no Max 2026. Commit
+  funcional `0329146`; 20/20 contratos em dois DPIs, 69/69 regressões, pacote
+  válido e 1 PASS/0 FAIL no host. E20.2 definida como próxima; sem instalação.
 
 - **2026-09-14 — Continuar do checkpoint sem refazer trabalho:** confirmada a
   conclusão das 19 suítes Max executadas na noite anterior; fechados evidência,

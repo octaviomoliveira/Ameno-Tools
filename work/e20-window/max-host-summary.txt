@@ -1,0 +1,17 @@
+E20.1 MAX HOST SUMMARY
+DATE=2026-09-14
+FUNCTIONAL_COMMIT=032914618ba80092f67e1bd6e02f1e6a19951f9a
+SCRIPT=tests/maxscript/test_e20_window_host.ms
+SCRIPT_SHA256=926E544C5E14F95507623C7490DD03FEB42FC070D08E9E12AEC6E6D9B5E92556
+COMMAND=tools/test-maxscript.ps1 -TestScript tests/maxscript/test_e20_window_host.ms
+HOST=3ds Max 2026.3 (28.3.0.30732)
+HOST_PYTHON=3.11.12
+QT=6.5.3
+RESULT=PASS
+PASS_MARKERS=1
+FAIL_MARKERS=0
+RUNNER_EXIT=0
+ASSERTIONS=portrait first open; native frame contained; exact normal geometry roundtrip; maximize-minimize persistence; reopen maximized; native-state restore to safe normal frame
+SETTINGS=isolated process-local INI under .test-output
+ENTRYPOINT=checkout source tree
+INSTALLED_PACKAGE_CHANGED=no

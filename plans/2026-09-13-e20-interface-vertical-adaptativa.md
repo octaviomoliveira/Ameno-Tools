@@ -2,7 +2,7 @@
 
 Data: 2026-09-13
 
-Status: E20.0 concluída; E20.1–E20.8 não iniciadas.
+Status: E20.0–E20.1 concluídas; E20.2 é a próxima etapa.
 
 ## Checkpoint de execução — 2026-09-14
 
@@ -19,12 +19,16 @@ Status: E20.0 concluída; E20.1–E20.8 não iniciadas.
 - Dependência E20.5: Aplicar ainda usa o estilo salvo; Salvar pode reconstruir
   cotas. A separação aprovada exige contrato funcional adicional, registrado
   na baseline, sem mudança do núcleo nesta etapa.
+- E20.1 concluída no commit funcional `0329146`: abertura vertical adaptada à
+  área útil, persistência segura de posição/tamanho/maximização, recuperação de
+  monitor/DPI e moldura nativa validada no Max 2026. Evidência:
+  [work/e20-window](../work/e20-window/README.md).
 
 | Etapa | Estado |
 | --- | --- |
 | E20.0 — Base e contratos | Concluída; regressões verdes e 12 REDs específicos |
-| E20.1 — Janela e persistência | Não iniciada; próxima |
-| E20.2 — Shell e identidade | Não iniciada |
+| E20.1 — Janela e persistência | Concluída; 20/20 contratos em dois DPIs e host Max verde |
+| E20.2 — Shell e identidade | Não iniciada; próxima |
 | E20.3 — Cotar | Não iniciada |
 | E20.4 — Prévia fiel | Não iniciada |
 | E20.5 — Estilos | Não iniciada; dependência funcional identificada |
@@ -172,6 +176,9 @@ Commit sugerido: `test(e20): capture vertical baseline and red contracts`.
 
 ### E20.1 — Geometria da janela e persistência segura
 
+Estado: concluída em 2026-09-14 no commit funcional `0329146`. Gate e
+reprodução em `work/e20-window/README.md`.
+
 1. Definir tamanho inicial vertical a partir de `availableGeometry()` do monitor.
 2. Fazer o primeiro frame mostrar o fluxo principal sem abrir fora da tela.
 3. Persistir tamanho, posição e estado maximizado somente após geometria válida.
@@ -186,6 +193,8 @@ Gate: geometria previsível, recuperável e persistente, sem clipping novo.
 Commit sugerido: `feat(e20): adopt safe vertical window geometry`.
 
 ### E20.2 — Shell adaptativo e linguagem visual
+
+Estado: próxima etapa.
 
 1. Medir breakpoints pela largura útil do viewport da página.
 2. Manter rail compacto, ordem aprovada e tooltips acessíveis.
