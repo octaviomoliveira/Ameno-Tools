@@ -2,7 +2,7 @@
 
 Data: 2026-09-13
 
-Status: E20.0–E20.1 concluídas; E20.2 é a próxima etapa.
+Status: E20.0–E20.2 concluídas no gate técnico local; E20.3 é a próxima etapa.
 
 ## Checkpoint de execução — 2026-09-14
 
@@ -23,13 +23,18 @@ Status: E20.0–E20.1 concluídas; E20.2 é a próxima etapa.
   área útil, persistência segura de posição/tamanho/maximização, recuperação de
   monitor/DPI e moldura nativa validada no Max 2026. Evidência:
   [work/e20-window](../work/e20-window/README.md).
+- E20.2 concluída no gate Qt local em 2026-09-23: breakpoints pelo viewport,
+  rail compacto acessível, linguagem visual e foco medidos. Shell 8/8 em 96 e
+  144 DPI; 69/69 regressões Python; 25 capturas sem rolagem horizontal.
+  Evidência: [work/e20-shell](../work/e20-shell/README.md). A instalação e o
+  aceite visual no Max permanecem no gate E20.8.
 
 | Etapa | Estado |
 | --- | --- |
 | E20.0 — Base e contratos | Concluída; regressões verdes e 12 REDs específicos |
 | E20.1 — Janela e persistência | Concluída; 20/20 contratos em dois DPIs e host Max verde |
-| E20.2 — Shell e identidade | Não iniciada; próxima |
-| E20.3 — Cotar | Não iniciada |
+| E20.2 — Shell e identidade | Concluída no gate técnico local; aceite no Max em E20.8 |
+| E20.3 — Cotar | Não iniciada; próxima |
 | E20.4 — Prévia fiel | Não iniciada |
 | E20.5 — Estilos | Não iniciada; dependência funcional identificada |
 | E20.6 — Demais páginas | Não iniciada |
@@ -194,7 +199,8 @@ Commit sugerido: `feat(e20): adopt safe vertical window geometry`.
 
 ### E20.2 — Shell adaptativo e linguagem visual
 
-Estado: próxima etapa.
+Estado: concluída no gate técnico local em 2026-09-23. Evidência em
+`work/e20-shell/README.md`; aceite visual no host fica para E20.8.
 
 1. Medir breakpoints pela largura útil do viewport da página.
 2. Manter rail compacto, ordem aprovada e tooltips acessíveis.

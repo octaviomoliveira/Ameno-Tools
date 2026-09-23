@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "Contents" / "python"))
 
 from PySide6 import QtWidgets  # noqa: E402
 
-from ameno_ui.responsive import spec_for_width  # noqa: E402
+from ameno_ui.responsive import spec_for_viewport_width  # noqa: E402
 from ameno_ui.window import AmenoMainWindow  # noqa: E402
 
 
@@ -32,16 +32,17 @@ class ResponsiveBridge:
 
 
 def test_breakpoints_are_pure_and_have_no_ambiguous_boundary() -> None:
-    assert spec_for_width(780).mode == "compact"
-    assert spec_for_width(899).mode == "compact"
-    assert spec_for_width(900).mode == "medium"
-    assert spec_for_width(1279).mode == "medium"
-    assert spec_for_width(1280).mode == "wide"
-    assert spec_for_width(1560).sidebar_width == 208
-    assert spec_for_width(780).page_margin == 16
+    assert spec_for_viewport_width(759).mode == "compact"
+    assert spec_for_viewport_width(760).mode == "medium"
+    assert spec_for_viewport_width(999).mode == "medium"
+    assert spec_for_viewport_width(1000).mode == "wide"
+    assert spec_for_viewport_width(1560).sidebar_width == 64
+    assert spec_for_viewport_width(700).page_margin == 16
+    assert spec_for_viewport_width(750, "compact").mode == "compact"
+    assert spec_for_viewport_width(750, "medium").mode == "medium"
 
 
-def test_shell_uses_rail_medium_and_wide_sidebar_without_rebuilding_pages() -> None:
+def test_shell_keeps_compact_rail_while_page_density_changes_without_rebuild() -> None:
     app = _app()
     bridge = ResponsiveBridge()
     window = AmenoMainWindow(bridge, lambda _token: None, lambda: None)
@@ -49,16 +50,16 @@ def test_shell_uses_rail_medium_and_wide_sidebar_without_rebuilding_pages() -> N
     view_ids = {key: id(view) for key, view in window.shell.page_views.items()}
     window.show_application("create")
     window.show()
-    for width, expected_mode, expected_sidebar in (
-        (780, "compact", 64),
-        (980, "medium", 184),
-        (1280, "wide", 208),
-        (1560, "wide", 208),
+    for width, expected_mode in (
+        (780, "compact"),
+        (980, "medium"),
+        (1280, "wide"),
+        (1560, "wide"),
     ):
         window.resize(width, 800)
         app.processEvents()
         assert window.shell._responsive_mode == expected_mode
-        assert window.shell.sidebar.width() == expected_sidebar
+        assert window.shell.sidebar.width() == 64
         assert {key: id(page) for key, page in window.shell.pages.items()} == page_ids
         assert {key: id(view) for key, view in window.shell.page_views.items()} == view_ids
     window.close()

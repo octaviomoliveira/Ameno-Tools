@@ -53,7 +53,7 @@ def test_compact_rail_uses_icons_but_keeps_accessible_names_and_tooltips() -> No
     window.close()
 
 
-def test_wide_navigation_keeps_labels_and_icons() -> None:
+def test_wide_navigation_keeps_compact_icons_and_accessible_labels() -> None:
     _app()
     window = AmenoMainWindow(IconBridge(), lambda _token: None, lambda: None)
     window.resize(1280, 800)
@@ -63,7 +63,9 @@ def test_wide_navigation_keeps_labels_and_icons() -> None:
     window._frame_checked = True
     window.show()
     QtWidgets.QApplication.processEvents()
-    assert window.shell._nav_by_key["create"].text() == "Cotar"
+    assert window.shell._nav_by_key["create"].text() == ""
     assert not window.shell._nav_by_key["create"].icon().isNull()
-    assert window.shell.sidebar.width() == 208
+    assert window.shell._nav_by_key["create"].accessibleName() == "Cotar"
+    assert window.shell._nav_by_key["styles"].accessibleName() == "Estilos"
+    assert window.shell.sidebar.width() == 64
     window.close()

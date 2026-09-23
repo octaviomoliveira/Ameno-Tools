@@ -120,7 +120,7 @@ class StylesPage(QtWidgets.QWidget):
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(24, 20, 24, 18)
         root.setSpacing(10)
-        root.addWidget(PageHeader("Estilo", "Ajuste a aparência das cotas e aplique o estilo.", "ESTILO"))
+        root.addWidget(PageHeader("Estilos", "Ajuste a aparência das cotas e aplique o estilo.", "ESTILOS"))
 
         self.style_card = QtWidgets.QWidget()
         self.style_card.setObjectName("TransparentHost")

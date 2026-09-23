@@ -1,16 +1,17 @@
 # Plano compartilhado — Ameno Tools
 
 > Fonte de continuidade do projeto para qualquer pessoa ou agente (incluindo Antigravity).
-> Atualizado: 2026-09-14
+> Atualizado: 2026-09-23
 
 ## Checkpoint corrente — E20
 
 Este checkpoint e o plano E20 prevalecem sobre os próximos passos históricos
 E18/E19 mantidos abaixo. Branch `feature/e20-vertical-adaptive-ui`, base publicada
 `develop` em `1acc10af35a289c18ffafa9186ca2055e4f97f41`; plano preservado no commit
-`d030e4f`. E20.0 e E20.1 concluídas; nenhuma nova instalação foi feita.
-Evidências: `work/e20-baseline/README.md` e `work/e20-window/README.md`.
-E20.2 é a próxima etapa; E20.3–E20.8 não iniciadas.
+`d030e4f`. E20.0–E20.2 concluídas no gate técnico local; nenhuma nova
+instalação foi feita. Evidências: `work/e20-baseline/README.md`,
+`work/e20-window/README.md` e `work/e20-shell/README.md`. E20.3 é a próxima
+etapa; E20.4–E20.8 não iniciadas.
 
 Já foram registrados 69 testes Python legados verdes, 12 REDs reproduzíveis
 (três de janela, sete de geometria/escala da prévia e dois de apresentação), um
@@ -46,6 +47,13 @@ Não substituir o histórico: acrescentar uma entrada datada. O plano corrente �
 Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions**. Ele deve criar cotas rápidas, editáveis e persistentes para plantas humanizadas, com apresentação controlável e uma saída de render independente para composição.
 
 ## Concluído
+
+- **E20.2 — shell adaptativo e identidade (2026-09-23):** layout passa a usar a
+  largura útil do viewport; rail compacto mantém ordem, tooltips, teclado e
+  alvos de 44×44 px; tokens visuais, contraste e foco foram consolidados.
+  Testes do shell 8/8 em 96 e 144 DPI, regressões Python 69/69, 25 capturas
+  Qt sem rolagem horizontal e pacote estrutural válido. Evidência em
+  `work/e20-shell/README.md`. Aceite no 3ds Max e instalação seguem em E20.8.
 
 - **E20.1 — janela vertical e persistência segura (2026-09-14):** primeira
   abertura `780×1020` escalada pela área útil, redimensionamento livre,
@@ -129,9 +137,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **E20 — interface vertical adaptativa:** E20.0–E20.1 concluídas. Próxima
-  entrega é E20.2, shell adaptativo e linguagem visual; E20.3–E20.8 não
-  iniciadas. Manter commits
+- **E20 — interface vertical adaptativa:** E20.0–E20.2 concluídas no gate
+  técnico local. Próxima entrega é E20.3, refinamento de Cotar; E20.4–E20.8
+  não iniciadas. Manter commits
   recuperáveis na branch `feature/e20-vertical-adaptive-ui`, sem merge/tag.
 
 - **E14 — Planos de cotação e fachadas em validação:** E14.1–E14.5 foram
@@ -308,10 +316,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Próximo passo — E20.2:** medir breakpoints pela largura real do viewport,
-  consolidar o shell e os tokens Ameno, corrigir contraste/foco/teclado e
-  provar zero overflow horizontal sem reconstruir páginas nem acessar bridge.
-  Manter a geometria E20.1 e a baseline E20.0 intactas. Plano:
+- **Próximo passo — E20.3:** refinar a página Cotar para o formato vertical,
+  mantendo as decisões de medida, orientação e direção legíveis, o estado da
+  cena acionável e o botão de iniciar acessível. Preservar os contratos
+  funcionais existentes e validar o fluxo nas geometrias do plano:
   `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
 
 - **E18.0 — baseline e reprodução concluída:** a branch
@@ -386,6 +394,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-23 — Atualizar a E20 no GitHub:** as alterações locais da E20.2
+  foram revisadas, o rail recebeu alvo visual mínimo de 44×44 px e o shell
+  passou 8/8 contratos em 96 e 144 DPI, 69/69 regressões Python, pacote
+  estrutural e 25 capturas Qt sem rolagem horizontal. O gate técnico local da
+  E20.2 foi registrado; E20.3 é a próxima etapa. A prévia 2D mantém seus 9
+  contratos RED previstos para E20.4. Evidência: `work/e20-shell/README.md`.
 
 - **2026-09-14 — Continuar as etapas da E20:** E20.1 implementada e fechada
   com geometria vertical segura, persistência de posição/tamanho/estado,

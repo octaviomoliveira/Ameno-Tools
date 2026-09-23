@@ -6,6 +6,7 @@ from typing import Iterable, Optional, Sequence, Tuple
 
 from .assets import nav_icon, pixmap
 from .qt_compat import QtCore, QtGui, QtWidgets
+from .theme import COLORS
 
 
 class BrandImage(QtWidgets.QLabel):
@@ -71,7 +72,7 @@ class ChoiceGlyph(QtWidgets.QWidget):
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
         active = bool(getattr(self.parentWidget(), "isChecked", lambda: False)())
-        pen = QtGui.QPen(QtGui.QColor("#FFFFFF" if active else "#B8B8B3"), 2.0)
+        pen = QtGui.QPen(QtGui.QColor(COLORS["white"] if active else COLORS["icon"]), 2.0)
         pen.setCapStyle(QtCore.Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(QtCore.Qt.PenJoinStyle.RoundJoin)
         painter.setPen(pen)
@@ -120,12 +121,14 @@ class ChoiceIndicator(QtWidgets.QWidget):
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
         checked = self.owner.isChecked()
-        painter.setPen(QtGui.QPen(QtGui.QColor("#F23B32" if checked else "#555753"), 1.6))
+        painter.setPen(
+            QtGui.QPen(QtGui.QColor(COLORS["red"] if checked else COLORS["control_border"]), 1.6)
+        )
         painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
         painter.drawEllipse(2, 2, 18, 18)
         if checked:
             painter.setPen(QtCore.Qt.PenStyle.NoPen)
-            painter.setBrush(QtGui.QColor("#F23B32"))
+            painter.setBrush(QtGui.QColor(COLORS["red"]))
             painter.drawEllipse(6, 6, 10, 10)
 
 
@@ -149,7 +152,7 @@ class StatusDot(QtWidgets.QWidget):
         del event
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
-        color = QtGui.QColor("#47C978" if self._ready else "#777873")
+        color = QtGui.QColor(COLORS["success"] if self._ready else COLORS["status_idle"])
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(color)
         painter.drawEllipse(3, 3, 12, 12)
@@ -166,6 +169,7 @@ class CollapsibleSection(QtWidgets.QFrame):
         self.toggle.setObjectName("SectionToggle")
         self.toggle.setText(title)
         self.toggle.setCheckable(True)
+        self.toggle.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.toggle.setChecked(expanded)
         self.toggle.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.toggle.setAccessibleName(title)
@@ -236,6 +240,7 @@ class ChoiceCard(QtWidgets.QPushButton):
         super().__init__("")
         self.setObjectName("ChoiceCard")
         self.setCheckable(True)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.setProperty("choice", True)
         self.setProperty("choiceValue", value)
         self.setAccessibleName(label)
@@ -341,6 +346,7 @@ class SegmentedChoice(QtWidgets.QWidget):
             icon_name = item[2] if len(item) > 2 else ""
             widget = QtWidgets.QPushButton(label)
             widget.setCheckable(True)
+            widget.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
             widget.setProperty("segment", True)
             widget.setProperty("segmentPosition", "first" if index == 0 else "last" if index == last else "middle")
             widget.setProperty("choiceValue", value)
@@ -410,6 +416,7 @@ class Disclosure(QtWidgets.QWidget):
         self.toggle = QtWidgets.QPushButton()
         self.toggle.setProperty("quiet", True)
         self.toggle.setCheckable(True)
+        self.toggle.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.toggle.setChecked(expanded)
         self.toggle.setAccessibleName(label)
         self._label = label

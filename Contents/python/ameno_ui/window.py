@@ -16,7 +16,7 @@ from .preferences import settings
 from .page_scaffold import apply_page_margins
 from .qt_compat import QtCore, QtGui, QtWidgets, max_parent
 from .render_page import RenderPage
-from .responsive import spec_for_width
+from .responsive import spec_for_viewport_width
 from .styles_page import StylesPage
 from .theme import apply_to
 from .window_geometry import (
@@ -41,14 +41,27 @@ class FixedPageHost(QtWidgets.QScrollArea):
             child.resize(self.viewport().size())
 
 
+class NavigationButton(QtWidgets.QPushButton):
+    """Rail button with an explicit Enter contract outside dialog contexts."""
+
+    def keyPressEvent(self, event) -> None:  # noqa: N802 - Qt API
+        if event.key() in (QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter):
+            self.click()
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+
 class AppShell(QtWidgets.QWidget):
     def __init__(self, bridge: UiBridge, logout: Callable[[], None]) -> None:
         super().__init__()
         self.setObjectName("AppShell")
         self._responsive_mode = ""
+        self._responsive_ready = False
+        self._applying_responsive = False
         self._nav_labels = {
             "create": "Cotar",
-            "styles": "Estilo",
+            "styles": "Estilos",
             "edit": "Revisar",
             "render": "Exportar",
             "config": "Configurações",
@@ -84,8 +97,8 @@ class AppShell(QtWidgets.QWidget):
         content = QtWidgets.QStackedWidget()
         content.setObjectName("ContentStack")
         self.content = content
-        for key, label in (("create", "Cotar"), ("styles", "Estilo"), ("edit", "Revisar"), ("render", "Exportar")):
-            page_button = QtWidgets.QPushButton(label)
+        for key, label in (("create", "Cotar"), ("styles", "Estilos"), ("edit", "Revisar"), ("render", "Exportar")):
+            page_button = NavigationButton(label)
             page_button.setCheckable(True)
             page_button.setMinimumHeight(36)
             page_button.setProperty("nav", True)
@@ -97,15 +110,16 @@ class AppShell(QtWidgets.QWidget):
             side_layout.addWidget(page_button)
             page_button.clicked.connect(lambda checked=False, name=key: self.show_page(name))
         side_layout.addStretch(1)
-        help_button = QtWidgets.QPushButton("Ajuda")
+        help_button = NavigationButton("Ajuda")
         self.help_button = help_button
         help_button.setProperty("nav", True)
         help_button.setAccessibleName("Ajuda")
         help_button.setToolTip("Como começar")
+        help_button.setMinimumHeight(40)
         help_button.setIcon(nav_icon("ajuda"))
         help_button.clicked.connect(self.show_help)
         side_layout.addWidget(help_button)
-        config_button = QtWidgets.QPushButton("Configurações")
+        config_button = NavigationButton("Configurações")
         config_button.setCheckable(True)
         config_button.setMinimumHeight(36)
         config_button.setProperty("nav", True)
@@ -139,57 +153,88 @@ class AppShell(QtWidgets.QWidget):
                 page_view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
                 page_view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             page_view.setWidget(self.pages[key])
+            page_view.viewport().installEventFilter(self)
             self.page_views[key] = page_view
             content.addWidget(page_view)
         layout.addWidget(content, 1)
         # O shell é construído atrás da tela de login. Não consultar a cena
         # antes de o token ser aceito; a primeira leitura acontece no
         # coordenador, depois da autenticação.
+        self._responsive_ready = True
         self.show_page("create", refresh=False)
-        self._apply_responsive_layout()
 
     def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
         super().resizeEvent(event)
         self._apply_responsive_layout()
 
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802 - Qt API
+        if (
+            self._responsive_ready
+            and event.type() == QtCore.QEvent.Type.Resize
+            and self.content.currentWidget() is not None
+            and watched is self.content.currentWidget().viewport()
+        ):
+            self._apply_responsive_layout()
+        return super().eventFilter(watched, event)
+
+    def _current_viewport_width(self) -> int:
+        current = self.content.currentWidget()
+        if current is not None and current.viewport().width() > 0:
+            return current.viewport().width()
+        return max(1, self.content.width())
+
     def _apply_responsive_layout(self) -> None:
-        spec = spec_for_width(self.width())
+        if not self._responsive_ready or self._applying_responsive:
+            return
+        spec = spec_for_viewport_width(
+            self._current_viewport_width(),
+            self._responsive_mode or None,
+        )
         mode, sidebar_width = spec.mode, spec.sidebar_width
         if mode == self._responsive_mode and self.sidebar.width() == sidebar_width:
             return
-        self._responsive_mode = mode
-        self.sidebar.setFixedWidth(sidebar_width)
-        compact = mode == "compact"
-        self.product_meta.setVisible(not compact)
-        self.sidebar.layout().setContentsMargins(8 if compact else 13, 18, 8 if compact else 13, 14)
-        for key, page in self.pages.items():
-            apply_page_margins(page, spec)
-            if key == "styles":
-                # Estilo owns its only vertical scroll inside the controls
-                # column. The page itself must fill, not outgrow, the outer
-                # viewport so preview and footer remain fixed.
-                page.setMinimumHeight(0)
-                page.setSizePolicy(
-                    QtWidgets.QSizePolicy.Policy.Ignored,
-                    QtWidgets.QSizePolicy.Policy.Ignored,
-                )
-        for key, widget in self._nav_by_key.items():
-            widget.setText("" if compact else self._nav_labels[key])
-            widget.setToolTip(self._nav_labels[key])
-            widget.setMinimumHeight(40 if compact else 36)
-            widget.setIconSize(QtCore.QSize(22 if compact else 18, 22 if compact else 18))
-            widget.setProperty("compact", compact)
-        # Re-evaluate the dynamic compact selector once per breakpoint. Calling
-        # ``widget.style().unpolish/polish`` is unsafe in 3ds Max's embedded
-        # Qt: the transient QStyle wrapper can already be deleted while the
-        # shell is being constructed. Reapplying the window-scoped stylesheet
-        # keeps the same widget tree and avoids that dangling wrapper.
-        owner = self.window()
-        if owner is not None and owner.styleSheet():
-            owner.setStyleSheet(owner.styleSheet())
-        self.help_button.setText("?" if compact else "Ajuda")
-        self.help_button.setIconSize(QtCore.QSize(22 if compact else 18, 22 if compact else 18))
-        self.help_button.setToolTip("Como começar")
+        self._applying_responsive = True
+        try:
+            self._responsive_mode = mode
+            self.sidebar.setFixedWidth(sidebar_width)
+            # Page density and rail density are independent. The authorial
+            # Ameno rail stays compact at every width; labels remain exposed
+            # through accessibility APIs and tooltips.
+            self.product_meta.setVisible(False)
+            self.sidebar.layout().setContentsMargins(8, 18, 8, 14)
+            for key, page in self.pages.items():
+                apply_page_margins(page, spec)
+                if key == "styles":
+                    # Estilos owns its only vertical scroll inside the controls
+                    # column. The page itself must fill, not outgrow, the outer
+                    # viewport so preview and footer remain fixed.
+                    page.setMinimumHeight(0)
+                    page.setSizePolicy(
+                        QtWidgets.QSizePolicy.Policy.Ignored,
+                        QtWidgets.QSizePolicy.Policy.Ignored,
+                    )
+            for key, widget in self._nav_by_key.items():
+                widget.setText("")
+                widget.setToolTip(self._nav_labels[key])
+                widget.setAccessibleName(self._nav_labels[key])
+                # Compact rail targets remain comfortably touchable and
+                # keyboard-visible even after the host stylesheet adds its
+                # own border/padding metrics.
+                widget.setMinimumHeight(44)
+                widget.setIconSize(QtCore.QSize(22, 22))
+                widget.setProperty("compact", True)
+            # Re-evaluate dynamic properties only when page density changes.
+            # Polishing the host style directly is unsafe in embedded Qt.
+            owner = self.window()
+            if owner is not None and owner.styleSheet():
+                owner.setStyleSheet(owner.styleSheet())
+            self.help_button.setMinimumHeight(44)
+            self.help_button.setText("?")
+            self.help_button.setIconSize(QtCore.QSize(22, 22))
+            self.help_button.setToolTip("Como começar")
+            self.help_button.setProperty("compact", True)
+        finally:
+            self._applying_responsive = False
 
     def show_page(self, name: str, refresh: bool = False) -> None:
         page = self.pages.get(name, self.pages["create"])
@@ -197,6 +242,7 @@ class AppShell(QtWidgets.QWidget):
         self.content.setCurrentWidget(view)
         for key, button_widget in self._nav_by_key.items():
             button_widget.setChecked(key == name)
+        self._apply_responsive_layout()
         if refresh and hasattr(page, "refresh"):
             # Callers use this only after an explicit command/authentication;
             # sidebar navigation itself remains local and never touches Max.
