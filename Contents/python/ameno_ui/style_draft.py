@@ -21,7 +21,7 @@ class StyleDraft(QtCore.QObject):
 
     _FIELD_NAMES = tuple(item.name for item in fields(StyleSnapshot))
     _ENUMS = {
-        "terminal_type": {"tick", "arrowClosed", "arrowOpen", "dot", "none"},
+        "terminal_type": {"tick", "arrowClosed", "arrowOpen", "dot", "diamond", "none"},
         "terminal_placement": {"auto", "inside", "outside"},
     }
     _LIMITS = {

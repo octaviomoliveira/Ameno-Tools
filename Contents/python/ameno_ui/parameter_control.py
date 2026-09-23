@@ -10,6 +10,11 @@ from .assets import nav_icon
 from .qt_compat import QtCore, QtWidgets
 
 
+# Millimetre-based fields can be displayed in another length unit. The value
+# model (and everything sent to the bridge) always stays in millimetres.
+DISPLAY_UNITS = {"mm": (1.0, 0), "cm": (0.1, 1), "m": (0.001, 3)}
+
+
 @dataclass(frozen=True)
 class ParameterSpec:
     field_name: str
@@ -39,6 +44,8 @@ class ParameterControl(QtWidgets.QWidget):
     def __init__(self, spec: ParameterSpec, parent=None) -> None:
         super().__init__(parent)
         self.spec = spec
+        self._display_unit = spec.unit
+        self._factor = 1.0
         self.setObjectName("ParameterControl")
         self.setAccessibleName(spec.label)
         if spec.description:
@@ -106,18 +113,38 @@ class ParameterControl(QtWidgets.QWidget):
 
     def _set_value(self, value: Any, emit: bool) -> None:
         number = self._clamp_input(value)
+        self._value = number
         blockers = (QtCore.QSignalBlocker(self.slider), QtCore.QSignalBlocker(self.spinbox))
         self.slider.setValue(self._slider_value(number))
-        self.spinbox.setValue(number)
+        self.spinbox.setValue(number * self._factor)
         del blockers
         if emit:
-            self.value_changed.emit(float(self.spinbox.value()))
+            self.value_changed.emit(number)
 
     def _slider_changed(self, value: int) -> None:
         self._set_value(self._value_from_slider(value), emit=True)
 
     def _spin_changed(self, value: float) -> None:
-        self._set_value(value, emit=True)
+        self._set_value(round(value / self._factor, self.spec.decimals + 3), emit=True)
+
+    def display_unit(self) -> str:
+        return self._display_unit
+
+    def set_display_unit(self, unit: str) -> None:
+        """Show a millimetre field in mm, cm or m without changing its value."""
+        if self.spec.unit != "mm" or unit not in DISPLAY_UNITS or unit == self._display_unit:
+            return
+        factor, extra_decimals = DISPLAY_UNITS[unit]
+        value = self._value
+        self._display_unit, self._factor = unit, factor
+        blocker = QtCore.QSignalBlocker(self.spinbox)
+        self.spinbox.setDecimals(self.spec.decimals + extra_decimals)
+        self.spinbox.setRange(self.spec.input_min * factor, self.spec.input_max * factor)
+        self.spinbox.setSingleStep(self.spec.step * factor)
+        self.spinbox.setSuffix(" " + unit)
+        self.spinbox.setAccessibleName("%s (%s)" % (self.spec.label, unit))
+        self.spinbox.setValue(value * factor)
+        del blocker
 
     def eventFilter(self, watched, event) -> bool:  # noqa: N802 - Qt API
         if (
@@ -129,7 +156,7 @@ class ParameterControl(QtWidgets.QWidget):
         return super().eventFilter(watched, event)
 
     def value(self) -> float:
-        return float(self.spinbox.value())
+        return float(self._value)
 
     def setValue(self, value: Any, emit: bool = True) -> None:  # noqa: N802 - Qt-like API
         self._set_value(value, emit=emit)

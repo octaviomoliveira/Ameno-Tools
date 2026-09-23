@@ -8,11 +8,12 @@
 Este checkpoint e o plano E20 prevalecem sobre os próximos passos históricos
 E18/E19 mantidos abaixo. Branch `feature/e20-vertical-adaptive-ui`, base publicada
 `develop` em `1acc10af35a289c18ffafa9186ca2055e4f97f41`; plano preservado no commit
-`d030e4f`. E20.0–E20.4 concluídas no gate técnico local; nenhuma nova
+`d030e4f`. E20.0–E20.5 concluídas no gate técnico local; nenhuma nova
 instalação foi feita. Evidências: `work/e20-baseline/README.md`,
 `work/e20-window/README.md`, `work/e20-shell/README.md`,
-`work/e20-cotar/README.md` e `work/e20-preview/README.md`. E20.5 é a próxima
-etapa; E20.6–E20.8 não iniciadas.
+`work/e20-cotar/README.md`, `work/e20-preview/README.md` e
+`work/e20-styles/README.md`. E20.6 é a próxima etapa; E20.7–E20.8 não
+iniciadas.
 
 Já foram registrados 69 testes Python legados verdes, 12 REDs reproduzíveis
 (três de janela, sete de geometria/escala da prévia e dois de apresentação), um
@@ -48,6 +49,14 @@ Não substituir o histórico: acrescentar uma entrada datada. O plano corrente �
 Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions**. Ele deve criar cotas rápidas, editáveis e persistentes para plantas humanizadas, com apresentação controlável e uma saída de render independente para composição.
 
 ## Concluído
+
+- **E20.5 — Estilos adaptativo (2026-09-23):** Aplicar usa sempre o estilo
+  salvo; com alterações vira "Salvar e aplicar" (decisão do usuário, sem novo
+  comando no núcleo). Salvar fica desabilitado sem alterações e explica que
+  atualiza as cotas do estilo; falha ao salvar não aplica. Rascunho protegido
+  ao trocar/criar estilo e em recargas. Unidade mm/cm/m só de exibição.
+  Posição/Ângulo ocultos; Losango oferecido. Estilos 9/9 em 96 e 144 DPI,
+  regressões 69/69. Evidência em `work/e20-styles/README.md`.
 
 - **E20.4 — Prévia 2D fiel (2026-09-23):** a prévia converte todos os valores
   de estilo com uma única escala física e reproduz setas, traço, ponto e
@@ -157,9 +166,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **E20 — interface vertical adaptativa:** E20.0–E20.4 concluídas no gate
-  técnico local. Próxima entrega é E20.5, layout e semântica de Estilos;
-  E20.6–E20.8 não iniciadas. Manter commits
+- **E20 — interface vertical adaptativa:** E20.0–E20.5 concluídas no gate
+  técnico local. Próxima entrega é E20.6, Revisar, Exportar e Configurações;
+  E20.7–E20.8 não iniciadas. Manter commits
   recuperáveis na branch `feature/e20-vertical-adaptive-ui`, sem merge/tag.
 
 - **E14 — Planos de cotação e fachadas em validação:** E14.1–E14.5 foram
@@ -336,11 +345,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Próximo passo — E20.5:** layout adaptativo e semântica de Estilos. Antes
-  de declarar Aplicar/Salvar concluídos, resolver ou obter autorização para o
-  contrato funcional de aplicar o rascunho (ver baseline). Decidir também o
-  destino dos controles Posicionamento e Ângulo, que o núcleo não aplica.
-  Detalhe em `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
+- **Próximo passo — E20.6:** aplicar tokens e breakpoints às páginas Revisar,
+  Exportar e Configurações, sem funções novas sem suporte. Dependências do
+  núcleo em aberto: aplicar rascunho sem salvar e Posição/Ângulo na cota
+  confirmada. Detalhe em
+  `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
 
 - **E18.0 — baseline e reprodução concluída:** a branch
   `feature/e18-ux-10-10` foi criada a partir de `feature/e17-ameno-ux` em
@@ -414,6 +423,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-23 — Push da E20.4 e seguir para a E20.5:** `21abc26` publicado.
+  Usuário escolheu "Salvar e aplicar" sem mudar o núcleo e ocultar
+  Posição/Ângulo. E20.5 implementada; evidência em
+  `work/e20-styles/README.md`. E20.6 é a próxima etapa.
 
 - **2026-09-23 — Push da E20.3 e seguir para a E20.4:** `2eb6e26` publicado.
   E20.4 implementada: prévia com escala física única; o usuário decidiu que ela

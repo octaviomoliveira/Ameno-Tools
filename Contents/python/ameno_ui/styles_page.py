@@ -9,7 +9,8 @@ from .common import button, set_bridge_error, set_message
 from .components import CollapsibleSection, ColorControl, PageHeader
 from .dimension_preview import PreviewGeometry, PreviewTerminal, build_preview_geometry
 from .models import StyleSnapshot
-from .parameter_control import ParameterControl, style_parameter_specs
+from .parameter_control import DISPLAY_UNITS, ParameterControl, style_parameter_specs
+from .preferences import settings
 from .qt_compat import QtCore, QtGui, QtWidgets
 from .style_draft import StyleDraft
 
@@ -115,6 +116,7 @@ class StylesPage(QtWidgets.QWidget):
         self._styles: List[StyleSnapshot] = []
         self._current: Optional[StyleSnapshot] = None
         self._loading = False
+        self._preferences = settings()
         # A local draft exists before the style library or the scene is read.
         # It is the only source used by the form and the 2D preview.
         self.draft = StyleDraft(parent=self)
@@ -175,7 +177,7 @@ class StylesPage(QtWidgets.QWidget):
         self.terminal_size = controls["terminal_size"]
         self.terminal_angle = controls["terminal_angle"]
         self.terminal = QtWidgets.QComboBox()
-        for label, value in (("Tick", "tick"), ("Seta fechada", "arrowClosed"), ("Seta aberta", "arrowOpen"), ("Ponto", "dot"), ("Nenhum", "none")):
+        for label, value in (("Tick", "tick"), ("Seta fechada", "arrowClosed"), ("Seta aberta", "arrowOpen"), ("Ponto", "dot"), ("Losango", "diamond"), ("Nenhum", "none")):
             self.terminal.addItem(label, value)
         self.placement = QtWidgets.QComboBox()
         for label, value in (("Automático", "auto"), ("Interno", "inside"), ("Externo", "outside")):
@@ -203,6 +205,12 @@ class StylesPage(QtWidgets.QWidget):
         self.zoom.setCurrentIndex(1)
         self.dark = QtWidgets.QCheckBox("Fundo escuro")
         self.dark.setChecked(True)
+        # Display unit for every millimetre field; values stay in mm.
+        self.unit = QtWidgets.QComboBox()
+        self.unit.setAccessibleName("Unidade dos valores")
+        self.unit.setToolTip("Unidade de exibição das medidas do estilo")
+        for unit in DISPLAY_UNITS:
+            self.unit.addItem(unit, unit)
         self.zoom.currentIndexChanged.connect(self.update_preview)
         self.dark.toggled.connect(self.update_preview)
         preview_controls.addWidget(self.zoom)
@@ -249,6 +257,10 @@ class StylesPage(QtWidgets.QWidget):
         terminal_form.addRow("Tamanho", self.terminal_size)
         terminal_form.addRow("Posição", self.placement)
         terminal_form.addRow("Ângulo", self.terminal_angle)
+        # The committed dimension ignores placement and angle (E20.4/E20.5).
+        # Keep their stored values, but do not offer controls without effect.
+        terminal_form.setRowVisible(self.placement, False)
+        terminal_form.setRowVisible(self.terminal_angle, False)
         self.terminals_section = CollapsibleSection("Terminais", terminal_content, expanded=False)
 
         color_content = QtWidgets.QWidget()
@@ -265,6 +277,14 @@ class StylesPage(QtWidgets.QWidget):
         controls_layout = QtWidgets.QVBoxLayout(controls_host)
         controls_layout.setContentsMargins(0, 0, 4, 0)
         controls_layout.setSpacing(8)
+        unit_row = QtWidgets.QHBoxLayout()
+        unit_row.setContentsMargins(2, 0, 0, 0)
+        unit_label = QtWidgets.QLabel("Unidade dos valores")
+        unit_label.setObjectName("Muted")
+        unit_row.addWidget(unit_label)
+        unit_row.addWidget(self.unit)
+        unit_row.addStretch(1)
+        controls_layout.addLayout(unit_row)
         controls_layout.addWidget(self.text_section)
         controls_layout.addWidget(self.lines_section)
         controls_layout.addWidget(self.terminals_section)
@@ -306,6 +326,7 @@ class StylesPage(QtWidgets.QWidget):
         actions.addWidget(self.status, 1)
         self.save_button = button("Salvar estilo", self.save_style)
         self.save_button.setMinimumWidth(118)
+        self.save_button.setToolTip("Salva a definição reutilizável e atualiza as cotas que já usam este estilo.")
         self.apply_button = button("Aplicar", self.apply_selected, primary=True)
         self.apply_button.setAccessibleName("Aplicar estilo")
         self.apply_button.setMinimumWidth(130)
@@ -320,9 +341,13 @@ class StylesPage(QtWidgets.QWidget):
         root.addWidget(self.footer)
 
         self._connect_dirty_signals()
+        self._controls = controls
+        self.unit.currentIndexChanged.connect(self._unit_changed)
         self.draft.dirty_changed.connect(self._draft_state_changed)
         self._load_form(self.draft.to_snapshot())
         self._draft_state_changed(False)
+        saved_unit = str(self._preferences.value("styles/unit", "mm"))
+        self.unit.setCurrentIndex(max(0, self.unit.findData(saved_unit)))
         self._apply_workspace_mode()
 
     def sizeHint(self) -> QtCore.QSize:  # noqa: N802 - Qt API
@@ -377,9 +402,50 @@ class StylesPage(QtWidgets.QWidget):
     def _select_combo(self, row: int) -> None:
         if self._loading or row < 0:
             return
+        current = self.list_widget.currentRow()
+        if row != current and not self._confirm_leave_draft():
+            blocker = QtCore.QSignalBlocker(self.style_selector)
+            self.style_selector.setCurrentIndex(current)
+            del blocker
+            return
         self.list_widget.setCurrentRow(row)
 
+    def _unit_changed(self, _index: int) -> None:
+        unit = str(self.unit.currentData() or "mm")
+        for control in self._controls.values():
+            control.set_display_unit(unit)
+        self._preferences.setValue("styles/unit", unit)
+
+    def _confirm_leave_draft(self) -> bool:
+        """Ask before an unsaved draft would be replaced; True to continue."""
+        if not self.draft.dirty:
+            return True
+        buttons = QtWidgets.QMessageBox.StandardButton
+        answer = QtWidgets.QMessageBox.question(
+            self,
+            "Alterações não salvas",
+            "O estilo tem alterações não salvas. Salvar antes de continuar?",
+            buttons.Save | buttons.Discard | buttons.Cancel,
+            buttons.Save,
+        )
+        if answer == buttons.Save:
+            return self._save_draft() is not None
+        if answer == buttons.Discard:
+            self.draft.restore_clean()
+            return True
+        return False
+
     def _draft_state_changed(self, dirty: bool) -> None:
+        self.save_button.setEnabled(dirty)
+        self.apply_button.setText("Salvar e aplicar" if dirty else "Aplicar")
+        self.apply_button.setToolTip(
+            "Salva o estilo, atualiza as cotas que já o usam e aplica às cotas selecionadas."
+            if dirty
+            else "Aplica o estilo salvo às cotas selecionadas."
+        )
+        prefix = "Salvar e aplicar" if dirty else "Aplicar"
+        self.apply_selected_action.setText(prefix + " às cotas selecionadas")
+        self.apply_all_action.setText(prefix + " a todas as cotas")
         if dirty:
             self.status.setText("Alterações não salvas")
             self.dirty_dot.setStyleSheet("background-color: #E5B567; border-radius: 5px;")
@@ -465,10 +531,14 @@ class StylesPage(QtWidgets.QWidget):
     def _select_row(self, row: int) -> None:
         if self._loading or row < 0 or row >= len(self._styles):
             return
+        same_style = self._current is not None and self._current.style_id == self._styles[row].style_id
         self._current = self._styles[row]
         blocker = QtCore.QSignalBlocker(self.style_selector)
         self.style_selector.setCurrentIndex(row)
         del blocker
+        if same_style and self.draft.dirty:
+            # A library reload must never overwrite the draft being edited.
+            return
         self._load_form(self._current)
 
     def _set_combo(self, combo: QtWidgets.QComboBox, value: str) -> None:
@@ -517,18 +587,34 @@ class StylesPage(QtWidgets.QWidget):
             self.annotation_color.set_color_text(text)
             self.draft.set_value("annotation_color", text)
 
-    def save_style(self) -> None:
+    @staticmethod
+    def _dimensions(count: int) -> str:
+        return "1 cota" if count == 1 else "%d cotas" % count
+
+    def _save_draft(self) -> Optional[int]:
+        """Persist the draft; return how many existing dimensions were rebuilt."""
         style = self._edited_style()
-        if style is None:
-            return
         try:
-            count = self.bridge.save_style(style)
-            self.refresh()
-            set_message(self.status, "Estilo salvo; %d cota(s) reconstruída(s)." % count)
+            count = int(self.bridge.save_style(style) or 0)
         except BridgeError as exc:
             set_bridge_error(self.status, exc, "Não foi possível salvar o estilo.")
+            return None
+        # Clean before reloading, so the library reload replaces the form.
+        self.draft.mark_clean()
+        self.refresh()
+        return count
+
+    def save_style(self) -> bool:
+        count = self._save_draft()
+        if count is None:
+            return False
+        set_message(self.status, "Estilo salvo · %s do estilo atualizada(s)." % self._dimensions(count))
+        return True
 
     def new_style(self) -> None:
+        # The new style copies the saved base; never drop edits silently.
+        if not self._confirm_leave_draft():
+            return
         base = self._current.style_id if self._current else "default"
         name, accepted = QtWidgets.QInputDialog.getText(self, "Novo estilo", "Nome:")
         if not accepted or not name.strip():
@@ -561,20 +647,37 @@ class StylesPage(QtWidgets.QWidget):
         except BridgeError as exc:
             set_bridge_error(self.status, exc, "Não foi possível excluir o estilo.")
 
-    def apply_selected(self) -> None:
+    def _apply(self, all_dimensions: bool) -> None:
         if self._current is None:
             return
+        rebuilt = None
+        if self.draft.dirty:
+            # Apply always uses the saved definition; an edited draft is
+            # saved explicitly first ("Salvar e aplicar").
+            rebuilt = self._save_draft()
+            if rebuilt is None:
+                return
         try:
-            count = self.bridge.apply_style(self._current.style_id, False)
-            set_message(self.status, "%d cota(s) selecionada(s) atualizada(s)." % count)
+            count = int(self.bridge.apply_style(self._current.style_id, all_dimensions) or 0)
         except BridgeError as exc:
-            set_bridge_error(self.status, exc, "Não foi possível aplicar o estilo à seleção.")
+            target = "todas as cotas" if all_dimensions else "cotas selecionadas"
+            set_bridge_error(self.status, exc, "Não foi possível aplicar o estilo às %s." % target)
+            return
+        if all_dimensions:
+            applied = "todas as cotas (%d)" % count
+        else:
+            applied = "1 cota selecionada" if count == 1 else "%d cotas selecionadas" % count
+        if rebuilt is None:
+            set_message(self.status, "Estilo aplicado a %s." % applied)
+        else:
+            set_message(
+                self.status,
+                "Estilo salvo e aplicado a %s · %s do estilo atualizada(s)."
+                % (applied, self._dimensions(rebuilt)),
+            )
+
+    def apply_selected(self) -> None:
+        self._apply(False)
 
     def apply_all(self) -> None:
-        if self._current is None:
-            return
-        try:
-            count = self.bridge.apply_style(self._current.style_id, True)
-            set_message(self.status, "%d cota(s) atualizada(s)." % count)
-        except BridgeError as exc:
-            set_bridge_error(self.status, exc, "Não foi possível aplicar o estilo às cotas.")
+        self._apply(True)

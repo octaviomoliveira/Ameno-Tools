@@ -2,7 +2,7 @@
 
 Data: 2026-09-13
 
-Status: E20.0–E20.4 concluídas no gate técnico local; E20.5 é a próxima etapa.
+Status: E20.0–E20.5 concluídas no gate técnico local; E20.6 é a próxima etapa.
 
 ## Checkpoint de execução — 2026-09-14
 
@@ -36,8 +36,8 @@ Status: E20.0–E20.4 concluídas no gate técnico local; E20.5 é a próxima et
 | E20.2 — Shell e identidade | Concluída no gate técnico local; aceite no Max em E20.8 |
 | E20.3 — Cotar | Concluída no gate técnico local; aceite no Max em E20.8 |
 | E20.4 — Prévia fiel | Concluída no gate técnico local; tipografia no Max em E20.8 |
-| E20.5 — Estilos | Não iniciada; próxima; dependência funcional identificada |
-| E20.6 — Demais páginas | Não iniciada |
+| E20.5 — Estilos | Concluída no gate técnico local; aplicar rascunho sem salvar segue dependência do núcleo |
+| E20.6 — Demais páginas | Não iniciada; próxima |
 | E20.7 — Regressões e aceite técnico | Não iniciada |
 | E20.8 — Instalação e aceite humano | Não iniciada |
 
@@ -260,6 +260,10 @@ Gate: preview fiel, responsivo, instantâneo e inteiramente local.
 Commit sugerido: `fix(e20): make style preview geometrically faithful`.
 
 ### E20.5 — Layout adaptativo e semântica de Estilos
+
+Estado: concluída no gate técnico local em 2026-09-23. Evidência em
+`work/e20-styles/README.md`. Por decisão do usuário, Aplicar com alterações é
+"Salvar e aplicar" e Posição/Ângulo ficam ocultos até o núcleo aplicá-los.
 
 1. No vertical, manter prévia acima dos controles em tamanho compreensível.
 2. No largo, avaliar e adotar preview lateral quando melhorar a comparação.
