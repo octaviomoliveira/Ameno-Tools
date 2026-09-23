@@ -59,35 +59,39 @@ def test_extension_and_scale_parameters_move_preview_primitives() -> None:
     assert extended.dimension_segment != base.dimension_segment
 
 
-def test_terminal_type_size_placement_and_angle_are_not_decorative() -> None:
+def test_terminal_type_and_size_are_not_decorative() -> None:
     base = build_preview_geometry(_style(), (620, 240))
-    arrow = build_preview_geometry(
-        replace(_style(), terminal_type="arrowClosed", terminal_size=260, terminal_placement="outside", terminal_angle=90),
-        (620, 240),
-    )
+    arrow = build_preview_geometry(replace(_style(), terminal_type="arrowClosed", terminal_size=260), (620, 240))
+    larger = build_preview_geometry(replace(_style(), terminal_size=260), (620, 240))
     none = build_preview_geometry(replace(_style(), terminal_type="none"), (620, 240))
     assert [item.kind for item in base.terminals] == ["tick", "tick"]
     assert [item.kind for item in arrow.terminals] == ["arrowClosed", "arrowClosed"]
-    assert arrow.terminals != base.terminals
+    assert larger.terminals != base.terminals
     assert all(item.kind == "none" and not item.points for item in none.terminals)
 
 
-def test_ticks_are_centered_and_arrow_heads_extend_toward_the_selected_side() -> None:
-    tick = build_preview_geometry(replace(_style(), terminal_type="tick", terminal_angle=45), (620, 240))
+def test_ticks_and_arrows_follow_the_committed_geometry() -> None:
+    # E20.4: the committed dimension (ameno_dimension_graphics.ms) lays ticks
+    # on direction + perpendicular ("/" for a left-to-right plan dimension)
+    # and keeps arrow bodies inside the span. Placement and angle are not
+    # applied by the core, so the preview must not pretend they are.
+    tick = build_preview_geometry(replace(_style(), terminal_type="tick"), (620, 240))
     left_tick = tick.terminals[0]
     assert left_tick.points[0][0] < left_tick.anchor[0] < left_tick.points[1][0]
-    assert left_tick.points[0][1] < left_tick.anchor[1] < left_tick.points[1][1]
+    assert left_tick.points[0][1] > left_tick.anchor[1] > left_tick.points[1][1]
 
-    inside = build_preview_geometry(
-        replace(_style(), terminal_type="arrowClosed", terminal_placement="inside"),
-        (620, 240),
-    )
-    outside = build_preview_geometry(
-        replace(_style(), terminal_type="arrowClosed", terminal_placement="outside"),
-        (620, 240),
-    )
+    for kind in ("tick", "arrowClosed"):
+        inside = build_preview_geometry(
+            replace(_style(), terminal_type=kind, terminal_placement="inside", terminal_angle=45),
+            (620, 240),
+        )
+        outside = build_preview_geometry(
+            replace(_style(), terminal_type=kind, terminal_placement="outside", terminal_angle=90),
+            (620, 240),
+        )
+        assert inside.terminals == outside.terminals, kind
     assert all(point[0] > inside.terminals[0].anchor[0] for point in inside.terminals[0].points[1:])
-    assert all(point[0] < outside.terminals[0].anchor[0] for point in outside.terminals[0].points[1:])
+    assert all(point[0] < inside.terminals[1].anchor[0] for point in inside.terminals[1].points[1:])
 
 
 def test_text_color_is_separate_from_line_color() -> None:

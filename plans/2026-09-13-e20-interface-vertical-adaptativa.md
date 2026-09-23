@@ -2,7 +2,7 @@
 
 Data: 2026-09-13
 
-Status: E20.0–E20.3 concluídas no gate técnico local; E20.4 é a próxima etapa.
+Status: E20.0–E20.4 concluídas no gate técnico local; E20.5 é a próxima etapa.
 
 ## Checkpoint de execução — 2026-09-14
 
@@ -35,8 +35,8 @@ Status: E20.0–E20.3 concluídas no gate técnico local; E20.4 é a próxima et
 | E20.1 — Janela e persistência | Concluída; 20/20 contratos em dois DPIs e host Max verde |
 | E20.2 — Shell e identidade | Concluída no gate técnico local; aceite no Max em E20.8 |
 | E20.3 — Cotar | Concluída no gate técnico local; aceite no Max em E20.8 |
-| E20.4 — Prévia fiel | Não iniciada; próxima |
-| E20.5 — Estilos | Não iniciada; dependência funcional identificada |
+| E20.4 — Prévia fiel | Concluída no gate técnico local; tipografia no Max em E20.8 |
+| E20.5 — Estilos | Não iniciada; próxima; dependência funcional identificada |
 | E20.6 — Demais páginas | Não iniciada |
 | E20.7 — Regressões e aceite técnico | Não iniciada |
 | E20.8 — Instalação e aceite humano | Não iniciada |
@@ -239,6 +239,10 @@ e zero regressão de bridge.
 Commit sugerido: `feat(e20): polish vertical quoting flow`.
 
 ### E20.4 — Reconstruir fidelidade da Prévia 2D de Estilos
+
+Estado: concluída no gate técnico local em 2026-09-23. Evidência em
+`work/e20-preview/README.md`. A prévia segue a cota confirmada; Posicionamento
+e Ângulo, ignorados pelo núcleo, não alteram mais a prévia.
 
 1. Auditar o modelo geométrico puro contra a geometria real das cotas.
 2. Corrigir setas, ticks, dots, diamonds e demais terminais suportados.

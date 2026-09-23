@@ -1,0 +1,163 @@
+{
+  "suite": "e20-window",
+  "python": "3.11.15",
+  "head": "2eb6e261b566f3fa7c2ffbb2ca74698fefafc20e",
+  "pyside": "6.5.3",
+  "qt": "6.5.3",
+  "test_sources": {
+    "test_e20_window_contracts.py": "3850d3c0491599d03168caba942ee90efd68af41c31a7276793b7d4a57875bb4"
+  },
+  "runtime_sources": {
+    "Contents/python/ameno_ui/__init__.py": "f3fe9b4be43c5476442410c668d6bbac5ffddfade2bf80e6a462c0bb75754dcd",
+    "Contents/python/ameno_ui/application.py": "445e4880ea0fd8f37382c8708be72098447620e4f0855ecd1129d90409a02b14",
+    "Contents/python/ameno_ui/assets.py": "c02e37302c170606f712b9719918e98dfdf4a0cbe027c356255c810679eea3d3",
+    "Contents/python/ameno_ui/auth.py": "b34cf8c1da33f1a341a5aa01dc8d96833ac0c1db7c6145743b2093ac2a6e5dbf",
+    "Contents/python/ameno_ui/bridge.py": "ca49aec69c531dda0612aff14a915328f75fb1dbe2d53478093dd2f0f6382731",
+    "Contents/python/ameno_ui/common.py": "cbd3d7c06b480e240cbecf64d77ea0a2c03309d04fa4a6554160cea11908bba8",
+    "Contents/python/ameno_ui/components.py": "246f58ff53d9ab0d2a689bca7145c71a41780889a27f13762c59032f77654392",
+    "Contents/python/ameno_ui/config_page.py": "b48b6a92953bc1af3f513cc1f286b2dd8b32d6dac17c6bbafd66b633d5c4a44d",
+    "Contents/python/ameno_ui/create_page.py": "ddd22b4371d556ee2bcb87ccc55bd616a95897edb8b25dea0e2acbe93634fce8",
+    "Contents/python/ameno_ui/dimension_preview.py": "64ebc4bcd1100c3ed71bb3d7541c1c1a8b4bc624d1735169c7ad647462eb4bf6",
+    "Contents/python/ameno_ui/edit_page.py": "09d48ae919c0fb317ea1286d266d8fcbc192d9b3a96552533987105c2f8be20b",
+    "Contents/python/ameno_ui/entrypoint.py": "7bb512f659b50609f17512c521b22260723c97c3a6aba20b4d145f50e3b5b19d",
+    "Contents/python/ameno_ui/host_info.py": "fb6930492d0d8a4cfecffc2307293e3b3edb17c422dfada8ebaaa7e4a6632f01",
+    "Contents/python/ameno_ui/login_page.py": "970cce4e704732964227b754604856e64e3c92d1c45800f086ad2b58ea08e01a",
+    "Contents/python/ameno_ui/models.py": "ab740ab43674dad1d2d2bc050fbd50c127b95dbcfd604c013f584735d0c42998",
+    "Contents/python/ameno_ui/page_scaffold.py": "ab2b5d2497518a4b5943423f611cfd2dc696a5eba22fdf14afe02c6d2a7ffcc8",
+    "Contents/python/ameno_ui/parameter_control.py": "1c8e2a911a4fa9530d83f6a4e63b27c453bfe9129098530a8e3248337bda357d",
+    "Contents/python/ameno_ui/preferences.py": "440256d90831acf70e722eccb72ddaa290e6f5569dca5a615faf38f81447ad5f",
+    "Contents/python/ameno_ui/qt_compat.py": "5f959fd44a83fe883197fa870da602f0c756931fdd7329bb8eab28cb63984d43",
+    "Contents/python/ameno_ui/render_page.py": "727b141c4bf5bc5b8a9c4a1b67b7b9a7a5303d9176c8446a255e98f5a2229952",
+    "Contents/python/ameno_ui/responsive.py": "b86bc0487c09bff48c0942df6cac3a2c5d6687a6fcaa8f591fe89d211dffcafe",
+    "Contents/python/ameno_ui/style_draft.py": "1bac9a268e6662b8c6cfa54bf339a9b62ce0c9a207f224aeb10514961f2e8d9d",
+    "Contents/python/ameno_ui/styles_page.py": "a8e056dcb01b7dd5467e2761208348bb1f1e33b46a1af9168af79b0524e4bbc0",
+    "Contents/python/ameno_ui/theme.py": "29399207037749453a2107d4cce76c53e229205f4f415619586c71fe5031dd9f",
+    "Contents/python/ameno_ui/window.py": "c982c8fc193ac450a93411571a1c377c5fa3ac6d9a1b176d984b178872efd002",
+    "Contents/python/ameno_ui/window_geometry.py": "3d1b5c4c15d85d882c87c659cd2ba6bf6e6d3973f61fe07ffdf18eeefe2e6b46"
+  },
+  "font_dpi_override": "96",
+  "tests": [
+    {
+      "test": "test_e20_window_contracts.py::test_closing_minimized_after_maximized_reopens_maximized",
+      "status": "PASS",
+      "seconds": 0.1777,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_closing_minimized_after_normal_reopens_normal",
+      "status": "PASS",
+      "seconds": 0.1268,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_cotar_primary_action_fits_780x720_or_is_scroll_reachable_on_smaller_monitor",
+      "status": "PASS",
+      "seconds": 0.0787,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_first_open_fits_a_small_available_monitor",
+      "status": "PASS",
+      "seconds": 0.0591,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_first_open_uses_portrait_when_the_monitor_has_room",
+      "status": "PASS",
+      "seconds": 0.0588,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_inaccessible_geometry_does_not_replace_the_last_good_restore_point",
+      "status": "PASS",
+      "seconds": 0.0637,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_initial_portrait_scales_uniformly_inside_small_available_area",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_invalid_rect_uses_a_usable_portrait_fallback",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_invalid_saved_blob_falls_back_to_the_current_monitor_portrait",
+      "status": "PASS",
+      "seconds": 0.0608,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_maximized_state_roundtrips_separately_from_normal_geometry",
+      "status": "PASS",
+      "seconds": 0.128,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_native_frame_is_inside_the_current_available_area_after_show",
+      "status": "PASS",
+      "seconds": 0.0665,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_recovery_clamps_oversized_saved_geometry",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_recovery_moves_removed_monitor_geometry_onto_preferred_monitor",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_recovery_preserves_safe_position_and_size",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_reopening_preserves_a_valid_position_and_size",
+      "status": "PASS",
+      "seconds": 0.1256,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_reopening_preserves_restored_size_or_recovers_if_it_no_longer_fits",
+      "status": "PASS",
+      "seconds": 0.1195,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_restoring_a_saved_maximized_window_runs_the_native_frame_check",
+      "status": "PASS",
+      "seconds": 0.0687,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_same_monitor_resolution_change_preserves_relative_placement",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_saved_screen_identity_drives_resolution_remap",
+      "status": "PASS",
+      "seconds": 0.0609,
+      "error": ""
+    },
+    {
+      "test": "test_e20_window_contracts.py::test_window_has_no_fixed_product_minimum",
+      "status": "PASS",
+      "seconds": 0.0613,
+      "error": ""
+    }
+  ],
+  "passed": 20,
+  "failed": 0
+}

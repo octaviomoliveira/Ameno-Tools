@@ -61,7 +61,9 @@ class PreviewWidget(QtWidgets.QWidget):
         if not text_color.isValid():
             text_color = line_color
         pen = QtGui.QPen(line_color)
-        pen.setWidthF(geometry.line_thickness_px)
+        # The model keeps the nominal physical width; a hairline below one
+        # device pixel would vanish, so painting never goes thinner than that.
+        pen.setWidthF(max(1.0 / max(1.0, self.devicePixelRatioF()), geometry.line_thickness_px))
         painter.setPen(pen)
         painter.setBrush(line_color)
         reference_radius = max(2.5, min(4.5, geometry.line_thickness_px * 1.5))
@@ -94,7 +96,7 @@ class PreviewWidget(QtWidgets.QWidget):
         if terminal.kind == "dot":
             painter.setBrush(color)
             painter.drawEllipse(QtCore.QPointF(*terminal.anchor), terminal.radius, terminal.radius)
-        elif terminal.kind == "arrowClosed":
+        elif terminal.kind in ("arrowClosed", "diamond"):
             painter.setBrush(color)
             painter.drawPolygon(QtGui.QPolygonF([QtCore.QPointF(*point) for point in terminal.points]))
         elif terminal.points:

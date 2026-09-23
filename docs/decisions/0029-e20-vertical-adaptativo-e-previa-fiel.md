@@ -56,5 +56,10 @@ adicional para Aplicar/Salvar; não pode ser declarada concluída só com novo
 texto nos botões. Ângulo e posicionamento dos terminais também precisam de
 contrato consistente entre overlay e geometria confirmada.
 
+Complemento de 2026-09-23 (E20.4): por decisão do usuário, a prévia segue a
+geometria confirmada e não aplica Posicionamento nem Ângulo, que o núcleo
+ignora. A prévia usa uma escala física única; a amostra encurta de 3,50 m até
+1,20 m em canvas estreito sem alterar proporções.
+
 Referências: `plans/2026-09-13-e20-interface-vertical-adaptativa.md` e
 `work/e20-baseline/README.md`.
