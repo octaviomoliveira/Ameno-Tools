@@ -135,24 +135,32 @@ class ChoiceIndicator(QtWidgets.QWidget):
 class StatusDot(QtWidgets.QWidget):
     """Font-independent status mark for compact scene summaries."""
 
+    _COLORS = {"idle": "status_idle", "ready": "success", "warning": "warning", "error": "red"}
+
     def __init__(self, ready: bool = False, parent=None) -> None:
         super().__init__(parent)
-        self._ready = ready
+        self._state = "ready" if ready else "idle"
         self.setFixedSize(18, 18)
         self.setAccessibleName("Estado da cena")
 
     def set_ready(self, ready: bool) -> None:
-        self._ready = bool(ready)
-        self.update()
+        self.set_state("ready" if ready else "idle")
 
     def is_ready(self) -> bool:
-        return self._ready
+        return self._state == "ready"
+
+    def set_state(self, state: str) -> None:
+        self._state = state if state in self._COLORS else "idle"
+        self.update()
+
+    def state(self) -> str:
+        return self._state
 
     def paintEvent(self, event) -> None:  # noqa: N802 - Qt API
         del event
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing, True)
-        color = QtGui.QColor(COLORS["success"] if self._ready else COLORS["status_idle"])
+        color = QtGui.QColor(COLORS[self._COLORS[self._state]])
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         painter.setBrush(color)
         painter.drawEllipse(3, 3, 12, 12)

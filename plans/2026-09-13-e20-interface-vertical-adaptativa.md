@@ -2,7 +2,7 @@
 
 Data: 2026-09-13
 
-Status: E20.0–E20.2 concluídas no gate técnico local; E20.3 é a próxima etapa.
+Status: E20.0–E20.3 concluídas no gate técnico local; E20.4 é a próxima etapa.
 
 ## Checkpoint de execução — 2026-09-14
 
@@ -34,8 +34,8 @@ Status: E20.0–E20.2 concluídas no gate técnico local; E20.3 é a próxima et
 | E20.0 — Base e contratos | Concluída; regressões verdes e 12 REDs específicos |
 | E20.1 — Janela e persistência | Concluída; 20/20 contratos em dois DPIs e host Max verde |
 | E20.2 — Shell e identidade | Concluída no gate técnico local; aceite no Max em E20.8 |
-| E20.3 — Cotar | Não iniciada; próxima |
-| E20.4 — Prévia fiel | Não iniciada |
+| E20.3 — Cotar | Concluída no gate técnico local; aceite no Max em E20.8 |
+| E20.4 — Prévia fiel | Não iniciada; próxima |
 | E20.5 — Estilos | Não iniciada; dependência funcional identificada |
 | E20.6 — Demais páginas | Não iniciada |
 | E20.7 — Regressões e aceite técnico | Não iniciada |
@@ -216,6 +216,9 @@ Gate: shell consistente, zero overflow horizontal e navegação completa.
 Commit sugerido: `feat(e20): refine adaptive Ameno shell`.
 
 ### E20.3 — Refinar Cotar como fluxo vertical principal
+
+Estado: concluída no gate técnico local em 2026-09-23. Evidência em
+`work/e20-cotar/README.md`; aceite visual no host fica para E20.8.
 
 1. Reavaliar densidade e proporções dos quatro cartões de decisão.
 2. Garantir leitura completa no padrão vertical sem esconder o CTA.

@@ -103,6 +103,8 @@ class CreatePage(QtWidgets.QWidget):
         details_form.addRow("Precisão", self.precision)
         details_form.addRow("Texto", self.follow_line)
         self.details = Disclosure("Ajustar detalhes", details_box, expanded=False)
+        # The scene card carries only scene facts and the one action that is
+        # meaningful for the current state; the choice summary lives by the CTA.
         scene_box = QtWidgets.QFrame()
         scene_box.setObjectName("SceneCard")
         self.action_box = scene_box
@@ -116,35 +118,36 @@ class CreatePage(QtWidgets.QWidget):
         self.scene_status = QtWidgets.QLabel("Cena não verificada")
         self.scene_status.setObjectName("SceneTitle")
         state_copy.addWidget(self.scene_status)
-        self.selection_summary = QtWidgets.QLabel()
-        self.selection_summary.setObjectName("SelectionSummary")
-        self.selection_summary.setWordWrap(True)
-        state_copy.addWidget(self.selection_summary)
-        self.prepare_button = button("Preparar cena", self.prepare_scene)
-        self.prepare_button.setAccessibleName("Preparar cena e criar as layers de cotas")
-        self.prepare_button.setMinimumWidth(142)
-        state_copy.addWidget(self.prepare_button, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
-        action_layout.addLayout(state_copy, 1)
-        action_layout.addWidget(self._vertical_rule())
-        scene_meta = QtWidgets.QVBoxLayout()
-        scene_meta.setSpacing(2)
         self.scene_detail = QtWidgets.QLabel("")
         self.scene_detail.setObjectName("Muted")
         self.scene_detail.setWordWrap(True)
-        self.count_label = QtWidgets.QLabel("0 cota(s)")
+        state_copy.addWidget(self.scene_detail)
+        state_copy.addStretch(1)
+        action_layout.addLayout(state_copy, 1)
+        scene_meta = QtWidgets.QVBoxLayout()
+        scene_meta.setSpacing(6)
+        self.count_label = QtWidgets.QLabel("0 cotas")
         self.count_label.setObjectName("Meta")
         self.count_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
-        self.scene_detail.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
         scene_meta.addWidget(self.count_label)
-        scene_meta.addWidget(self.scene_detail)
+        self.prepare_button = button("Preparar cena", self.run_scene_action)
+        self.prepare_button.setMinimumWidth(142)
+        scene_meta.addWidget(self.prepare_button, 0, QtCore.Qt.AlignmentFlag.AlignRight)
         action_layout.addLayout(scene_meta)
         root.addWidget(scene_box)
 
-        button_row = QtWidgets.QHBoxLayout()
+        self.selection_summary = QtWidgets.QLabel()
+        self.selection_summary.setObjectName("SelectionSummary")
+        self.selection_summary.setWordWrap(True)
+        root.addWidget(self.selection_summary)
+
+        # Side by side while both fit; stacked at full width when narrow.
+        button_row = QtWidgets.QBoxLayout(QtWidgets.QBoxLayout.Direction.LeftToRight)
         button_row.setSpacing(10)
+        self._button_row = button_row
         self.start_button = button("Iniciar cotação", self.start_selected, primary=True)
         self.start_button.setAccessibleName("Iniciar cotação")
-        self.start_button.setMinimumWidth(260)
+        self.start_button.setMinimumWidth(160)
         self.more_button = QtWidgets.QToolButton()
         self.more_button.setText("Mais ações")
         self.more_button.setAccessibleName("Mais ações de cotação")
@@ -200,10 +203,13 @@ class CreatePage(QtWidgets.QWidget):
         self.delete_selection = self.delete_selection_action
         self.clear_orphans = self.clear_orphans_action
         self.delete_all = self.delete_all_action
+        self._scene_state = "unverified"
         self._restore_preferences()
         self._last_tool_choice = self.tool_choice.value()
         self._sync_direction_rule(notify=False)
         self._update_summary()
+        self._apply_scene_state("unverified", "Cena não verificada",
+                                "Preparar cena cria as layers Ameno quando ainda não existem.", 0)
         self.guide.setVisible(False)
 
     @property
@@ -264,6 +270,16 @@ class CreatePage(QtWidgets.QWidget):
         if continuous and (was_automatic or notify):
             self.mode.set_value("horizontal", emit=True)
         self.mode.set_item_enabled("aligned", not continuous)
+        # The rule is readable on the disabled option itself, not only in the
+        # message below it or in the start fallback.
+        automatic = self.mode._by_value["aligned"]
+        automatic_hint = (
+            "Disponível só em Uma medida. Em Várias medidas, escolha Horizontal ou Vertical."
+            if continuous
+            else "A cota segue o alinhamento entre os dois pontos clicados."
+        )
+        automatic.setToolTip(automatic_hint)
+        automatic.setAccessibleDescription(automatic_hint)
         if continuous:
             message = (
                 "Direção alterada para Horizontal · Automática só funciona em uma medida."
@@ -279,12 +295,43 @@ class CreatePage(QtWidgets.QWidget):
         self.direction_message.setProperty("feedback", feedback)
         self.direction_message.setVisible(True)
 
-    @staticmethod
-    def _vertical_rule() -> QtWidgets.QFrame:
-        rule = QtWidgets.QFrame()
-        rule.setObjectName("SceneRule")
-        rule.setFrameShape(QtWidgets.QFrame.Shape.VLine)
-        return rule
+    # Scene state -> (action label, accessible name, status dot). "ready" only
+    # re-reads the scene: preparing a ready scene is a no-op in the core.
+    _SCENE_ACTIONS = {
+        "unverified": ("Preparar cena", "Preparar cena e criar as layers de cotas", "idle"),
+        "notPrepared": ("Preparar cena", "Preparar cena e criar as layers de cotas", "idle"),
+        "requiresRepair": ("Reparar cena", "Reparar a infraestrutura Ameno da cena", "warning"),
+        "error": ("Tentar novamente", "Tentar preparar a cena novamente", "error"),
+        "ready": ("Atualizar estado", "Atualizar o estado da cena", "ready"),
+    }
+
+    def _apply_scene_state(self, status: str, label: str, detail: str, count: int) -> None:
+        state = status if status in self._SCENE_ACTIONS else "notPrepared"
+        self._scene_state = state
+        action, accessible, dot = self._SCENE_ACTIONS[state]
+        self.scene_status.setText(label)
+        self.scene_dot.set_state(dot)
+        self.scene_detail.setText(detail)
+        self.scene_detail.setVisible(bool(detail))
+        self.count_label.setText("1 cota" if count == 1 else "%d cotas" % count)
+        self.prepare_button.setText(action)
+        self.prepare_button.setAccessibleName(accessible)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        stacked = self.width() < 480
+        direction = (
+            QtWidgets.QBoxLayout.Direction.TopToBottom
+            if stacked
+            else QtWidgets.QBoxLayout.Direction.LeftToRight
+        )
+        if self._button_row.direction() == direction:
+            return
+        self._button_row.setDirection(direction)
+        self.more_button.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding if stacked else QtWidgets.QSizePolicy.Policy.Preferred,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
 
     def _restore_preferences(self) -> None:
         self.tool_choice.set_value(str(self._preferences.value("create/tool", "single")))
@@ -329,10 +376,7 @@ class CreatePage(QtWidgets.QWidget):
     def load_snapshot(self, snapshot: Dict) -> None:
         scene: SceneSnapshot = snapshot.get("scene", SceneSnapshot())
         create: CreateSnapshot = snapshot.get("create", CreateSnapshot())
-        self.scene_status.setText(scene.status_label)
-        self.scene_dot.set_ready(scene.status == "ready")
-        self.scene_detail.setText(scene.detail)
-        self.count_label.setText("%d cota(s)" % scene.dimension_count)
+        self._apply_scene_state(scene.status, scene.status_label, scene.detail, scene.dimension_count)
         self.plane_choice.set_value(create.plane)
         self._set_combo(self.mode, create.mode)
         self._set_combo(self.style, create.style_id)
@@ -351,14 +395,16 @@ class CreatePage(QtWidgets.QWidget):
         self._last_tool_choice = self.tool_choice.value()
         self._sync_direction_rule(notify=False)
 
-    def refresh(self) -> None:
+    def refresh(self) -> bool:
         try:
             snapshot = self.bridge.refresh()
             self.load_styles(snapshot["styles"])
             self.load_snapshot(snapshot)
             set_message(self.status, "Estado da cena atualizado.")
+            return True
         except BridgeError as exc:
             set_bridge_error(self.status, exc, "Não foi possível atualizar a cena.")
+            return False
 
     def apply_settings(self) -> bool:
         """Send exactly one consolidated draft immediately before a tool starts."""
@@ -381,11 +427,15 @@ class CreatePage(QtWidgets.QWidget):
             return False
 
     def _set_busy(self, busy: bool) -> None:
-        for control in (self.start_button, self.prepare_button, self.more_button, self.tool_choice, self.plane_choice, self.details):
+        # Disabling the container keeps Automática's own rule-driven state.
+        for control in (self.start_button, self.prepare_button, self.more_button, self.tool_choice,
+                        self.plane_choice, self.mode, self.details):
             control.setEnabled(not busy)
+        self.start_button.setText("Cotação em andamento…" if busy else "Iniciar cotação")
 
     def _run_tool(self, continuous: bool) -> None:
         self._set_busy(True)
+        set_message(self.status, "Cotação em andamento. Clique na viewport · Esc cancela · Ctrl+Z desfaz.")
         QtWidgets.QApplication.processEvents()
         try:
             result = self.bridge.start_continuous() if continuous else self.bridge.start_individual()
@@ -419,13 +469,30 @@ class CreatePage(QtWidgets.QWidget):
         self.tool_choice.set_value("continuous")
         self.start_selected()
 
+    def run_scene_action(self) -> None:
+        if self._scene_state == "ready":
+            self.refresh()
+        else:
+            self.prepare_scene()
+
     def prepare_scene(self) -> None:
         try:
             result = self.bridge.prepare_scene()
-            self.refresh()
-            set_message(self.status, result.get("label") or "Cena preparada.")
         except BridgeError as exc:
             set_bridge_error(self.status, exc, "Não foi possível preparar a cena.")
+            return
+        if not self.refresh():
+            return
+        if self._scene_state in ("requiresRepair", "error"):
+            # The core can decline a repair (e.g. duplicated Ameno records);
+            # say so instead of reporting a success that did not happen.
+            set_message(
+                self.status,
+                "A cena não foi preparada automaticamente. %s" % self.scene_detail.text(),
+                error=True,
+            )
+        else:
+            set_message(self.status, result.get("label") or "Cena preparada.")
 
     def _maintenance(self, action: Callable[[], int], label: str, confirmation: str = "") -> None:
         if confirmation:

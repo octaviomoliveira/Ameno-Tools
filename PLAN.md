@@ -8,10 +8,11 @@
 Este checkpoint e o plano E20 prevalecem sobre os próximos passos históricos
 E18/E19 mantidos abaixo. Branch `feature/e20-vertical-adaptive-ui`, base publicada
 `develop` em `1acc10af35a289c18ffafa9186ca2055e4f97f41`; plano preservado no commit
-`d030e4f`. E20.0–E20.2 concluídas no gate técnico local; nenhuma nova
+`d030e4f`. E20.0–E20.3 concluídas no gate técnico local; nenhuma nova
 instalação foi feita. Evidências: `work/e20-baseline/README.md`,
-`work/e20-window/README.md` e `work/e20-shell/README.md`. E20.3 é a próxima
-etapa; E20.4–E20.8 não iniciadas.
+`work/e20-window/README.md`, `work/e20-shell/README.md` e
+`work/e20-cotar/README.md`. E20.4 é a próxima etapa; E20.5–E20.8 não
+iniciadas.
 
 Já foram registrados 69 testes Python legados verdes, 12 REDs reproduzíveis
 (três de janela, sete de geometria/escala da prévia e dois de apresentação), um
@@ -47,6 +48,16 @@ Não substituir o histórico: acrescentar uma entrada datada. O plano corrente �
 Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions**. Ele deve criar cotas rápidas, editáveis e persistentes para plantas humanizadas, com apresentação controlável e uma saída de render independente para composição.
 
 ## Concluído
+
+- **E20.3 — Cotar como fluxo vertical (2026-09-23):** cartão de cena mostra
+  só estado, detalhe, contagem e uma ação coerente (Preparar, Reparar, Tentar
+  novamente ou Atualizar estado); cena pronta só relê o estado e reparo
+  recusado pelo núcleo aparece como erro. Automática explica a regra no
+  próprio segmento; cotação em andamento trava todas as decisões e orienta
+  Esc/Ctrl+Z; CTA e Mais ações empilham quando estreito. Contratos Cotar 8/8
+  em 96 e 144 DPI, shell 8/8, janela 20/20, regressões 69/69, pacote válido.
+  Evidência em `work/e20-cotar/README.md`. MAXScript e aceite no Max não
+  rodaram nesta máquina; seguem em E20.8.
 
 - **E20.2 — shell adaptativo e identidade (2026-09-23):** layout passa a usar a
   largura útil do viewport; rail compacto mantém ordem, tooltips, teclado e
@@ -137,8 +148,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **E20 — interface vertical adaptativa:** E20.0–E20.2 concluídas no gate
-  técnico local. Próxima entrega é E20.3, refinamento de Cotar; E20.4–E20.8
+- **E20 — interface vertical adaptativa:** E20.0–E20.3 concluídas no gate
+  técnico local. Próxima entrega é E20.4, fidelidade da Prévia 2D; E20.5–E20.8
   não iniciadas. Manter commits
   recuperáveis na branch `feature/e20-vertical-adaptive-ui`, sem merge/tag.
 
@@ -316,10 +327,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Próximo passo — E20.3:** refinar a página Cotar para o formato vertical,
-  mantendo as decisões de medida, orientação e direção legíveis, o estado da
-  cena acionável e o botão de iniciar acessível. Preservar os contratos
-  funcionais existentes e validar o fluxo nas geometrias do plano:
+- **Próximo passo — E20.4:** reconstruir a fidelidade da Prévia 2D de
+  Estilos até os 9 contratos RED de `test_e20_preview_contracts.py` ficarem
+  verdes, com atualização inteiramente local. Detalhe em
   `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
 
 - **E18.0 — baseline e reprodução concluída:** a branch
@@ -394,6 +404,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-23 — Continuar a E20 a partir de `d028a90`:** E20.3 implementada
+  com 7 contratos RED novos convertidos em verdes (8/8 em 96 e 144 DPI), sem
+  regressão Python (69/69), shell 8/8 e janela 20/20. Runtime de teste
+  recriado nesta máquina em `.test-output/e20-venv` (CPython 3.11 + PySide6
+  6.5.3). Evidência: `work/e20-cotar/README.md`. E20.4 é a próxima etapa.
 
 - **2026-09-23 — Atualizar a E20 no GitHub:** as alterações locais da E20.2
   foram revisadas, o rail recebeu alvo visual mínimo de 44×44 px e o shell

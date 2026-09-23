@@ -73,6 +73,8 @@ def run_tests(suite: str, report: Path) -> int:
         files = [path for path in files if path.name == "test_e20_window_contracts.py"]
     elif suite == "e20-shell":
         files = [path for path in files if path.name == "test_e20_shell_contracts.py"]
+    elif suite == "e20-cotar":
+        files = [path for path in files if path.name == "test_e20_cotar_contracts.py"]
     elif suite == "e20-preview":
         files = [path for path in files if path.name == "test_e20_preview_contracts.py"]
     else:
@@ -214,7 +216,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--suite",
-        choices=("legacy", "e20", "e20-window", "e20-shell", "e20-preview"),
+        choices=("legacy", "e20", "e20-window", "e20-shell", "e20-cotar", "e20-preview"),
     )
     parser.add_argument("--report", type=Path, default=ROOT / "work/e20-baseline/python-results.json")
     parser.add_argument("--capture", type=Path)

@@ -1,0 +1,1345 @@
+{
+  "head": "d028a90345f30f91eb1480d41218805349bc84d1",
+  "python": "3.11.15",
+  "pyside": "6.5.3",
+  "qt": "6.5.3",
+  "platform": "offscreen",
+  "font_dpi_override": "96",
+  "initial_size": [
+    593,
+    776
+  ],
+  "scope": "Offscreen model/Qt evidence; not human acceptance in 3ds Max.",
+  "captures": [
+    {
+      "file": "create-780x720.png",
+      "sha256": "179306cf74982809db95032f76a0843e5cbd7933e9f12fed557031cee3a5a40b",
+      "page": "create",
+      "requested_size": [
+        780,
+        720
+      ],
+      "size": [
+        772,
+        720
+      ],
+      "image_pixels": [
+        772,
+        720
+      ],
+      "viewport_size": [
+        702,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "cta_rect": [
+        16,
+        582,
+        547,
+        50
+      ],
+      "cta_fully_visible": true,
+      "card_text": [
+        {
+          "text": "Uma medida",
+          "available": [
+            191,
+            23
+          ],
+          "required": [
+            91,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Seleciona uma única cota",
+          "available": [
+            191,
+            23
+          ],
+          "required": [
+            160,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Várias medidas",
+          "available": [
+            191,
+            23
+          ],
+          "required": [
+            111,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Cria uma sequência contínua",
+          "available": [
+            191,
+            23
+          ],
+          "required": [
+            180,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Planta",
+          "available": [
+            191,
+            23
+          ],
+          "required": [
+            47,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições no plano horizontal",
+          "available": [
+            191,
+            23
+          ],
+          "required": [
+            183,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Fachada / Vista",
+          "available": [
+            191,
+            23
+          ],
+          "required": [
+            113,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições alinhadas à vista",
+          "available": [
+            191,
+            23
+          ],
+          "required": [
+            166,
+            17
+          ],
+          "fits": true
+        }
+      ]
+    },
+    {
+      "file": "styles-780x720.png",
+      "sha256": "6829845fcb2f9e9c6de68d1612f7c675d2bc3f4088b34cbaf64735a8d36460c5",
+      "page": "styles",
+      "requested_size": [
+        780,
+        720
+      ],
+      "size": [
+        772,
+        720
+      ],
+      "image_pixels": [
+        772,
+        720
+      ],
+      "viewport_size": [
+        702,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "workspace_mode": "compact",
+      "preview_rect": [
+        16,
+        168,
+        670,
+        280
+      ],
+      "footer_rect": [
+        16,
+        639,
+        670,
+        65
+      ],
+      "controls_viewport": [
+        660,
+        171
+      ],
+      "controls_scroll_max": [
+        0,
+        391
+      ]
+    },
+    {
+      "file": "edit-780x720.png",
+      "sha256": "6223fce02ab7be48bec7c1b6ccb2eeffd0b95382a8c2e0c6f2c4d155cefb9d39",
+      "page": "edit",
+      "requested_size": [
+        780,
+        720
+      ],
+      "size": [
+        772,
+        720
+      ],
+      "image_pixels": [
+        772,
+        720
+      ],
+      "viewport_size": [
+        702,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "render-780x720.png",
+      "sha256": "10adf71236430349a90a32e00c8c0d3ceb5e9966b1ee848bce3c957002b213e6",
+      "page": "render",
+      "requested_size": [
+        780,
+        720
+      ],
+      "size": [
+        772,
+        720
+      ],
+      "image_pixels": [
+        772,
+        720
+      ],
+      "viewport_size": [
+        702,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "config-780x720.png",
+      "sha256": "30410164765d17399e708b18caba1ce2d256e6b8d4a9f51eb2bef18eb3a16a18",
+      "page": "config",
+      "requested_size": [
+        780,
+        720
+      ],
+      "size": [
+        772,
+        720
+      ],
+      "image_pixels": [
+        772,
+        720
+      ],
+      "viewport_size": [
+        702,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "create-780x1020.png",
+      "sha256": "afa8704fc552eaf86177be44fb7d43148efa1e29579dfbebbc8fb6f261cc06a3",
+      "page": "create",
+      "requested_size": [
+        780,
+        1020
+      ],
+      "size": [
+        780,
+        1020
+      ],
+      "image_pixels": [
+        780,
+        1020
+      ],
+      "viewport_size": [
+        710,
+        1020
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "cta_rect": [
+        16,
+        582,
+        555,
+        50
+      ],
+      "cta_fully_visible": true,
+      "card_text": [
+        {
+          "text": "Uma medida",
+          "available": [
+            195,
+            23
+          ],
+          "required": [
+            91,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Seleciona uma única cota",
+          "available": [
+            195,
+            23
+          ],
+          "required": [
+            160,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Várias medidas",
+          "available": [
+            195,
+            23
+          ],
+          "required": [
+            111,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Cria uma sequência contínua",
+          "available": [
+            195,
+            23
+          ],
+          "required": [
+            180,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Planta",
+          "available": [
+            195,
+            23
+          ],
+          "required": [
+            47,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições no plano horizontal",
+          "available": [
+            195,
+            23
+          ],
+          "required": [
+            183,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Fachada / Vista",
+          "available": [
+            195,
+            23
+          ],
+          "required": [
+            113,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições alinhadas à vista",
+          "available": [
+            195,
+            23
+          ],
+          "required": [
+            166,
+            17
+          ],
+          "fits": true
+        }
+      ]
+    },
+    {
+      "file": "styles-780x1020.png",
+      "sha256": "ffe58cde1b511c0a2fd9e8a48465e92d56e2717a23e1c4bd9788f34ed00f4c8d",
+      "page": "styles",
+      "requested_size": [
+        780,
+        1020
+      ],
+      "size": [
+        780,
+        1020
+      ],
+      "image_pixels": [
+        780,
+        1020
+      ],
+      "viewport_size": [
+        710,
+        1020
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "workspace_mode": "compact",
+      "preview_rect": [
+        16,
+        168,
+        678,
+        285
+      ],
+      "footer_rect": [
+        16,
+        939,
+        678,
+        65
+      ],
+      "controls_viewport": [
+        668,
+        466
+      ],
+      "controls_scroll_max": [
+        0,
+        96
+      ]
+    },
+    {
+      "file": "edit-780x1020.png",
+      "sha256": "ea3f0644b1378bae9ecec0285e5e4afdae17db9854449c1900d9543ed284393a",
+      "page": "edit",
+      "requested_size": [
+        780,
+        1020
+      ],
+      "size": [
+        780,
+        1020
+      ],
+      "image_pixels": [
+        780,
+        1020
+      ],
+      "viewport_size": [
+        710,
+        1020
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "render-780x1020.png",
+      "sha256": "d59197075f8b4d81e135b411e62f5931a0f1be7eee15d3beb3d665d48996bd91",
+      "page": "render",
+      "requested_size": [
+        780,
+        1020
+      ],
+      "size": [
+        780,
+        1020
+      ],
+      "image_pixels": [
+        780,
+        1020
+      ],
+      "viewport_size": [
+        710,
+        1020
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "config-780x1020.png",
+      "sha256": "3fb0c57ebd1b5048d2fec9cd43f9d49254bc4262f2181a4fde51667069d2c929",
+      "page": "config",
+      "requested_size": [
+        780,
+        1020
+      ],
+      "size": [
+        780,
+        1020
+      ],
+      "image_pixels": [
+        780,
+        1020
+      ],
+      "viewport_size": [
+        710,
+        1020
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "create-980x720.png",
+      "sha256": "e340a068ee4355879b8e7ac99238474a17110e7eb25a97597dbfee7e2304f27d",
+      "page": "create",
+      "requested_size": [
+        980,
+        720
+      ],
+      "size": [
+        980,
+        720
+      ],
+      "image_pixels": [
+        980,
+        720
+      ],
+      "viewport_size": [
+        910,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "cta_rect": [
+        24,
+        584,
+        739,
+        50
+      ],
+      "cta_fully_visible": true,
+      "card_text": [
+        {
+          "text": "Uma medida",
+          "available": [
+            287,
+            23
+          ],
+          "required": [
+            91,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Seleciona uma única cota",
+          "available": [
+            287,
+            23
+          ],
+          "required": [
+            160,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Várias medidas",
+          "available": [
+            287,
+            23
+          ],
+          "required": [
+            111,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Cria uma sequência contínua",
+          "available": [
+            287,
+            23
+          ],
+          "required": [
+            180,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Planta",
+          "available": [
+            287,
+            23
+          ],
+          "required": [
+            47,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições no plano horizontal",
+          "available": [
+            287,
+            23
+          ],
+          "required": [
+            183,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Fachada / Vista",
+          "available": [
+            287,
+            23
+          ],
+          "required": [
+            113,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições alinhadas à vista",
+          "available": [
+            287,
+            23
+          ],
+          "required": [
+            166,
+            17
+          ],
+          "fits": true
+        }
+      ]
+    },
+    {
+      "file": "styles-980x720.png",
+      "sha256": "eb62579fb676cf00c3226ab74d7be6b48148aa77250dbbafd6aa54b41e0f75da",
+      "page": "styles",
+      "requested_size": [
+        980,
+        720
+      ],
+      "size": [
+        980,
+        720
+      ],
+      "image_pixels": [
+        980,
+        720
+      ],
+      "viewport_size": [
+        910,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "workspace_mode": "wide",
+      "preview_rect": [
+        576,
+        170,
+        310,
+        451
+      ],
+      "footer_rect": [
+        24,
+        631,
+        862,
+        65
+      ],
+      "controls_viewport": [
+        532,
+        451
+      ],
+      "controls_scroll_max": [
+        0,
+        111
+      ]
+    },
+    {
+      "file": "edit-980x720.png",
+      "sha256": "3321f616d7293bfe60fc1ff88e8c294595de8dd1e74105d92512dca3384ebc5f",
+      "page": "edit",
+      "requested_size": [
+        980,
+        720
+      ],
+      "size": [
+        980,
+        720
+      ],
+      "image_pixels": [
+        980,
+        720
+      ],
+      "viewport_size": [
+        910,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "render-980x720.png",
+      "sha256": "94951be446fa16a6760eee5b65548afbf8c02d54d137a5b2e35e2fda2a3d6f7e",
+      "page": "render",
+      "requested_size": [
+        980,
+        720
+      ],
+      "size": [
+        980,
+        720
+      ],
+      "image_pixels": [
+        980,
+        720
+      ],
+      "viewport_size": [
+        910,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "config-980x720.png",
+      "sha256": "bddb406169d62361d5f85bb5304d6941316884eb9c9a130f22f6ee71aa2abcd3",
+      "page": "config",
+      "requested_size": [
+        980,
+        720
+      ],
+      "size": [
+        980,
+        720
+      ],
+      "image_pixels": [
+        980,
+        720
+      ],
+      "viewport_size": [
+        910,
+        720
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "create-780x560.png",
+      "sha256": "9f01aef259d12792c6b7cd722b6aace999003ee3097afe99153c0ecd93400223",
+      "page": "create",
+      "requested_size": [
+        780,
+        560
+      ],
+      "size": [
+        780,
+        560
+      ],
+      "image_pixels": [
+        780,
+        560
+      ],
+      "viewport_size": [
+        700,
+        560
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        136
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "cta_rect": [
+        16,
+        582,
+        545,
+        50
+      ],
+      "cta_fully_visible": false,
+      "card_text": [
+        {
+          "text": "Uma medida",
+          "available": [
+            190,
+            23
+          ],
+          "required": [
+            91,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Seleciona uma única cota",
+          "available": [
+            190,
+            23
+          ],
+          "required": [
+            160,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Várias medidas",
+          "available": [
+            190,
+            23
+          ],
+          "required": [
+            111,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Cria uma sequência contínua",
+          "available": [
+            190,
+            23
+          ],
+          "required": [
+            180,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Planta",
+          "available": [
+            190,
+            23
+          ],
+          "required": [
+            47,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições no plano horizontal",
+          "available": [
+            190,
+            23
+          ],
+          "required": [
+            183,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Fachada / Vista",
+          "available": [
+            190,
+            23
+          ],
+          "required": [
+            113,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições alinhadas à vista",
+          "available": [
+            190,
+            23
+          ],
+          "required": [
+            166,
+            17
+          ],
+          "fits": true
+        }
+      ]
+    },
+    {
+      "file": "styles-780x560.png",
+      "sha256": "9f70edc03d32a6059744c8ebb81d9d344d24121ee355b81453c6385126634e76",
+      "page": "styles",
+      "requested_size": [
+        780,
+        560
+      ],
+      "size": [
+        780,
+        560
+      ],
+      "image_pixels": [
+        780,
+        560
+      ],
+      "viewport_size": [
+        710,
+        560
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "workspace_mode": "compact",
+      "preview_rect": [
+        16,
+        168,
+        678,
+        190
+      ],
+      "footer_rect": [
+        16,
+        479,
+        678,
+        65
+      ],
+      "controls_viewport": [
+        668,
+        101
+      ],
+      "controls_scroll_max": [
+        0,
+        461
+      ]
+    },
+    {
+      "file": "edit-780x560.png",
+      "sha256": "17a3833bd8f0aaa0af717fe5a6202755fc970b32ae51c4b14fd7c88793bafbd9",
+      "page": "edit",
+      "requested_size": [
+        780,
+        560
+      ],
+      "size": [
+        780,
+        560
+      ],
+      "image_pixels": [
+        780,
+        560
+      ],
+      "viewport_size": [
+        700,
+        560
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        128
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "render-780x560.png",
+      "sha256": "cc9dc43af90c5b80e4852440ffe08a90cbe484bda63be5caf98a47658abf00b9",
+      "page": "render",
+      "requested_size": [
+        780,
+        560
+      ],
+      "size": [
+        780,
+        560
+      ],
+      "image_pixels": [
+        780,
+        560
+      ],
+      "viewport_size": [
+        700,
+        560
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        24
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "config-780x560.png",
+      "sha256": "d598244fd77e0766999748805b868c276c03846581fe6e2f677942594f0bb3e6",
+      "page": "config",
+      "requested_size": [
+        780,
+        560
+      ],
+      "size": [
+        780,
+        560
+      ],
+      "image_pixels": [
+        780,
+        560
+      ],
+      "viewport_size": [
+        710,
+        560
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "create-1280x800.png",
+      "sha256": "d474cebf2d754ed3dd6371d4dcc8024bacdc2ca190a300e4af7e04e895aafab3",
+      "page": "create",
+      "requested_size": [
+        1280,
+        800
+      ],
+      "size": [
+        1280,
+        800
+      ],
+      "image_pixels": [
+        1280,
+        800
+      ],
+      "viewport_size": [
+        1210,
+        800
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "cta_rect": [
+        30,
+        590,
+        1027,
+        50
+      ],
+      "cta_fully_visible": true,
+      "card_text": [
+        {
+          "text": "Uma medida",
+          "available": [
+            431,
+            23
+          ],
+          "required": [
+            91,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Seleciona uma única cota",
+          "available": [
+            431,
+            23
+          ],
+          "required": [
+            160,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Várias medidas",
+          "available": [
+            431,
+            23
+          ],
+          "required": [
+            111,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Cria uma sequência contínua",
+          "available": [
+            431,
+            23
+          ],
+          "required": [
+            180,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Planta",
+          "available": [
+            431,
+            23
+          ],
+          "required": [
+            47,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições no plano horizontal",
+          "available": [
+            431,
+            23
+          ],
+          "required": [
+            183,
+            17
+          ],
+          "fits": true
+        },
+        {
+          "text": "Fachada / Vista",
+          "available": [
+            431,
+            23
+          ],
+          "required": [
+            113,
+            19
+          ],
+          "fits": true
+        },
+        {
+          "text": "Medições alinhadas à vista",
+          "available": [
+            431,
+            23
+          ],
+          "required": [
+            166,
+            17
+          ],
+          "fits": true
+        }
+      ]
+    },
+    {
+      "file": "styles-1280x800.png",
+      "sha256": "ce877c48669d0326be2ab096015b04ddfa47e11c69676f14fefc4bde3b30b7dc",
+      "page": "styles",
+      "requested_size": [
+        1280,
+        800
+      ],
+      "size": [
+        1280,
+        800
+      ],
+      "image_pixels": [
+        1280,
+        800
+      ],
+      "viewport_size": [
+        1210,
+        800
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0,
+      "workspace_mode": "wide",
+      "preview_rect": [
+        765,
+        176,
+        415,
+        519
+      ],
+      "footer_rect": [
+        30,
+        705,
+        1150,
+        65
+      ],
+      "controls_viewport": [
+        715,
+        519
+      ],
+      "controls_scroll_max": [
+        0,
+        43
+      ]
+    },
+    {
+      "file": "edit-1280x800.png",
+      "sha256": "44c641848f8dee436cb4d62d3cc2ec0355b05c31e2d26dba543a1389ac379aae",
+      "page": "edit",
+      "requested_size": [
+        1280,
+        800
+      ],
+      "size": [
+        1280,
+        800
+      ],
+      "image_pixels": [
+        1280,
+        800
+      ],
+      "viewport_size": [
+        1210,
+        800
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "render-1280x800.png",
+      "sha256": "8a1165cb6f64a5ba3f6058c82c05edd2cf3372a3a4d53981be8400c9452c842b",
+      "page": "render",
+      "requested_size": [
+        1280,
+        800
+      ],
+      "size": [
+        1280,
+        800
+      ],
+      "image_pixels": [
+        1280,
+        800
+      ],
+      "viewport_size": [
+        1210,
+        800
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    },
+    {
+      "file": "config-1280x800.png",
+      "sha256": "2c05befad5897863aea285a67b0a29a0ac355b9de9605c1b7ac4524aa387d2af",
+      "page": "config",
+      "requested_size": [
+        1280,
+        800
+      ],
+      "size": [
+        1280,
+        800
+      ],
+      "image_pixels": [
+        1280,
+        800
+      ],
+      "viewport_size": [
+        1210,
+        800
+      ],
+      "sidebar_width": 64,
+      "scroll_max": [
+        0,
+        0
+      ],
+      "logical_dpi": 96,
+      "dpr": 1.0
+    }
+  ]
+}
