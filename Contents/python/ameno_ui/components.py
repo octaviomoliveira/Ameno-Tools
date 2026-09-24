@@ -213,7 +213,9 @@ class ColorControl(QtWidgets.QWidget):
         layout.addWidget(self.swatch)
         self.value_label = QtWidgets.QLabel("#F5F5F5")
         self.value_label.setObjectName("ColorValue")
-        self.value_label.setMinimumWidth(72)
+        # Exactly the width of the longest hex value, so narrow columns keep
+        # the Edit action intact instead of reserving slack for the label.
+        self.value_label.setMinimumWidth(self.value_label.fontMetrics().horizontalAdvance("#DDDDDD") + 4)
         self.value_label.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.value_label)
         layout.addStretch(1)
@@ -345,6 +347,9 @@ class SegmentedChoice(QtWidgets.QWidget):
         self.buttons.setExclusive(True)
         self._items = list(choices)
         self._by_value = {}
+        self._icons = {}
+        self._icons_shown = True
+        self._full_width = 0
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -363,6 +368,7 @@ class SegmentedChoice(QtWidgets.QWidget):
             if icon_name:
                 widget.setIcon(nav_icon(icon_name))
                 widget.setIconSize(QtCore.QSize(20, 20))
+                self._icons[widget] = widget.icon()
             self.buttons.addButton(widget, index)
             self._by_value[value] = widget
             layout.addWidget(widget, 1)
@@ -373,6 +379,24 @@ class SegmentedChoice(QtWidgets.QWidget):
     def value(self) -> str:
         checked = self.buttons.checkedButton()
         return str(checked.property("choiceValue")) if checked is not None else ""
+
+    def icons_shown(self) -> bool:
+        return self._icons_shown
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        if not self._icons:
+            return
+        if self._icons_shown:
+            self._full_width = sum(button.minimumSizeHint().width() for button in self.buttons.buttons())
+        # Labels always win over decoration: drop the icons before any
+        # segment would be squeezed below its text.
+        show = self.width() >= self._full_width
+        if show == self._icons_shown:
+            return
+        self._icons_shown = show
+        for button, button_icon in self._icons.items():
+            button.setIcon(button_icon if show else QtGui.QIcon())
 
     def currentData(self) -> str:
         return self.value()

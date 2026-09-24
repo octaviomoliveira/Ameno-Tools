@@ -1,0 +1,277 @@
+[
+  {
+    "file": "config-1280x800.png",
+    "before": [
+      1280,
+      800
+    ],
+    "after": [
+      1280,
+      800
+    ]
+  },
+  {
+    "file": "config-780x1020.png",
+    "before": [
+      780,
+      1020
+    ],
+    "after": [
+      780,
+      1020
+    ]
+  },
+  {
+    "file": "config-780x560.png",
+    "before": [
+      780,
+      560
+    ],
+    "after": [
+      780,
+      560
+    ]
+  },
+  {
+    "file": "config-780x720.png",
+    "before": [
+      780,
+      720
+    ],
+    "after": [
+      772,
+      720
+    ]
+  },
+  {
+    "file": "config-980x720.png",
+    "before": [
+      980,
+      720
+    ],
+    "after": [
+      980,
+      720
+    ]
+  },
+  {
+    "file": "create-1280x800.png",
+    "before": [
+      1280,
+      800
+    ],
+    "after": [
+      1280,
+      800
+    ]
+  },
+  {
+    "file": "create-780x1020.png",
+    "before": [
+      780,
+      1020
+    ],
+    "after": [
+      780,
+      1020
+    ]
+  },
+  {
+    "file": "create-780x560.png",
+    "before": [
+      780,
+      560
+    ],
+    "after": [
+      780,
+      560
+    ]
+  },
+  {
+    "file": "create-780x720.png",
+    "before": [
+      780,
+      720
+    ],
+    "after": [
+      772,
+      720
+    ]
+  },
+  {
+    "file": "create-980x720.png",
+    "before": [
+      980,
+      720
+    ],
+    "after": [
+      980,
+      720
+    ]
+  },
+  {
+    "file": "edit-1280x800.png",
+    "before": [
+      1280,
+      800
+    ],
+    "after": [
+      1280,
+      800
+    ]
+  },
+  {
+    "file": "edit-780x1020.png",
+    "before": [
+      780,
+      1020
+    ],
+    "after": [
+      780,
+      1020
+    ]
+  },
+  {
+    "file": "edit-780x560.png",
+    "before": [
+      780,
+      560
+    ],
+    "after": [
+      780,
+      560
+    ]
+  },
+  {
+    "file": "edit-780x720.png",
+    "before": [
+      780,
+      720
+    ],
+    "after": [
+      772,
+      720
+    ]
+  },
+  {
+    "file": "edit-980x720.png",
+    "before": [
+      980,
+      720
+    ],
+    "after": [
+      980,
+      720
+    ]
+  },
+  {
+    "file": "render-1280x800.png",
+    "before": [
+      1280,
+      800
+    ],
+    "after": [
+      1280,
+      800
+    ]
+  },
+  {
+    "file": "render-780x1020.png",
+    "before": [
+      780,
+      1020
+    ],
+    "after": [
+      780,
+      1020
+    ]
+  },
+  {
+    "file": "render-780x560.png",
+    "before": [
+      780,
+      560
+    ],
+    "after": [
+      780,
+      560
+    ]
+  },
+  {
+    "file": "render-780x720.png",
+    "before": [
+      780,
+      720
+    ],
+    "after": [
+      772,
+      720
+    ]
+  },
+  {
+    "file": "render-980x720.png",
+    "before": [
+      980,
+      720
+    ],
+    "after": [
+      980,
+      720
+    ]
+  },
+  {
+    "file": "styles-1280x800.png",
+    "before": [
+      1280,
+      800
+    ],
+    "after": [
+      1280,
+      800
+    ]
+  },
+  {
+    "file": "styles-780x1020.png",
+    "before": [
+      780,
+      1020
+    ],
+    "after": [
+      780,
+      1020
+    ]
+  },
+  {
+    "file": "styles-780x560.png",
+    "before": [
+      780,
+      560
+    ],
+    "after": [
+      780,
+      560
+    ]
+  },
+  {
+    "file": "styles-780x720.png",
+    "before": [
+      780,
+      720
+    ],
+    "after": [
+      772,
+      720
+    ]
+  },
+  {
+    "file": "styles-980x720.png",
+    "before": [
+      980,
+      720
+    ],
+    "after": [
+      980,
+      720
+    ]
+  }
+]

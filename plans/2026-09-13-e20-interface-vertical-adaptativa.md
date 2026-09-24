@@ -2,7 +2,7 @@
 
 Data: 2026-09-13
 
-Status: E20.0–E20.6 concluídas no gate técnico local; E20.7 é a próxima etapa.
+Status: E20.0–E20.6 concluídas no gate técnico local; E20.7 com parte Qt fechada e matriz MAXScript pendente.
 
 ## Checkpoint de execução — 2026-09-14
 
@@ -38,7 +38,7 @@ Status: E20.0–E20.6 concluídas no gate técnico local; E20.7 é a próxima et
 | E20.4 — Prévia fiel | Concluída no gate técnico local; tipografia no Max em E20.8 |
 | E20.5 — Estilos | Concluída no gate técnico local; aplicar rascunho sem salvar segue dependência do núcleo |
 | E20.6 — Demais páginas | Concluída no gate técnico local; aceite no Max em E20.8 |
-| E20.7 — Regressões e aceite técnico | Não iniciada; próxima |
+| E20.7 — Regressões e aceite técnico | Parte Qt fechada; matriz MAXScript pendente (exige Max 2026) |
 | E20.8 — Instalação e aceite humano | Não iniciada |
 
 Base obrigatória: `develop` no commit que estiver publicado quando a execução
@@ -298,6 +298,10 @@ globais.
 Commit sugerido: `feat(e20): unify remaining product pages`.
 
 ### E20.7 — Acessibilidade, desempenho e regressões
+
+Estado: parte Qt/Python fechada em 2026-09-23 (itens 1–5, 7 e 8). Item 6
+(MAXScript E16–E19) pendente no host. Evidência em
+`work/e20-acceptance/README.md`.
 
 1. Executar matriz de geometrias e DPI.
 2. Executar detector de clipping e overflow em todas as páginas/estados.

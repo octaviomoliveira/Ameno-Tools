@@ -1,0 +1,97 @@
+{
+  "suite": "e20-styles",
+  "python": "3.11.15",
+  "head": "2510823c19bb1f4076e1ebf6a8ea80132a08bf69",
+  "pyside": "6.5.3",
+  "qt": "6.5.3",
+  "test_sources": {
+    "test_e20_styles_contracts.py": "2b355b60c0f0c63423adeaf8ff0a62089a03ddf457773bdc3fc08f9ebd3fc329"
+  },
+  "runtime_sources": {
+    "Contents/python/ameno_ui/__init__.py": "f3fe9b4be43c5476442410c668d6bbac5ffddfade2bf80e6a462c0bb75754dcd",
+    "Contents/python/ameno_ui/application.py": "445e4880ea0fd8f37382c8708be72098447620e4f0855ecd1129d90409a02b14",
+    "Contents/python/ameno_ui/assets.py": "c02e37302c170606f712b9719918e98dfdf4a0cbe027c356255c810679eea3d3",
+    "Contents/python/ameno_ui/auth.py": "b34cf8c1da33f1a341a5aa01dc8d96833ac0c1db7c6145743b2093ac2a6e5dbf",
+    "Contents/python/ameno_ui/bridge.py": "ca49aec69c531dda0612aff14a915328f75fb1dbe2d53478093dd2f0f6382731",
+    "Contents/python/ameno_ui/common.py": "cbd3d7c06b480e240cbecf64d77ea0a2c03309d04fa4a6554160cea11908bba8",
+    "Contents/python/ameno_ui/components.py": "7e9b9fb92750368dca8bbfc976716a26b64e82ba97fa24a0122198f89d16fee7",
+    "Contents/python/ameno_ui/config_page.py": "9470c8c3f329172462987ffb81dac420955a436bf898b3bb291f5f22fb7e2a1d",
+    "Contents/python/ameno_ui/create_page.py": "ddd22b4371d556ee2bcb87ccc55bd616a95897edb8b25dea0e2acbe93634fce8",
+    "Contents/python/ameno_ui/dimension_preview.py": "64ebc4bcd1100c3ed71bb3d7541c1c1a8b4bc624d1735169c7ad647462eb4bf6",
+    "Contents/python/ameno_ui/edit_page.py": "bc1e6c78965d9d467573fa1bc389a0941332155f0e03bd15153944ff87087921",
+    "Contents/python/ameno_ui/entrypoint.py": "7bb512f659b50609f17512c521b22260723c97c3a6aba20b4d145f50e3b5b19d",
+    "Contents/python/ameno_ui/host_info.py": "fb6930492d0d8a4cfecffc2307293e3b3edb17c422dfada8ebaaa7e4a6632f01",
+    "Contents/python/ameno_ui/login_page.py": "970cce4e704732964227b754604856e64e3c92d1c45800f086ad2b58ea08e01a",
+    "Contents/python/ameno_ui/models.py": "ab740ab43674dad1d2d2bc050fbd50c127b95dbcfd604c013f584735d0c42998",
+    "Contents/python/ameno_ui/page_scaffold.py": "ab2b5d2497518a4b5943423f611cfd2dc696a5eba22fdf14afe02c6d2a7ffcc8",
+    "Contents/python/ameno_ui/parameter_control.py": "b1879484952c5cab947087e6dc2c943f0c26d9b62aa7430a038e51a3361194ed",
+    "Contents/python/ameno_ui/preferences.py": "440256d90831acf70e722eccb72ddaa290e6f5569dca5a615faf38f81447ad5f",
+    "Contents/python/ameno_ui/qt_compat.py": "5f959fd44a83fe883197fa870da602f0c756931fdd7329bb8eab28cb63984d43",
+    "Contents/python/ameno_ui/render_page.py": "8887d08e02885ecceb882b26aab495be0bdc9cc1cb24c68b62b7767e550f7d70",
+    "Contents/python/ameno_ui/responsive.py": "b86bc0487c09bff48c0942df6cac3a2c5d6687a6fcaa8f591fe89d211dffcafe",
+    "Contents/python/ameno_ui/style_draft.py": "bf9130e00445c67c9437b38d8bfb8c65d8e829bed5a29c1e1a6c3066c2ffa763",
+    "Contents/python/ameno_ui/styles_page.py": "677b8300c93c1369f137cbcb2b69a41308312796657d45d938952ab3812c1181",
+    "Contents/python/ameno_ui/theme.py": "29399207037749453a2107d4cce76c53e229205f4f415619586c71fe5031dd9f",
+    "Contents/python/ameno_ui/window.py": "c982c8fc193ac450a93411571a1c377c5fa3ac6d9a1b176d984b178872efd002",
+    "Contents/python/ameno_ui/window_geometry.py": "3d1b5c4c15d85d882c87c659cd2ba6bf6e6d3973f61fe07ffdf18eeefe2e6b46"
+  },
+  "font_dpi_override": "144",
+  "tests": [
+    {
+      "test": "test_e20_styles_contracts.py::test_apply_and_save_state_their_destination",
+      "status": "PASS",
+      "seconds": 0.1744,
+      "error": ""
+    },
+    {
+      "test": "test_e20_styles_contracts.py::test_background_style_reload_keeps_an_unsaved_draft",
+      "status": "PASS",
+      "seconds": 0.1204,
+      "error": ""
+    },
+    {
+      "test": "test_e20_styles_contracts.py::test_clean_apply_uses_the_saved_style_directly",
+      "status": "PASS",
+      "seconds": 0.1134,
+      "error": ""
+    },
+    {
+      "test": "test_e20_styles_contracts.py::test_display_unit_changes_presentation_but_preserves_physical_values",
+      "status": "PASS",
+      "seconds": 0.1207,
+      "error": ""
+    },
+    {
+      "test": "test_e20_styles_contracts.py::test_failed_save_never_applies_and_keeps_the_draft",
+      "status": "PASS",
+      "seconds": 0.1134,
+      "error": ""
+    },
+    {
+      "test": "test_e20_styles_contracts.py::test_save_and_apply_persists_the_draft_before_applying_it",
+      "status": "PASS",
+      "seconds": 0.1197,
+      "error": ""
+    },
+    {
+      "test": "test_e20_styles_contracts.py::test_switching_style_protects_the_draft",
+      "status": "PASS",
+      "seconds": 0.1105,
+      "error": ""
+    },
+    {
+      "test": "test_e20_styles_contracts.py::test_unsupported_terminal_controls_are_hidden_and_diamond_is_offered",
+      "status": "PASS",
+      "seconds": 0.1093,
+      "error": ""
+    },
+    {
+      "test": "test_e20_styles_contracts.py::test_workspace_regions_never_cover_each_other",
+      "status": "PASS",
+      "seconds": 0.4884,
+      "error": ""
+    }
+  ],
+  "passed": 9,
+  "failed": 0
+}

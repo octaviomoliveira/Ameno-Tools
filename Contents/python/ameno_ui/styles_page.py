@@ -224,6 +224,8 @@ class StylesPage(QtWidgets.QWidget):
         text_form.setContentsMargins(14, 8, 14, 12)
         text_form.setHorizontalSpacing(12)
         text_form.setVerticalSpacing(8)
+        # Narrow columns put the label above the field instead of clipping.
+        text_form.setRowWrapPolicy(QtWidgets.QFormLayout.RowWrapPolicy.WrapLongRows)
         text_form.setFieldGrowthPolicy(QtWidgets.QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         text_form.addRow("Nome do estilo", self.name)
         text_form.addRow("Fonte", self.font)
@@ -243,6 +245,8 @@ class StylesPage(QtWidgets.QWidget):
         line_form.setContentsMargins(14, 8, 14, 12)
         line_form.setHorizontalSpacing(12)
         line_form.setVerticalSpacing(8)
+        # Narrow columns put the label above the field instead of clipping.
+        line_form.setRowWrapPolicy(QtWidgets.QFormLayout.RowWrapPolicy.WrapLongRows)
         line_form.addRow("Espessura", self.line_thickness)
         line_form.addRow("Prolongamento", self.overhang)
         line_form.addRow("Recuo", self.extension_gap)
@@ -253,6 +257,8 @@ class StylesPage(QtWidgets.QWidget):
         terminal_form.setContentsMargins(14, 8, 14, 12)
         terminal_form.setHorizontalSpacing(12)
         terminal_form.setVerticalSpacing(8)
+        # Narrow columns put the label above the field instead of clipping.
+        terminal_form.setRowWrapPolicy(QtWidgets.QFormLayout.RowWrapPolicy.WrapLongRows)
         terminal_form.addRow("Tipo", self.terminal)
         terminal_form.addRow("Tamanho", self.terminal_size)
         terminal_form.addRow("Posição", self.placement)
@@ -268,6 +274,8 @@ class StylesPage(QtWidgets.QWidget):
         color_form.setContentsMargins(14, 8, 14, 12)
         color_form.setHorizontalSpacing(12)
         color_form.setVerticalSpacing(8)
+        # Narrow columns put the label above the field instead of clipping.
+        color_form.setRowWrapPolicy(QtWidgets.QFormLayout.RowWrapPolicy.WrapLongRows)
         color_form.addRow("Cor das cotas", self.annotation_color)
         color_form.addRow("Texto", self.mask)
         self.colors_section = CollapsibleSection("Cores", color_content, expanded=True)

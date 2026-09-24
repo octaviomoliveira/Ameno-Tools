@@ -12,8 +12,9 @@ E18/E19 mantidos abaixo. Branch `feature/e20-vertical-adaptive-ui`, base publica
 instalação foi feita. Evidências: `work/e20-baseline/README.md`,
 `work/e20-window/README.md`, `work/e20-shell/README.md`,
 `work/e20-cotar/README.md`, `work/e20-preview/README.md`,
-`work/e20-styles/README.md` e `work/e20-pages/README.md`. E20.7 é a próxima
-etapa; E20.8 não iniciada.
+`work/e20-styles/README.md`, `work/e20-pages/README.md` e
+`work/e20-acceptance/README.md`. E20.7 tem a parte Qt fechada; falta a matriz
+MAXScript, que exige 3ds Max 2026. E20.8 não iniciada.
 
 Já foram registrados 69 testes Python legados verdes, 12 REDs reproduzíveis
 (três de janela, sete de geometria/escala da prévia e dois de apresentação), um
@@ -49,6 +50,13 @@ Não substituir o histórico: acrescentar uma entrada datada. O plano corrente �
 Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions**. Ele deve criar cotas rápidas, editáveis e persistentes para plantas humanizadas, com apresentação controlável e uma saída de render independente para composição.
 
 ## Concluído
+
+- **E20.7 — Aceite técnico, parte Qt (2026-09-23):** matriz de overflow em
+  cinco páginas com estado cheio, sete geometrias e dois DPIs; teclado, tooltips,
+  desempenho e 100 ciclos de lifecycle, sem acesso à cena. Corrigidas três
+  causas em 440 px (ícones da Direção, formulários de Estilos, cor). Aceite 6/6
+  em 96 e 144 DPI, regressões 69/69, galeria antes/depois. **Pendente:** matriz
+  MAXScript E16–E19 no host. Evidência em `work/e20-acceptance/README.md`.
 
 - **E20.6 — Revisar, Exportar e Configurações (2026-09-23):** cabeçalhos
   iguais ao rail, sem instrução repetida na abertura, estado vazio compacto em
@@ -173,9 +181,8 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **E20 — interface vertical adaptativa:** E20.0–E20.6 concluídas no gate
-  técnico local. Próxima entrega é E20.7, regressões e aceite técnico; E20.8
-  não iniciada. Manter commits
+- **E20 — interface vertical adaptativa:** E20.0–E20.6 concluídas e E20.7
+  com a parte Qt fechada. Falta a matriz MAXScript no host antes da E20.8. Manter commits
   recuperáveis na branch `feature/e20-vertical-adaptive-ui`, sem merge/tag.
 
 - **E14 — Planos de cotação e fachadas em validação:** E14.1–E14.5 foram
@@ -352,11 +359,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Próximo passo — E20.7:** varredura global de regressões e aceite técnico,
-  incluindo o contrato de texto cortado em Cotar e Estilos. As suítes
-  MAXScript exigem uma máquina com 3ds Max 2026. Dependências do núcleo em
-  aberto: aplicar rascunho sem salvar e Posição/Ângulo na cota confirmada.
-  Detalhe em `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
+- **Próximo passo — fechar E20.7 no host:** numa máquina com 3ds Max 2026,
+  rodar a matriz MAXScript da baseline (`work/e20-baseline/max-regression`) e
+  repetir a medição de desempenho com fontes reais. Depois, E20.8 (backup,
+  instalação e aceite humano). Dependências do núcleo em aberto: aplicar
+  rascunho sem salvar e Posição/Ângulo na cota confirmada.
 
 - **E18.0 — baseline e reprodução concluída:** a branch
   `feature/e18-ux-10-10` foi criada a partir de `feature/e17-ameno-ux` em
@@ -430,6 +437,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-23 — Push da E20.6 e seguir para a E20.7:** `2510823` publicado.
+  Parte Qt da E20.7 implementada; matriz MAXScript pendente por falta de Max
+  nesta máquina. Evidência em `work/e20-acceptance/README.md`.
 
 - **2026-09-23 — Push da E20.5 e seguir para a E20.6:** `2ca1838` já estava
   publicado. E20.6 implementada; evidência em `work/e20-pages/README.md`.

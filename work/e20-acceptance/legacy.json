@@ -1,0 +1,472 @@
+{
+  "suite": "legacy",
+  "python": "3.11.15",
+  "head": "2510823c19bb1f4076e1ebf6a8ea80132a08bf69",
+  "pyside": "6.5.3",
+  "qt": "6.5.3",
+  "test_sources": {
+    "test_e15_qt_headless.py": "d1e36c9472c607c0a0bb03a6ded7d30f3e912061b4bdb8e0a915290ce7cd9fa8",
+    "test_e15_qt_static.py": "950056a9affc9db3833214571bdd283656f5153bba7405993e05d93f739277cf",
+    "test_e17_qt_ux.py": "40266613c336ad05566bf342aa4e49860cc4d2e3313a1361d8aed2c1e56a3c8d",
+    "test_e18_appearance.py": "b92ac1bb3d8db8b9b2b75bdac113b1a807225a7a9207ba8c325641d32d15fcb2",
+    "test_e18_baseline.py": "0fda6a7c073eccb611913c0a25858fb85944f8819612550d5ecfff5794102db0",
+    "test_e18_create_first_use.py": "600acdf5fa0e6c21f1190ec35f4fbeb442139f6043f4bfeff48add1927e106fb",
+    "test_e18_icons.py": "b06f4f103ccde77cb0573fc2d1b60ce27fd9126266d344bc089139596cde6140",
+    "test_e18_packaging.py": "e8f4c9df51a477143001459ec5b7d8f442fe6c122e26be6d444150718e0053a2",
+    "test_e18_parameter_control.py": "684d1512d62a9e83696bb850bdf08b9379dde36fe4a5a129f5fcd9e0ebc9565b",
+    "test_e18_preview_geometry.py": "cff3887f9a54be531d11b1efa12306470f1ed90f68e5c825f8fefaf10002ebbc",
+    "test_e18_quality.py": "fd88e099055f8304b7eb1b3cdf7d73c46d75e1286c060b28f786729176635d9b",
+    "test_e18_responsive_layout.py": "773a02e31753d892ea4fa9894f0495d41621b062f13e414ab08573b6666588ed",
+    "test_e18_secondary_pages.py": "0cb1461218f27e8092cd3c5428f1f4f40bdfb0566452b66e187c6dd63dd1ae7f",
+    "test_e18_style_draft.py": "34e7ad7e6c9b58d884808935dbd3ad17e4ff412f9709a6a4bd3b6ab8a1ae0768",
+    "test_e19_cotar_reference.py": "22a6528a4ffbedbfed37ebfe3c0e51af7e3a523ceba5470d9581f2c55f30172a",
+    "test_e19_style_workspace.py": "9e3e0a36a2b84e793c005fb45bfec331dc392f892dfac97df6bb6328dfe4fae9"
+  },
+  "runtime_sources": {
+    "Contents/python/ameno_ui/__init__.py": "f3fe9b4be43c5476442410c668d6bbac5ffddfade2bf80e6a462c0bb75754dcd",
+    "Contents/python/ameno_ui/application.py": "445e4880ea0fd8f37382c8708be72098447620e4f0855ecd1129d90409a02b14",
+    "Contents/python/ameno_ui/assets.py": "c02e37302c170606f712b9719918e98dfdf4a0cbe027c356255c810679eea3d3",
+    "Contents/python/ameno_ui/auth.py": "b34cf8c1da33f1a341a5aa01dc8d96833ac0c1db7c6145743b2093ac2a6e5dbf",
+    "Contents/python/ameno_ui/bridge.py": "ca49aec69c531dda0612aff14a915328f75fb1dbe2d53478093dd2f0f6382731",
+    "Contents/python/ameno_ui/common.py": "cbd3d7c06b480e240cbecf64d77ea0a2c03309d04fa4a6554160cea11908bba8",
+    "Contents/python/ameno_ui/components.py": "7e9b9fb92750368dca8bbfc976716a26b64e82ba97fa24a0122198f89d16fee7",
+    "Contents/python/ameno_ui/config_page.py": "9470c8c3f329172462987ffb81dac420955a436bf898b3bb291f5f22fb7e2a1d",
+    "Contents/python/ameno_ui/create_page.py": "ddd22b4371d556ee2bcb87ccc55bd616a95897edb8b25dea0e2acbe93634fce8",
+    "Contents/python/ameno_ui/dimension_preview.py": "64ebc4bcd1100c3ed71bb3d7541c1c1a8b4bc624d1735169c7ad647462eb4bf6",
+    "Contents/python/ameno_ui/edit_page.py": "bc1e6c78965d9d467573fa1bc389a0941332155f0e03bd15153944ff87087921",
+    "Contents/python/ameno_ui/entrypoint.py": "7bb512f659b50609f17512c521b22260723c97c3a6aba20b4d145f50e3b5b19d",
+    "Contents/python/ameno_ui/host_info.py": "fb6930492d0d8a4cfecffc2307293e3b3edb17c422dfada8ebaaa7e4a6632f01",
+    "Contents/python/ameno_ui/login_page.py": "970cce4e704732964227b754604856e64e3c92d1c45800f086ad2b58ea08e01a",
+    "Contents/python/ameno_ui/models.py": "ab740ab43674dad1d2d2bc050fbd50c127b95dbcfd604c013f584735d0c42998",
+    "Contents/python/ameno_ui/page_scaffold.py": "ab2b5d2497518a4b5943423f611cfd2dc696a5eba22fdf14afe02c6d2a7ffcc8",
+    "Contents/python/ameno_ui/parameter_control.py": "b1879484952c5cab947087e6dc2c943f0c26d9b62aa7430a038e51a3361194ed",
+    "Contents/python/ameno_ui/preferences.py": "440256d90831acf70e722eccb72ddaa290e6f5569dca5a615faf38f81447ad5f",
+    "Contents/python/ameno_ui/qt_compat.py": "5f959fd44a83fe883197fa870da602f0c756931fdd7329bb8eab28cb63984d43",
+    "Contents/python/ameno_ui/render_page.py": "8887d08e02885ecceb882b26aab495be0bdc9cc1cb24c68b62b7767e550f7d70",
+    "Contents/python/ameno_ui/responsive.py": "b86bc0487c09bff48c0942df6cac3a2c5d6687a6fcaa8f591fe89d211dffcafe",
+    "Contents/python/ameno_ui/style_draft.py": "bf9130e00445c67c9437b38d8bfb8c65d8e829bed5a29c1e1a6c3066c2ffa763",
+    "Contents/python/ameno_ui/styles_page.py": "677b8300c93c1369f137cbcb2b69a41308312796657d45d938952ab3812c1181",
+    "Contents/python/ameno_ui/theme.py": "29399207037749453a2107d4cce76c53e229205f4f415619586c71fe5031dd9f",
+    "Contents/python/ameno_ui/window.py": "c982c8fc193ac450a93411571a1c377c5fa3ac6d9a1b176d984b178872efd002",
+    "Contents/python/ameno_ui/window_geometry.py": "3d1b5c4c15d85d882c87c659cd2ba6bf6e6d3973f61fe07ffdf18eeefe2e6b46"
+  },
+  "font_dpi_override": "96",
+  "tests": [
+    {
+      "test": "test_e15_qt_headless.py::test_login_enters_app_without_blocking_on_scene_refresh",
+      "status": "PASS",
+      "seconds": 0.0218,
+      "error": ""
+    },
+    {
+      "test": "test_e15_qt_headless.py::test_preview_paints_without_scene_objects",
+      "status": "PASS",
+      "seconds": 0.0055,
+      "error": ""
+    },
+    {
+      "test": "test_e15_qt_headless.py::test_window_builds_and_navigation_stays_local",
+      "status": "PASS",
+      "seconds": 0.0931,
+      "error": ""
+    },
+    {
+      "test": "test_e15_qt_static.py::test_auth_gateway_failure_returns_safe_error_state",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e15_qt_static.py::test_auth_token_is_not_serialized_or_logged",
+      "status": "PASS",
+      "seconds": 0.0001,
+      "error": ""
+    },
+    {
+      "test": "test_e15_qt_static.py::test_bootstrap_and_packaging_do_not_load_legacy_presentation",
+      "status": "PASS",
+      "seconds": 0.0011,
+      "error": ""
+    },
+    {
+      "test": "test_e15_qt_static.py::test_new_ui_does_not_import_wpf_or_create_qapplication",
+      "status": "PASS",
+      "seconds": 0.0028,
+      "error": ""
+    },
+    {
+      "test": "test_e15_qt_static.py::test_python_package_compiles_and_has_required_modules",
+      "status": "PASS",
+      "seconds": 0.0337,
+      "error": ""
+    },
+    {
+      "test": "test_e17_qt_ux.py::test_all_previous_commands_remain_reachable_without_extra_primary_actions",
+      "status": "PASS",
+      "seconds": 0.0589,
+      "error": ""
+    },
+    {
+      "test": "test_e17_qt_ux.py::test_brand_assets_and_fonts_have_runtime_fallbacks",
+      "status": "PASS",
+      "seconds": 0.0005,
+      "error": ""
+    },
+    {
+      "test": "test_e17_qt_ux.py::test_bridge_errors_are_translated_to_an_actionable_next_step",
+      "status": "PASS",
+      "seconds": 0.0002,
+      "error": ""
+    },
+    {
+      "test": "test_e17_qt_ux.py::test_create_choices_remain_local_until_one_consolidated_start",
+      "status": "PASS",
+      "seconds": 0.0117,
+      "error": ""
+    },
+    {
+      "test": "test_e17_qt_ux.py::test_layout_renders_at_minimum_default_and_large_sizes",
+      "status": "PASS",
+      "seconds": 0.2515,
+      "error": ""
+    },
+    {
+      "test": "test_e17_qt_ux.py::test_login_never_serializes_token_and_help_never_reads_scene",
+      "status": "PASS",
+      "seconds": 0.0678,
+      "error": ""
+    },
+    {
+      "test": "test_e17_qt_ux.py::test_logout_erases_token_widget_and_100_window_lifecycles_complete",
+      "status": "PASS",
+      "seconds": 7.1254,
+      "error": ""
+    },
+    {
+      "test": "test_e17_qt_ux.py::test_navigation_is_local_and_widget_tree_is_stable_for_100_cycles",
+      "status": "PASS",
+      "seconds": 0.0662,
+      "error": ""
+    },
+    {
+      "test": "test_e17_qt_ux.py::test_theme_is_scoped_to_ameno_window",
+      "status": "PASS",
+      "seconds": 0.06,
+      "error": ""
+    },
+    {
+      "test": "test_e18_appearance.py::test_appearance_fits_narrow_page_without_horizontal_content",
+      "status": "PASS",
+      "seconds": 0.0146,
+      "error": ""
+    },
+    {
+      "test": "test_e18_appearance.py::test_appearance_uses_one_vertical_flow_without_fixed_splitter",
+      "status": "PASS",
+      "seconds": 0.0093,
+      "error": ""
+    },
+    {
+      "test": "test_e18_appearance.py::test_empty_library_still_has_editable_default_draft_and_preview",
+      "status": "PASS",
+      "seconds": 0.0088,
+      "error": ""
+    },
+    {
+      "test": "test_e18_appearance.py::test_loading_a_style_updates_draft_and_keeps_actions_explicit",
+      "status": "PASS",
+      "seconds": 0.0088,
+      "error": ""
+    },
+    {
+      "test": "test_e18_baseline.py::test_pages_fit_default_window_without_horizontal_scroll",
+      "status": "PASS",
+      "seconds": 0.1386,
+      "error": ""
+    },
+    {
+      "test": "test_e18_baseline.py::test_preview_reacts_before_style_list_refresh",
+      "status": "PASS",
+      "seconds": 0.0203,
+      "error": ""
+    },
+    {
+      "test": "test_e18_create_first_use.py::test_cta_is_visible_in_default_window_without_scrolling",
+      "status": "PASS",
+      "seconds": 0.1059,
+      "error": ""
+    },
+    {
+      "test": "test_e18_create_first_use.py::test_existing_style_choices_remain_available_after_guided_rewrite",
+      "status": "PASS",
+      "seconds": 0.0051,
+      "error": ""
+    },
+    {
+      "test": "test_e18_create_first_use.py::test_first_use_has_one_cta_and_summary_follows_choices",
+      "status": "PASS",
+      "seconds": 0.005,
+      "error": ""
+    },
+    {
+      "test": "test_e18_icons.py::test_all_navigation_icons_are_local_svg_assets_with_safe_fallback",
+      "status": "PASS",
+      "seconds": 0.0017,
+      "error": ""
+    },
+    {
+      "test": "test_e18_icons.py::test_compact_rail_uses_icons_but_keeps_accessible_names_and_tooltips",
+      "status": "PASS",
+      "seconds": 0.0863,
+      "error": ""
+    },
+    {
+      "test": "test_e18_icons.py::test_wide_navigation_keeps_compact_icons_and_accessible_labels",
+      "status": "PASS",
+      "seconds": 0.1068,
+      "error": ""
+    },
+    {
+      "test": "test_e18_packaging.py::test_new_e18_modules_and_icons_are_inside_the_package_tree",
+      "status": "PASS",
+      "seconds": 0.0008,
+      "error": ""
+    },
+    {
+      "test": "test_e18_packaging.py::test_package_targets_only_max_2026_and_still_excludes_legacy_wpf",
+      "status": "PASS",
+      "seconds": 0.0026,
+      "error": ""
+    },
+    {
+      "test": "test_e18_packaging.py::test_packaging_scripts_copy_contents_and_remove_wpf_cache",
+      "status": "PASS",
+      "seconds": 0.0002,
+      "error": ""
+    },
+    {
+      "test": "test_e18_parameter_control.py::test_control_has_focusable_accessible_children_and_no_timer",
+      "status": "PASS",
+      "seconds": 0.0013,
+      "error": ""
+    },
+    {
+      "test": "test_e18_parameter_control.py::test_decimal_comma_keyboard_and_reset_are_local",
+      "status": "PASS",
+      "seconds": 0.0007,
+      "error": ""
+    },
+    {
+      "test": "test_e18_parameter_control.py::test_slider_and_spinbox_are_synchronized_with_one_signal",
+      "status": "PASS",
+      "seconds": 0.0008,
+      "error": ""
+    },
+    {
+      "test": "test_e18_parameter_control.py::test_technical_input_can_exceed_slider_range_but_stays_bounded",
+      "status": "PASS",
+      "seconds": 0.0006,
+      "error": ""
+    },
+    {
+      "test": "test_e18_preview_geometry.py::test_extension_and_scale_parameters_move_preview_primitives",
+      "status": "PASS",
+      "seconds": 0.0001,
+      "error": ""
+    },
+    {
+      "test": "test_e18_preview_geometry.py::test_geometry_is_deterministic_and_does_not_require_qt_or_scene",
+      "status": "PASS",
+      "seconds": 0.0001,
+      "error": ""
+    },
+    {
+      "test": "test_e18_preview_geometry.py::test_line_and_text_parameters_have_visible_geometry_effects",
+      "status": "PASS",
+      "seconds": 0.0001,
+      "error": ""
+    },
+    {
+      "test": "test_e18_preview_geometry.py::test_terminal_type_and_size_are_not_decorative",
+      "status": "PASS",
+      "seconds": 0.0001,
+      "error": ""
+    },
+    {
+      "test": "test_e18_preview_geometry.py::test_text_color_is_separate_from_line_color",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e18_preview_geometry.py::test_ticks_and_arrows_follow_the_committed_geometry",
+      "status": "PASS",
+      "seconds": 0.0002,
+      "error": ""
+    },
+    {
+      "test": "test_e18_quality.py::test_local_preview_update_p95_stays_under_20ms_without_bridge",
+      "status": "PASS",
+      "seconds": 0.0418,
+      "error": ""
+    },
+    {
+      "test": "test_e18_quality.py::test_parameter_wheel_is_ignored_without_focus",
+      "status": "PASS",
+      "seconds": 0.0014,
+      "error": ""
+    },
+    {
+      "test": "test_e18_quality.py::test_resize_navigation_lifecycle_keeps_widget_tree_and_connections_stable",
+      "status": "PASS",
+      "seconds": 3.457,
+      "error": ""
+    },
+    {
+      "test": "test_e18_quality.py::test_visible_actions_have_accessible_names",
+      "status": "PASS",
+      "seconds": 0.0803,
+      "error": ""
+    },
+    {
+      "test": "test_e18_responsive_layout.py::test_all_pages_have_no_horizontal_scroll_at_supported_window_widths",
+      "status": "PASS",
+      "seconds": 0.2943,
+      "error": ""
+    },
+    {
+      "test": "test_e18_responsive_layout.py::test_breakpoints_are_pure_and_have_no_ambiguous_boundary",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e18_responsive_layout.py::test_compact_layout_survives_common_windows_dpi_scales",
+      "status": "PASS",
+      "seconds": 2.6795,
+      "error": ""
+    },
+    {
+      "test": "test_e18_responsive_layout.py::test_shell_keeps_compact_rail_while_page_density_changes_without_rebuild",
+      "status": "PASS",
+      "seconds": 0.1775,
+      "error": ""
+    },
+    {
+      "test": "test_e18_secondary_pages.py::test_login_explains_token_and_has_named_primary_action",
+      "status": "PASS",
+      "seconds": 0.0592,
+      "error": ""
+    },
+    {
+      "test": "test_e18_secondary_pages.py::test_navigation_between_secondary_pages_stays_local",
+      "status": "PASS",
+      "seconds": 0.0641,
+      "error": ""
+    },
+    {
+      "test": "test_e18_secondary_pages.py::test_secondary_pages_have_actionable_headings_and_one_primary_each",
+      "status": "PASS",
+      "seconds": 0.0596,
+      "error": ""
+    },
+    {
+      "test": "test_e18_style_draft.py::test_draft_dirty_clean_and_restore_are_explicit",
+      "status": "PASS",
+      "seconds": 0.0007,
+      "error": ""
+    },
+    {
+      "test": "test_e18_style_draft.py::test_draft_is_valid_and_clean_before_any_style_library_read",
+      "status": "PASS",
+      "seconds": 0.0,
+      "error": ""
+    },
+    {
+      "test": "test_e18_style_draft.py::test_draft_load_is_atomic_and_snapshot_contains_every_style_field",
+      "status": "PASS",
+      "seconds": 0.0001,
+      "error": ""
+    },
+    {
+      "test": "test_e18_style_draft.py::test_draft_normalizes_decimal_enum_and_bounds_without_external_calls",
+      "status": "PASS",
+      "seconds": 0.0001,
+      "error": ""
+    },
+    {
+      "test": "test_e19_cotar_reference.py::test_automatic_direction_recovers_after_silent_single_selection_and_show",
+      "status": "PASS",
+      "seconds": 0.0832,
+      "error": ""
+    },
+    {
+      "test": "test_e19_cotar_reference.py::test_choice_cards_keep_one_active_option_per_question",
+      "status": "PASS",
+      "seconds": 0.0622,
+      "error": ""
+    },
+    {
+      "test": "test_e19_cotar_reference.py::test_continuous_measurement_prevents_automatic_direction_in_the_main_flow",
+      "status": "PASS",
+      "seconds": 0.0612,
+      "error": ""
+    },
+    {
+      "test": "test_e19_cotar_reference.py::test_cotar_matches_reference_contract_at_980x720",
+      "status": "PASS",
+      "seconds": 0.1067,
+      "error": ""
+    },
+    {
+      "test": "test_e19_cotar_reference.py::test_direction_segments_use_local_reference_icons",
+      "status": "PASS",
+      "seconds": 0.0601,
+      "error": ""
+    },
+    {
+      "test": "test_e19_cotar_reference.py::test_invalid_direction_modal_is_only_a_start_fallback",
+      "status": "PASS",
+      "seconds": 0.0662,
+      "error": ""
+    },
+    {
+      "test": "test_e19_style_workspace.py::test_style_compact_mode_places_fixed_preview_above_scrolling_controls",
+      "status": "PASS",
+      "seconds": 0.0655,
+      "error": ""
+    },
+    {
+      "test": "test_e19_style_workspace.py::test_style_default_height_gives_the_preview_room_to_explain_the_dimension",
+      "status": "PASS",
+      "seconds": 0.0684,
+      "error": ""
+    },
+    {
+      "test": "test_e19_style_workspace.py::test_style_preview_changes_locally_and_never_enters_controls_scroll",
+      "status": "PASS",
+      "seconds": 0.1256,
+      "error": ""
+    },
+    {
+      "test": "test_e19_style_workspace.py::test_style_workspace_keeps_preview_and_footer_fixed_at_980x720",
+      "status": "PASS",
+      "seconds": 0.1069,
+      "error": ""
+    },
+    {
+      "test": "test_e19_style_workspace.py::test_style_workspace_uses_four_groups_and_separate_color_swatch",
+      "status": "PASS",
+      "seconds": 0.1165,
+      "error": ""
+    },
+    {
+      "test": "test_e19_style_workspace.py::test_window_opens_in_vertical_stacked_workspace",
+      "status": "PASS",
+      "seconds": 0.0731,
+      "error": ""
+    }
+  ],
+  "passed": 69,
+  "failed": 0
+}
