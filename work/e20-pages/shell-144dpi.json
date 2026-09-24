@@ -1,0 +1,91 @@
+{
+  "suite": "e20-shell",
+  "python": "3.11.15",
+  "head": "2ca1838187242e5d7881778f9f29f264bb89eed8",
+  "pyside": "6.5.3",
+  "qt": "6.5.3",
+  "test_sources": {
+    "test_e20_shell_contracts.py": "68e84eb5969c39e39416ab8490c824d28c5962f5b92ca9e38298282193121488"
+  },
+  "runtime_sources": {
+    "Contents/python/ameno_ui/__init__.py": "f3fe9b4be43c5476442410c668d6bbac5ffddfade2bf80e6a462c0bb75754dcd",
+    "Contents/python/ameno_ui/application.py": "445e4880ea0fd8f37382c8708be72098447620e4f0855ecd1129d90409a02b14",
+    "Contents/python/ameno_ui/assets.py": "c02e37302c170606f712b9719918e98dfdf4a0cbe027c356255c810679eea3d3",
+    "Contents/python/ameno_ui/auth.py": "b34cf8c1da33f1a341a5aa01dc8d96833ac0c1db7c6145743b2093ac2a6e5dbf",
+    "Contents/python/ameno_ui/bridge.py": "ca49aec69c531dda0612aff14a915328f75fb1dbe2d53478093dd2f0f6382731",
+    "Contents/python/ameno_ui/common.py": "cbd3d7c06b480e240cbecf64d77ea0a2c03309d04fa4a6554160cea11908bba8",
+    "Contents/python/ameno_ui/components.py": "7e8998fc21e9d88de66043d0559dca8d27bffcb349b50ecb647dfde931d07985",
+    "Contents/python/ameno_ui/config_page.py": "9470c8c3f329172462987ffb81dac420955a436bf898b3bb291f5f22fb7e2a1d",
+    "Contents/python/ameno_ui/create_page.py": "ddd22b4371d556ee2bcb87ccc55bd616a95897edb8b25dea0e2acbe93634fce8",
+    "Contents/python/ameno_ui/dimension_preview.py": "64ebc4bcd1100c3ed71bb3d7541c1c1a8b4bc624d1735169c7ad647462eb4bf6",
+    "Contents/python/ameno_ui/edit_page.py": "bc1e6c78965d9d467573fa1bc389a0941332155f0e03bd15153944ff87087921",
+    "Contents/python/ameno_ui/entrypoint.py": "7bb512f659b50609f17512c521b22260723c97c3a6aba20b4d145f50e3b5b19d",
+    "Contents/python/ameno_ui/host_info.py": "fb6930492d0d8a4cfecffc2307293e3b3edb17c422dfada8ebaaa7e4a6632f01",
+    "Contents/python/ameno_ui/login_page.py": "970cce4e704732964227b754604856e64e3c92d1c45800f086ad2b58ea08e01a",
+    "Contents/python/ameno_ui/models.py": "ab740ab43674dad1d2d2bc050fbd50c127b95dbcfd604c013f584735d0c42998",
+    "Contents/python/ameno_ui/page_scaffold.py": "ab2b5d2497518a4b5943423f611cfd2dc696a5eba22fdf14afe02c6d2a7ffcc8",
+    "Contents/python/ameno_ui/parameter_control.py": "b1879484952c5cab947087e6dc2c943f0c26d9b62aa7430a038e51a3361194ed",
+    "Contents/python/ameno_ui/preferences.py": "440256d90831acf70e722eccb72ddaa290e6f5569dca5a615faf38f81447ad5f",
+    "Contents/python/ameno_ui/qt_compat.py": "5f959fd44a83fe883197fa870da602f0c756931fdd7329bb8eab28cb63984d43",
+    "Contents/python/ameno_ui/render_page.py": "8887d08e02885ecceb882b26aab495be0bdc9cc1cb24c68b62b7767e550f7d70",
+    "Contents/python/ameno_ui/responsive.py": "b86bc0487c09bff48c0942df6cac3a2c5d6687a6fcaa8f591fe89d211dffcafe",
+    "Contents/python/ameno_ui/style_draft.py": "bf9130e00445c67c9437b38d8bfb8c65d8e829bed5a29c1e1a6c3066c2ffa763",
+    "Contents/python/ameno_ui/styles_page.py": "8dabb1c4059cd212866fdb93c71097a8e0259a55046846ee5fc4dc7e46e7d53f",
+    "Contents/python/ameno_ui/theme.py": "29399207037749453a2107d4cce76c53e229205f4f415619586c71fe5031dd9f",
+    "Contents/python/ameno_ui/window.py": "c982c8fc193ac450a93411571a1c377c5fa3ac6d9a1b176d984b178872efd002",
+    "Contents/python/ameno_ui/window_geometry.py": "3d1b5c4c15d85d882c87c659cd2ba6bf6e6d3973f61fe07ffdf18eeefe2e6b46"
+  },
+  "font_dpi_override": "144",
+  "tests": [
+    {
+      "test": "test_e20_shell_contracts.py::test_compact_rail_actions_have_at_least_a_44px_target",
+      "status": "PASS",
+      "seconds": 0.1769,
+      "error": ""
+    },
+    {
+      "test": "test_e20_shell_contracts.py::test_core_color_tokens_meet_text_and_focus_contrast_thresholds",
+      "status": "PASS",
+      "seconds": 0.0001,
+      "error": ""
+    },
+    {
+      "test": "test_e20_shell_contracts.py::test_every_page_stays_within_its_viewport_without_horizontal_scrolling",
+      "status": "PASS",
+      "seconds": 0.402,
+      "error": ""
+    },
+    {
+      "test": "test_e20_shell_contracts.py::test_keyboard_can_activate_every_page_from_the_rail",
+      "status": "PASS",
+      "seconds": 0.1273,
+      "error": ""
+    },
+    {
+      "test": "test_e20_shell_contracts.py::test_keyboard_focus_is_visible_on_the_compact_rail",
+      "status": "PASS",
+      "seconds": 0.1127,
+      "error": ""
+    },
+    {
+      "test": "test_e20_shell_contracts.py::test_rail_keeps_the_approved_order_and_semantic_labels",
+      "status": "PASS",
+      "seconds": 0.1085,
+      "error": ""
+    },
+    {
+      "test": "test_e20_shell_contracts.py::test_resize_and_navigation_keep_pages_views_and_connections_stable",
+      "status": "PASS",
+      "seconds": 4.0259,
+      "error": ""
+    },
+    {
+      "test": "test_e20_shell_contracts.py::test_responsive_mode_is_derived_from_the_page_viewport_width",
+      "status": "PASS",
+      "seconds": 0.3302,
+      "error": ""
+    }
+  ],
+  "passed": 8,
+  "failed": 0
+}

@@ -7,7 +7,7 @@ from typing import Optional
 
 from .bridge import BridgeError, UiBridge
 from .common import button, group, message_label, set_bridge_error, set_message
-from .components import PageHeader, StatusPill
+from .components import ActionRow, PageHeader, StatusPill
 from .qt_compat import QtCore, QtGui, QtWidgets
 
 
@@ -22,17 +22,23 @@ class RenderPage(QtWidgets.QWidget):
         root.addWidget(
             PageHeader(
                 "Exportar",
-                "Escolha o arquivo e o que incluir. O renderer só será consultado ao atualizar ou exportar.",
-                "SAÍDA",
+                "Escolha o arquivo e o que incluir no PNG das cotas.",
+                "EXPORTAR",
             )
         )
-        renderer_box = group("Pronto para exportar")
+        renderer_box = group("Renderer")
         renderer_form = QtWidgets.QFormLayout(renderer_box)
-        self.renderer = QtWidgets.QLabel("Atualize o estado para detectar o renderer.")
+        self.renderer = QtWidgets.QLabel("Lido ao exportar ou em Mais ações > Atualizar")
+        self.renderer.setObjectName("Muted")
+        self.renderer.setWordWrap(True)
         self.renderer_state = StatusPill("Não verificado")
+        state_row = QtWidgets.QHBoxLayout()
+        state_row.setContentsMargins(0, 0, 0, 0)
+        state_row.addWidget(self.renderer_state)
+        state_row.addStretch(1)
         self.camera = QtWidgets.QLabel("Vista atual do 3ds Max")
         renderer_form.addRow("Renderer", self.renderer)
-        renderer_form.addRow("Estado", self.renderer_state)
+        renderer_form.addRow("Estado", state_row)
         renderer_form.addRow("Origem", self.camera)
         root.addWidget(renderer_box)
 
@@ -49,41 +55,40 @@ class RenderPage(QtWidgets.QWidget):
         self.scope = QtWidgets.QComboBox()
         self.scope.addItem("Todas as cotas", "all")
         self.scope.addItem("Somente as selecionadas", "selected")
-        self.only_dimensions = QtWidgets.QCheckBox("Exportar somente as cotas, com fundo transparente")
+        self.only_dimensions = QtWidgets.QCheckBox("Transparente, só as cotas")
+        self.only_dimensions.setToolTip("Exporta somente as cotas, com fundo transparente, para compor sobre o render.")
         self.only_dimensions.setChecked(True)
         output_form.addRow("Salvar em", path_host)
         output_form.addRow("Incluir", self.scope)
         output_form.addRow("Fundo", self.only_dimensions)
         root.addWidget(output_box)
 
-        actions = QtWidgets.QHBoxLayout()
         self.render_button = button("Exportar PNG", self.render, primary=True)
         self.render_button.setAccessibleName("Exportar cotas em PNG")
         self.more_button = QtWidgets.QToolButton()
-        self.more_button.setText("Mais ações  ···")
+        self.more_button.setText("Mais ações")
         self.more_button.setAccessibleName("Mais ações de exportação")
         self.more_button.setMinimumHeight(40)
         self.more_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.more_menu = QtWidgets.QMenu(self.more_button)
-        self.refresh_action = self.more_menu.addAction("Atualizar renderer e caminho")
+        self.refresh_action = self.more_menu.addAction("Atualizar")
         self.open_action = self.more_menu.addAction("Abrir pasta de saída")
         self.copy_action = self.more_menu.addAction("Copiar caminho")
         self.more_button.setMenu(self.more_menu)
         self.refresh_action.triggered.connect(self.refresh)
         self.open_action.triggered.connect(self.open_folder)
         self.copy_action.triggered.connect(self.copy_path)
-        actions.addWidget(self.render_button, 1)
-        actions.addWidget(self.more_button)
-        root.addLayout(actions)
+        self.actions = ActionRow(self.render_button, self.more_button)
+        root.addWidget(self.actions)
         self.status = message_label()
-        self.status.setText("Escolha um arquivo de saída e revise o escopo antes de exportar.")
+        self.status.setVisible(False)
         root.addWidget(self.status)
         root.addStretch(1)
 
     def refresh(self) -> None:
         try:
             scene = self.bridge.scene()
-            self.renderer.setText("%s · %s" % (scene.renderer_label, scene.renderer_state))
+            self.renderer.setText(scene.renderer_label)
             self.renderer_state.setText(scene.renderer_state or "Não informado")
             if not self.path.text().strip():
                 self.path.setText(self.bridge.default_render_path())

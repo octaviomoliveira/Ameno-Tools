@@ -8,12 +8,12 @@
 Este checkpoint e o plano E20 prevalecem sobre os próximos passos históricos
 E18/E19 mantidos abaixo. Branch `feature/e20-vertical-adaptive-ui`, base publicada
 `develop` em `1acc10af35a289c18ffafa9186ca2055e4f97f41`; plano preservado no commit
-`d030e4f`. E20.0–E20.5 concluídas no gate técnico local; nenhuma nova
+`d030e4f`. E20.0–E20.6 concluídas no gate técnico local; nenhuma nova
 instalação foi feita. Evidências: `work/e20-baseline/README.md`,
 `work/e20-window/README.md`, `work/e20-shell/README.md`,
-`work/e20-cotar/README.md`, `work/e20-preview/README.md` e
-`work/e20-styles/README.md`. E20.6 é a próxima etapa; E20.7–E20.8 não
-iniciadas.
+`work/e20-cotar/README.md`, `work/e20-preview/README.md`,
+`work/e20-styles/README.md` e `work/e20-pages/README.md`. E20.7 é a próxima
+etapa; E20.8 não iniciada.
 
 Já foram registrados 69 testes Python legados verdes, 12 REDs reproduzíveis
 (três de janela, sete de geometria/escala da prévia e dois de apresentação), um
@@ -49,6 +49,13 @@ Não substituir o histórico: acrescentar uma entrada datada. O plano corrente �
 Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions**. Ele deve criar cotas rápidas, editáveis e persistentes para plantas humanizadas, com apresentação controlável e uma saída de render independente para composição.
 
 ## Concluído
+
+- **E20.6 — Revisar, Exportar e Configurações (2026-09-23):** cabeçalhos
+  iguais ao rail, sem instrução repetida na abertura, estado vazio compacto em
+  Revisar, "Renderer" em vez de "Pronto para exportar", "Mais ações" único e
+  ações empilhadas quando estreito. Três textos cortados em 440 px corrigidos.
+  Páginas 7/7 em 96 e 144 DPI, regressões 69/69. Evidência em
+  `work/e20-pages/README.md`.
 
 - **E20.5 — Estilos adaptativo (2026-09-23):** Aplicar usa sempre o estilo
   salvo; com alterações vira "Salvar e aplicar" (decisão do usuário, sem novo
@@ -166,9 +173,9 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Em andamento
 
-- **E20 — interface vertical adaptativa:** E20.0–E20.5 concluídas no gate
-  técnico local. Próxima entrega é E20.6, Revisar, Exportar e Configurações;
-  E20.7–E20.8 não iniciadas. Manter commits
+- **E20 — interface vertical adaptativa:** E20.0–E20.6 concluídas no gate
+  técnico local. Próxima entrega é E20.7, regressões e aceite técnico; E20.8
+  não iniciada. Manter commits
   recuperáveis na branch `feature/e20-vertical-adaptive-ui`, sem merge/tag.
 
 - **E14 — Planos de cotação e fachadas em validação:** E14.1–E14.5 foram
@@ -345,11 +352,11 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Próximo passo — E20.6:** aplicar tokens e breakpoints às páginas Revisar,
-  Exportar e Configurações, sem funções novas sem suporte. Dependências do
-  núcleo em aberto: aplicar rascunho sem salvar e Posição/Ângulo na cota
-  confirmada. Detalhe em
-  `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
+- **Próximo passo — E20.7:** varredura global de regressões e aceite técnico,
+  incluindo o contrato de texto cortado em Cotar e Estilos. As suítes
+  MAXScript exigem uma máquina com 3ds Max 2026. Dependências do núcleo em
+  aberto: aplicar rascunho sem salvar e Posição/Ângulo na cota confirmada.
+  Detalhe em `plans/2026-09-13-e20-interface-vertical-adaptativa.md`.
 
 - **E18.0 — baseline e reprodução concluída:** a branch
   `feature/e18-ux-10-10` foi criada a partir de `feature/e17-ameno-ux` em
@@ -423,6 +430,10 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-23 — Push da E20.5 e seguir para a E20.6:** `2ca1838` já estava
+  publicado. E20.6 implementada; evidência em `work/e20-pages/README.md`.
+  E20.7 é a próxima etapa.
 
 - **2026-09-23 — Push da E20.4 e seguir para a E20.5:** `21abc26` publicado.
   Usuário escolheu "Salvar e aplicar" sem mudar o núcleo e ocultar

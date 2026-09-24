@@ -8,7 +8,7 @@ from .bridge import BridgeError, UiBridge
 from .common import button, group, message_label, set_bridge_error, set_message
 from .components import Disclosure, PageHeader
 from .host_info import collect
-from .qt_compat import QtWidgets
+from .qt_compat import QtCore, QtWidgets
 
 
 class ConfigPage(QtWidgets.QWidget):
@@ -20,7 +20,7 @@ class ConfigPage(QtWidgets.QWidget):
         root = QtWidgets.QVBoxLayout(self)
         root.setContentsMargins(30, 26, 30, 30)
         root.setSpacing(14)
-        root.addWidget(PageHeader("Configuração", "Conta, ambiente e diagnóstico para suporte. O token nunca é salvo.", "AMENO"))
+        root.addWidget(PageHeader("Configurações", "Conta, ambiente e diagnóstico para suporte. O token nunca é salvo.", "CONFIGURAÇÕES"))
 
         account_box = group("Conta")
         account_layout = QtWidgets.QVBoxLayout(account_box)
@@ -29,10 +29,11 @@ class ConfigPage(QtWidgets.QWidget):
         account_layout.addWidget(self.session)
         privacy = QtWidgets.QLabel("O token fica somente em memória e será apagado ao sair.")
         privacy.setObjectName("Muted")
+        privacy.setWordWrap(True)
         account_layout.addWidget(privacy)
         self.logout_button = button("Sair da conta", self._logout)
         self.logout_button.setAccessibleName("Sair da conta Ameno")
-        account_layout.addWidget(self.logout_button, 0)
+        account_layout.addWidget(self.logout_button, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         root.addWidget(account_box)
 
         info_box = group("Informações técnicas")
@@ -47,9 +48,10 @@ class ConfigPage(QtWidgets.QWidget):
         self.technical = Disclosure("Ver detalhes do ambiente", info_box, expanded=False)
         root.addWidget(self.technical)
         self.copy_button = button("Copiar diagnóstico para suporte", self.copy_diagnostic)
-        root.addWidget(self.copy_button)
+        self.copy_button.setToolTip("O diagnóstico não inclui o token da conta.")
+        root.addWidget(self.copy_button, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
         self.status = message_label()
-        self.status.setText("O diagnóstico não inclui o token da conta.")
+        self.status.setVisible(False)
         root.addWidget(self.status)
         root.addStretch(1)
 

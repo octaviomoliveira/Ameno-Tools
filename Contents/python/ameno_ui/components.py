@@ -441,6 +441,39 @@ class Disclosure(QtWidgets.QWidget):
         self.toggle.setText(("−  " if expanded else "+  ") + self._label)
 
 
+class ActionRow(QtWidgets.QWidget):
+    """Primary action plus "Mais ações": side by side, stacked when narrow."""
+
+    STACK_BELOW = 420
+
+    def __init__(self, primary: QtWidgets.QWidget, secondary: QtWidgets.QWidget) -> None:
+        super().__init__()
+        self.setObjectName("TransparentHost")
+        self.primary, self.secondary = primary, secondary
+        primary.setMinimumWidth(0)
+        self._layout = QtWidgets.QBoxLayout(QtWidgets.QBoxLayout.Direction.LeftToRight, self)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setSpacing(10)
+        self._layout.addWidget(primary, 1)
+        self._layout.addWidget(secondary)
+
+    def is_stacked(self) -> bool:
+        return self._layout.direction() == QtWidgets.QBoxLayout.Direction.TopToBottom
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        stacked = self.width() < self.STACK_BELOW
+        if stacked == self.is_stacked():
+            return
+        self._layout.setDirection(
+            QtWidgets.QBoxLayout.Direction.TopToBottom if stacked else QtWidgets.QBoxLayout.Direction.LeftToRight
+        )
+        self.secondary.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding if stacked else QtWidgets.QSizePolicy.Policy.Preferred,
+            QtWidgets.QSizePolicy.Policy.Fixed,
+        )
+
+
 class StatusPill(QtWidgets.QLabel):
     def __init__(self, text: str = "") -> None:
         super().__init__(text)

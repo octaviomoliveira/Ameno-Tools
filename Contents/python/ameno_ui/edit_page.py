@@ -6,9 +6,51 @@ from typing import List, Optional
 
 from .bridge import BridgeError, UiBridge
 from .common import button, group, message_label, set_bridge_error, set_message
-from .components import PageHeader, SectionHeading
+from .components import ActionRow, PageHeader, SectionHeading
 from .models import AuditSnapshot, StyleSnapshot
 from .qt_compat import QtCore, QtWidgets
+
+
+class _StateHost(QtWidgets.QWidget):
+    """Shows one state at a time and takes only that state's height.
+
+    QStackedWidget sizes itself (and its height-for-width) by the tallest
+    page, which kept the empty state as tall as the full review form.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._pages: list = []
+        self._current = -1
+        self._layout = QtWidgets.QVBoxLayout(self)
+        self._layout.setContentsMargins(0, 0, 0, 0)
+
+    def addWidget(self, widget: QtWidgets.QWidget) -> int:  # noqa: N802 - Qt-like API
+        self._pages.append(widget)
+        self._layout.addWidget(widget)
+        widget.setVisible(len(self._pages) == 1)
+        if self._current < 0:
+            self._current = 0
+        return len(self._pages) - 1
+
+    def count(self) -> int:
+        return len(self._pages)
+
+    def widget(self, index: int) -> QtWidgets.QWidget:
+        return self._pages[index]
+
+    def currentIndex(self) -> int:  # noqa: N802 - Qt-like API
+        return self._current
+
+    def currentWidget(self):  # noqa: N802 - Qt-like API
+        return self._pages[self._current] if 0 <= self._current < len(self._pages) else None
+
+    def setCurrentIndex(self, index: int) -> None:  # noqa: N802 - Qt-like API
+        if not 0 <= index < len(self._pages):
+            return
+        self._current = index
+        for position, page in enumerate(self._pages):
+            page.setVisible(position == index)
 
 
 class EditPage(QtWidgets.QWidget):
@@ -23,8 +65,8 @@ class EditPage(QtWidgets.QWidget):
         root.addWidget(
             PageHeader(
                 "Revisar",
-                "Selecione uma cota na viewport. Leia a medida, corrija o texto e aplique somente quando estiver pronto.",
-                "EDIÇÃO",
+                "Leia a medida da cota selecionada e ajuste o texto exibido.",
+                "REVISAR",
             )
         )
 
@@ -32,19 +74,18 @@ class EditPage(QtWidgets.QWidget):
         refresh_row.addStretch(1)
         self.refresh_button = button("Ler seleção atual", self.refresh)
         self.refresh_button.setAccessibleName("Ler seleção atual na viewport")
+        self.refresh_button.setToolTip("A interface não monitora a viewport; a seleção é lida só neste clique.")
         refresh_row.addWidget(self.refresh_button)
         root.addLayout(refresh_row)
 
-        self.selection_stack = QtWidgets.QStackedWidget()
+        self.selection_stack = _StateHost()
         self.selection_stack.setObjectName("SelectionStack")
 
         empty = QtWidgets.QFrame()
         empty.setObjectName("Card")
         empty_layout = QtWidgets.QVBoxLayout(empty)
-        empty_layout.setContentsMargins(24, 32, 24, 32)
-        empty_layout.addWidget(SectionHeading("Nenhuma cota carregada", "Selecione uma cota Ameno no 3ds Max e clique em Ler seleção atual."))
-        empty_layout.addWidget(QtWidgets.QLabel("A interface não monitora a viewport em segundo plano."))
-        empty_layout.addStretch(1)
+        empty_layout.setContentsMargins(20, 18, 20, 18)
+        empty_layout.addWidget(SectionHeading("Nenhuma cota carregada", "Selecione uma cota Ameno na viewport e clique em Ler seleção atual."))
         self.selection_stack.addWidget(empty)
 
         selected = QtWidgets.QWidget()
@@ -105,16 +146,16 @@ class EditPage(QtWidgets.QWidget):
         edit_layout.addWidget(self.override_stack)
         reason_row = QtWidgets.QFormLayout()
         self.reason = QtWidgets.QLineEdit()
-        self.reason.setPlaceholderText("Opcional, mas recomendado para auditoria")
+        self.reason.setPlaceholderText("Opcional")
+        self.reason.setToolTip("Opcional, mas recomendado para auditoria.")
         reason_row.addRow("Motivo da alteração", self.reason)
         edit_layout.addLayout(reason_row)
         selected_layout.addWidget(edit_box)
 
-        actions = QtWidgets.QHBoxLayout()
         self.apply_button = button("Aplicar alteração", self.apply, primary=True)
         self.apply_button.setAccessibleName("Aplicar alteração à cota")
         self.more_button = QtWidgets.QToolButton()
-        self.more_button.setText("Mais ações  ···")
+        self.more_button.setText("Mais ações")
         self.more_button.setAccessibleName("Mais ações de revisão")
         self.more_button.setMinimumHeight(40)
         self.more_button.setPopupMode(QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
@@ -124,14 +165,13 @@ class EditPage(QtWidgets.QWidget):
         self.more_button.setMenu(self.more_menu)
         self.restore_action.triggered.connect(self.restore)
         self.anchors_action.triggered.connect(self.select_anchors)
-        actions.addWidget(self.apply_button, 1)
-        actions.addWidget(self.more_button)
-        selected_layout.addLayout(actions)
+        self.actions = ActionRow(self.apply_button, self.more_button)
+        selected_layout.addWidget(self.actions)
         self.selection_stack.addWidget(selected)
         root.addWidget(self.selection_stack)
 
         self.status = message_label()
-        self.status.setText("Selecione uma cota e clique em Ler seleção atual quando estiver pronto.")
+        self.status.setVisible(False)
         root.addWidget(self.status)
         root.addStretch(1)
         self.mode.currentIndexChanged.connect(self._update_enabled)
@@ -156,12 +196,15 @@ class EditPage(QtWidgets.QWidget):
         self.override_stack.setCurrentIndex(indexes.get(mode, 0))
         self.reason.setEnabled(mode != "measured")
 
+    def _show_state(self, index: int) -> None:
+        self.selection_stack.setCurrentIndex(index)
+
     def _load(self, audit: Optional[AuditSnapshot]) -> None:
         self._audit = audit
         if audit is None:
             for widget in (self.dimension_id, self.measured, self.displayed, self.delta, self.anchor, self.orphan):
                 widget.setText("—")
-            self.selection_stack.setCurrentIndex(0)
+            self._show_state(0)
             return
         self.dimension_id.setText(audit.dimension_id)
         self.measured.setText(audit.measured_text)
@@ -172,7 +215,7 @@ class EditPage(QtWidgets.QWidget):
         index = self.mode.findData(audit.mode)
         if index >= 0:
             self.mode.setCurrentIndex(index)
-        self.selection_stack.setCurrentIndex(1)
+        self._show_state(1)
 
     def refresh(self) -> None:
         try:

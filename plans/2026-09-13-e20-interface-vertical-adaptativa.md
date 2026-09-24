@@ -2,7 +2,7 @@
 
 Data: 2026-09-13
 
-Status: E20.0–E20.5 concluídas no gate técnico local; E20.6 é a próxima etapa.
+Status: E20.0–E20.6 concluídas no gate técnico local; E20.7 é a próxima etapa.
 
 ## Checkpoint de execução — 2026-09-14
 
@@ -37,8 +37,8 @@ Status: E20.0–E20.5 concluídas no gate técnico local; E20.6 é a próxima et
 | E20.3 — Cotar | Concluída no gate técnico local; aceite no Max em E20.8 |
 | E20.4 — Prévia fiel | Concluída no gate técnico local; tipografia no Max em E20.8 |
 | E20.5 — Estilos | Concluída no gate técnico local; aplicar rascunho sem salvar segue dependência do núcleo |
-| E20.6 — Demais páginas | Não iniciada; próxima |
-| E20.7 — Regressões e aceite técnico | Não iniciada |
+| E20.6 — Demais páginas | Concluída no gate técnico local; aceite no Max em E20.8 |
+| E20.7 — Regressões e aceite técnico | Não iniciada; próxima |
 | E20.8 — Instalação e aceite humano | Não iniciada |
 
 Base obrigatória: `develop` no commit que estiver publicado quando a execução
@@ -281,6 +281,9 @@ perder a prévia nem confundir os destinos.
 Commit sugerido: `feat(e20): complete adaptive styles workspace`.
 
 ### E20.6 — Revisar, Exportar e Configurações
+
+Estado: concluída no gate técnico local em 2026-09-23. Evidência em
+`work/e20-pages/README.md`.
 
 1. Aplicar os tokens e breakpoints consolidados às páginas restantes.
 2. Remover redundância, empty states excessivos e textos internos.
