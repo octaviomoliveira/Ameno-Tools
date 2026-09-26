@@ -319,6 +319,9 @@ struct AmenoUiBridgeService
     fn applyStyleCommand styleId allDimensions:false =
     (
         if ::AmenoStyleService == undefined then return (errorResult "styleServiceUnavailable" "O serviço de estilos não está disponível.")
+        if ::AmenoApp == undefined then return (errorResult "runtimeUnavailable" "O runtime Ameno não está disponível.")
+        if not allDimensions and (::AmenoApp.getSelectedDimensionControllers()).count == 0 then
+            return (errorResult "noSelection" "Selecione uma cota Ameno na viewport.")
         try
         (
             local count = if allDimensions then (::AmenoStyleService.applyDraftToSelection (::AmenoStyleService.createDraftFromStyle styleId) allDimensions:true) else ::AmenoApp.applyStyleToSelection styleId

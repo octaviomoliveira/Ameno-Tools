@@ -1,20 +1,23 @@
 # Plano compartilhado — Ameno Tools
 
 > Fonte de continuidade do projeto para qualquer pessoa ou agente (incluindo Antigravity).
-> Atualizado: 2026-09-23
+> Atualizado: 2026-09-26
 
 ## Checkpoint corrente — E20
 
 Este checkpoint e o plano E20 prevalecem sobre os próximos passos históricos
 E18/E19 mantidos abaixo. Branch `feature/e20-vertical-adaptive-ui`, base publicada
 `develop` em `1acc10af35a289c18ffafa9186ca2055e4f97f41`; plano preservado no commit
-`d030e4f`. E20.0–E20.6 concluídas no gate técnico local; nenhuma nova
-instalação foi feita. Evidências: `work/e20-baseline/README.md`,
+`d030e4f`. E20.0–E20.6 concluídas no gate técnico local. A matriz E20.7
+MAXScript passou 19/19 em 2026-09-25; a Qt passou 6/6 em 96 e 144 DPI no
+runtime compatível com Max 2026. E20.8 está instalada para aceite interativo,
+mas ainda não foi aprovada pelo usuário. Evidências: `work/e20-baseline/README.md`,
 `work/e20-window/README.md`, `work/e20-shell/README.md`,
 `work/e20-cotar/README.md`, `work/e20-preview/README.md`,
 `work/e20-styles/README.md`, `work/e20-pages/README.md` e
-`work/e20-acceptance/README.md`. E20.7 tem a parte Qt fechada; falta a matriz
-MAXScript, que exige 3ds Max 2026. E20.8 não iniciada.
+`work/e20-acceptance/README.md` e
+`plans/2026-09-26-e20-style-bridge-fix.md`. A correção do botão Aplicar e do
+parser de estilos foi instalada em 2026-09-26; reteste na cena real pendente.
 
 Já foram registrados 69 testes Python legados verdes, 12 REDs reproduzíveis
 (três de janela, sete de geometria/escala da prévia e dois de apresentação), um
@@ -359,11 +362,12 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 
 ## Próximo passo executável
 
-- **Próximo passo — fechar E20.7 no host:** numa máquina com 3ds Max 2026,
-  rodar a matriz MAXScript da baseline (`work/e20-baseline/max-regression`) e
-  repetir a medição de desempenho com fontes reais. Depois, E20.8 (backup,
-  instalação e aceite humano). Dependências do núcleo em aberto: aplicar
-  rascunho sem salvar e Posição/Ângulo na cota confirmada.
+- **Próximo passo — aceite humano E20.8:** abrir Max 2026 com a build corrigida,
+  selecionar uma cota Ameno e testar `Aplicar` e `Aplicar a todas` na página
+  Estilos. Se aprovado, concluir E20.8 e decidir promoção da branch. O risco de
+  persistência parcial em `updateStyleAndRebuild` permanece para etapa separada.
+  Dependências do núcleo em aberto: aplicar rascunho sem salvar e Posição/Ângulo
+  na cota confirmada.
 
 - **E18.0 — baseline e reprodução concluída:** a branch
   `feature/e18-ux-10-10` foi criada a partir de `feature/e17-ameno-ux` em
@@ -437,6 +441,13 @@ Entregar, no 3ds Max 2026, o primeiro módulo do Ameno Tools: **Ameno Dimensions
 - Licença e modelo de distribuição.
 
 ## Histórico de solicitações
+
+- **2026-09-26 — Corrigir falha ao aplicar estilos na E20:** a ponte Python
+  passou a nomear `allDimensions`, o MAXScript sinaliza seleção vazia, o parser
+  preserva campos vazios e recupera registros antigos deslocados. Build instalada
+  com backups do plugin e da biblioteca; testes Qt 10/10 + 6/6, Batch E20 e E13
+  aprovados. Aceite na cena do usuário pendente. Evidência:
+  `plans/2026-09-26-e20-style-bridge-fix.md`.
 
 - **2026-09-23 — Push da E20.6 e seguir para a E20.7:** `2510823` publicado.
   Parte Qt da E20.7 implementada; matriz MAXScript pendente por falta de Max

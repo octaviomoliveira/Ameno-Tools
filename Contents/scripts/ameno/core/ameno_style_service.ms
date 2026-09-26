@@ -350,7 +350,9 @@ struct AmenoStyleServiceDefinition
         local loadedStyles = #()
         for entry in styleEntries do
         (
-            local tokens = filterString entry "|"
+            -- Preserve optional empty fields (notably textColor). Without this,
+            -- `||` shifts placement/angle/scale one column to the left.
+            local tokens = filterString entry "|" splitEmptyTokens:true
             if tokens.count >= 13 then
             (
                 local s = AmenoStyleRecord()
@@ -382,6 +384,24 @@ struct AmenoStyleServiceDefinition
                 )
                 if tokens.count >= 18 and tokens[18] != "" do s.terminalAngle = tokens[18] as float
                 if tokens.count >= 19 and tokens[19] != "" do s.previewScale = tokens[19] as float
+
+                -- Older versions read an empty textColor with filterString's
+                -- default behavior, then saved the shifted fields back to disk.
+                -- Recover those records in memory; the next normal save writes
+                -- the corrected schema. The original library is not rewritten
+                -- merely by loading it.
+                local legacyColor = toLower s.textColor
+                if legacyColor == "auto" or legacyColor == "inside" or legacyColor == "outside" do
+                (
+                    local previousPlacement = s.terminalPlacement as string
+                    local previousAngle = try (previousPlacement as float) catch (undefined)
+                    if previousAngle != undefined and previousAngle >= 0.0 and previousAngle <= 180.0 then
+                        s.terminalAngle = previousAngle
+                    else if s.terminalAngle == 1.0 then
+                        s.terminalAngle = 45.0
+                    s.terminalPlacement = legacyColor as name
+                    s.textColor = ""
+                )
 
                 append loadedStyles s
             )
@@ -942,7 +962,8 @@ struct AmenoStyleServiceDefinition
         (
             undo "Ameno: aplicar estilo às selecionadas" on
             (
-                this.saveStyle draft.styleRecord
+                if not (this.saveStyle draft.styleRecord) then
+                    throw "Não foi possível persistir o estilo na cena e na biblioteca global."
                 for c in controllersToUpdate do
                 (
                     local rec = ::AmenoDimensionCA.readCA c

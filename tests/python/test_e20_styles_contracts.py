@@ -7,6 +7,7 @@ import sys
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -15,7 +16,7 @@ sys.path.insert(0, str(ROOT / "Contents" / "python"))
 
 from PySide6 import QtCore, QtWidgets  # noqa: E402
 
-from ameno_ui.bridge import BridgeError  # noqa: E402
+from ameno_ui.bridge import BridgeError, UiBridge  # noqa: E402
 from ameno_ui.models import StyleSnapshot  # noqa: E402
 from ameno_ui.window import AmenoMainWindow  # noqa: E402
 
@@ -48,6 +49,23 @@ class StylesBridge:
     def apply_style(self, style_id, all_dimensions):
         self.calls.append(("apply", style_id, all_dimensions))
         return 2
+
+
+def test_real_bridge_passes_maxscript_keyword_parameter() -> None:
+    class Service:
+        def __init__(self):
+            self.calls = []
+
+        def applyStyleCommand(self, style_id, *, allDimensions=False):
+            self.calls.append((style_id, allDimensions))
+            return [True, "ok", "", 2]
+
+    service = Service()
+    bridge = UiBridge()
+    bridge._rt = SimpleNamespace(AmenoUiBridge=service)
+    assert bridge.apply_style("technical") == 2
+    assert bridge.apply_style("default", all_dimensions=True) == 2
+    assert service.calls == [("technical", False), ("default", True)]
 
 
 @contextmanager

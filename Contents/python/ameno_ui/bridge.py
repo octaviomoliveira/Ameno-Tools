@@ -164,7 +164,7 @@ class UiBridge:
         return bool(payload)
 
     def apply_style(self, style_id: str, all_dimensions: bool = False) -> int:
-        _, _, _, payload = _result(self._call("applyStyleCommand", style_id, bool(all_dimensions)))
+        _, _, _, payload = _result(self._call("applyStyleCommand", style_id, allDimensions=bool(all_dimensions)))
         try:
             return int(payload or 0)
         except Exception:
